@@ -79,12 +79,32 @@
   dependencies:
     tslib "^2.4.0"
 
+"@tscircuit/builder@^1.0.3", "@tscircuit/builder@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@tscircuit/builder/-/builder-1.0.4.tgz#d3c0490c52807d3a40b8a788b6d9498fdce64db2"
+  integrity sha512-h0AeWUuaUiwHUFiGU82+8lbThy35z37LnplqHUJgPrUsRNTC/U6afk/7GoUE4pcB2bhWt60/KFkuKVNjD+kbig==
+  dependencies:
+    parsel-js "^1.0.2"
+    rectilinear-router "^1.0.1"
+    svg-path-bounds "^1.0.2"
+    transformation-matrix "^2.12.0"
+
 "@tscircuit/eagle-xml-converter@^0.0.6":
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/@tscircuit/eagle-xml-converter/-/eagle-xml-converter-0.0.6.tgz#ef40bc390e4cf9e456dd25f32b7e6d1315d67df1"
   integrity sha512-rNbfSGX2qiqeOy+AnZ3lN+t+PK6ijx/eOM3ZedgjaHbYhrWYexDbP6Qt/jISjREMyO/G2uhXgiBFWsqKI9BEvQ==
   dependencies:
     fast-xml-parser "^4.0.10"
+
+"@tscircuit/react-fiber@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@tscircuit/react-fiber/-/react-fiber-0.0.3.tgz#9275b611616e2be5de97ff855b441e870230ee77"
+  integrity sha512-hRvHsXV8oY9t0SmnfenEopbmwGbBIVXz7XcNALXTSQC2ghnpE0cQ5U6TLtbMqZaVNNzexmaSDiX9fpjy3BuCvQ==
+  dependencies:
+    "@tscircuit/builder" "^1.0.3"
+    "@types/react-reconciler" "^0.28.0"
+    react "^18.2.0"
+    react-reconciler "^0.29.0"
 
 "@types/node@18.7.23":
   version "18.7.23"
@@ -96,7 +116,14 @@
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.5.tgz#5f19d2b85a98e9558036f6a3cacc8819420f05cf"
   integrity sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==
 
-"@types/react@^18.0.21":
+"@types/react-reconciler@^0.28.0":
+  version "0.28.0"
+  resolved "https://registry.yarnpkg.com/@types/react-reconciler/-/react-reconciler-0.28.0.tgz#513acbed173140e958c909041ca14eb40412077f"
+  integrity sha512-5cjk9ottZAj7eaTsqzPUIlrVbh3hBAO2YaEL1rkjHKB3xNAId7oU8GhzvAX+gfmlfoxTwJnBjPxEHyxkEA1Ffg==
+  dependencies:
+    "@types/react" "*"
+
+"@types/react@*", "@types/react@^18.0.21":
   version "18.0.21"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.21.tgz#b8209e9626bb00a34c76f55482697edd2b43cc67"
   integrity sha512-7QUCOxvFgnD5Jk8ZKlUAhVcRj7GuJRjnjjiY/IUBWKgOlnvDvTMLD4RTF7NPyVmbRhNrbomZiOepg7M/2Kj1mA==
@@ -109,6 +136,11 @@
   version "0.16.2"
   resolved "https://registry.yarnpkg.com/@types/scheduler/-/scheduler-0.16.2.tgz#1a62f89525723dde24ba1b01b092bf5df8ad4d39"
   integrity sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==
+
+abs-svg-path@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/abs-svg-path/-/abs-svg-path-0.1.1.tgz#df601c8e8d2ba10d4a76d625e236a9a39c2723bf"
+  integrity sha512-d8XPSGjfyzlXC3Xx891DJRyZfqk5JU0BJrDQcsWomFIV1/BIzPW5HDH5iDdWpqWaav0YVIEzT1RHTwWr0FFshA==
 
 caniuse-lite@^1.0.30001406:
   version "1.0.30001414"
@@ -127,10 +159,27 @@ fast-xml-parser@^4.0.10:
   dependencies:
     strnum "^1.0.5"
 
+glpk.js@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/glpk.js/-/glpk.js-4.0.1.tgz#5ec021d5712fad8bd3c256d87a6e2b6b3003240b"
+  integrity sha512-sxb3UT9IP2NXCocvFoC4I4XcvyVRGTS48hRWWpSAnl8yrsSbKDF58HjR8BUu1YxXHkkZ3kq7ycs7RLvI7l1pYg==
+  dependencies:
+    pako "^2.0.4"
+
+is-svg-path@^1.0.1:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/is-svg-path/-/is-svg-path-1.0.2.tgz#77ab590c12b3d20348e5c7a13d0040c87784dda0"
+  integrity sha512-Lj4vePmqpPR1ZnRctHv8ltSh1OrSxHkhUkd7wi+VQdcdP15/KvQFyk7LhNuM7ZW0EVbJz8kZLVmL9quLrfq4Kg==
+
 "js-tokens@^3.0.0 || ^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"
   integrity sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==
+
+lodash@^4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
 loose-envify@^1.1.0:
   version "1.4.0"
@@ -170,6 +219,28 @@ next@^12.3.1:
     "@next/swc-win32-ia32-msvc" "12.3.1"
     "@next/swc-win32-x64-msvc" "12.3.1"
 
+normalize-svg-path@^1.0.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/normalize-svg-path/-/normalize-svg-path-1.1.0.tgz#0e614eca23c39f0cffe821d6be6cd17e569a766c"
+  integrity sha512-r9KHKG2UUeB5LoTouwDzBy2VxXlHsiM6fyLQvnJa0S5hrhzqElH/CH7TUGhT1fVvIYBIKf3OpY4YJ4CK+iaqHg==
+  dependencies:
+    svg-arc-to-cubic-bezier "^3.0.0"
+
+pako@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/pako/-/pako-2.0.4.tgz#6cebc4bbb0b6c73b0d5b8d7e8476e2b2fbea576d"
+  integrity sha512-v8tweI900AUkZN6heMU/4Uy4cXRc2AYNRggVmTR+dEncawDJgCdLMximOVA2p4qO57WMynangsfGRb5WD6L1Bg==
+
+parse-svg-path@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/parse-svg-path/-/parse-svg-path-0.1.2.tgz#7a7ec0d1eb06fa5325c7d3e009b859a09b5d49eb"
+  integrity sha512-JyPSBnkTJ0AI8GGJLfMXvKq42cj5c006fnLz6fXy6zfoVjJizi8BNTpu8on8ziI1cKy9d9DGNuY17Ce7wuejpQ==
+
+parsel-js@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/parsel-js/-/parsel-js-1.0.2.tgz#46d2956ee181383cbda6547d7bf89fb8daccbabc"
+  integrity sha512-G8Wzng7kxh8k6trrL5U5Fv25r7WJ/s4SEo8B6AF/5qSMq6PfptKXSWvBYw3s6eEXKFjWIsMc5hxuekht5XRbng==
+
 picocolors@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.0.0.tgz#cb5bdc74ff3f51892236eaf79d68bc44564ab81c"
@@ -192,12 +263,35 @@ react-dom@^18.2.0:
     loose-envify "^1.1.0"
     scheduler "^0.23.0"
 
+react-reconciler@^0.29.0:
+  version "0.29.0"
+  resolved "https://registry.yarnpkg.com/react-reconciler/-/react-reconciler-0.29.0.tgz#ee769bd362915076753f3845822f2d1046603de7"
+  integrity sha512-wa0fGj7Zht1EYMRhKWwoo1H9GApxYLBuhoAuXN0TlltESAjDssB+Apf0T/DngVqaMyPypDmabL37vw/2aRM98Q==
+  dependencies:
+    loose-envify "^1.1.0"
+    scheduler "^0.23.0"
+
 react@^18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
   integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
   dependencies:
     loose-envify "^1.1.0"
+
+rectilinear-router@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/rectilinear-router/-/rectilinear-router-1.0.1.tgz#8b817cbd51fad93d994a928c7339a2ae5bd4568d"
+  integrity sha512-3cLXo9A8/jK36nU5XRTC0V/9DLn0ORBaI02nYqGnoscazzo1xphyzzmQIJK8QjyNSBqoDAypkpOEP0khMMIPPw==
+  dependencies:
+    lodash "^4.17.21"
+    rsmt-ts "^1.1.4"
+
+rsmt-ts@^1.1.4:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/rsmt-ts/-/rsmt-ts-1.1.6.tgz#f164f9b9629322d1adee3026b559e78e6b63bb99"
+  integrity sha512-SKq3nla9/X4YUJX+DkInHbdZ/iEfVkGnpvP8zaF9/vv09vpHHmpiHv129zpKkVjVr7dML9lBGBdTok41Z3rQnQ==
+  dependencies:
+    glpk.js "^4.0.1"
 
 scheduler@^0.23.0:
   version "0.23.0"
@@ -221,7 +315,22 @@ styled-jsx@5.0.7:
   resolved "https://registry.yarnpkg.com/styled-jsx/-/styled-jsx-5.0.7.tgz#be44afc53771b983769ac654d355ca8d019dff48"
   integrity sha512-b3sUzamS086YLRuvnaDigdAewz1/EFYlHpYBP5mZovKEdQQOIIYq8lApylub3HHZ6xFjV051kkGU7cudJmrXEA==
 
-transformation-matrix@^2.13.0:
+svg-arc-to-cubic-bezier@^3.0.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/svg-arc-to-cubic-bezier/-/svg-arc-to-cubic-bezier-3.2.0.tgz#390c450035ae1c4a0104d90650304c3bc814abe6"
+  integrity sha512-djbJ/vZKZO+gPoSDThGNpKDO+o+bAeA4XQKovvkNCqnIS2t+S4qnLAGQhyyrulhCFRl1WWzAp0wUDV8PpTVU3g==
+
+svg-path-bounds@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/svg-path-bounds/-/svg-path-bounds-1.0.2.tgz#00312f672b08afc432a66ddfbd06db40cec8d0d0"
+  integrity sha512-H4/uAgLWrppIC0kHsb2/dWUYSmb4GE5UqH06uqWBcg6LBjX2fu0A8+JrO2/FJPZiSsNOKZAhyFFgsLTdYUvSqQ==
+  dependencies:
+    abs-svg-path "^0.1.1"
+    is-svg-path "^1.0.1"
+    normalize-svg-path "^1.0.0"
+    parse-svg-path "^0.1.2"
+
+transformation-matrix@^2.12.0, transformation-matrix@^2.13.0:
   version "2.13.0"
   resolved "https://registry.yarnpkg.com/transformation-matrix/-/transformation-matrix-2.13.0.tgz#4b367e715049197be8b658ac0fe6aed51fb43088"
   integrity sha512-TAkpbTWNBG/tlI68WEFHUQlK71PBIk+7EBqE91qi7NNho3EO5APqDw19FY7Clkeom5GhyAcGQPqn0wsD8WkYfA==
