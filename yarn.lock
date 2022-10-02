@@ -79,6 +79,13 @@
   dependencies:
     tslib "^2.4.0"
 
+"@tscircuit/eagle-xml-converter@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@tscircuit/eagle-xml-converter/-/eagle-xml-converter-0.0.6.tgz#ef40bc390e4cf9e456dd25f32b7e6d1315d67df1"
+  integrity sha512-rNbfSGX2qiqeOy+AnZ3lN+t+PK6ijx/eOM3ZedgjaHbYhrWYexDbP6Qt/jISjREMyO/G2uhXgiBFWsqKI9BEvQ==
+  dependencies:
+    fast-xml-parser "^4.0.10"
+
 "@types/node@18.7.23":
   version "18.7.23"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.7.23.tgz#75c580983846181ebe5f4abc40fe9dfb2d65665f"
@@ -112,6 +119,13 @@ csstype@^3.0.2:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.1.tgz#841b532c45c758ee546a11d5bd7b7b473c8c30b9"
   integrity sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==
+
+fast-xml-parser@^4.0.10:
+  version "4.0.10"
+  resolved "https://registry.yarnpkg.com/fast-xml-parser/-/fast-xml-parser-4.0.10.tgz#72c81f74a0ef98af77ef37dd19d227533aae2994"
+  integrity sha512-mYMMIk7Ho1QOiedyvafdyPamn1Vlda+5n95lcn0g79UiCQoLQ2xfPQ8m3pcxBMpVaftYXtoIE2wrNTjmLQnnkg==
+  dependencies:
+    strnum "^1.0.5"
 
 "js-tokens@^3.0.0 || ^4.0.0":
   version "4.0.0"
@@ -197,15 +211,30 @@ source-map-js@^1.0.2:
   resolved "https://registry.yarnpkg.com/source-map-js/-/source-map-js-1.0.2.tgz#adbc361d9c62df380125e7f161f71c826f1e490c"
   integrity sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==
 
+strnum@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/strnum/-/strnum-1.0.5.tgz#5c4e829fe15ad4ff0d20c3db5ac97b73c9b072db"
+  integrity sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==
+
 styled-jsx@5.0.7:
   version "5.0.7"
   resolved "https://registry.yarnpkg.com/styled-jsx/-/styled-jsx-5.0.7.tgz#be44afc53771b983769ac654d355ca8d019dff48"
   integrity sha512-b3sUzamS086YLRuvnaDigdAewz1/EFYlHpYBP5mZovKEdQQOIIYq8lApylub3HHZ6xFjV051kkGU7cudJmrXEA==
 
+transformation-matrix@^2.13.0:
+  version "2.13.0"
+  resolved "https://registry.yarnpkg.com/transformation-matrix/-/transformation-matrix-2.13.0.tgz#4b367e715049197be8b658ac0fe6aed51fb43088"
+  integrity sha512-TAkpbTWNBG/tlI68WEFHUQlK71PBIk+7EBqE91qi7NNho3EO5APqDw19FY7Clkeom5GhyAcGQPqn0wsD8WkYfA==
+
 tslib@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
+
+type-fest@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-3.0.0.tgz#678e2e8d916e3b7dc1c3a6591d399ba3f7521584"
+  integrity sha512-MINvUN5ug9u+0hJDzSZNSnuKXI8M4F5Yvb6SQZ2CYqe7SgKXKOosEcU5R7tRgo85I6eAVBbkVF7TCvB4AUK2xQ==
 
 typescript@^4.8.4:
   version "4.8.4"
