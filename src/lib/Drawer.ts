@@ -1,5 +1,11 @@
 import { scaleOnly } from "./util/scale-only"
-import { identity, Matrix, applyToPoint } from "transformation-matrix"
+import {
+  identity,
+  Matrix,
+  applyToPoint,
+  translate,
+  compose,
+} from "transformation-matrix"
 import colors from "./colors"
 
 export interface Aperture {
@@ -57,6 +63,7 @@ export class Drawer {
     this.transform = identity()
     // positive is up (cartesian)
     this.transform.d *= -1
+    this.transform = compose(this.transform, translate(0, -500))
   }
 
   clear() {
@@ -94,6 +101,7 @@ export class Drawer {
   text(text: string, x: number, y: number) {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
+    console.log({ x$, y$, text })
     this.ctx.fillText(text, x$, y$)
   }
 
@@ -121,6 +129,7 @@ export class Drawer {
       ctx.strokeStyle = "rgba(0,0,0,1)"
     }
     ctx.font = `${scaleOnly(transform, fontSize)}px sans-serif`
+    console.log(ctx.font)
   }
 
   moveTo(x: number, y: number) {
