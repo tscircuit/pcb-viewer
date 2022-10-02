@@ -7,6 +7,7 @@ import {
   compose,
 } from "transformation-matrix"
 import colors from "./colors"
+import { convertTextToLines } from "./convert-text-to-lines"
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -96,18 +97,20 @@ export class Drawer {
     this.ctx.beginPath()
     this.ctx.arc(x$, y$, r$ * 2, 0, 2 * Math.PI)
     this.ctx.fill()
+    this.ctx.closePath()
   }
 
+  /* NOTE: This is not gerber compatible */
   text(text: string, x: number, y: number) {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
-    console.log({ x$, y$, text })
+
     this.ctx.fillText(text, x$, y$)
   }
 
   applyAperture() {
-    const { ctx, transform } = this
-    const { size, mode, color, fontSize } = this.aperture
+    const { ctx, transform, aperture } = this
+    const { size, mode, color, fontSize } = aperture
     ctx.lineWidth = scaleOnly(transform, size)
     ctx.lineCap = "round"
     if (mode === "add") {
@@ -129,7 +132,6 @@ export class Drawer {
       ctx.strokeStyle = "rgba(0,0,0,1)"
     }
     ctx.font = `${scaleOnly(transform, fontSize)}px sans-serif`
-    console.log(ctx.font)
   }
 
   moveTo(x: number, y: number) {
@@ -142,7 +144,6 @@ export class Drawer {
     let { lastPoint, ctx } = this
     const lastPoint$ = applyToPoint(this.transform, lastPoint)
 
-    ctx.beginPath()
     this.applyAperture()
 
     if (shape === "square")
@@ -152,12 +153,16 @@ export class Drawer {
         size$,
         size$
       )
+    ctx.beginPath()
     ctx.moveTo(lastPoint$.x, lastPoint$.y)
     ctx.lineTo(x$, y$)
+
+    ctx.stroke()
+    ctx.closePath()
+
     if (shape === "square")
       ctx.fillRect(x$ - size$ / 2, y$ - size$ / 2, size$, size$)
 
-    ctx.stroke()
     this.lastPoint = { x, y }
   }
 }

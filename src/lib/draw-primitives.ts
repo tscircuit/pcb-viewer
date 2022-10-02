@@ -1,5 +1,6 @@
 import { Primitive, Line, Text, Circle, Rect } from "./types"
 import { Drawer } from "./Drawer"
+import { convertTextToLines } from "./convert-text-to-lines"
 
 export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
@@ -20,7 +21,14 @@ export const drawText = (drawer: Drawer, text: Text) => {
   if (text.align && text.align !== "top-left") {
     console.warn("Unhandled text align", text.align)
   }
-  drawer.text(text.text, text.x, text.y)
+
+  // Non-gerber compatible
+  // drawer.text(text.text, text.x, text.y)
+
+  const lines = convertTextToLines(text)
+  for (const line of lines) {
+    drawLine(drawer, line)
+  }
 }
 
 export const drawRect = (drawer: Drawer, rect: Rect) => {
