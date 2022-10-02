@@ -21,18 +21,17 @@ export default () => {
       {
         pcb_drawing_type: "rect",
         x: 100,
-        y: 250,
+        y: 270,
         w: 100,
         h: 100,
         layer: { name: "top" },
       },
       {
         pcb_drawing_type: "text",
-        x: 150,
-        y: 200,
+        x: 50,
+        y: 210,
         size: 45,
-        // text: "Hello World",
-        text: "Hello World",
+        text: "Hello World1",
         layer: { name: "top" },
       },
       {
