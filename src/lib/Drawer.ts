@@ -1,32 +1,29 @@
 import { scaleOnly } from "./util/scale-only"
 import { identity, Matrix, applyToPoint } from "transformation-matrix"
-import { SetOptional } from "type-fest"
+import colors from "./colors"
 
 export interface Aperture {
   shape: "circle" | "square"
   size: number
   mode: "add" | "subtract"
   fontSize: number
-  color: string | number
+  color: string
 }
 
-export const DEFAULT_LAYER_COLORS = {
-  0: "black",
-  1: "blue",
-  2: "green",
-  3: "cyan",
-  4: "red",
-  5: "magenta",
-  6: "brown",
-  7: "lightgrey",
-  8: "darkgrey",
-  9: "lightblue",
-  10: "lightgreen",
-  11: "lightcyan",
-  12: "lightred",
-  13: "lightmagenta",
-  14: "yellow",
-  15: "white",
+export const LAYER_NAME_TO_COLOR = {
+  // Standard colors, you shouldn't use these except for testing
+  red: "red",
+  black: "black",
+  green: "green",
+  // TODO more builtin html colors
+
+  // Common eagle names
+  top: colors.board.copper.f,
+  keepout: colors.board.background,
+  tkeepout: colors.board.b_crtyd,
+  tplace: colors.board.b_silks,
+
+  ...colors.board,
 }
 
 export const FILL_TYPES = {
@@ -58,6 +55,8 @@ export class Drawer {
     this.canvas = canvas
     this.ctx = canvas.getContext("2d")
     this.transform = identity()
+    // positive is up (cartesian)
+    this.transform.d *= -1
   }
 
   clear() {
@@ -71,17 +70,16 @@ export class Drawer {
       shape: "circle",
       mode: "add",
       size: 0,
-      color: 4,
+      color: "red",
       ...aperature,
     }
   }
 
   rect(x: number, y: number, w: number, h: number) {
-    const w$ = scaleOnly(this.transform, w)
-    const h$ = scaleOnly(this.transform, h)
-    const [x$, y$] = applyToPoint(this.transform, [x, y])
+    const [x1$, y1$] = applyToPoint(this.transform, [x, y])
+    const [x2$, y2$] = applyToPoint(this.transform, [x + w, y + h])
     this.applyAperture()
-    this.ctx.fillRect(x$, y$, w$, h$)
+    this.ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
   }
 
   circle(x: number, y: number, r: number) {
@@ -89,7 +87,7 @@ export class Drawer {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
     this.ctx.beginPath()
-    this.ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
+    this.ctx.arc(x$, y$, r$ * 2, 0, 2 * Math.PI)
     this.ctx.fill()
   }
 
@@ -105,8 +103,16 @@ export class Drawer {
     ctx.lineWidth = scaleOnly(transform, size)
     ctx.lineCap = "round"
     if (mode === "add") {
-      const colorString =
-        typeof color === "string" ? color : DEFAULT_LAYER_COLORS[color]
+      let colorString =
+        color[0] === "#" || color.startsWith("rgb")
+          ? color
+          : LAYER_NAME_TO_COLOR[color.toLowerCase()]
+          ? LAYER_NAME_TO_COLOR[color.toLowerCase()]
+          : null
+      if (colorString === null) {
+        console.warn(`Color mapping for "${color}" not found`)
+        colorString = "white"
+      }
       ctx.fillStyle = colorString
       ctx.strokeStyle = colorString
     } else {

@@ -11,7 +11,9 @@ export const drawEagle = (drawer: Drawer, eagle: EagleJSON) => {
 
   if (eagle.grid.unit === "inch") {
     drawer.transform = compose(
-      fromDefinition(fromTransformAttribute("translate(200, 200) scale(30,30)"))
+      fromDefinition(
+        fromTransformAttribute("translate(200, 200) scale(30,-30)")
+      )
     )
   }
 
@@ -22,36 +24,22 @@ export const drawEagle = (drawer: Drawer, eagle: EagleJSON) => {
 
   for (const smd of pkg.smd || []) {
     drawer.equip({
-      mode: "add",
-      size: 1,
-      fontSize: 0.5,
-      shape: "square",
-      color: layerMap[smd.layer].color,
+      color: layerMap[smd.layer].name,
     })
     drawer.rect(smd.x - smd.dx / 2, smd.y - smd.dy / 2, smd.dx, smd.dy)
-
-    drawer.equip({ color: "green", fontSize: 0.7 })
-    drawer.text(smd.layer.toString(), smd.x, smd.y)
   }
   for (const wire of pkg.wire || []) {
     drawer.equip({
-      mode: "add",
       size: wire.width,
       shape: "circle",
-      color: layerMap[wire.layer].color,
+      color: layerMap[wire.layer].name,
     })
     drawer.moveTo(wire.x1, wire.y1)
     drawer.lineTo(wire.x2, wire.y2)
-
-    drawer.equip({ color: "green", fontSize: 0.7 })
-    drawer.text(wire.layer.toString(), wire.x1, wire.y1)
   }
 
   for (const circle of pkg.circle || []) {
-    drawer.equip({ color: layerMap[circle.layer].color })
-    drawer.circle(circle.x, circle.y, circle.width)
-
-    drawer.equip({ color: "green", fontSize: 0.7 })
-    drawer.text(circle.layer.toString(), circle.x, circle.y)
+    drawer.equip({ color: layerMap[circle.layer].name })
+    drawer.circle(circle.x, circle.y, circle.radius)
   }
 }
