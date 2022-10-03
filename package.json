@@ -15,7 +15,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@tscircuit/builder": "^1.0.4",
+    "@tscircuit/builder": "^1.0.5",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/react-fiber": "^0.0.3",
     "react-dom": "^18.2.0",

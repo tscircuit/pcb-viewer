@@ -79,7 +79,7 @@
   dependencies:
     tslib "^2.4.0"
 
-"@tscircuit/builder@^1.0.3", "@tscircuit/builder@^1.0.4":
+"@tscircuit/builder@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@tscircuit/builder/-/builder-1.0.4.tgz#d3c0490c52807d3a40b8a788b6d9498fdce64db2"
   integrity sha512-h0AeWUuaUiwHUFiGU82+8lbThy35z37LnplqHUJgPrUsRNTC/U6afk/7GoUE4pcB2bhWt60/KFkuKVNjD+kbig==
@@ -89,10 +89,28 @@
     svg-path-bounds "^1.0.2"
     transformation-matrix "^2.12.0"
 
+"@tscircuit/builder@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@tscircuit/builder/-/builder-1.0.5.tgz#8c714b003ca47d4a5cb422d67a5b25c1161f1f94"
+  integrity sha512-2K9y0Wk7u+NQkMtrGOZpQEvpXaY5G0y+QB3pjDPrzlHLveF7TwZ/32ZZ4uTmAkvoU1tGvcqemmIQwkvZNkfKww==
+  dependencies:
+    "@tscircuit/eagle-xml-converter" "^0.0.7"
+    parsel-js "^1.0.2"
+    rectilinear-router "^1.0.1"
+    svg-path-bounds "^1.0.2"
+    transformation-matrix "^2.12.0"
+
 "@tscircuit/eagle-xml-converter@^0.0.6":
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/@tscircuit/eagle-xml-converter/-/eagle-xml-converter-0.0.6.tgz#ef40bc390e4cf9e456dd25f32b7e6d1315d67df1"
   integrity sha512-rNbfSGX2qiqeOy+AnZ3lN+t+PK6ijx/eOM3ZedgjaHbYhrWYexDbP6Qt/jISjREMyO/G2uhXgiBFWsqKI9BEvQ==
+  dependencies:
+    fast-xml-parser "^4.0.10"
+
+"@tscircuit/eagle-xml-converter@^0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@tscircuit/eagle-xml-converter/-/eagle-xml-converter-0.0.7.tgz#6009da62a7214ca4e91f3e841cdd5bf7767aa1b3"
+  integrity sha512-0f9qNgO63CiBt42ZCRShxSXw32ZI7ZWMB/F7ZbuYdBi8HPdcJdyBQDMZ3w0WQM2nYGZ5rMc6fvjh5j6ATnxsOg==
   dependencies:
     fast-xml-parser "^4.0.10"
 

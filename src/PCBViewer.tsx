@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 import { CanvasPrimitiveRenderer } from "./components/CanvasPrimitiveRenderer"
 import { createRoot } from "@tscircuit/react-fiber"
-import { createProjectBuilder } from "@tscircuit/builder"
+import { AnyElement, createProjectBuilder } from "@tscircuit/builder"
 
 export const PCBViewer = ({ children }) => {
-  const [elements, setElements] = useState([])
+  const [elements, setElements] = useState<Array<AnyElement>>([])
 
   useEffect(() => {
     // TODO re-use project builder
@@ -18,7 +18,7 @@ export const PCBViewer = ({ children }) => {
 
   return (
     <CanvasPrimitiveRenderer
-      primitives={elements.flatMap((elm) => elm.pcb_primitives)}
+      elements={elements.filter((elm) => elm.type.startsWith("pcb_"))}
     />
   )
 }
