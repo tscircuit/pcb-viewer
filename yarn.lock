@@ -79,16 +79,6 @@
   dependencies:
     tslib "^2.4.0"
 
-"@tscircuit/builder@^1.0.3":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@tscircuit/builder/-/builder-1.0.4.tgz#d3c0490c52807d3a40b8a788b6d9498fdce64db2"
-  integrity sha512-h0AeWUuaUiwHUFiGU82+8lbThy35z37LnplqHUJgPrUsRNTC/U6afk/7GoUE4pcB2bhWt60/KFkuKVNjD+kbig==
-  dependencies:
-    parsel-js "^1.0.2"
-    rectilinear-router "^1.0.1"
-    svg-path-bounds "^1.0.2"
-    transformation-matrix "^2.12.0"
-
 "@tscircuit/builder@^1.0.5":
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@tscircuit/builder/-/builder-1.0.5.tgz#8c714b003ca47d4a5cb422d67a5b25c1161f1f94"
@@ -114,14 +104,11 @@
   dependencies:
     fast-xml-parser "^4.0.10"
 
-"@tscircuit/react-fiber@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@tscircuit/react-fiber/-/react-fiber-0.0.3.tgz#9275b611616e2be5de97ff855b441e870230ee77"
-  integrity sha512-hRvHsXV8oY9t0SmnfenEopbmwGbBIVXz7XcNALXTSQC2ghnpE0cQ5U6TLtbMqZaVNNzexmaSDiX9fpjy3BuCvQ==
+"@tscircuit/react-fiber@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@tscircuit/react-fiber/-/react-fiber-0.0.4.tgz#5ea8310d7484cfec506f5c87f547b1197b4aefc0"
+  integrity sha512-fQk1bz9CJDpx+4rHnDcREHe1UhX15ALcfpOU409tiixHfACsKF9Go8CpJXeky5mKn3S+Ikhz5Rx8UhM8yUwaUQ==
   dependencies:
-    "@tscircuit/builder" "^1.0.3"
-    "@types/react-reconciler" "^0.28.0"
-    react "^18.2.0"
     react-reconciler "^0.29.0"
 
 "@types/node@18.7.23":
@@ -134,14 +121,7 @@
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.5.tgz#5f19d2b85a98e9558036f6a3cacc8819420f05cf"
   integrity sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==
 
-"@types/react-reconciler@^0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@types/react-reconciler/-/react-reconciler-0.28.0.tgz#513acbed173140e958c909041ca14eb40412077f"
-  integrity sha512-5cjk9ottZAj7eaTsqzPUIlrVbh3hBAO2YaEL1rkjHKB3xNAId7oU8GhzvAX+gfmlfoxTwJnBjPxEHyxkEA1Ffg==
-  dependencies:
-    "@types/react" "*"
-
-"@types/react@*", "@types/react@^18.0.21":
+"@types/react@^18.0.21":
   version "18.0.21"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.21.tgz#b8209e9626bb00a34c76f55482697edd2b43cc67"
   integrity sha512-7QUCOxvFgnD5Jk8ZKlUAhVcRj7GuJRjnjjiY/IUBWKgOlnvDvTMLD4RTF7NPyVmbRhNrbomZiOepg7M/2Kj1mA==

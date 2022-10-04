@@ -17,7 +17,7 @@
   "dependencies": {
     "@tscircuit/builder": "^1.0.5",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
-    "@tscircuit/react-fiber": "^0.0.3",
+    "@tscircuit/react-fiber": "^0.0.4",
     "react-dom": "^18.2.0",
     "transformation-matrix": "^2.13.0"
   }
