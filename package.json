@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "next dev",
-    "build": "tsup ./src --dts --sourcemap",
+    "build": "tsup ./src",
     "yalc": "npm run build && yalc push"
   },
   "files": [
