@@ -1,12 +1,16 @@
 {
   "name": "@tscircuit/pcb-viewer",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
     "start": "next dev",
-    "build": "tsup ./src --dts --sourcemap"
+    "build": "tsup ./src --dts --sourcemap",
+    "yalc": "npm run build && yalc push"
   },
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
     "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/git": "^10.0.1",
@@ -18,12 +22,17 @@
     "react": "^18.2.0",
     "tsup": "^6.2.3",
     "type-fest": "^3.0.0",
-    "typescript": "^4.8.4"
-  },
-  "dependencies": {
+    "typescript": "^4.8.4",
     "@tscircuit/builder": "^1.0.5",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
-    "@tscircuit/react-fiber": "^0.0.4",
+    "@tscircuit/react-fiber": "^0.0.4"
+  },
+  "peerDependencies": {
+    "@tscircuit/builder": "^1.0.5",
+    "@tscircuit/eagle-xml-converter": "^0.0.6",
+    "@tscircuit/react-fiber": "^0.0.4"
+  },
+  "dependencies": {
     "react-dom": "^18.2.0",
     "transformation-matrix": "^2.13.0"
   }
