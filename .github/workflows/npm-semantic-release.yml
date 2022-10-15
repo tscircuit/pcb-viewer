@@ -1,4 +1,4 @@
-jame: NPM Semantic Release
+name: NPM Semantic Release
 on:
   push:
     branches:
