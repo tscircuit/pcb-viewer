@@ -61,5 +61,4 @@ export type GridConfig = {
     top: number
     bottom: number
   }
-  label_size?: number
 }
