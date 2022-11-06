@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { createRoot } from "@tscircuit/react-fiber"
 import { AnyElement, createProjectBuilder } from "@tscircuit/builder"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"

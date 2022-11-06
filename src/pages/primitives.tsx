@@ -1,3 +1,4 @@
+import { drawGrid } from "lib/draw-grid"
 import React, { useEffect, useRef } from "react"
 import attinyEagle from "../assets/attiny-eagle"
 import { drawEagle } from "../lib/draw-eagle"
@@ -10,6 +11,10 @@ export default () => {
   useEffect(() => {
     const drawer = new Drawer(ref.current)
     drawer.clear()
+    drawGrid(drawer, {
+      spacing: 100,
+      view_window: { left: 0, bottom: 0, right: width, top: height },
+    })
     drawPrimitives(drawer, [
       {
         pcb_drawing_type: "circle",

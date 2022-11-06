@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react"
+import { Matrix } from "transformation-matrix"
 import { drawPrimitives } from "../lib/draw-primitives"
 import { Drawer } from "../lib/Drawer"
 import { Primitive } from "../lib/types"
@@ -6,19 +7,36 @@ import { Primitive } from "../lib/types"
 interface Props {
   primitives: Primitive[]
   defaultUnit?: string
+  transform?: Matrix
+  grid: GridConfig
+  width?: number
+  height?: number
 }
 
-export const CanvasPrimitiveRenderer = ({ primitives }: Props) => {
+export const CanvasPrimitiveRenderer = ({
+  primitives,
+  transform,
+  grid,
+  width = 500,
+  height = 500,
+}: Props) => {
   const ref = useRef()
-  let [width, height] = [500, 500]
   useEffect(() => {
     const drawer = new Drawer(ref.current)
+    if (transform) drawer.transform = transform
     drawer.clear()
     drawPrimitives(drawer, primitives)
   }, [primitives])
 
   return (
-    <div style={{ backgroundColor: "black" }}>
+    <div
+      style={{
+        backgroundColor: "black",
+        width,
+        height,
+        border: "1px solid #f00",
+      }}
+    >
       <canvas ref={ref} width={width} height={height}></canvas>
     </div>
   )

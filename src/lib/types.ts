@@ -52,3 +52,14 @@ export interface Circle extends PCBDrawingObject {
 }
 
 export type Primitive = Line | Text | Rect | Circle
+
+export type GridConfig = {
+  spacing: number
+  view_window: {
+    left: number
+    right: number
+    top: number
+    bottom: number
+  }
+  label_size?: number
+}

@@ -1,11 +1,11 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
     "start": "next dev",
-    "build": "tsup ./src",
+    "build": "tsup ./src --dts",
     "yalc": "npm run build && yalc push"
   },
   "files": [
@@ -16,21 +16,22 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^9.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
+    "@tscircuit/builder": "^1.0.11",
+    "@tscircuit/eagle-xml-converter": "^0.0.6",
+    "@tscircuit/react-fiber": "^0.0.4",
     "@types/node": "18.7.23",
     "@types/react": "^18.0.21",
     "next": "^12.3.1",
     "react": "^18.2.0",
     "tsup": "^6.2.3",
     "type-fest": "^3.0.0",
-    "typescript": "^4.8.4",
-    "@tscircuit/builder": "^1.0.5",
-    "@tscircuit/eagle-xml-converter": "^0.0.6",
-    "@tscircuit/react-fiber": "^0.0.4"
+    "typescript": "^4.8.4"
   },
   "peerDependencies": {
     "@tscircuit/builder": "^1.0.5",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
-    "@tscircuit/react-fiber": "^0.0.4"
+    "@tscircuit/react-fiber": "^0.0.4",
+    "react": "^18.2.0"
   },
   "dependencies": {
     "react-dom": "^18.2.0",

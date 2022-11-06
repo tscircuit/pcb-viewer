@@ -101,10 +101,11 @@ export class Drawer {
   }
 
   /* NOTE: This is not gerber compatible */
-  text(text: string, x: number, y: number) {
+  debugText(text: string, x: number, y: number) {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
 
+    this.ctx.font = `${scaleOnly(this.transform, 10)}px sans-serif`
     this.ctx.fillText(text, x$, y$)
   }
 

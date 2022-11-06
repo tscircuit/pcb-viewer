@@ -24,6 +24,28 @@ export const convertElementToPrimitives = (
         return []
       }
     }
+    case "pcb_plated_hole": {
+      const { x, y, hole_diameter, outer_diameter } = element
+
+      return [
+        {
+          pcb_drawing_type: "circle",
+          x,
+          y,
+          r: hole_diameter / 2,
+          // TODO support layer on pcb_plated_hole
+          layer: { name: "top" },
+        },
+        {
+          pcb_drawing_type: "circle",
+          x,
+          y,
+          r: outer_diameter / 2,
+          // TODO support layer on pcb_plated_hole
+          layer: { name: "top" },
+        },
+      ]
+    }
   }
 
   console.warn(`Unsupported element type: ${element.type}`)
