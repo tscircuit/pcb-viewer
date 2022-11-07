@@ -54,7 +54,7 @@ export const drawGrid = (drawer: Drawer, grid_config: GridConfig) => {
 
   for (let x = startx; x < right; x += spacing) {
     for (let y = starty; y < top; y += spacing) {
-      drawer.debugText(`${x}, ${y}`, x + px * 3, y + px * 3)
+      drawer.debugText(`${x}, ${y}`, x + px * 3, y - px * 3)
     }
   }
 }

@@ -96,7 +96,7 @@ export class Drawer {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
     this.ctx.beginPath()
-    this.ctx.arc(x$, y$, r$ * 2, 0, 2 * Math.PI)
+    this.ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
     this.ctx.fill()
     this.ctx.closePath()
   }

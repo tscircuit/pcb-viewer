@@ -32,7 +32,7 @@ export const convertElementToPrimitives = (
           pcb_drawing_type: "circle",
           x,
           y,
-          r: hole_diameter / 2,
+          r: outer_diameter / 2,
           // TODO support layer on pcb_plated_hole
           layer: { name: "top" },
         },
@@ -40,9 +40,9 @@ export const convertElementToPrimitives = (
           pcb_drawing_type: "circle",
           x,
           y,
-          r: outer_diameter / 2,
+          r: hole_diameter / 2,
           // TODO support layer on pcb_plated_hole
-          layer: { name: "top" },
+          layer: { name: "drill" },
         },
       ]
     }
