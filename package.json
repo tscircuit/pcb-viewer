@@ -1,11 +1,11 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
     "start": "next dev",
-    "build": "tsup ./src --dts",
+    "build": "tsup",
     "yalc": "npm run build && yalc push"
   },
   "files": [

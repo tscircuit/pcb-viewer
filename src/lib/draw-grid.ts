@@ -21,7 +21,12 @@ export const transformBounds = (
 export const drawGrid = (drawer: Drawer, grid_config: GridConfig) => {
   const { spacing, view_window } = grid_config
 
-  const transformed_window = transformBounds(drawer.transform, view_window)
+  const transformed_window = transformBounds(
+    inverse(drawer.transform),
+    view_window
+  )
+
+  console.log({ view_window, transformed_window })
 
   const { left, right, top, bottom } = transformed_window
 
