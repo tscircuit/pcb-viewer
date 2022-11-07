@@ -5,6 +5,7 @@ import {
   applyToPoint,
   translate,
   compose,
+  inverse,
 } from "transformation-matrix"
 import colors from "./colors"
 import { convertTextToLines } from "./convert-text-to-lines"
@@ -105,7 +106,7 @@ export class Drawer {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
 
-    this.ctx.font = `${scaleOnly(this.transform, 10)}px sans-serif`
+    this.ctx.font = `10px sans-serif`
     this.ctx.fillText(text, x$, y$)
   }
 
@@ -132,7 +133,7 @@ export class Drawer {
       ctx.fillStyle = "rgba(0,0,0,1)"
       ctx.strokeStyle = "rgba(0,0,0,1)"
     }
-    ctx.font = `${scaleOnly(transform, fontSize)}px sans-serif`
+    ctx.font = `${scaleOnly(inverse(transform), fontSize)}px sans-serif`
   }
 
   moveTo(x: number, y: number) {
