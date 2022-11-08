@@ -16,7 +16,7 @@ export const convertElementToPrimitives = (
             y,
             w: width,
             h: height,
-            layer: layer,
+            layer: layer || { name: "top" },
           },
         ]
       } else if (element.shape === "circle") {

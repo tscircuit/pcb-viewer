@@ -85,8 +85,8 @@ export class Drawer {
   }
 
   rect(x: number, y: number, w: number, h: number) {
-    const [x1$, y1$] = applyToPoint(this.transform, [x, y])
-    const [x2$, y2$] = applyToPoint(this.transform, [x + w, y + h])
+    const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
+    const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
     this.applyAperture()
     this.ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
   }
