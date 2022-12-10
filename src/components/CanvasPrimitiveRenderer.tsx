@@ -28,7 +28,7 @@ export const CanvasPrimitiveRenderer = ({
     drawer.clear()
     if (grid) drawGrid(drawer, grid)
     drawPrimitives(drawer, primitives)
-  }, [primitives])
+  }, [primitives, transform])
 
   return (
     <div
