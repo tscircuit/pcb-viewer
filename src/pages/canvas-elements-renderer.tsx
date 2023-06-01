@@ -1,0 +1,99 @@
+import { CanvasElementsRenderer } from "../components/CanvasElementsRenderer"
+import { identity, compose, scale, translate } from "transformation-matrix"
+import { useMouseMatrixTransform } from "use-mouse-matrix-transform"
+
+const defaultTransform = compose(translate(400, 300), scale(40, 40))
+
+export default () => {
+  const { ref: transformRef, transform } = useMouseMatrixTransform({
+    initialTransform: defaultTransform,
+  })
+
+  console.log(transform)
+
+  return (
+    <div
+      style={{ width: 300, height: 300, backgroundColor: "red" }}
+      ref={transformRef}
+    >
+      {/* <CanvasElementsRenderer
+        elements={
+          [
+            {
+              type: "pcb_component",
+              source_component_id: "generic_0",
+              pcb_component_id: "pcb_generic_component_0",
+              source: {
+                type: "source_component",
+                source_component_id: "generic_0",
+                name: "C1",
+              },
+            },
+            {
+              type: "pcb_smtpad",
+              shape: "rect",
+              x: -6.25,
+              y: 0,
+              width: 1,
+              height: 1,
+              pcb_component_id: "pcb_generic_component_0",
+              source: null,
+            },
+            {
+              type: "pcb_smtpad",
+              shape: "rect",
+              x: -4.75,
+              y: 0,
+              width: 1,
+              height: 1,
+              pcb_component_id: "pcb_generic_component_0",
+              source: null,
+            },
+            {
+              type: "pcb_component",
+              source_component_id: "generic_1",
+              pcb_component_id: "pcb_generic_component_1",
+              source: {
+                type: "source_component",
+                source_component_id: "generic_1",
+                name: "C2",
+              },
+            },
+            {
+              type: "pcb_smtpad",
+              shape: "rect",
+              x: 6.25,
+              y: 0,
+              width: 1,
+              height: 1,
+              pcb_component_id: "pcb_generic_component_1",
+              source: null,
+            },
+            {
+              type: "pcb_smtpad",
+              shape: "rect",
+              x: 7.75,
+              y: 0,
+              width: 1,
+              height: 1,
+              pcb_component_id: "pcb_generic_component_1",
+              source: null,
+            },
+          ] as any
+        }
+        height={300}
+        width={500}
+        transform={transform}
+        grid={{
+          spacing: 1,
+          view_window: {
+            left: 0,
+            right: 500,
+            top: 300,
+            bottom: 0,
+          },
+        }}
+      /> */}
+    </div>
+  )
+}
