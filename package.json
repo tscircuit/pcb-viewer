@@ -25,7 +25,8 @@
     "react": "^18.2.0",
     "tsup": "^6.2.3",
     "type-fest": "^3.0.0",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "use-mouse-matrix-transform": "^1.0.2"
   },
   "peerDependencies": {
     "@tscircuit/builder": "^1.0.5",
