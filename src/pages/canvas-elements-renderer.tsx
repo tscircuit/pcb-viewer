@@ -1,22 +1,17 @@
 import { CanvasElementsRenderer } from "../components/CanvasElementsRenderer"
-import { identity, compose, scale, translate } from "transformation-matrix"
+import { compose, scale, translate } from "transformation-matrix"
 import { useMouseMatrixTransform } from "use-mouse-matrix-transform"
 
-const defaultTransform = compose(translate(400, 300), scale(40, 40))
+const defaultTransform = compose(translate(100, 100), scale(40, 40))
 
 export default () => {
   const { ref: transformRef, transform } = useMouseMatrixTransform({
     initialTransform: defaultTransform,
   })
 
-  console.log(transform)
-
   return (
-    <div
-      style={{ width: 300, height: 300, backgroundColor: "red" }}
-      ref={transformRef}
-    >
-      {/* <CanvasElementsRenderer
+    <div ref={transformRef}>
+      <CanvasElementsRenderer
         elements={
           [
             {
@@ -32,7 +27,7 @@ export default () => {
             {
               type: "pcb_smtpad",
               shape: "rect",
-              x: -6.25,
+              x: 0,
               y: 0,
               width: 1,
               height: 1,
@@ -42,41 +37,11 @@ export default () => {
             {
               type: "pcb_smtpad",
               shape: "rect",
-              x: -4.75,
+              x: 2,
               y: 0,
               width: 1,
               height: 1,
               pcb_component_id: "pcb_generic_component_0",
-              source: null,
-            },
-            {
-              type: "pcb_component",
-              source_component_id: "generic_1",
-              pcb_component_id: "pcb_generic_component_1",
-              source: {
-                type: "source_component",
-                source_component_id: "generic_1",
-                name: "C2",
-              },
-            },
-            {
-              type: "pcb_smtpad",
-              shape: "rect",
-              x: 6.25,
-              y: 0,
-              width: 1,
-              height: 1,
-              pcb_component_id: "pcb_generic_component_1",
-              source: null,
-            },
-            {
-              type: "pcb_smtpad",
-              shape: "rect",
-              x: 7.75,
-              y: 0,
-              width: 1,
-              height: 1,
-              pcb_component_id: "pcb_generic_component_1",
               source: null,
             },
           ] as any
@@ -93,7 +58,7 @@ export default () => {
             bottom: 0,
           },
         }}
-      /> */}
+      />
     </div>
   )
 }
