@@ -15,13 +15,13 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: "16.x"
-          cache: "yarn"
+          cache: "npm"
       - name: Install dependencies
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: yarn install
+        run: npm install
       - name: Build
-        run: yarn build
+        run: npm run build
       - name: Release
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
