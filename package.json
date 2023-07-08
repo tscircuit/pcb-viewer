@@ -29,10 +29,10 @@
     "use-mouse-matrix-transform": "^1.0.4"
   },
   "peerDependencies": {
-    "@tscircuit/builder": "^1.0.5",
-    "@tscircuit/eagle-xml-converter": "^0.0.6",
-    "@tscircuit/react-fiber": "^0.0.4",
-    "react": "^18.2.0"
+    "@tscircuit/builder": "*",
+    "@tscircuit/eagle-xml-converter": "*",
+    "@tscircuit/react-fiber": "*",
+    "react": "*"
   },
   "dependencies": {
     "react-dom": "^18.2.0",
