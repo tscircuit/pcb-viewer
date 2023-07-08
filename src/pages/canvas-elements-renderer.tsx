@@ -1,3 +1,4 @@
+import React from "react"
 import { CanvasElementsRenderer } from "../components/CanvasElementsRenderer"
 import { compose, scale, translate } from "transformation-matrix"
 import { useMouseMatrixTransform } from "use-mouse-matrix-transform"
