@@ -25,7 +25,7 @@
     "@storybook/nextjs": "^7.0.26",
     "@storybook/react": "^7.0.26",
     "@storybook/testing-library": "^0.0.14-next.2",
-    "@tscircuit/builder": "^1.1.2",
+    "@tscircuit/builder": "^1.2.0",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/react-fiber": "^1.0.2",
     "@types/node": "18.7.23",

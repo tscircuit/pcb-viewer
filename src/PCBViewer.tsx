@@ -25,6 +25,8 @@ export const PCBViewer = ({ children }) => {
       .then((elements) => setElements(elements))
   }, [children])
 
+  console.log(elements)
+
   if (elements.length === 0) return null
 
   return (
