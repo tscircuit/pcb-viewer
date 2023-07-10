@@ -26,8 +26,6 @@ export const drawGrid = (drawer: Drawer, grid_config: GridConfig) => {
     view_window
   )
 
-  console.log({ view_window, transformed_window })
-
   const { left, right, top, bottom } = transformed_window
 
   const startx = Math.floor(left / spacing) * spacing
