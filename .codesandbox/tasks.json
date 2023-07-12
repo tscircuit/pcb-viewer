@@ -22,19 +22,9 @@
       "command": "npm run build",
       "runAtStart": false
     },
-    "yalc": {
-      "name": "yalc",
-      "command": "npm run yalc",
-      "runAtStart": false
-    },
     "storybook": {
       "name": "storybook",
       "command": "npm run storybook",
-      "runAtStart": false
-    },
-    "build-storybook": {
-      "name": "build-storybook",
-      "command": "npm run build-storybook",
       "runAtStart": false
     }
   }
