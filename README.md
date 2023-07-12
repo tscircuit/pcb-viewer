@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer.svg)](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer)
 
-[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com)
+[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com) &middot; [Open in CodeSandbox](https://codesandbox.io/p/github/tscircuit/pcb-viewer)
 
 Render PCBs w/ React
 
