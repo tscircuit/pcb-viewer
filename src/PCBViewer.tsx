@@ -17,13 +17,24 @@ export const PCBViewer = ({ children }) => {
     onSetTransform: setTransform,
   })
 
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     // TODO re-use project builder
     const projectBuilder = createProjectBuilder()
     createRoot()
       .render(children, projectBuilder as any)
-      .then((elements) => setElements(elements))
+      .then((elements) => {
+        setElements(elements)
+        setError(null)
+      })
+      .catch((e) => {
+        setError(e.toString())
+        console.log(e.toString())
+      })
   }, [children])
+
+  if (error) return <div style={{ color: "red" }}> {error} </div>
 
   if (elements.length === 0) return null
 
