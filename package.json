@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
-    "start": "next dev",
+    "start": "storybook dev -p 6006",
     "build": "tsup ./src/index.tsx --dts --sourcemap --outDir dist",
     "yalc": "npm run build && yalc push",
     "storybook": "storybook dev -p 6006",
