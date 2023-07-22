@@ -18,7 +18,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "baseUrl": "./src",
-    "jsx": "preserve"
+    "jsx": "react-jsx"
   },
   "include": [
     "next-env.d.ts",
