@@ -8,8 +8,13 @@ import { compose, scale, translate } from "transformation-matrix"
 
 const defaultTransform = compose(translate(400, 300), scale(40, 40))
 
-export const PCBViewer = ({ children }) => {
-  const [elements, setElements] = useState<Array<AnyElement>>([])
+type Props = {
+  children?: any
+  soup?: any
+}
+
+export const PCBViewer = ({ children, soup }: Props) => {
+  const [stateElements, setStateElements] = useState<Array<AnyElement>>([])
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransform] = useState(defaultTransform)
   const { ref: transformRef } = useMouseMatrixTransform({
@@ -20,12 +25,13 @@ export const PCBViewer = ({ children }) => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!children || children?.length === 0) return
     // TODO re-use project builder
     const projectBuilder = createProjectBuilder()
     createRoot()
       .render(children, projectBuilder as any)
       .then((elements) => {
-        setElements(elements)
+        setStateElements(elements)
         setError(null)
       })
       .catch((e) => {
@@ -35,6 +41,8 @@ export const PCBViewer = ({ children }) => {
   }, [children])
 
   if (error) return <div style={{ color: "red" }}> {error} </div>
+
+  const elements = soup ?? stateElements
 
   if (elements.length === 0) return null
 
