@@ -2,6 +2,7 @@
   "name": "@tscircuit/pcb-viewer",
   "version": "1.2.3",
   "main": "dist/index.js",
+  "repository": "tscircuit/pcb-viewer",
   "license": "MIT",
   "scripts": {
     "start": "storybook dev -p 6006",
