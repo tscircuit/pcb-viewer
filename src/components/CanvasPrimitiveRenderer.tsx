@@ -38,7 +38,6 @@ export const CanvasPrimitiveRenderer = ({
         backgroundColor: "black",
         width,
         height,
-        border: "1px solid #f00",
         position: "relative",
       }}
     >
