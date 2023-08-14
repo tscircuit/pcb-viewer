@@ -45,6 +45,7 @@
     "react": "*"
   },
   "dependencies": {
+    "react-supergrid": "^1.0.6",
     "transformation-matrix": "^2.13.0"
   }
 }
