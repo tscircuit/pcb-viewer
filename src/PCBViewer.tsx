@@ -28,9 +28,11 @@ export const PCBViewer = ({ children, soup }: Props) => {
   const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
-    const { center, width, height } = findBoundsAndCenter(
-      elements.filter((e) => e.type.startsWith("pcb_"))
+    const { center, width, height } = elements.some((e) =>
+      e.type.startsWith("pcb_")
     )
+      ? findBoundsAndCenter(elements.filter((e) => e.type.startsWith("pcb_")))
+      : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
     const scaleFactor = Math.min(
       (elmBounds.width ?? 0) / width,
       (elmBounds.height ?? 0) / height,
