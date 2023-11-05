@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "main": "dist/index.js",
   "repository": "tscircuit/pcb-viewer",
   "license": "MIT",
