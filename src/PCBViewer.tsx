@@ -5,6 +5,7 @@ import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
+import { findBoundsAndCenter } from "@tscircuit/builder"
 
 const defaultTransform = compose(translate(400, 300), scale(40, 40))
 
@@ -16,13 +17,34 @@ type Props = {
 export const PCBViewer = ({ children, soup }: Props) => {
   const [stateElements, setStateElements] = useState<Array<AnyElement>>([])
   const [ref, refDimensions] = useMeasure()
-  const [transform, setTransform] = useState(defaultTransform)
-  const { ref: transformRef } = useMouseMatrixTransform({
+  const [transform, setTransformInternal] = useState(defaultTransform)
+  const { ref: transformRef, setTransform } = useMouseMatrixTransform({
     transform,
-    onSetTransform: setTransform,
+    onSetTransform: setTransformInternal,
   })
 
   const [error, setError] = useState(null)
+
+  const resetTransform = () => {
+    const elmBounds =
+      refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
+    const { center, width, height } = findBoundsAndCenter(
+      elements.filter((e) => e.type.startsWith("pcb_"))
+    )
+    const scaleFactor = Math.min(
+      (elmBounds.width ?? 0) / width,
+      (elmBounds.height ?? 0) / height,
+      100
+    )
+    setTransform(
+      compose(
+        translate((elmBounds.width ?? 0) / 2, (elmBounds.height ?? 0) / 2),
+        // translate(100, 0),
+        scale(scaleFactor, scaleFactor, 0, 0),
+        translate(-center.x, -center.y)
+      )
+    )
+  }
 
   useEffect(() => {
     if (!children || children?.length === 0) return
@@ -39,6 +61,12 @@ export const PCBViewer = ({ children, soup }: Props) => {
         console.log(e.toString())
       })
   }, [children])
+
+  useEffect(() => {
+    if (refDimensions && refDimensions.width !== 0 && children) {
+      resetTransform()
+    }
+  }, [children, refDimensions])
 
   if (error) return <div style={{ color: "red" }}> {error} </div>
 
