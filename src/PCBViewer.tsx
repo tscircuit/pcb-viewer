@@ -12,9 +12,10 @@ const defaultTransform = compose(translate(400, 300), scale(40, 40))
 type Props = {
   children?: any
   soup?: any
+  height?: number
 }
 
-export const PCBViewer = ({ children, soup }: Props) => {
+export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
   const [stateElements, setStateElements] = useState<Array<AnyElement>>([])
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
@@ -82,14 +83,14 @@ export const PCBViewer = ({ children, soup }: Props) => {
         <CanvasElementsRenderer
           key={refDimensions.width}
           transform={transform}
-          height={600}
+          height={height}
           width={refDimensions.width}
           grid={{
             spacing: 1,
             view_window: {
               left: 0,
               right: refDimensions.width || 500,
-              top: 600,
+              top: height,
               bottom: 0,
             },
           }}
