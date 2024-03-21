@@ -17,6 +17,7 @@ export const convertElementToPrimitives = (
             w: width,
             h: height,
             layer: layer || { name: "top" },
+            _element: element,
           },
         ]
       } else if (element.shape === "circle") {
@@ -35,6 +36,7 @@ export const convertElementToPrimitives = (
           r: outer_diameter / 2,
           // TODO support layer on pcb_plated_hole
           layer: { name: "top" },
+          _element: element,
         },
         {
           pcb_drawing_type: "circle",
@@ -43,6 +45,9 @@ export const convertElementToPrimitives = (
           r: hole_diameter / 2,
           // TODO support layer on pcb_plated_hole
           layer: { name: "drill" },
+
+          // double highlights are annoying
+          // _element: element,
         },
       ]
     }
@@ -76,6 +81,6 @@ export const convertElementToPrimitives = (
     }
   }
 
-  console.warn(`Unsupported element type: ${element.type}`)
+  // console.warn(`Unsupported element type: ${element.type}`)
   return []
 }

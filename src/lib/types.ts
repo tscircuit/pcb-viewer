@@ -1,3 +1,5 @@
+import type { AnyElement } from "@tscircuit/builder"
+
 export type AlignString =
   | "top-left"
   | "top-center"
@@ -16,6 +18,7 @@ export interface LayerRef {
 export interface PCBDrawingObject {
   layer: LayerRef
   unit?: string
+  _element?: AnyElement
 }
 
 export interface Line extends PCBDrawingObject {
