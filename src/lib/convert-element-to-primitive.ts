@@ -2,8 +2,27 @@ import { AnyElement } from "@tscircuit/builder"
 import { Primitive } from "./types"
 
 export const convertElementToPrimitives = (
-  element: AnyElement
+  element: AnyElement,
+  allElements: AnyElement[]
 ): Primitive[] => {
+  const _parent_pcb_component =
+    "pcb_component_id" in element
+      ? allElements.find(
+          (elm) =>
+            elm.type === "pcb_component" &&
+            elm.pcb_component_id === element.pcb_component_id
+        )
+      : undefined
+  const _parent_source_component =
+    _parent_pcb_component && "source_component_id" in _parent_pcb_component
+      ? allElements.find(
+          (elm) =>
+            elm.type === "source_component" &&
+            elm.source_component_id ===
+              _parent_pcb_component.source_component_id
+        )
+      : undefined
+
   switch (element.type) {
     case "pcb_smtpad": {
       if (element.shape === "rect") {
@@ -18,6 +37,8 @@ export const convertElementToPrimitives = (
             h: height,
             layer: layer || { name: "top" },
             _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
           },
         ]
       } else if (element.shape === "circle") {
@@ -37,6 +58,8 @@ export const convertElementToPrimitives = (
           // TODO support layer on pcb_plated_hole
           layer: { name: "top" },
           _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
         },
         {
           pcb_drawing_type: "circle",

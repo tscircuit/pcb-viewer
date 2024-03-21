@@ -19,6 +19,8 @@ export interface PCBDrawingObject {
   layer: LayerRef
   unit?: string
   _element?: AnyElement
+  _parent_pcb_component?: AnyElement
+  _parent_source_component?: AnyElement
 }
 
 export interface Line extends PCBDrawingObject {

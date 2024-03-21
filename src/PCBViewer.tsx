@@ -94,7 +94,10 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
               bottom: 0,
             },
           }}
-          elements={elements.filter((elm) => elm.type.startsWith("pcb_"))}
+          elements={elements.filter(
+            (elm) =>
+              elm.type.startsWith("pcb_") || elm.type.startsWith("source_")
+          )}
         />
       </div>
     </div>
