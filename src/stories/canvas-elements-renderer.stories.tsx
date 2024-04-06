@@ -93,9 +93,7 @@ const exampleSoup = [
     y: 0,
     width: 0.8,
     height: 1.2,
-    layer: {
-      name: "top",
-    },
+    layer: "top",
     pcb_component_id: "pcb_component_simple_resistor_0",
     port_hints: ["left", "1"],
     pcb_port_id: "pcb_port_0",
@@ -108,9 +106,7 @@ const exampleSoup = [
     y: 0,
     width: 0.8,
     height: 1.2,
-    layer: {
-      name: "top",
-    },
+    layer: "top",
     pcb_component_id: "pcb_component_simple_resistor_0",
     port_hints: ["right", "2"],
     pcb_port_id: "pcb_port_1",
