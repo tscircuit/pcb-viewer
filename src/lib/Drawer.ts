@@ -27,12 +27,16 @@ export const LAYER_NAME_TO_COLOR = {
 
   // Common eagle names
   top: colors.board.copper.f,
+  bottom: colors.board.copper.b,
+  drill: colors.board.anchor,
   keepout: colors.board.background,
   tkeepout: colors.board.b_crtyd,
   tplace: colors.board.b_silks,
 
   ...colors.board,
 }
+
+export const DEFAULT_DRAW_ORDER = ["top", "bottom", "drill"]
 
 export const FILL_TYPES = {
   0: "Empty",
@@ -55,17 +59,20 @@ export const FILL_TYPES = {
 
 export class Drawer {
   ctx: CanvasRenderingContext2D
+  // @ts-ignore this.equip({}) handles constructor assignment
   aperture: Aperture
   transform: Matrix
   lastPoint: { x: number; y: number }
 
   constructor(public canvas: HTMLCanvasElement) {
     this.canvas = canvas
-    this.ctx = canvas.getContext("2d")
+    this.ctx = canvas.getContext("2d")!
     this.transform = identity()
     // positive is up (cartesian)
     this.transform.d *= -1
     this.transform = compose(this.transform, translate(0, -500))
+    this.lastPoint = { x: 0, y: 0 }
+    this.equip({})
   }
 
   clear() {
@@ -120,8 +127,8 @@ export class Drawer {
         color[0] === "#" || color.startsWith("rgb")
           ? color
           : LAYER_NAME_TO_COLOR[color.toLowerCase()]
-          ? LAYER_NAME_TO_COLOR[color.toLowerCase()]
-          : null
+            ? LAYER_NAME_TO_COLOR[color.toLowerCase()]
+            : null
       if (colorString === null) {
         console.warn(`Color mapping for "${color}" not found`)
         colorString = "white"

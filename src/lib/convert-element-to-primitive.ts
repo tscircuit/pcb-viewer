@@ -1,9 +1,9 @@
-import { AnyElement } from "@tscircuit/builder"
+import { Soup } from "@tscircuit/builder"
 import { Primitive } from "./types"
 
 export const convertElementToPrimitives = (
-  element: AnyElement,
-  allElements: AnyElement[]
+  element: Soup.AnySoupElement,
+  allElements: Soup.AnySoupElement[]
 ): Primitive[] => {
   const _parent_pcb_component =
     "pcb_component_id" in element
@@ -35,16 +35,44 @@ export const convertElementToPrimitives = (
             y,
             w: width,
             h: height,
-            layer: layer || { name: "top" },
+            layer: layer || "top",
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
           },
         ]
       } else if (element.shape === "circle") {
-        console.warn(`Unsupported shape: ${element.shape} for pcb_smtpad`)
-        return []
+        const { x, y, radius, layer } = element
+        return [
+          {
+            pcb_drawing_type: "circle",
+            x,
+            y,
+            r: radius,
+            layer: layer || "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+          },
+        ]
       }
+    }
+    case "pcb_hole": {
+      const { x, y, hole_diameter } = element as Soup.PCBHole
+      console.log("hole", element)
+
+      return [
+        {
+          pcb_drawing_type: "circle",
+          x,
+          y,
+          r: hole_diameter / 2,
+          layer: "drill",
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+        },
+      ]
     }
     case "pcb_plated_hole": {
       const { x, y, hole_diameter, outer_diameter } = element
@@ -102,6 +130,8 @@ export const convertElementToPrimitives = (
 
       return primitives
     }
+    // The builder currently outputs these as smtpads and holes, so pcb_via isn't
+    // used, but that maybe should be changed
     case "pcb_via": {
       const { x, y, outer_diameter, hole_diameter, from_layer, to_layer } =
         element
