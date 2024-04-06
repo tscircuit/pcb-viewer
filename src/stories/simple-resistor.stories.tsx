@@ -37,13 +37,13 @@ export const SimpleResistorsOffCenter = () => {
           pcb_x={5}
           pcb_y={5}
         />
-        <resistor
+        {/* <resistor
           name="R2"
           footprint="0805"
           resistance="10k"
           pcb_x={20}
           pcb_y={20}
-        />
+        /> */}
       </PCBViewer>
     </div>
   )

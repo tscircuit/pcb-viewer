@@ -11,9 +11,7 @@ export type AlignString =
   | "bottom-center"
   | "bottom-right"
 
-export interface LayerRef {
-  name: string
-}
+export type LayerRef = string
 
 export interface PCBDrawingObject {
   layer: LayerRef

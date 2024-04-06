@@ -6,7 +6,7 @@ export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
     size: line.width,
     shape: line.squareCap ? "square" : "circle",
-    color: line.layer.name,
+    color: line.layer,
   })
   drawer.moveTo(line.x1, line.y1)
   drawer.lineTo(line.x2, line.y2)
@@ -15,7 +15,7 @@ export const drawLine = (drawer: Drawer, line: Line) => {
 export const drawText = (drawer: Drawer, text: Text) => {
   drawer.equip({
     fontSize: text.size,
-    color: text.layer.name,
+    color: text.layer,
   })
   // TODO handle align
   if (text.align && text.align !== "top-left") {
@@ -33,7 +33,7 @@ export const drawText = (drawer: Drawer, text: Text) => {
 
 export const drawRect = (drawer: Drawer, rect: Rect) => {
   drawer.equip({
-    color: rect.layer.name,
+    color: rect.layer,
   })
   if (rect.align && rect.align !== "center") {
     console.warn("Unhandled rect align", rect.align)
@@ -43,7 +43,7 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
 
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
   drawer.equip({
-    color: circle.layer.name,
+    color: circle.layer,
   })
   drawer.circle(circle.x, circle.y, circle.r)
 }

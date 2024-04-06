@@ -56,7 +56,7 @@ export const convertElementToPrimitives = (
           y,
           r: outer_diameter / 2,
           // TODO support layer on pcb_plated_hole
-          layer: { name: "top" },
+          layer: "top",
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
@@ -67,7 +67,7 @@ export const convertElementToPrimitives = (
           y,
           r: hole_diameter / 2,
           // TODO support layer on pcb_plated_hole
-          layer: { name: "drill" },
+          layer: "drill",
 
           // double highlights are annoying
           // _element: element,
@@ -101,6 +101,31 @@ export const convertElementToPrimitives = (
       }
 
       return primitives
+    }
+    case "pcb_via": {
+      const { x, y, outer_diameter, hole_diameter, from_layer, to_layer } =
+        element
+
+      return [
+        {
+          pcb_drawing_type: "circle",
+          x,
+          y,
+          r: outer_diameter / 2,
+          layer: from_layer,
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+        },
+        {
+          pcb_drawing_type: "circle",
+          x,
+          y,
+          r: hole_diameter / 2,
+          layer: to_layer,
+          // _element: element, // Avoiding double highlight for the via hole
+        },
+      ]
     }
   }
 

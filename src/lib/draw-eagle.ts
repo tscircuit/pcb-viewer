@@ -1,4 +1,4 @@
-import { EagleJSON, Layer } from "@tscircuit/eagle-xml-converter"
+import type { EagleJSON, Layer } from "@tscircuit/eagle-xml-converter"
 import {
   compose,
   fromDefinition,

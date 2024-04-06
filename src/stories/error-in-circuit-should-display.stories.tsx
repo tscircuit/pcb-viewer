@@ -5,6 +5,7 @@ export const ErrorInCircuit = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer>
+        {/* @ts-expect-error */}
         <resistor footprint="some-invalid-name" />
       </PCBViewer>
     </div>

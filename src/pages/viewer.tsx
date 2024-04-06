@@ -2,15 +2,15 @@ import { GroupBuilder } from "@tscircuit/builder"
 import React, { useEffect, useRef } from "react"
 import { PCBViewer } from "../PCBViewer"
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      custom: {
-        onRender: (gb: GroupBuilder) => any
-      }
-    }
-  }
-}
+// declare global {
+//   namespace JSX {
+//     interface IntrinsicElements {
+//       custom: {
+//         onRender: (gb: GroupBuilder) => any
+//       }
+//     }
+//   }
+// }
 
 export default () => {
   return (

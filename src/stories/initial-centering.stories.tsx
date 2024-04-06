@@ -6,12 +6,14 @@ export const SpacedResistors = () => {
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer>
         <resistor
+          name="R1"
           pcb_x="500mm"
           pcb_y="500mm"
           footprint="0805"
           resistance="10k"
         />
         <resistor
+          name="R2"
           pcb_x="540mm"
           pcb_y="510mm"
           footprint="0805"

@@ -1,7 +1,5 @@
 import { drawGrid } from "lib/draw-grid"
 import React, { useEffect, useRef } from "react"
-import attinyEagle from "../assets/attiny-eagle"
-import { drawEagle } from "../lib/draw-eagle"
 import { drawPrimitives } from "../lib/draw-primitives"
 import { Drawer } from "../lib/Drawer"
 
@@ -21,7 +19,7 @@ export default () => {
         x: 100,
         y: 100,
         r: 50,
-        layer: { name: "top" },
+        layer: "top",
       },
       {
         pcb_drawing_type: "rect",
@@ -29,7 +27,7 @@ export default () => {
         y: 270,
         w: 100,
         h: 100,
-        layer: { name: "top" },
+        layer: "top",
       },
       {
         pcb_drawing_type: "text",
@@ -37,7 +35,7 @@ export default () => {
         y: 210,
         size: 45,
         text: "Hello World1",
-        layer: { name: "top" },
+        layer: "top",
       },
       {
         pcb_drawing_type: "line",
@@ -46,7 +44,7 @@ export default () => {
         x2: 100,
         y2: 400,
         width: 10,
-        layer: { name: "top" },
+        layer: "top",
       },
       {
         pcb_drawing_type: "line",
@@ -56,7 +54,7 @@ export default () => {
         y2: 450,
         width: 10,
         squareCap: true,
-        layer: { name: "top" },
+        layer: "top",
       },
     ])
   }, [])

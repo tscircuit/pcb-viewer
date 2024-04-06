@@ -9,7 +9,7 @@ const ConnectedResistors = () => {
           name="R1"
           pcb_x={-4}
           pcb_y={0}
-          footprint="1206"
+          footprint="1210"
           resistance="10kohm"
         />
         <resistor
