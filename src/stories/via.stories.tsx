@@ -22,7 +22,7 @@ export const ViaExample: React.FC = () => {
 }
 
 const meta: Meta<typeof ViaExample> = {
-  title: "PCB/Via",
+  title: "Via",
   component: ViaExample,
 }
 
