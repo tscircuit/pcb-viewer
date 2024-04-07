@@ -152,8 +152,20 @@ export const convertElementToPrimitives = (
           x,
           y,
           r: hole_diameter / 2,
+          layer: "drill",
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+        },
+        {
+          pcb_drawing_type: "circle",
+          x,
+          y,
+          r: outer_diameter / 2,
           layer: to_layer,
-          // _element: element, // Avoiding double highlight for the via hole
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
         },
       ]
     }
