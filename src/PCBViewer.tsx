@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react"
 import { createRoot } from "@tscircuit/react-fiber"
-import { AnyElement, createProjectBuilder } from "@tscircuit/builder"
+import {
+  AnyElement,
+  AnySoupElement,
+  createProjectBuilder,
+} from "@tscircuit/builder"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"
@@ -73,7 +77,7 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
 
   if (error) return <div style={{ color: "red" }}> {error} </div>
 
-  const elements = soup ?? stateElements
+  const elements: AnySoupElement[] = soup ?? stateElements
 
   if (elements.length === 0) return null
 

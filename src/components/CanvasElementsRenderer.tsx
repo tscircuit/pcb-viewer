@@ -20,7 +20,6 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     const primitives = props.elements.flatMap((elm) =>
       convertElementToPrimitives(elm, props.elements)
     )
-    console.log(primitives)
     return primitives
   }, [props.elements])
   return (
