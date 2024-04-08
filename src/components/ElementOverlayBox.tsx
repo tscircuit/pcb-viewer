@@ -49,14 +49,6 @@ export const HighlightedPrimitiveBoxWithText = ({
   const [finalState, setFinalState] = useState(false)
 
   useEffect(() => {
-    // let a = false
-    // const interval = setInterval(() => {
-    //   setFinalState(!a)
-    //   a = !a
-    // }, 500)
-    // return () => {
-    //   clearInterval(interval)
-    // }
     setTimeout(() => {
       setFinalState(true)
     }, 100)
@@ -117,41 +109,11 @@ export const ElementOverlayBox = ({
 }: {
   highlightedPrimitives: HighlightedPrimitive[]
 }) => {
-  console.log({ highlightedPrimitives })
   return (
     <div style={containerStyle}>
       {highlightedPrimitives.map((primitive, i) => (
         <HighlightedPrimitiveBoxWithText key={i} primitive={primitive} />
       ))}
-      {/* {highlightedPrimitives.map((primitive, i) => (
-        <div
-          key={`${i}-box`}
-          style={{
-            position: "absolute",
-            left: primitive.screen_x - primitive.screen_w / 2 - 8,
-            top: primitive.screen_y - primitive.screen_h / 2 - 8,
-            width: primitive.screen_w + 16,
-            height: primitive.screen_h + 16,
-            border: "1px solid red",
-          }}
-        />
-      ))}
-      {highlightedPrimitives.map((primitive, i) => (
-        <div
-          key={`${i}-text`}
-          style={{
-            position: "absolute",
-            left: primitive.screen_x - primitive.screen_w / 2 - 8,
-            top: primitive.screen_y - primitive.screen_h / 2 - 8,
-            whiteSpace: "pre-line",
-            width: Math.max(100, primitive.screen_w + 16),
-          }}
-        >
-          <div style={{ position: "absolute", left: 0, bottom: 0 }}>
-            {getTextForHighlightedPrimitive(primitive)}
-          </div>
-        </div>
-      ))} */}
     </div>
   )
 }
