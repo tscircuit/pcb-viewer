@@ -19,8 +19,10 @@ export const MouseElementTracker = ({
   const highlightedPrimitives = useMemo(() => {
     const highlightedPrimitives: HighlightedPrimitive[] = []
     for (const primitive of mousedPrimitives) {
+      if (primitive._element?.type === "pcb_via") continue
+      if (primitive._element?.type === "pcb_component") continue
       const screenPos = applyToPoint(
-        transform,
+        transform!,
         primitive as { x: number; y: number }
       )
       const w =
@@ -28,17 +30,30 @@ export const MouseElementTracker = ({
       const h =
         "h" in primitive ? primitive.h : "r" in primitive ? primitive.r * 2 : 0
       const screenSize = {
-        w: w * transform.d,
-        h: h * transform.d,
+        w: w * transform!.d,
+        h: h * transform!.d,
       }
+
+      // FANCY: If 2+ highlighted primitives inhabit the same space, give
+      // them an incrementing same_space_index
+      let same_space_index = highlightedPrimitives.filter(
+        (hp) =>
+          screenPos.x === hp.screen_x &&
+          screenPos.y === hp.screen_y &&
+          screenSize.w === hp.screen_w &&
+          screenSize.h === hp.screen_h
+      ).length
+
       highlightedPrimitives.push({
         ...(primitive as any),
         screen_x: screenPos.x,
         screen_y: screenPos.y,
         screen_w: screenSize.w,
         screen_h: screenSize.h,
+        same_space_index,
       })
     }
+
     return highlightedPrimitives
   }, [mousedPrimitives, transform])
   return (
@@ -88,6 +103,7 @@ export type HighlightedPrimitive = {
   y: number
   w: number
   h: number
+  same_space_index?: number
   _element: AnyElement
   _parent_pcb_component?: AnyElement
   _parent_source_component?: AnyElement
