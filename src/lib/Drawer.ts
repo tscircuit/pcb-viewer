@@ -124,10 +124,10 @@ export class Drawer {
     ctx.lineCap = "round"
     if (mode === "add") {
       let colorString =
-        color[0] === "#" || color.startsWith("rgb")
+        color?.[0] === "#" || color?.startsWith("rgb")
           ? color
-          : LAYER_NAME_TO_COLOR[color.toLowerCase()]
-            ? LAYER_NAME_TO_COLOR[color.toLowerCase()]
+          : LAYER_NAME_TO_COLOR[color?.toLowerCase()]
+            ? LAYER_NAME_TO_COLOR[color?.toLowerCase()]
             : null
       if (colorString === null) {
         console.warn(`Color mapping for "${color}" not found`)
