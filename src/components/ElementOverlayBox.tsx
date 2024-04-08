@@ -98,8 +98,9 @@ export const HighlightedPrimitiveBoxWithText = ({
           marginLeft: finalState ? `${-sip * si}px` : 0,
           marginTop: finalState ? `${-sip * si}px` : 0,
           border: `1px solid ${color}`,
+          opacity: finalState ? 1 : si === 0 ? 1 : 0,
           transition:
-            "width 0.2s, height 0.2s, margin-left 0.2s, margin-top 0.2s",
+            "width 0.2s, height 0.2s, margin-left 0.2s, margin-top 0.2s, opacity 0.2s",
         }}
       >
         <div
@@ -110,6 +111,7 @@ export const HighlightedPrimitiveBoxWithText = ({
             marginLeft: finalState ? `${-sip * si}px` : 0,
             marginBottom: finalState ? 0 : -sip * si,
             transition: "margin-left 0.2s, margin-bottom 0.2s",
+            lineHeight: "0.8em",
           }}
         >
           {getTextForHighlightedPrimitive(primitive)}
