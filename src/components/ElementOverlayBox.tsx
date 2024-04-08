@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { HighlightedPrimitive } from "./MouseElementTracker"
+import colors from "lib/colors"
 
 const containerStyle = {
   position: "absolute",
@@ -41,6 +42,11 @@ export const getTextForHighlightedPrimitive = (
   }
 }
 
+const layerColorHightlightMap = {
+  top: "red",
+  bottom: "aqua",
+}
+
 export const HighlightedPrimitiveBoxWithText = ({
   primitive,
 }: {
@@ -64,6 +70,12 @@ export const HighlightedPrimitiveBoxWithText = ({
   const si = primitive.same_space_index ?? 0
   const sip = 26
 
+  const color: string =
+    layerColorHightlightMap[
+      (primitive as any)?._element
+        ?.layer as keyof typeof layerColorHightlightMap
+    ] ?? "red"
+
   return (
     <div
       style={{
@@ -72,6 +84,7 @@ export const HighlightedPrimitiveBoxWithText = ({
         top: y - h / 2 - 8,
         width: w + 16,
         height: h + 16,
+        color,
       }}
     >
       <div
@@ -84,7 +97,7 @@ export const HighlightedPrimitiveBoxWithText = ({
           height: finalState ? `calc(100% + ${sip * 2 * si}px)` : "100%",
           marginLeft: finalState ? `${-sip * si}px` : 0,
           marginTop: finalState ? `${-sip * si}px` : 0,
-          border: "1px solid red",
+          border: `1px solid ${color}`,
           transition:
             "width 0.2s, height 0.2s, margin-left 0.2s, margin-top 0.2s",
         }}
@@ -93,8 +106,10 @@ export const HighlightedPrimitiveBoxWithText = ({
           style={{
             position: "absolute",
             left: 0,
-            bottom: finalState ? h + 20 + sip * si : h + 20,
-            transition: "left 0.2s, bottom 0.2s",
+            bottom: h + 20 + sip * si,
+            marginLeft: finalState ? `${-sip * si}px` : 0,
+            marginBottom: finalState ? 0 : -sip * si,
+            transition: "margin-left 0.2s, margin-bottom 0.2s",
           }}
         >
           {getTextForHighlightedPrimitive(primitive)}
