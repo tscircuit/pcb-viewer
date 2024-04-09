@@ -59,7 +59,6 @@ export const convertElementToPrimitives = (
     }
     case "pcb_hole": {
       const { x, y, hole_diameter } = element as Soup.PCBHole
-      console.log("hole", element)
 
       return [
         {
