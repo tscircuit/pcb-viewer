@@ -119,7 +119,8 @@ export class Drawer {
 
   applyAperture() {
     const { ctx, transform, aperture } = this
-    const { size, mode, color, fontSize } = aperture
+    let { size, mode, color, fontSize } = aperture
+    if (!color) color = "undefined"
     ctx.lineWidth = scaleOnly(transform, size)
     ctx.lineCap = "round"
     if (mode === "add") {
