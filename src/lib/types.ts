@@ -29,6 +29,7 @@ export interface Line extends PCBDrawingObject {
   y2: number
   squareCap?: boolean
   width: number
+  zoomIndependent?: boolean
 }
 export interface Text extends PCBDrawingObject {
   pcb_drawing_type: "text"

@@ -23,6 +23,7 @@ export const LAYER_NAME_TO_COLOR = {
   red: "red",
   black: "black",
   green: "green",
+  board: "white",
   // TODO more builtin html colors
 
   // Common eagle names

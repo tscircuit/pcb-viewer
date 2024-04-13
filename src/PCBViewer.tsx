@@ -60,6 +60,7 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
     createRoot()
       .render(children, projectBuilder as any)
       .then((elements) => {
+        console.log({ elements })
         setStateElements(elements)
         setError(null)
       })

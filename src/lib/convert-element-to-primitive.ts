@@ -24,6 +24,55 @@ export const convertElementToPrimitives = (
       : undefined
 
   switch (element.type) {
+    case "pcb_board": {
+      const { width, height, center } = element
+      return [
+        {
+          pcb_drawing_type: "line",
+          x1: center.x - width / 2,
+          y1: center.y - height / 2,
+          x2: center.x + width / 2,
+          y2: center.y - height / 2,
+          width: 1, // Add the required width property
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+        {
+          pcb_drawing_type: "line",
+          x1: center.x - width / 2,
+          y1: center.y + height / 2,
+          x2: center.x + width / 2,
+          y2: center.y + height / 2,
+          width: 1, // Add the required width property
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+        {
+          pcb_drawing_type: "line",
+          x1: center.x - width / 2,
+          y1: center.y - height / 2,
+          x2: center.x - width / 2,
+          y2: center.y + height / 2,
+          width: 1, // Add the required width property
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+        {
+          pcb_drawing_type: "line",
+          x1: center.x + width / 2,
+          y1: center.y - height / 2,
+          x2: center.x + width / 2,
+          y2: center.y + height / 2,
+          width: 1, // Add the required width property
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+      ]
+    }
     case "pcb_smtpad": {
       if (element.shape === "rect") {
         const { shape, x, y, width, height, layer } = element

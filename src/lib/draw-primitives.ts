@@ -4,7 +4,7 @@ import { convertTextToLines } from "./convert-text-to-lines"
 
 export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
-    size: line.width,
+    size: line.zoomIndependent ? line.width / drawer.transform.a : line.width,
     shape: line.squareCap ? "square" : "circle",
     color: line.layer,
   })
