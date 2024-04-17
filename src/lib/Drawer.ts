@@ -28,6 +28,15 @@ export const LAYER_NAME_TO_COLOR = {
 
   // Common eagle names
   top: colors.board.copper.f,
+  inner1: colors.board.copper.in1,
+  inner2: colors.board.copper.in2,
+  inner3: colors.board.copper.in3,
+  inner4: colors.board.copper.in4,
+  inner5: colors.board.copper.in5,
+  inner6: colors.board.copper.in6,
+  inner7: colors.board.copper.in7,
+  inner8: colors.board.copper.in8,
+
   bottom: colors.board.copper.b,
   drill: colors.board.anchor,
   keepout: colors.board.background,
