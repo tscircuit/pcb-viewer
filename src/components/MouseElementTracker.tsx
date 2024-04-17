@@ -107,6 +107,7 @@ export type HighlightedPrimitive = {
   _element: AnyElement
   _parent_pcb_component?: AnyElement
   _parent_source_component?: AnyElement
+  _source_port?: AnyElement
   screen_x: number
   screen_y: number
   screen_w: number

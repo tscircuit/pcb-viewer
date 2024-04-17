@@ -19,6 +19,7 @@ export interface PCBDrawingObject {
   _element?: AnyElement
   _parent_pcb_component?: AnyElement
   _parent_source_component?: AnyElement
+  _source_port?: AnyElement
 }
 
 export interface Line extends PCBDrawingObject {

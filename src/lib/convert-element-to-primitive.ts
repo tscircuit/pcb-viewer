@@ -22,6 +22,14 @@ export const convertElementToPrimitives = (
               _parent_pcb_component.source_component_id
         )
       : undefined
+  const _source_port =
+    "source_port_id" in element
+      ? allElements.find(
+          (e) =>
+            e.type === "source_port" &&
+            e.source_port_id === element.source_port_id
+        )
+      : undefined
 
   switch (element.type) {
     case "pcb_board": {
@@ -88,6 +96,7 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
+            _source_port,
           },
         ]
       } else if (element.shape === "circle") {
@@ -102,6 +111,7 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
+            _source_port,
           },
         ]
       }
@@ -136,6 +146,7 @@ export const convertElementToPrimitives = (
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
+          _source_port,
         },
         {
           pcb_drawing_type: "circle",
