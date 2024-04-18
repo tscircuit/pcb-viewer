@@ -47,6 +47,8 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
     right: Math.max(screenDStart.x, screenDEnd.x),
     top: Math.min(screenDStart.y, screenDEnd.y),
     bottom: Math.max(screenDStart.y, screenDEnd.y),
+    flipX: screenDStart.x > screenDEnd.x,
+    flipY: screenDStart.y > screenDEnd.y,
     width: 0,
     height: 0,
   }
@@ -69,7 +71,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
           setDEnd({ x: rwPoint.x, y: rwPoint.y })
         }
       }}
-      onClick={() => {
+      onMouseDown={() => {
         if (dimensionToolStretching) {
           setDimensionToolStretching(false)
         } else if (dimensionToolVisible) {
@@ -84,23 +86,52 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
             style={{
               position: "absolute",
               left: arrowScreenBounds.left,
-              right: arrowScreenBounds.right,
+              width: arrowScreenBounds.width,
               textAlign: "center",
-              top: screenDStart.y,
+              top: screenDStart.y + 2,
               color: "red",
-              backgroundColor: "rgba(255,0,255,0.1)",
+              mixBlendMode: "difference",
+              pointerEvents: "none",
+              marginTop: arrowScreenBounds.flipY ? 0 : -20,
               fontSize: 12,
               fontFamily: "sans-serif",
               zIndex: 1000,
             }}
           >
-            {Math.abs(screenDStart.y - screenDEnd.y).toFixed(2)}
+            {Math.abs(dStart.x - dEnd.x).toFixed(2)}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: screenDEnd.x,
+              height: arrowScreenBounds.height,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              top: arrowScreenBounds.top,
+              color: "red",
+              pointerEvents: "none",
+              mixBlendMode: "difference",
+              fontSize: 12,
+              fontFamily: "sans-serif",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                marginLeft: arrowScreenBounds.flipX ? "-100%" : 4,
+                paddingRight: 4,
+              }}
+            >
+              {Math.abs(dStart.y - dEnd.y).toFixed(2)}
+            </div>
           </div>
           <svg
             style={{
               position: "absolute",
               left: 0,
               top: 0,
+              pointerEvents: "none",
               mixBlendMode: "difference",
               zIndex: 1000,
             }}
@@ -150,6 +181,24 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
               stroke="red"
             />
           </svg>
+          <div
+            style={{
+              right: 0,
+              bottom: 0,
+              position: "absolute",
+              color: "red",
+              fontFamily: "sans-serif",
+              fontSize: 12,
+              margin: 4,
+            }}
+          >
+            ({dStart.x.toFixed(2)},{dStart.y.toFixed(2)})<br />(
+            {dEnd.x.toFixed(2)},{dEnd.y.toFixed(2)})<br />
+            dist:{" "}
+            {Math.sqrt(
+              Math.pow(dEnd.x - dStart.x, 2) + Math.pow(dEnd.y - dStart.y, 2),
+            ).toFixed(2)}
+          </div>
         </>
       )}
     </div>
