@@ -6,6 +6,7 @@ import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { Matrix } from "transformation-matrix"
 import { GridConfig } from "lib/types"
 import { MouseElementTracker } from "./MouseElementTracker"
+import { DimensionOverlay } from "./DimensionOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnyElement[]
@@ -18,19 +19,21 @@ export interface CanvasElementsRendererProps {
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const primitives = useMemo(() => {
     const primitives = props.elements.flatMap((elm) =>
-      convertElementToPrimitives(elm, props.elements)
+      convertElementToPrimitives(elm, props.elements),
     )
     return primitives
   }, [props.elements])
   return (
     <MouseElementTracker transform={props.transform} primitives={primitives}>
-      <CanvasPrimitiveRenderer
-        transform={props.transform}
-        primitives={primitives}
-        width={props.width}
-        height={props.height}
-        grid={props.grid}
-      />
+      <DimensionOverlay transform={props.transform!}>
+        <CanvasPrimitiveRenderer
+          transform={props.transform}
+          primitives={primitives}
+          width={props.width}
+          height={props.height}
+          grid={props.grid}
+        />
+      </DimensionOverlay>
     </MouseElementTracker>
   )
 }
