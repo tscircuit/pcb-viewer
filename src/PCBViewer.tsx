@@ -55,19 +55,20 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
 
   useEffect(() => {
     if (!children || children?.length === 0) return
-    // TODO re-use project builder
-    const projectBuilder = createProjectBuilder()
-    createRoot()
-      .render(children, projectBuilder as any)
-      .then((elements) => {
-        console.log({ elements })
-        setStateElements(elements)
-        setError(null)
-      })
-      .catch((e) => {
-        setError(e.toString())
-        console.log(e.toString())
-      })
+    async function doRender() {
+      // TODO re-use project builder
+      const projectBuilder = createProjectBuilder()
+      await createRoot()
+        .render(children, projectBuilder as any)
+        .then((elements) => {
+          setStateElements(elements)
+          setError(null)
+        })
+    }
+    doRender().catch((e) => {
+      setError(e.toString())
+      console.log(e.toString())
+    })
   }, [children])
 
   useEffect(() => {
