@@ -30,8 +30,8 @@ export const MouseElementTracker = ({
       const h =
         "h" in primitive ? primitive.h : "r" in primitive ? primitive.r * 2 : 0
       const screenSize = {
-        w: w * transform!.d,
-        h: h * transform!.d,
+        w: w * transform!.a,
+        h: h * transform!.a,
       }
 
       // FANCY: If 2+ highlighted primitives inhabit the same space, give

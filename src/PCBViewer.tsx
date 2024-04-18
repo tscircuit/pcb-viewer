@@ -11,7 +11,7 @@ import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import { findBoundsAndCenter } from "@tscircuit/builder"
 
-const defaultTransform = compose(translate(400, 300), scale(40, 40))
+const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
 type Props = {
   children?: any
@@ -47,7 +47,7 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
       compose(
         translate((elmBounds.width ?? 0) / 2, (elmBounds.height ?? 0) / 2),
         // translate(100, 0),
-        scale(scaleFactor, scaleFactor, 0, 0),
+        scale(scaleFactor, -scaleFactor, 0, 0),
         translate(-center.x, -center.y)
       )
     )
