@@ -82,15 +82,20 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
         <>
           <div
             style={{
-              width: 10,
-              height: 10,
-              backgroundColor: "blue",
               position: "absolute",
-              left: screenDStart.x,
+              left: arrowScreenBounds.left,
+              right: arrowScreenBounds.right,
+              textAlign: "center",
               top: screenDStart.y,
+              color: "red",
+              backgroundColor: "rgba(255,0,255,0.1)",
+              fontSize: 12,
+              fontFamily: "sans-serif",
               zIndex: 1000,
             }}
-          ></div>
+          >
+            {Math.abs(screenDStart.y - screenDEnd.y).toFixed(2)}
+          </div>
           <svg
             style={{
               position: "absolute",
