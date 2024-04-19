@@ -38,12 +38,17 @@ export const ToolbarOverlay = ({ children }: Props) => {
             border: "1px solid #666",
             margin: 16,
             padding: 4,
+            paddingLeft: 6,
+            paddingRight: 6,
             borderRadius: 2,
             color: "#eee",
             cursor: "pointer",
           }}
         >
-          layer: top
+          layer:{" "}
+          <span style={{ marginLeft: 2, fontWeight: 500, color: "#CD0000" }}>
+            top
+          </span>
         </div>
       </div>
     </div>
