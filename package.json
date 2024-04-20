@@ -24,7 +24,7 @@
     "@storybook/react": "^8.0.6",
     "@storybook/testing-library": "^0.0.14-next.2",
     "@swc/core": "^1.4.12",
-    "@tscircuit/builder": "^1.5.56",
+    "@tscircuit/builder": "^1.5.70",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/react-fiber": "^1.0.33",
     "@types/node": "18.7.23",
@@ -45,7 +45,9 @@
     "react": "*"
   },
   "dependencies": {
+    "@emotion/css": "^11.11.2",
     "react-supergrid": "^1.0.10",
-    "transformation-matrix": "^2.13.0"
+    "transformation-matrix": "^2.13.0",
+    "zustand": "^4.5.2"
   }
 }
