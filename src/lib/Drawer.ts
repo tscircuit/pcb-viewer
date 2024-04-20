@@ -13,6 +13,7 @@ import { convertTextToLines } from "./convert-text-to-lines"
 export interface Aperture {
   shape: "circle" | "square"
   size: number
+  opacity: number
   mode: "add" | "subtract"
   fontSize: number
   color: string
@@ -72,6 +73,7 @@ export class Drawer {
   // @ts-ignore this.equip({}) handles constructor assignment
   aperture: Aperture
   transform: Matrix
+  foregroundLayer: string = "top"
   lastPoint: { x: number; y: number }
 
   constructor(public canvas: HTMLCanvasElement) {
@@ -90,14 +92,15 @@ export class Drawer {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
   }
 
-  equip(aperature: Partial<Aperture>) {
+  equip(aperture: Partial<Aperture>) {
     this.aperture = {
       fontSize: 0,
       shape: "circle",
       mode: "add",
       size: 0,
       color: "red",
-      ...aperature,
+      opacity: this.foregroundLayer === aperture.color ? 1 : 0.5,
+      ...aperture,
     }
   }
 
@@ -144,6 +147,7 @@ export class Drawer {
         console.warn(`Color mapping for "${color}" not found`)
         colorString = "white"
       }
+      ctx.globalAlpha = aperture.opacity
       ctx.fillStyle = colorString
       ctx.strokeStyle = colorString
     } else {

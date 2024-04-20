@@ -25,19 +25,11 @@ export const MultiLayerCircuit: React.FC = () => {
           footprint="0402"
           pcb_layer="bottom"
         />
-        <via
-          name={"V1"}
-          x={"0mm"}
-          y={"0mm"}
-          pcb_x={"0mm"}
-          pcb_y={"0mm"}
-          hole_diameter="0.2mm"
-          outer_diameter="0.6mm"
-          from_layer="top"
-          to_layer="bottom"
+        <trace
+          from=".R1 > .right"
+          to=".R2 > .left"
+          pcb_route_hints={[{ x: 0, y: 0, via: true }]}
         />
-        <trace from=".R1 > .right" to=".V1 > port.top" />
-        <trace from=".R2 > .left" to=".V1 > port.bottom" />
       </PCBViewer>
     </div>
   )

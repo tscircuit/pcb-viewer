@@ -5,6 +5,7 @@ import { Matrix } from "transformation-matrix"
 import { drawPrimitives } from "../lib/draw-primitives"
 import { Drawer } from "../lib/Drawer"
 import { GridConfig, Primitive } from "../lib/types"
+import { useStore } from "global-store"
 
 interface Props {
   primitives: Primitive[]
@@ -23,14 +24,15 @@ export const CanvasPrimitiveRenderer = ({
   height = 500,
 }: Props) => {
   const ref = useRef()
+  const selectedLayer = useStore((s) => s.selected_layer)
   useEffect(() => {
     if (!ref.current) return
     const drawer = new Drawer(ref.current)
     if (transform) drawer.transform = transform
     drawer.clear()
-    // if (grid) drawGrid(drawer, grid)
+    drawer.foregroundLayer = selectedLayer
     drawPrimitives(drawer, primitives)
-  }, [primitives, transform])
+  }, [primitives, transform, selectedLayer])
 
   return (
     <div
