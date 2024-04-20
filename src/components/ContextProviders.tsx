@@ -5,7 +5,7 @@ import { createStore } from "../global-store"
 export const StoreContext = createContext(null)
 
 export const ContextProviders = ({ children }: { children?: any }) => {
-  const store = createStore()
+  const store = useMemo(() => createStore(), [])
 
   return (
     <StoreContext.Provider value={store as any}>

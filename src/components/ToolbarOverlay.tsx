@@ -2,6 +2,7 @@ import { useState } from "react"
 import { css } from "@emotion/css"
 import { all_layers } from "@tscircuit/builder"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
+import { useStore } from "global-store"
 
 interface Props {
   children?: any
@@ -48,8 +49,12 @@ export const LayerButton = ({
 export const ToolbarOverlay = ({ children }: Props) => {
   const [isMouseOverContainer, setIsMouseOverContainer] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
+  const [selectedLayer, selectLayer] = useStore((s) => [
+    s.selected_layer,
+    s.selectLayer,
+  ])
 
-  const selectedLayer = "top"
+  // const selectedLayer = "top"
 
   return (
     <div
@@ -101,22 +106,30 @@ export const ToolbarOverlay = ({ children }: Props) => {
         >
           <div>
             layer:{" "}
-            <span style={{ marginLeft: 2, fontWeight: 500, color: "#CD0000" }}>
+            <span
+              style={{
+                marginLeft: 2,
+                fontWeight: 500,
+                color: (LAYER_NAME_TO_COLOR as any)[selectedLayer],
+              }}
+            >
               {selectedLayer}
             </span>
           </div>
           {isLayerMenuOpen && (
             <div style={{ marginTop: 4 }}>
-              {all_layers.map((layer) => (
-                <LayerButton
-                  key={layer}
-                  name={layer}
-                  selected={layer === selectedLayer}
-                  onClick={() => {
-                    // TODO
-                  }}
-                />
-              ))}
+              {all_layers
+                .map((l) => l.replace(/-/g, "")) // TODO remove when inner-1 becomes inner1
+                .map((layer) => (
+                  <LayerButton
+                    key={layer}
+                    name={layer}
+                    selected={layer === selectedLayer}
+                    onClick={() => {
+                      selectLayer(layer.replace(/-/, ""))
+                    }}
+                  />
+                ))}
             </div>
           )}
         </div>
