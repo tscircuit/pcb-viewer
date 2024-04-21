@@ -10,8 +10,9 @@ import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import { findBoundsAndCenter } from "@tscircuit/builder"
+import { ContextProviders } from "components/ContextProviders"
 
-const defaultTransform = compose(translate(400, 300), scale(40, 40))
+const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
 type Props = {
   children?: any
@@ -47,7 +48,7 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
       compose(
         translate((elmBounds.width ?? 0) / 2, (elmBounds.height ?? 0) / 2),
         // translate(100, 0),
-        scale(scaleFactor, scaleFactor, 0, 0),
+        scale(scaleFactor, -scaleFactor, 0, 0),
         translate(-center.x, -center.y)
       )
     )
@@ -86,25 +87,27 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
   return (
     <div ref={transformRef as any}>
       <div ref={ref as any}>
-        <CanvasElementsRenderer
-          key={refDimensions.width}
-          transform={transform}
-          height={height}
-          width={refDimensions.width}
-          grid={{
-            spacing: 1,
-            view_window: {
-              left: 0,
-              right: refDimensions.width || 500,
-              top: height,
-              bottom: 0,
-            },
-          }}
-          elements={elements.filter(
-            (elm) =>
-              elm.type.startsWith("pcb_") || elm.type.startsWith("source_")
-          )}
-        />
+        <ContextProviders>
+          <CanvasElementsRenderer
+            key={refDimensions.width}
+            transform={transform}
+            height={height}
+            width={refDimensions.width}
+            grid={{
+              spacing: 1,
+              view_window: {
+                left: 0,
+                right: refDimensions.width || 500,
+                top: height,
+                bottom: 0,
+              },
+            }}
+            elements={elements.filter(
+              (elm) =>
+                elm.type.startsWith("pcb_") || elm.type.startsWith("source_")
+            )}
+          />
+        </ContextProviders>
       </div>
     </div>
   )

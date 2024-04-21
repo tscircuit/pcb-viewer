@@ -19,12 +19,10 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^9.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
-    "@storybook/blocks": "^7.0.26",
     "@storybook/nextjs": "^8.0.6",
     "@storybook/react": "^8.0.6",
-    "@storybook/testing-library": "^0.0.14-next.2",
     "@swc/core": "^1.4.12",
-    "@tscircuit/builder": "^1.5.56",
+    "@tscircuit/builder": "^1.5.70",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/react-fiber": "^1.0.33",
     "@types/node": "18.7.23",
@@ -45,7 +43,10 @@
     "react": "*"
   },
   "dependencies": {
-    "react-supergrid": "^1.0.7",
-    "transformation-matrix": "^2.13.0"
+    "@emotion/css": "^11.11.2",
+    "color": "^4.2.3",
+    "react-supergrid": "^1.0.10",
+    "transformation-matrix": "^2.13.0",
+    "zustand": "^4.5.2"
   }
 }
