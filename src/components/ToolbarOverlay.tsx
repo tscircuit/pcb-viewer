@@ -92,7 +92,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       <div
         style={{
           position: "absolute",
-          // opacity: isMouseOverContainer ? 1 : 0,
+          opacity: isMouseOverContainer ? 1 : 0,
           top: 16,
           left: 16,
           transition: isMouseOverContainer
