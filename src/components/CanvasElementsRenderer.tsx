@@ -27,7 +27,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   return (
     <MouseElementTracker transform={props.transform} primitives={primitives}>
       <DimensionOverlay transform={props.transform!}>
-        <ToolbarOverlay>
+        <ToolbarOverlay elements={props.elements as any}>
           <CanvasPrimitiveRenderer
             transform={props.transform}
             primitives={primitives}

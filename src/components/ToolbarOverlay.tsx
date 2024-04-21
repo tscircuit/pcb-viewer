@@ -1,11 +1,12 @@
 import { useState } from "react"
 import { css } from "@emotion/css"
-import { all_layers } from "@tscircuit/builder"
+import { AnySoupElement, all_layers } from "@tscircuit/builder"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useStore } from "global-store"
 
 interface Props {
   children?: any
+  elements?: AnySoupElement[]
 }
 
 export const LayerButton = ({
@@ -46,15 +47,35 @@ export const LayerButton = ({
   )
 }
 
-export const ToolbarOverlay = ({ children }: Props) => {
+export const ToolbarButton = ({ children, ...props }: any) => (
+  <div
+    {...props}
+    style={{
+      backgroundColor: "#1F1F1F",
+      border: "1px solid #666",
+      margin: 4,
+      padding: 4,
+      paddingLeft: 6,
+      paddingRight: 6,
+      borderRadius: 2,
+      alignSelf: "start",
+      color: "#eee",
+      cursor: "pointer",
+    }}
+  >
+    {children}
+  </div>
+)
+
+export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isMouseOverContainer, setIsMouseOverContainer] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [selectedLayer, selectLayer] = useStore((s) => [
     s.selected_layer,
     s.selectLayer,
   ])
-
-  // const selectedLayer = "top"
+  const errorCount =
+    elements?.filter((e) => e.type.includes("error")).length ?? 0
 
   return (
     <div
@@ -71,32 +92,23 @@ export const ToolbarOverlay = ({ children }: Props) => {
       <div
         style={{
           position: "absolute",
-          opacity: isMouseOverContainer ? 1 : 0,
-          top: 0,
-          left: 0,
+          // opacity: isMouseOverContainer ? 1 : 0,
+          top: 16,
+          left: 16,
           transition: isMouseOverContainer
             ? "opacity 100ms linear"
             : "opacity 1s linear",
           zIndex: 100,
           color: "red",
+          display: "flex",
           fontSize: 12,
+          height: 100,
           fontFamily: "sans-serif",
         }}
       >
-        <div
-          style={{
-            backgroundColor: "#1F1F1F",
-            border: "1px solid #666",
-            margin: 16,
-            padding: 4,
-            paddingLeft: 6,
-            paddingRight: 6,
-            borderRadius: 2,
-            color: "#eee",
-            cursor: "pointer",
-          }}
+        <ToolbarButton
           onClick={() => {
-            setLayerMenuOpen(true)
+            setLayerMenuOpen(!isLayerMenuOpen)
           }}
           onMouseLeave={() => {
             if (isLayerMenuOpen) {
@@ -117,7 +129,7 @@ export const ToolbarOverlay = ({ children }: Props) => {
             </span>
           </div>
           {isLayerMenuOpen && (
-            <div style={{ marginTop: 4 }}>
+            <div style={{ marginTop: 4, minWidth: 120 }}>
               {all_layers
                 .map((l) => l.replace(/-/g, "")) // TODO remove when inner-1 becomes inner1
                 .map((layer) => (
@@ -132,7 +144,8 @@ export const ToolbarOverlay = ({ children }: Props) => {
                 ))}
             </div>
           )}
-        </div>
+        </ToolbarButton>
+        <ToolbarButton>{errorCount} errors</ToolbarButton>
       </div>
     </div>
   )
