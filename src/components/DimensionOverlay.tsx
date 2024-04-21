@@ -20,8 +20,6 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
   const containerBounds = container?.getBoundingClientRect()
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      console.log("got event")
-      console.log(e.key)
       if (e.key === "d") {
         setDStart({ x: mousePosRef.current.x, y: mousePosRef.current.y })
         setDEnd({ x: mousePosRef.current.x, y: mousePosRef.current.y })
@@ -196,7 +194,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
             {dEnd.x.toFixed(2)},{dEnd.y.toFixed(2)})<br />
             dist:{" "}
             {Math.sqrt(
-              Math.pow(dEnd.x - dStart.x, 2) + Math.pow(dEnd.y - dStart.y, 2),
+              Math.pow(dEnd.x - dStart.x, 2) + Math.pow(dEnd.y - dStart.y, 2)
             ).toFixed(2)}
           </div>
         </>

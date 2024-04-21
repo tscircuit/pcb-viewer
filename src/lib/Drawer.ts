@@ -17,6 +17,7 @@ export interface Aperture {
   mode: "add" | "subtract"
   fontSize: number
   color: string
+  layer: string
 }
 
 export const LAYER_NAME_TO_COLOR = {
@@ -25,6 +26,7 @@ export const LAYER_NAME_TO_COLOR = {
   black: "black",
   green: "green",
   board: "white",
+  other: "#eee",
   // TODO more builtin html colors
 
   // Common eagle names
@@ -47,7 +49,16 @@ export const LAYER_NAME_TO_COLOR = {
   ...colors.board,
 }
 
-export const DEFAULT_DRAW_ORDER = ["top", "bottom", "drill"]
+export const DEFAULT_DRAW_ORDER = [
+  "top",
+  "inner1",
+  "inner2",
+  "inner3",
+  "inner4",
+  "inner5",
+  "inner6",
+  "bottom",
+] as const
 
 export const FILL_TYPES = {
   0: "Empty",
@@ -69,16 +80,22 @@ export const FILL_TYPES = {
 }
 
 export class Drawer {
-  ctx: CanvasRenderingContext2D
+  canvasLayerMap: Record<string, HTMLCanvasElement>
+  ctxLayerMap: Record<string, CanvasRenderingContext2D>
   // @ts-ignore this.equip({}) handles constructor assignment
   aperture: Aperture
   transform: Matrix
   foregroundLayer: string = "top"
   lastPoint: { x: number; y: number }
 
-  constructor(public canvas: HTMLCanvasElement) {
-    this.canvas = canvas
-    this.ctx = canvas.getContext("2d")!
+  constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
+    this.canvasLayerMap = canvasLayerMap
+    this.ctxLayerMap = Object.fromEntries(
+      Object.entries(canvasLayerMap).map(([name, canvas]) => [
+        name,
+        canvas.getContext("2d")!,
+      ])
+    )
     this.transform = identity()
     // positive is up (cartesian)
     this.transform.d *= -1
@@ -88,8 +105,9 @@ export class Drawer {
   }
 
   clear() {
-    const { ctx, canvas } = this
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    for (const ctx of Object.values(this.ctxLayerMap)) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    }
   }
 
   equip(aperture: Partial<Aperture>) {
@@ -99,6 +117,7 @@ export class Drawer {
       mode: "add",
       size: 0,
       color: "red",
+      layer: "top",
       opacity: this.foregroundLayer === aperture.color ? 1 : 0.5,
       ...aperture,
     }
@@ -108,31 +127,74 @@ export class Drawer {
     const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
     const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
     this.applyAperture()
-    this.ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+    const ctx = this.getLayerCtx()
+    ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
   }
 
   circle(x: number, y: number, r: number) {
     const r$ = scaleOnly(this.transform, r)
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
-    this.ctx.beginPath()
-    this.ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
-    this.ctx.fill()
-    this.ctx.closePath()
+    const ctx = this.getLayerCtx()
+    ctx.beginPath()
+    ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
+    ctx.fill()
+    ctx.closePath()
   }
 
   /* NOTE: This is not gerber compatible */
   debugText(text: string, x: number, y: number) {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
+    const ctx = this.getLayerCtx()
 
-    this.ctx.font = `10px sans-serif`
-    this.ctx.fillText(text, x$, y$)
+    ctx.font = `10px sans-serif`
+    ctx.fillText(text, x$, y$)
+  }
+
+  getLayerCtx() {
+    const ctx = this.ctxLayerMap[this.aperture.layer]
+    if (!ctx) {
+      throw new Error(`No context for layer "${this.aperture.layer}"`)
+    }
+    return ctx
+  }
+
+  /**
+   * Iterate over each canvas and set the z index based on the layer order, but
+   * always render the foreground layer on top.
+   *
+   * Also: Set the opacity of every non-foreground layer to 0.5
+   */
+  orderAndFadeLayers() {
+    const { canvasLayerMap, foregroundLayer } = this
+    const opaqueLayers = new Set([foregroundLayer, "drill", "other", "board"])
+    const order = [
+      "drill",
+      "board",
+      foregroundLayer,
+      ...DEFAULT_DRAW_ORDER.filter((l) => l !== foregroundLayer),
+    ]
+    order.forEach((layer, i) => {
+      const canvas = canvasLayerMap[layer]
+      if (!canvas) return
+      canvas.style.zIndex = `${100 - i}`
+      canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
+    })
   }
 
   applyAperture() {
-    const { ctx, transform, aperture } = this
+    const { transform, aperture } = this
     let { size, mode, color, fontSize } = aperture
+    if (color in this.ctxLayerMap) {
+      this.aperture.layer = color
+    } else {
+      this.aperture.layer = "other"
+    }
+    const ctx = this.getLayerCtx()
+    if (!ctx) {
+      throw new Error(`No context for layer "${this.foregroundLayer}"`)
+    }
     if (!color) color = "undefined"
     ctx.lineWidth = scaleOnly(transform, size)
     ctx.lineCap = "round"
@@ -140,14 +202,13 @@ export class Drawer {
       let colorString =
         color?.[0] === "#" || color?.startsWith("rgb")
           ? color
-          : LAYER_NAME_TO_COLOR[color?.toLowerCase()]
-            ? LAYER_NAME_TO_COLOR[color?.toLowerCase()]
+          : (LAYER_NAME_TO_COLOR as any)[color?.toLowerCase()]
+            ? (LAYER_NAME_TO_COLOR as any)[color?.toLowerCase()]
             : null
       if (colorString === null) {
         console.warn(`Color mapping for "${color}" not found`)
         colorString = "white"
       }
-      ctx.globalAlpha = aperture.opacity
       ctx.fillStyle = colorString
       ctx.strokeStyle = colorString
     } else {
@@ -165,10 +226,11 @@ export class Drawer {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     const { size, shape, mode } = this.aperture
     const size$ = scaleOnly(this.transform, size)
-    let { lastPoint, ctx } = this
+    let { lastPoint } = this
     const lastPoint$ = applyToPoint(this.transform, lastPoint)
 
     this.applyAperture()
+    const ctx = this.getLayerCtx()
 
     if (shape === "square")
       ctx.fillRect(

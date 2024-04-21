@@ -6,6 +6,7 @@ import { drawPrimitives } from "../lib/draw-primitives"
 import { Drawer } from "../lib/Drawer"
 import { GridConfig, Primitive } from "../lib/types"
 import { useStore } from "global-store"
+import { all_layers } from "@tscircuit/builder"
 
 interface Props {
   primitives: Primitive[]
@@ -23,15 +24,18 @@ export const CanvasPrimitiveRenderer = ({
   width = 500,
   height = 500,
 }: Props) => {
-  const ref = useRef()
+  const canvasRefs = useRef<Record<string, HTMLCanvasElement>>()
   const selectedLayer = useStore((s) => s.selected_layer)
+
   useEffect(() => {
-    if (!ref.current) return
-    const drawer = new Drawer(ref.current)
+    if (!canvasRefs.current) return
+    if (Object.keys(canvasRefs.current).length === 0) return
+    const drawer = new Drawer(canvasRefs.current)
     if (transform) drawer.transform = transform
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
     drawPrimitives(drawer, primitives)
+    drawer.orderAndFadeLayers()
   }, [primitives, transform, selectedLayer])
 
   return (
@@ -53,12 +57,26 @@ export const CanvasPrimitiveRenderer = ({
         transform={transform}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
-      <canvas
-        ref={ref}
-        style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}
-        width={width}
-        height={height}
-      ></canvas>
+      {all_layers
+        .map((l) => l.replace(/-/g, ""))
+        .concat(["drill", "other"])
+        .map((layer, i) => (
+          <canvas
+            key={layer}
+            ref={(el) => {
+              canvasRefs.current ??= {}
+              canvasRefs.current[layer] = el!
+            }}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              pointerEvents: "none",
+            }}
+            width={width}
+            height={height}
+          ></canvas>
+        ))}
     </div>
   )
 }
