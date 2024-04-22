@@ -8,6 +8,7 @@ import { GridConfig } from "lib/types"
 import { MouseElementTracker } from "./MouseElementTracker"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
+import { ErrorOverlay } from "./ErrorOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnyElement[]
@@ -28,13 +29,18 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     <MouseElementTracker transform={props.transform} primitives={primitives}>
       <DimensionOverlay transform={props.transform!}>
         <ToolbarOverlay elements={props.elements as any}>
-          <CanvasPrimitiveRenderer
+          <ErrorOverlay
             transform={props.transform}
-            primitives={primitives}
-            width={props.width}
-            height={props.height}
-            grid={props.grid}
-          />
+            elements={props.elements as any}
+          >
+            <CanvasPrimitiveRenderer
+              transform={props.transform}
+              primitives={primitives}
+              width={props.width}
+              height={props.height}
+              grid={props.grid}
+            />
+          </ErrorOverlay>
         </ToolbarOverlay>
       </DimensionOverlay>
     </MouseElementTracker>

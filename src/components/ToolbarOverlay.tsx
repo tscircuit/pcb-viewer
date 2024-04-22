@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import { css } from "@emotion/css"
 import { AnySoupElement, all_layers } from "@tscircuit/builder"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
@@ -61,6 +61,7 @@ export const ToolbarButton = ({ children, ...props }: any) => (
       alignSelf: "start",
       color: "#eee",
       cursor: "pointer",
+      ...props.style,
     }}
   >
     {children}
@@ -70,6 +71,7 @@ export const ToolbarButton = ({ children, ...props }: any) => (
 export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isMouseOverContainer, setIsMouseOverContainer] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
+  const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [selectedLayer, selectLayer] = useStore((s) => [
     s.selected_layer,
     s.selectLayer,
@@ -145,7 +147,27 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             </div>
           )}
         </ToolbarButton>
-        <ToolbarButton>{errorCount} errors</ToolbarButton>
+        <ToolbarButton
+          style={errorCount > 0 ? { color: "red" } : {}}
+          onClick={() => setErrorsOpen(!isErrorsOpen)}
+          onMouseLeave={() => setErrorsOpen(false)}
+        >
+          <div>{errorCount} errors</div>
+          {isErrorsOpen && (
+            <div
+              style={{ display: "grid", gridTemplateColumns: "100px 300px" }}
+            >
+              {elements
+                ?.filter((e) => e.type.includes("error"))
+                .map((e, i) => (
+                  <Fragment key={i}>
+                    <div>{e.error_type}</div>
+                    <div>{e.message}</div>
+                  </Fragment>
+                ))}
+            </div>
+          )}
+        </ToolbarButton>
       </div>
     </div>
   )

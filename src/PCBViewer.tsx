@@ -73,7 +73,7 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
   }, [children])
 
   useEffect(() => {
-    if (refDimensions && refDimensions.width !== 0 && children) {
+    if (refDimensions && refDimensions.width !== 0 && (children || soup)) {
       resetTransform()
     }
   }, [children, refDimensions])
@@ -81,8 +81,6 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
   if (error) return <div style={{ color: "red" }}> {error} </div>
 
   const elements: AnySoupElement[] = soup ?? stateElements
-
-  if (elements.length === 0) return null
 
   return (
     <div ref={transformRef as any}>
