@@ -40,6 +40,26 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
             y: port2.y,
           })
 
+          const canLineBeDrawn = !(
+            isNaN(screenPort1.x) ||
+            isNaN(screenPort1.y) ||
+            isNaN(screenPort2.x) ||
+            isNaN(screenPort2.y)
+          )
+
+          const midPoint = {
+            x: (screenPort1.x + screenPort2.x) / 2,
+            y: (screenPort1.y + screenPort2.y) / 2,
+          }
+
+          if (isNaN(midPoint.x) || isNaN(midPoint.y)) {
+            midPoint.x = isNaN(screenPort1.x) ? screenPort2.x : screenPort1.x
+            midPoint.y = isNaN(screenPort1.y) ? screenPort2.y : screenPort1.y
+          }
+          if (isNaN(midPoint.x) || isNaN(midPoint.y)) {
+            return null
+          }
+
           return (
             <>
               <svg
@@ -54,24 +74,26 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
                 width={containerBounds?.width}
                 height={containerBounds?.height}
               >
-                <line
-                  x1={screenPort1.x}
-                  y1={screenPort1.y}
-                  x2={screenPort2.x}
-                  y2={screenPort2.y}
-                  markerEnd="url(#head)"
-                  strokeWidth={1.5}
-                  strokeDasharray={"2,2"}
-                  fill="none"
-                  stroke="red"
-                />
+                {canLineBeDrawn && (
+                  <line
+                    x1={screenPort1.x}
+                    y1={screenPort1.y}
+                    x2={screenPort2.x}
+                    y2={screenPort2.y}
+                    markerEnd="url(#head)"
+                    strokeWidth={1.5}
+                    strokeDasharray={"2,2"}
+                    fill="none"
+                    stroke="red"
+                  />
+                )}
               </svg>
               <div
                 className={css`
                   position: absolute;
                   z-index: 1000;
-                  left: ${(screenPort1.x + screenPort2.x) / 2}px;
-                  top: ${(screenPort1.y + screenPort2.y) / 2}px;
+                  left: ${midPoint.x}px;
+                  top: ${midPoint.y}px;
                   color: red;
                   text-align: center;
                   font-family: sans-serif;
