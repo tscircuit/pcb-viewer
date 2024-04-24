@@ -51,6 +51,51 @@ export const TraceErrorCircuit2: React.FC = () => {
   )
 }
 
+export const TraceErrorCircuit3 = () => (
+  <div style={{ backgroundColor: "black" }}>
+    <PCBViewer>
+      <group>
+        <component
+          name="B1"
+          footprint={
+            <footprint>
+              <platedhole
+                x={0}
+                y={-4}
+                port_hints={[`1`]}
+                hole_diameter={0.8}
+                outer_diameter={2}
+                inner_diameter={1.2}
+              />
+              <platedhole
+                x={0}
+                y={4}
+                port_hints={[`2`]}
+                hole_diameter={0.8}
+                outer_diameter={2}
+                inner_diameter={1.2}
+              />
+            </footprint>
+          }
+        >
+          <port x={0} y={-0.7} name="plus" pin_number={1} direction="up" />
+          <port x={0} y={0.7} name="minus" pin_number={2} direction="down" />
+        </component>
+        <resistor
+          name="R1"
+          x={2}
+          y={0}
+          pcb_x={8}
+          pcb_y={0}
+          resistance={"10k"}
+          footprint={"0805"}
+        />
+        <trace to=".B1 > .plus" from=".R1 > .left" />
+      </group>
+    </PCBViewer>
+  </div>
+)
+
 const meta: Meta<typeof TraceErrorCircuit1> = {
   title: "TraceError",
   component: TraceErrorCircuit1,
