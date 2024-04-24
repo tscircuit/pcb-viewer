@@ -23,10 +23,12 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
           const { pcb_port_ids } = el
 
           const port1: PCBPort = elements.find(
-            (el) => el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids[0]
+            (el) =>
+              el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[0]
           )
           const port2: PCBPort = elements.find(
-            (el) => el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids[1]
+            (el) =>
+              el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[1]
           )
 
           if (!port1 || !port2) return null
