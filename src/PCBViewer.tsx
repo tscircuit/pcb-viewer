@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { createRoot } from "@tscircuit/react-fiber"
 import {
   AnyElement,
@@ -11,6 +11,8 @@ import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import { findBoundsAndCenter } from "@tscircuit/builder"
 import { ContextProviders } from "components/ContextProviders"
+import { EditEvent } from "lib/edit-events"
+import { applyEditEvents } from "lib/apply-edit-events"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -18,16 +20,32 @@ type Props = {
   children?: any
   soup?: any
   height?: number
+  allowEditing?: boolean
+  editEvents?: EditEvent[]
+  onEditEventsChanged?: (editEvents: EditEvent[]) => void
 }
 
-export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
+export const PCBViewer = ({
+  children,
+  soup,
+  height = 600,
+  allowEditing = true,
+  editEvents: editEventsProp,
+  onEditEventsChanged,
+}: Props) => {
   const [stateElements, setStateElements] = useState<Array<AnyElement>>([])
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
-  const { ref: transformRef, setTransform } = useMouseMatrixTransform({
+  const {
+    ref: transformRef,
+    setTransform,
+    cancelDrag: cancelPanDrag,
+  } = useMouseMatrixTransform({
     transform,
     onSetTransform: setTransformInternal,
   })
+  let [editEvents, setEditEvents] = useState<EditEvent[]>([])
+  editEvents = editEventsProp ?? editEvents
 
   const [error, setError] = useState(null)
 
@@ -80,7 +98,27 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
 
   if (error) return <div style={{ color: "red" }}> {error} </div>
 
-  const elements: AnySoupElement[] = soup ?? stateElements
+  const pcbElmsPreEdit: AnySoupElement[] = (soup ?? stateElements).filter(
+    (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_")
+  )
+
+  const elements = useMemo(() => {
+    return applyEditEvents(pcbElmsPreEdit, editEvents)
+  }, [pcbElmsPreEdit, editEvents])
+
+  const onCreateEditEvent = (event: EditEvent) => {
+    setEditEvents([...editEvents, event])
+    onEditEventsChanged?.([...editEvents, event])
+  }
+  const onModifyEditEvent = (modifiedEvent: Partial<EditEvent>) => {
+    const newEditEvents = editEvents.map((e) =>
+      e.edit_event_id === modifiedEvent.edit_event_id
+        ? { ...e, ...modifiedEvent }
+        : e
+    )
+    setEditEvents(newEditEvents)
+    onEditEventsChanged?.(newEditEvents)
+  }
 
   return (
     <div ref={transformRef as any}>
@@ -91,6 +129,10 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
             transform={transform}
             height={height}
             width={refDimensions.width}
+            allowEditing={allowEditing}
+            cancelPanDrag={cancelPanDrag}
+            onCreateEditEvent={onCreateEditEvent}
+            onModifyEditEvent={onModifyEditEvent}
             grid={{
               spacing: 1,
               view_window: {
@@ -100,10 +142,7 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
                 bottom: 0,
               },
             }}
-            elements={elements.filter(
-              (elm) =>
-                elm.type.startsWith("pcb_") || elm.type.startsWith("source_")
-            )}
+            elements={elements}
           />
         </ContextProviders>
       </div>

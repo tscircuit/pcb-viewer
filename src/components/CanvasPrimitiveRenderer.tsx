@@ -5,7 +5,7 @@ import { Matrix } from "transformation-matrix"
 import { drawPrimitives } from "../lib/draw-primitives"
 import { Drawer } from "../lib/Drawer"
 import { GridConfig, Primitive } from "../lib/types"
-import { useStore } from "global-store"
+import { useGlobalStore } from "global-store"
 import { all_layers } from "@tscircuit/builder"
 
 interface Props {
@@ -25,7 +25,7 @@ export const CanvasPrimitiveRenderer = ({
   height = 500,
 }: Props) => {
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>()
-  const selectedLayer = useStore((s) => s.selected_layer)
+  const selectedLayer = useGlobalStore((s) => s.selected_layer)
 
   useEffect(() => {
     if (!canvasRefs.current) return

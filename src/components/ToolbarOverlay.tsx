@@ -2,7 +2,7 @@ import { Fragment, useState } from "react"
 import { css } from "@emotion/css"
 import { AnySoupElement, all_layers } from "@tscircuit/builder"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
-import { useStore } from "global-store"
+import { useGlobalStore } from "global-store"
 
 interface Props {
   children?: any
@@ -72,10 +72,16 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isMouseOverContainer, setIsMouseOverContainer] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
-  const [selectedLayer, selectLayer] = useStore((s) => [
+  const [selectedLayer, selectLayer] = useGlobalStore((s) => [
     s.selected_layer,
     s.selectLayer,
   ])
+  const [in_move_footprint_mode, in_draw_trace_mode] = useGlobalStore((s) => [
+    s.in_move_footprint_mode,
+    s.in_draw_trace_mode,
+  ])
+  const setEditMode = useGlobalStore((s) => s.setEditMode)
+
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
 
@@ -85,7 +91,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       onMouseEnter={() => {
         setIsMouseOverContainer(true)
       }}
-      onMouseLeave={() => {
+      onMouseLeave={(e) => {
         setIsMouseOverContainer(false)
         setLayerMenuOpen(false)
       }}
@@ -167,6 +173,28 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                 ))}
             </div>
           )}
+        </ToolbarButton>
+        <ToolbarButton
+          style={{}}
+          onClick={() => {
+            setEditMode(in_draw_trace_mode ? "off" : "draw_trace")
+          }}
+        >
+          <div>
+            {in_draw_trace_mode ? "✖ " : ""}
+            Edit Traces
+          </div>
+        </ToolbarButton>
+        <ToolbarButton
+          style={{}}
+          onClick={() => {
+            setEditMode(in_move_footprint_mode ? "off" : "move_footprint")
+          }}
+        >
+          <div>
+            {in_move_footprint_mode ? "✖ " : ""}
+            Move Components
+          </div>
         </ToolbarButton>
       </div>
     </div>
