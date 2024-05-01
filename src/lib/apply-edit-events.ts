@@ -1,5 +1,10 @@
-import { AnySoupElement } from "@tscircuit/builder"
+import {
+  AnySoupElement,
+  transformPCBElement,
+  transformPCBElements,
+} from "@tscircuit/builder"
 import { EditEvent } from "./edit-events"
+import { translate } from "transformation-matrix"
 
 export const applyEditEvents = (
   soup: AnySoupElement[],
@@ -9,12 +14,16 @@ export const applyEditEvents = (
 
   for (const edit_event of edit_events) {
     if (edit_event.pcb_edit_event_type === "edit_component_location") {
-      const component = soup.find(
-        (element) => element.id === edit_event.pcb_component_id
+      const mat = translate(
+        edit_event.new_center.x - edit_event.original_center.x,
+        edit_event.new_center.y - edit_event.original_center.y
       )
-      if (component) {
-        component.center = edit_event.new_center
-      }
+      // TODO Future work: recurse here in case there's a nested component
+      soup = soup.map((e: any) =>
+        e.pcb_component_id !== edit_event.pcb_component_id
+          ? e
+          : transformPCBElement(e, mat)
+      )
     }
   }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { HighlightedPrimitive } from "./MouseElementTracker"
 import colors from "lib/colors"
+import { useGlobalStore } from "global-store"
 
 const containerStyle = {
   position: "absolute",
@@ -128,11 +129,14 @@ export const ElementOverlayBox = ({
 }: {
   highlightedPrimitives: HighlightedPrimitive[]
 }) => {
+  const is_moving_component = useGlobalStore((s) => s.is_moving_component)
+
   return (
     <div style={containerStyle}>
-      {highlightedPrimitives.map((primitive, i) => (
-        <HighlightedPrimitiveBoxWithText key={i} primitive={primitive} />
-      ))}
+      {!is_moving_component &&
+        highlightedPrimitives.map((primitive, i) => (
+          <HighlightedPrimitiveBoxWithText key={i} primitive={primitive} />
+        ))}
     </div>
   )
 }

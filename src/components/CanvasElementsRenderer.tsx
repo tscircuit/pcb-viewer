@@ -1,6 +1,6 @@
 import React, { useCallback } from "react"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import { AnyElement } from "@tscircuit/builder"
+import { AnyElement, AnySoupElement } from "@tscircuit/builder"
 import { useMemo } from "react"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { Matrix } from "transformation-matrix"
@@ -10,14 +10,18 @@ import { DimensionOverlay } from "./DimensionOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { EditOverlay } from "./EditOverlay"
+import { EditEvent } from "lib/edit-events"
 
 export interface CanvasElementsRendererProps {
-  elements: AnyElement[]
+  elements: AnySoupElement[]
   transform?: Matrix
   width?: number
   height?: number
   grid?: GridConfig
-  cancelDrag?: Function
+  allowEditing: boolean
+  cancelPanDrag: Function
+  onCreateEditEvent: (event: EditEvent) => void
+  onModifyEditEvent: (event: Partial<EditEvent>) => void
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
@@ -30,16 +34,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   return (
     <MouseElementTracker transform={props.transform} primitives={primitives}>
       <EditOverlay
+        disabled={!props.allowEditing}
         transform={props.transform}
-        soup={props.elements as any}
-        cancelDrag={props.cancelDrag}
+        soup={props.elements}
+        cancelPanDrag={props.cancelPanDrag}
+        onCreateEditEvent={props.onCreateEditEvent}
+        onModifyEditEvent={props.onModifyEditEvent}
       >
         <DimensionOverlay transform={props.transform!}>
-          <ToolbarOverlay elements={props.elements as any}>
-            <ErrorOverlay
-              transform={props.transform}
-              elements={props.elements as any}
-            >
+          <ToolbarOverlay elements={props.elements}>
+            <ErrorOverlay transform={props.transform} elements={props.elements}>
               <CanvasPrimitiveRenderer
                 transform={props.transform}
                 primitives={primitives}

@@ -4,6 +4,7 @@ export type EditComponentLocationEvent = {
   pcb_component_id: string
   original_center: { x: number; y: number }
   new_center: { x: number; y: number }
+  in_progress?: boolean
 }
 
 export type EditEvent = EditComponentLocationEvent
