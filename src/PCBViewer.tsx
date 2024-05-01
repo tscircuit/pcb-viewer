@@ -24,7 +24,11 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
   const [stateElements, setStateElements] = useState<Array<AnyElement>>([])
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
-  const { ref: transformRef, setTransform } = useMouseMatrixTransform({
+  const {
+    ref: transformRef,
+    setTransform,
+    cancelDrag,
+  } = useMouseMatrixTransform({
     transform,
     onSetTransform: setTransformInternal,
   })
@@ -91,6 +95,7 @@ export const PCBViewer = ({ children, soup, height = 600 }: Props) => {
             transform={transform}
             height={height}
             width={refDimensions.width}
+            cancelDrag={cancelDrag}
             grid={{
               spacing: 1,
               view_window: {

@@ -6,24 +6,31 @@ interface Props {
   transform?: Matrix
   children: any
   soup: AnySoupElement[]
+  cancelDrag?: Function
 }
 
 const isInsideOf = (
   pcb_component: PCBComponent,
-  point: { x: number; y: number }
+  point: { x: number; y: number },
+  padding: number = 0
 ) => {
   const halfWidth = pcb_component.width / 2
   const halfHeight = pcb_component.height / 2
 
-  const left = pcb_component.center.x - halfWidth
-  const right = pcb_component.center.x + halfWidth
-  const top = pcb_component.center.y - halfHeight
-  const bottom = pcb_component.center.y + halfHeight
+  const left = pcb_component.center.x - halfWidth - padding
+  const right = pcb_component.center.x + halfWidth + padding
+  const top = pcb_component.center.y - halfHeight - padding
+  const bottom = pcb_component.center.y + halfHeight + padding
 
   return point.x > left && point.x < right && point.y > top && point.y < bottom
 }
 
-export const EditOverlay = ({ children, transform, soup }: Props) => {
+export const EditOverlay = ({
+  children,
+  transform,
+  soup,
+  cancelDrag,
+}: Props) => {
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [activePcbComponentId, setActivePcbComponent] = useState<null | string>(
@@ -46,7 +53,11 @@ export const EditOverlay = ({ children, transform, soup }: Props) => {
 
         let foundActiveComponent = false
         for (const e of soup) {
-          if (e.type === "pcb_component" && isInsideOf(e, rwPoint)) {
+          if (
+            e.type === "pcb_component" &&
+            isInsideOf(e, rwPoint, 10 / transform.a)
+          ) {
+            cancelDrag?.()
             setActivePcbComponent(e.pcb_component_id)
             foundActiveComponent = true
             break

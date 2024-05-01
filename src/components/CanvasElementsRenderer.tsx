@@ -17,6 +17,7 @@ export interface CanvasElementsRendererProps {
   width?: number
   height?: number
   grid?: GridConfig
+  cancelDrag?: Function
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
@@ -28,7 +29,11 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   }, [props.elements])
   return (
     <MouseElementTracker transform={props.transform} primitives={primitives}>
-      <EditOverlay transform={props.transform} soup={props.elements as any}>
+      <EditOverlay
+        transform={props.transform}
+        soup={props.elements as any}
+        cancelDrag={props.cancelDrag}
+      >
         <DimensionOverlay transform={props.transform!}>
           <ToolbarOverlay elements={props.elements as any}>
             <ErrorOverlay
