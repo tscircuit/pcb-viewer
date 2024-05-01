@@ -22,7 +22,7 @@
     "@storybook/nextjs": "^8.0.6",
     "@storybook/react": "^8.0.6",
     "@swc/core": "^1.4.12",
-    "@tscircuit/builder": "^1.5.71",
+    "@tscircuit/builder": "^1.5.76",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/react-fiber": "^1.0.33",
     "@types/node": "18.7.23",
@@ -35,7 +35,8 @@
     "tsup": "^8.0.2",
     "type-fest": "^3.0.0",
     "typescript": "^5.4.4",
-    "use-mouse-matrix-transform": "^1.1.9"
+    "use-mouse-matrix-transform": "^1.1.9",
+    "zod": "^3.23.5"
   },
   "peerDependencies": {
     "@tscircuit/builder": "*",

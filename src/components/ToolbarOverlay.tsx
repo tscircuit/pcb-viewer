@@ -168,6 +168,12 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             </div>
           )}
         </ToolbarButton>
+        <ToolbarButton style={{}} onClick={() => {}}>
+          <div>Edit Traces</div>
+        </ToolbarButton>
+        <ToolbarButton style={{}} onClick={() => {}}>
+          <div>Move Components</div>
+        </ToolbarButton>
       </div>
     </div>
   )

@@ -9,6 +9,7 @@ import { MouseElementTracker } from "./MouseElementTracker"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
+import { EditOverlay } from "./EditOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnyElement[]
@@ -27,22 +28,24 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   }, [props.elements])
   return (
     <MouseElementTracker transform={props.transform} primitives={primitives}>
-      <DimensionOverlay transform={props.transform!}>
-        <ToolbarOverlay elements={props.elements as any}>
-          <ErrorOverlay
-            transform={props.transform}
-            elements={props.elements as any}
-          >
-            <CanvasPrimitiveRenderer
+      <EditOverlay transform={props.transform} soup={props.elements as any}>
+        <DimensionOverlay transform={props.transform!}>
+          <ToolbarOverlay elements={props.elements as any}>
+            <ErrorOverlay
               transform={props.transform}
-              primitives={primitives}
-              width={props.width}
-              height={props.height}
-              grid={props.grid}
-            />
-          </ErrorOverlay>
-        </ToolbarOverlay>
-      </DimensionOverlay>
+              elements={props.elements as any}
+            >
+              <CanvasPrimitiveRenderer
+                transform={props.transform}
+                primitives={primitives}
+                width={props.width}
+                height={props.height}
+                grid={props.grid}
+              />
+            </ErrorOverlay>
+          </ToolbarOverlay>
+        </DimensionOverlay>
+      </EditOverlay>
     </MouseElementTracker>
   )
 }
