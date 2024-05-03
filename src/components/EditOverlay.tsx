@@ -69,6 +69,7 @@ export const EditOverlay = ({
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
+        if (isNaN(x) || isNaN(y)) return
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
 
         let foundActiveComponent = false
@@ -115,6 +116,7 @@ export const EditOverlay = ({
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
+        if (isNaN(x) || isNaN(y)) return
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
         setDragState({
           ...dragState,
@@ -152,6 +154,7 @@ export const EditOverlay = ({
         soup
           .filter((e): e is PCBComponent => e.type === "pcb_component")
           .map((e) => {
+            if (!e?.center) return null
             const projectedCenter = applyToPoint(transform, e.center)
 
             return (
