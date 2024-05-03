@@ -22,12 +22,12 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
         .map((el: PCBTraceError) => {
           const { pcb_port_ids } = el
 
-          const port1: PCBPort = elements.find(
-            (el) =>
+          const port1 = elements.find(
+            (el): el is PCBPort =>
               el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[0]
           )
-          const port2: PCBPort = elements.find(
-            (el) =>
+          const port2 = elements.find(
+            (el): el is PCBPort =>
               el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[1]
           )
 

@@ -139,6 +139,10 @@ const CanvasElementsTest = () => {
               bottom: 0,
             },
           }}
+          allowEditing={false}
+          cancelPanDrag={() => {}}
+          onCreateEditEvent={() => {}}
+          onModifyEditEvent={() => {}}
         />
       </div>
     </div>

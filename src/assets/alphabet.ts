@@ -50,11 +50,11 @@ export const lineAlphabet: Record<
 > = {}
 for (const letter in svgAlphabet) {
   lineAlphabet[letter] = []
-  const segs = svgAlphabet[letter]
+  const segs = (svgAlphabet as any)[letter]
     .split("M")
     .slice(1)
-    .map((seg) =>
-      seg.split("L").map((pr) => pr.trim().split(" ").map(parseFloat))
+    .map((seg: any) =>
+      seg.split("L").map((pr: any) => pr.trim().split(" ").map(parseFloat))
     )
   for (const seg of segs) {
     for (let i = 0; i < seg.length - 1; i++) {

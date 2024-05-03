@@ -34,7 +34,7 @@ export const getTextForHighlightedPrimitive = (
       ) {
         s += `.${_parent_source_component.name} > `
       }
-      s += (element.port_hints ?? element._source_port?.port_hints)
+      s += (element.port_hints ?? (element as any)._source_port?.port_hints)
         .map((ph: string) => `port.${ph}`)
         .join(", ")
       return s

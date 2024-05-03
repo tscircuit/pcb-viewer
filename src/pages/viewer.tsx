@@ -17,17 +17,17 @@ export default () => {
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer>
         <custom
-          onRender={(gb) => {
+          onRender={(gb: any) => {
             // gb.addResistor((rb) => {})
-            gb.addComponent((cb) => {
-              cb.footprint.addPad((pb) =>
+            gb.addComponent((cb: any) => {
+              cb.footprint.addPad((pb: any) =>
                 pb
                   .setShape("rect")
                   .setLayer("top")
                   .setPosition(100, 100)
                   .setSize(20, 20)
               )
-              cb.footprint.addPad((pb) =>
+              cb.footprint.addPad((pb: any) =>
                 pb
                   .setShape("rect")
                   .setLayer("top")

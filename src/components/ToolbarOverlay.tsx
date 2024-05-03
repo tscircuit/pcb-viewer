@@ -1,6 +1,12 @@
 import { Fragment, useState } from "react"
 import { css } from "@emotion/css"
-import { AnySoupElement, all_layers } from "@tscircuit/builder"
+import {
+  AnySoupElement,
+  LayerRef,
+  PCBTraceError,
+  SourceError,
+  all_layers,
+} from "@tscircuit/builder"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
 
@@ -72,10 +78,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isMouseOverContainer, setIsMouseOverContainer] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
-  const [selectedLayer, selectLayer] = useGlobalStore((s) => [
-    s.selected_layer,
-    s.selectLayer,
-  ])
+  const [selectedLayer, selectLayer] = useGlobalStore(
+    (s) => [s.selected_layer, s.selectLayer] as const
+  )
   const [in_move_footprint_mode, in_draw_trace_mode] = useGlobalStore((s) => [
     s.in_move_footprint_mode,
     s.in_draw_trace_mode,
@@ -130,10 +135,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               style={{
                 marginLeft: 2,
                 fontWeight: 500,
-                color: (LAYER_NAME_TO_COLOR as any)[selectedLayer],
+                color: (LAYER_NAME_TO_COLOR as any)[selectedLayer as string],
               }}
             >
-              {selectedLayer}
+              {selectedLayer as string}
             </span>
           </div>
           {isLayerMenuOpen && (
@@ -146,7 +151,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     name={layer}
                     selected={layer === selectedLayer}
                     onClick={() => {
-                      selectLayer(layer.replace(/-/, ""))
+                      selectLayer(layer.replace(/-/, "") as LayerRef)
                     }}
                   />
                 ))}
@@ -164,7 +169,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               style={{ display: "grid", gridTemplateColumns: "100px 300px" }}
             >
               {elements
-                ?.filter((e) => e.type.includes("error"))
+                ?.filter((e): e is PCBTraceError => e.type.includes("error"))
                 .map((e, i) => (
                   <Fragment key={i}>
                     <div>{e.error_type}</div>

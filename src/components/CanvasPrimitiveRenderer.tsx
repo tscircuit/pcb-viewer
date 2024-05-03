@@ -54,7 +54,7 @@ export const CanvasPrimitiveRenderer = ({
         screenSpaceCellSize={200}
         width={width}
         height={height}
-        transform={transform}
+        transform={transform!}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
       {all_layers
