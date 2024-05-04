@@ -96,6 +96,7 @@ export const EditOverlay = ({
               original_center: e.center,
               new_center: e.center,
               in_progress: true,
+              created_at: Date.now(),
             })
 
             setIsMovingComponent(true)

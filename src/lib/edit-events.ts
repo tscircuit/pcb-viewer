@@ -5,6 +5,7 @@ export type EditComponentLocationEvent = {
   original_center: { x: number; y: number }
   new_center: { x: number; y: number }
   in_progress?: boolean
+  created_at: number
 }
 
 export type EditEvent = EditComponentLocationEvent
