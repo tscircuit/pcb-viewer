@@ -19,6 +19,8 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
   const container = containerRef.current!
   const containerBounds = container?.getBoundingClientRect()
   useEffect(() => {
+    const container = containerRef.current
+
     const down = (e: KeyboardEvent) => {
       if (e.key === "d") {
         setDStart({ x: mousePosRef.current.x, y: mousePosRef.current.y })
@@ -33,9 +35,33 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
       }
     }
 
-    window.addEventListener("keydown", down)
-    return () => window.removeEventListener("keydown", down)
-  }, [containerRef]) // TODO attempt to add event listener on mount and add keydown to ref
+    const addKeyListener = () => {
+      if (container) {
+        container.addEventListener("keydown", down)
+      }
+    }
+
+    const removeKeyListener = () => {
+      if (container) {
+        container.removeEventListener("keydown", down)
+      }
+    }
+
+    if (container) {
+      container.addEventListener("focus", addKeyListener)
+      container.addEventListener("blur", removeKeyListener)
+      container.addEventListener("mouseenter", addKeyListener)
+      container.addEventListener("mouseleave", removeKeyListener)
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener("focus", addKeyListener)
+        container.removeEventListener("blur", removeKeyListener)
+        container.removeEventListener("mouseenter", addKeyListener)
+        container.removeEventListener("mouseleave", removeKeyListener)
+      }
+    }
+  }, [containerRef])
 
   const screenDStart = applyToPoint(transform, dStart)
   const screenDEnd = applyToPoint(transform, dEnd)
@@ -56,7 +82,18 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
   return (
     <div
       ref={containerRef}
+      tabIndex={0}
       style={{ position: "relative" }}
+      onMouseEnter={() => {
+        if (containerRef.current) {
+          containerRef.current.focus()
+        }
+      }}
+      onMouseLeave={() => {
+        if (containerRef.current) {
+          containerRef.current.blur()
+        }
+      }}
       onMouseMove={(e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
@@ -194,7 +231,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
             {dEnd.x.toFixed(2)},{dEnd.y.toFixed(2)})<br />
             dist:{" "}
             {Math.sqrt(
-              Math.pow(dEnd.x - dStart.x, 2) + Math.pow(dEnd.y - dStart.y, 2)
+              Math.pow(dEnd.x - dStart.x, 2) + Math.pow(dEnd.y - dStart.y, 2),
             ).toFixed(2)}
           </div>
         </>
