@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
+    "@tscircuit/soup": "^0.0.16",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
     "transformation-matrix": "^2.13.0",

@@ -4,9 +4,10 @@ import type {
   PCBSMTPad,
 } from "@tscircuit/builder"
 import { useGlobalStore } from "global-store"
-import { EditEvent } from "lib/edit-events"
+import { EditEvent, EditTraceHintEvent } from "lib/edit-events"
 import { useEffect, useRef, useState } from "react"
 import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
+import type { PcbRouteHint } from "@tscircuit/soup"
 
 interface Props {
   transform?: Matrix
@@ -14,8 +15,8 @@ interface Props {
   soup: AnySoupElement[]
   disabled?: boolean
   cancelPanDrag: Function
-  onCreateEditEvent: (event: EditEvent) => void
-  onModifyEditEvent: (event: Partial<EditEvent>) => void
+  onCreateEditEvent: (event: EditTraceHintEvent) => void
+  onModifyEditEvent: (event: Partial<EditTraceHintEvent>) => void
 }
 
 const isInsideOf = (
@@ -73,15 +74,35 @@ export const EditTraceHintOverlay = ({
     dragStart: { x: number; y: number }
     originalCenter: { x: number; y: number }
     dragEnd: { x: number; y: number }
-    edit_event_id: string
+    editEvent: EditTraceHintEvent
   } | null>(null)
   const isElementSelected = selectedElement !== null
   const in_edit_trace_mode = useGlobalStore((s) => s.in_draw_trace_mode)
 
   const disabled = disabledProp || !in_edit_trace_mode
 
-  const dragStartScreen = applyToPoint(transform, dragState?.dragStart!)
-  const dragEndScreen = applyToPoint(transform, dragState?.dragEnd!)
+  let ogCenterScreen, dragEndScreen
+  if (dragState?.originalCenter && dragState?.dragEnd) {
+    ogCenterScreen = applyToPoint(transform, dragState?.originalCenter!)
+    dragEndScreen = applyToPoint(transform, dragState?.dragEnd!)
+  }
+
+  useEffect(() => {
+    console.log(isElementSelected)
+    if (!isElementSelected) return
+    console.log("adding keydown listener")
+
+    function keyDown(e: KeyboardEvent) {
+      console.log("keydown", e.key)
+      if (e.key === "Escape") {
+        setSelectedElement(null)
+        setDragState(null)
+      }
+    }
+
+    window.addEventListener("keydown", keyDown)
+    return () => window.removeEventListener("keydown", keyDown)
+  }, [isElementSelected])
 
   return (
     <div
@@ -98,46 +119,60 @@ export const EditTraceHintOverlay = ({
         if (isNaN(x) || isNaN(y)) return
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
 
-        let foundActiveComponent = false
-        for (const e of soup) {
-          if (
-            e.type === "pcb_smtpad" &&
-            isInsideOf(e, rwMousePoint, 10 / transform.a)
-          ) {
-            setSelectedElement(e)
-            // setActivePcbComponent(e.pcb_component_id)
-            // foundActiveComponent = true
-            // const edit_event_id = Math.random().toString()
-            setDragState({
-              dragStart: rwMousePoint,
-              originalCenter: { x: e.x, y: e.y },
-              dragEnd: rwMousePoint,
-              edit_event_id: "",
-            })
+        if (!isElementSelected) {
+          for (const e of soup) {
+            if (
+              e.type === "pcb_smtpad" &&
+              isInsideOf(e, rwMousePoint, 10 / transform.a)
+            ) {
+              setSelectedElement(e)
+              // setActivePcbComponent(e.pcb_component_id)
+              setDragState({
+                dragStart: rwMousePoint,
+                originalCenter: { x: e.x, y: e.y },
+                dragEnd: rwMousePoint,
+                editEvent: {
+                  pcb_edit_event_type: "edit_trace_hint",
+                  pcb_port_id: e.pcb_port_id!,
+                  path: [{ x: e.x, y: e.y }],
+                  created_at: Date.now(),
+                  edit_event_id: Math.random().toString(),
+                  in_progress: true,
+                },
+              })
 
-            cancelPanDrag()
-            // onCreateEditEvent({
-            //   edit_event_id,
-            //   pcb_edit_event_type: "edit_component_location",
-            //   pcb_component_id: e.pcb_component_id,
-            //   original_center: e.center,
-            //   new_center: e.center,
-            //   in_progress: true,
-            //   created_at: Date.now(),
-            // })
-
-            // setIsMovingComponent(true)
-            break
+              cancelPanDrag()
+              break
+            }
           }
+        } else if (dragState) {
+          cancelPanDrag()
+          const lastPointScreen = applyToPoint(
+            transform,
+            dragState.editEvent.path.slice(-1)[0],
+          )
+          const distanceFromLastPoint = Math.sqrt(
+            (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2,
+          )
+          if (distanceFromLastPoint < 20) {
+            // Close the trace hint
+            onCreateEditEvent({
+              ...dragState.editEvent,
+              in_progress: false,
+            })
+            setDragState(null)
+            setSelectedElement(null)
+            return
+          }
+          // Edit existing edit event by adding a new point at the rwMousePoint
+          setDragState({
+            ...dragState,
+            editEvent: {
+              ...dragState.editEvent,
+              path: [...dragState.editEvent.path, rwMousePoint],
+            },
+          })
         }
-        // if (!foundActiveComponent) {
-        //   setActivePcbComponent(null)
-        // }
-
-        // if (foundActiveComponent) {
-        //   e.preventDefault()
-        //   return false
-        // }
       }}
       onMouseMove={(e) => {
         if (!isElementSelected || !dragState) return
@@ -178,26 +213,38 @@ export const EditTraceHintOverlay = ({
       }}
     >
       {children}
-      <svg
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          pointerEvents: "none",
-          mixBlendMode: "difference",
-          zIndex: 1000,
-        }}
-        width={containerBounds?.width}
-        height={containerBounds?.height}
-      >
-        <line
-          x1={dragStartScreen.x}
-          y1={dragStartScreen.y}
-          x2={dragEndScreen.x}
-          y2={dragEndScreen.y}
-          stroke="red"
-        />
-      </svg>
+      {in_edit_trace_mode &&
+        dragState?.editEvent &&
+        ogCenterScreen &&
+        dragEndScreen && (
+          <svg
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              pointerEvents: "none",
+              mixBlendMode: "difference",
+              zIndex: 1000,
+            }}
+            width={containerBounds?.width}
+            height={containerBounds?.height}
+          >
+            <path
+              stroke="red"
+              d={`M ${ogCenterScreen.x} ${ogCenterScreen.y} ${dragState?.editEvent.path
+                .map((p) => applyToPoint(transform!, p))
+                .map((p) => `L ${p.x} ${p.y}`)
+                .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}
+            />
+            {/* <line
+            x1={ogCenterScreen.x}
+            y1={ogCenterScreen.y}
+            x2={dragEndScreen.x}
+            y2={dragEndScreen.y}
+            stroke="red"
+          /> */}
+          </svg>
+        )}
       {!disabled &&
         soup
           .filter((e): e is PCBSMTPad => e.type === "pcb_smtpad")
