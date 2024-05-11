@@ -3,11 +3,13 @@ import type {
   PCBComponent,
   PCBSMTPad,
 } from "@tscircuit/builder"
+import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 import { EditEvent, EditTraceHintEvent } from "lib/edit-events"
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
-import type { PcbRouteHint } from "@tscircuit/soup"
+import type { PcbRouteHint, PcbTraceHint } from "@tscircuit/soup"
+import { HotkeyActionMenu } from "./HotkeyActionMenu"
 
 interface Props {
   transform?: Matrix
@@ -88,9 +90,7 @@ export const EditTraceHintOverlay = ({
   }
 
   useEffect(() => {
-    console.log(isElementSelected)
     if (!isElementSelected) return
-    console.log("adding keydown listener")
 
     function keyDown(e: KeyboardEvent) {
       console.log("keydown", e.key)
@@ -245,35 +245,86 @@ export const EditTraceHintOverlay = ({
           /> */}
           </svg>
         )}
-      {!disabled &&
-        soup
-          .filter((e): e is PCBSMTPad => e.type === "pcb_smtpad")
-          .map((e) => {
-            return null
-            // if (!e?.center) return null
-            const projectedCenter = applyToPoint(transform, e)
-
-            return (
-              <div
-                key={e.pcb_component_id}
-                style={{
-                  position: "absolute",
-                  pointerEvents: "none",
-                  // b/c of transform, this is actually center not left/top
-                  left: projectedCenter.x,
-                  top: projectedCenter.y,
-                  width: 0.5 * transform.a + 20,
-                  height: 0.5 * transform.a + 20,
-                  transform: "translate(-50%, -50%)",
-                  background:
-                    isElementSelected &&
-                    selectedElement.pcb_smtpad_id === e.pcb_smtpad_id
-                      ? "rgba(255, 0, 0, 0.2)"
-                      : "",
-                }}
-              />
-            )
-          })}
+      {!disabled && (
+        <svg
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            pointerEvents: "none",
+            mixBlendMode: "difference",
+            zIndex: 1000,
+          }}
+          width={containerBounds?.width}
+          height={containerBounds?.height}
+        >
+          {soup
+            .filter((e): e is PcbTraceHint => e.type === "pcb_trace_hint")
+            .map((e) => {
+              const { route } = e
+              const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
+              const pcb_port_screen = applyToPoint(transform!, pcb_port)
+              return (
+                <>
+                  <rect
+                    key={`rect-${e.pcb_port_id}`}
+                    x={pcb_port_screen.x - 10}
+                    y={pcb_port_screen.y - 10}
+                    width={20}
+                    height={20}
+                    stroke="red"
+                  />
+                  <path
+                    key={`path-${e.pcb_port_id}`}
+                    stroke="red"
+                    d={`M ${pcb_port_screen.x} ${pcb_port_screen.y} ${route
+                      .map((r) => applyToPoint(transform!, r))
+                      .map((r) => `L ${r.x} ${r.y}`)
+                      .join(" ")}`}
+                  />
+                  {route
+                    .map((r) => applyToPoint(transform, r))
+                    .map((r, i) => (
+                      <Fragment key={i}>
+                        <circle cx={r.x} cy={r.y} r={8} stroke="red" />
+                        <circle
+                          cx={r.x}
+                          cy={r.y}
+                          r={16}
+                          stroke="red"
+                          fill="transparent"
+                        />
+                      </Fragment>
+                    ))}
+                </>
+              )
+            })}
+        </svg>
+      )}
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          bottom: 0,
+        }}
+      >
+        <HotkeyActionMenu
+          hotkeys={[
+            {
+              key: "v",
+              name: "Via",
+            },
+            {
+              key: "del",
+              name: "Delete Node",
+            },
+            {
+              key: "r",
+              name: "Delete Trace Hint",
+            },
+          ]}
+        />
+      </div>
     </div>
   )
 }
