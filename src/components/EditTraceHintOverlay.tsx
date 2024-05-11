@@ -93,7 +93,6 @@ export const EditTraceHintOverlay = ({
     if (!isElementSelected) return
 
     function keyDown(e: KeyboardEvent) {
-      console.log("keydown", e.key)
       if (e.key === "Escape") {
         setSelectedElement(null)
         setDragState(null)
@@ -134,7 +133,7 @@ export const EditTraceHintOverlay = ({
                 editEvent: {
                   pcb_edit_event_type: "edit_trace_hint",
                   pcb_port_id: e.pcb_port_id!,
-                  path: [{ x: e.x, y: e.y }],
+                  route: [{ x: e.x, y: e.y }],
                   created_at: Date.now(),
                   edit_event_id: Math.random().toString(),
                   in_progress: true,
@@ -149,7 +148,7 @@ export const EditTraceHintOverlay = ({
           cancelPanDrag()
           const lastPointScreen = applyToPoint(
             transform,
-            dragState.editEvent.path.slice(-1)[0],
+            dragState.editEvent.route.slice(-1)[0],
           )
           const distanceFromLastPoint = Math.sqrt(
             (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2,
@@ -169,7 +168,7 @@ export const EditTraceHintOverlay = ({
             ...dragState,
             editEvent: {
               ...dragState.editEvent,
-              path: [...dragState.editEvent.path, rwMousePoint],
+              route: [...dragState.editEvent.route, rwMousePoint],
             },
           })
         }
@@ -231,7 +230,7 @@ export const EditTraceHintOverlay = ({
           >
             <path
               stroke="red"
-              d={`M ${ogCenterScreen.x} ${ogCenterScreen.y} ${dragState?.editEvent.path
+              d={`M ${ogCenterScreen.x} ${ogCenterScreen.y} ${dragState?.editEvent.route
                 .map((p) => applyToPoint(transform!, p))
                 .map((p) => `L ${p.x} ${p.y}`)
                 .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}

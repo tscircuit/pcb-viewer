@@ -13,14 +13,15 @@ export const HotkeyActionMenu = ({
       className={css`
         display: flex;
         flex-direction: column;
-        background-color: rgba(255, 255, 255, 0.4);
         font-family: sans-serif;
         font-size: 12px;
+        margin: 8px;
       `}
     >
       {hotkeys.map((hotkey) => {
         return (
           <div
+            key={hotkey.name}
             className={css`
               display: flex;
               align-items: center;
@@ -30,7 +31,7 @@ export const HotkeyActionMenu = ({
                 padding: 1px;
                 margin: 2px;
                 color: rgba(255, 255, 255, 0.8);
-                font-size: 8px;
+                font-size: 9px;
                 border-radius: 3px;
                 text-align: center;
                 width: 20px;
@@ -38,6 +39,7 @@ export const HotkeyActionMenu = ({
               }
 
               & .name {
+                margin-left: 4px;
                 color: rgba(255, 255, 255, 0.8);
               }
             `}

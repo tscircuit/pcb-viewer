@@ -14,7 +14,8 @@ export type EditTraceHintEvent = {
   edit_event_id: string
   pcb_edit_event_type: "edit_trace_hint"
   pcb_port_id: string
-  path: Array<{ x: number; y: number; via?: boolean; to_layer?: LayerRef }>
+  pcb_trace_hint_id?: string
+  route: Array<{ x: number; y: number; via?: boolean; to_layer?: LayerRef }>
   in_progress?: boolean
   created_at: number
 }
