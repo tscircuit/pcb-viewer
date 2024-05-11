@@ -17,7 +17,7 @@ interface Props {
 const isInsideOf = (
   pcb_component: PCBComponent,
   point: { x: number; y: number },
-  padding: number = 0
+  padding: number = 0,
 ) => {
   const halfWidth = pcb_component.width / 2
   const halfHeight = pcb_component.height / 2
@@ -42,7 +42,7 @@ export const EditPlacementOverlay = ({
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [activePcbComponentId, setActivePcbComponent] = useState<null | string>(
-    null
+    null,
   )
   const [dragState, setDragState] = useState<{
     dragStart: { x: number; y: number }
@@ -55,7 +55,7 @@ export const EditPlacementOverlay = ({
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
 
-  const disabled = disabledProp || !in_edit_mode
+  const disabled = disabledProp || !in_move_footprint_mode
 
   return (
     <div

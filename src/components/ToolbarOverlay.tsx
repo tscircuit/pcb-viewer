@@ -79,7 +79,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [selectedLayer, selectLayer] = useGlobalStore(
-    (s) => [s.selected_layer, s.selectLayer] as const
+    (s) => [s.selected_layer, s.selectLayer] as const,
   )
   const [in_move_footprint_mode, in_draw_trace_mode] = useGlobalStore((s) => [
     s.in_move_footprint_mode,

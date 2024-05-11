@@ -21,7 +21,7 @@ interface Props {
 const isInsideOf = (
   pcb_component: PCBComponent,
   point: { x: number; y: number },
-  padding: number = 0
+  padding: number = 0,
 ) => {
   const halfWidth = pcb_component.width / 2
   const halfHeight = pcb_component.height / 2
@@ -34,6 +34,24 @@ const isInsideOf = (
   return point.x > left && point.x < right && point.y > top && point.y < bottom
 }
 
+/**
+ * The trace hit overlay allows you to click a pad, after
+ * clicking a pad you'll start dragging out a trace.
+ *
+ * Each time you click, you'll add to the trace hint path.
+ *
+ * If you click inside any existing hint, you'll stop adding
+ * to the trace hint path.
+ *
+ * If you select an existing hint, you'll start dragging the
+ * route hint. Mouse up stops dragging.
+ *
+ * If you right click on a hint, you'll delete it.
+ *
+ * If you right click when creating a trace hint, it will
+ * place a hint you'll exit adding the trace hint.
+ *
+ */
 export const EditTraceHintOverlay = ({
   children,
   disabled: disabledProp,
@@ -46,7 +64,7 @@ export const EditTraceHintOverlay = ({
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [activePcbComponentId, setActivePcbComponent] = useState<null | string>(
-    null
+    null,
   )
   const [dragState, setDragState] = useState<{
     dragStart: { x: number; y: number }
