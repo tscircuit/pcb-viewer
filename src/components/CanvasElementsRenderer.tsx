@@ -47,8 +47,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           transform={props.transform}
           soup={props.elements}
           cancelPanDrag={props.cancelPanDrag}
-          onCreateEditEvent={props.onCreateEditEvent}
-          onModifyEditEvent={props.onModifyEditEvent}
+          onCreateEditEvent={props.onCreateEditEvent as any}
+          onModifyEditEvent={props.onModifyEditEvent as any}
         >
           <DimensionOverlay transform={props.transform!}>
             <ToolbarOverlay elements={props.elements}>

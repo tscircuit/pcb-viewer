@@ -20,4 +20,4 @@ export type EditTraceHintEvent = {
   created_at: number
 }
 
-export type EditEvent = EditComponentLocationEvent
+export type EditEvent = EditComponentLocationEvent | EditTraceHintEvent

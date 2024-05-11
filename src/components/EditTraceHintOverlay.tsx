@@ -24,7 +24,7 @@ interface Props {
 const isInsideOf = (
   elm: PCBSMTPad,
   point: { x: number; y: number },
-  padding: number = 0,
+  padding: number = 0
 ) => {
   if (elm.shape === "circle") {
     // Not implemented
@@ -148,10 +148,10 @@ export const EditTraceHintOverlay = ({
           cancelPanDrag()
           const lastPointScreen = applyToPoint(
             transform,
-            dragState.editEvent.route.slice(-1)[0],
+            dragState.editEvent.route.slice(-1)[0]
           )
           const distanceFromLastPoint = Math.sqrt(
-            (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2,
+            (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2
           )
           if (distanceFromLastPoint < 20) {
             // Close the trace hint
@@ -319,7 +319,7 @@ export const EditTraceHintOverlay = ({
             },
             {
               key: "r",
-              name: "Delete Trace Hint",
+              name: "Delete Route",
             },
           ]}
         />
