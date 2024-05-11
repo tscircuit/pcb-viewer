@@ -19,17 +19,21 @@ interface Props {
 }
 
 const isInsideOf = (
-  pcb_component: PCBComponent,
+  elm: PCBSMTPad,
   point: { x: number; y: number },
   padding: number = 0,
 ) => {
-  const halfWidth = pcb_component.width / 2
-  const halfHeight = pcb_component.height / 2
+  if (elm.shape === "circle") {
+    // Not implemented
+    return false
+  }
+  const halfWidth = elm.width / 2
+  const halfHeight = elm.height / 2
 
-  const left = pcb_component.center.x - halfWidth - padding
-  const right = pcb_component.center.x + halfWidth + padding
-  const top = pcb_component.center.y - halfHeight - padding
-  const bottom = pcb_component.center.y + halfHeight + padding
+  const left = elm.x - halfWidth - padding
+  const right = elm.x + halfWidth + padding
+  const top = elm.y - halfHeight - padding
+  const bottom = elm.y + halfHeight + padding
 
   return point.x > left && point.x < right && point.y > top && point.y < bottom
 }
@@ -63,21 +67,21 @@ export const EditTraceHintOverlay = ({
 }: Props) => {
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const [activePcbComponentId, setActivePcbComponent] = useState<null | string>(
-    null,
-  )
+  const containerBounds = containerRef.current?.getBoundingClientRect()
+  const [selectedElement, setSelectedElement] = useState<null | PCBSMTPad>(null)
   const [dragState, setDragState] = useState<{
     dragStart: { x: number; y: number }
     originalCenter: { x: number; y: number }
     dragEnd: { x: number; y: number }
     edit_event_id: string
   } | null>(null)
-  const isPcbComponentActive = activePcbComponentId !== null
-  const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
-  const in_move_footprint_mode = useGlobalStore((s) => s.in_draw_trace_mode)
-  const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
+  const isElementSelected = selectedElement !== null
+  const in_edit_trace_mode = useGlobalStore((s) => s.in_draw_trace_mode)
 
-  const disabled = disabledProp || !in_edit_mode
+  const disabled = disabledProp || !in_edit_trace_mode
+
+  const dragStartScreen = applyToPoint(transform, dragState?.dragStart!)
+  const dragEndScreen = applyToPoint(transform, dragState?.dragEnd!)
 
   return (
     <div
@@ -97,20 +101,21 @@ export const EditTraceHintOverlay = ({
         let foundActiveComponent = false
         for (const e of soup) {
           if (
-            e.type === "pcb_component" &&
+            e.type === "pcb_smtpad" &&
             isInsideOf(e, rwMousePoint, 10 / transform.a)
           ) {
-            cancelPanDrag()
+            setSelectedElement(e)
             // setActivePcbComponent(e.pcb_component_id)
             // foundActiveComponent = true
             // const edit_event_id = Math.random().toString()
-            // setDragState({
-            //   dragStart: rwMousePoint,
-            //   originalCenter: e.center,
-            //   dragEnd: rwMousePoint,
-            //   edit_event_id,
-            // })
+            setDragState({
+              dragStart: rwMousePoint,
+              originalCenter: { x: e.x, y: e.y },
+              dragEnd: rwMousePoint,
+              edit_event_id: "",
+            })
 
+            cancelPanDrag()
             // onCreateEditEvent({
             //   edit_event_id,
             //   pcb_edit_event_type: "edit_component_location",
@@ -135,7 +140,7 @@ export const EditTraceHintOverlay = ({
         // }
       }}
       onMouseMove={(e) => {
-        if (!activePcbComponentId || !dragState) return
+        if (!isElementSelected || !dragState) return
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
@@ -160,7 +165,7 @@ export const EditTraceHintOverlay = ({
         // })
       }}
       onMouseUp={(e) => {
-        if (!activePcbComponentId) return
+        if (!isElementSelected) return
         // setActivePcbComponent(null)
         // setIsMovingComponent(false)
         // if (dragState) {
@@ -173,10 +178,31 @@ export const EditTraceHintOverlay = ({
       }}
     >
       {children}
+      <svg
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          pointerEvents: "none",
+          mixBlendMode: "difference",
+          zIndex: 1000,
+        }}
+        width={containerBounds?.width}
+        height={containerBounds?.height}
+      >
+        <line
+          x1={dragStartScreen.x}
+          y1={dragStartScreen.y}
+          x2={dragEndScreen.x}
+          y2={dragEndScreen.y}
+          stroke="red"
+        />
+      </svg>
       {!disabled &&
         soup
           .filter((e): e is PCBSMTPad => e.type === "pcb_smtpad")
           .map((e) => {
+            return null
             // if (!e?.center) return null
             const projectedCenter = applyToPoint(transform, e)
 
@@ -193,8 +219,8 @@ export const EditTraceHintOverlay = ({
                   height: 0.5 * transform.a + 20,
                   transform: "translate(-50%, -50%)",
                   background:
-                    isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
+                    isElementSelected &&
+                    selectedElement.pcb_smtpad_id === e.pcb_smtpad_id
                       ? "rgba(255, 0, 0, 0.2)"
                       : "",
                 }}
