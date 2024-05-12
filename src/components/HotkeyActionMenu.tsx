@@ -1,4 +1,5 @@
 import { css } from "@emotion/css"
+import { useEffect } from "react"
 
 export const HotkeyActionMenu = ({
   hotkeys,
@@ -6,8 +7,25 @@ export const HotkeyActionMenu = ({
   hotkeys: Array<{
     key: string
     name: string
+    onUse: Function
   }>
 }) => {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      hotkeys.forEach((hotkey) => {
+        if (event.key === hotkey.key) {
+          hotkey.onUse()
+        }
+      })
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [hotkeys])
+
   return (
     <div
       className={css`
@@ -43,7 +61,6 @@ export const HotkeyActionMenu = ({
                 color: rgba(255, 255, 255, 0.8);
               }
             `}
-            key={hotkey.key}
           >
             <div className="key">{hotkey.key}</div>{" "}
             <div className="name">{hotkey.name}</div>

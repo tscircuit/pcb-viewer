@@ -24,7 +24,7 @@ interface Props {
 const isInsideOf = (
   elm: PCBSMTPad,
   point: { x: number; y: number },
-  padding: number = 0
+  padding: number = 0,
 ) => {
   if (elm.shape === "circle") {
     // Not implemented
@@ -77,7 +77,9 @@ export const EditTraceHintOverlay = ({
     originalCenter: { x: number; y: number }
     dragEnd: { x: number; y: number }
     editEvent: EditTraceHintEvent
+    shouldDrawRouteHint?: boolean
   } | null>(null)
+  const [shouldCreateAsVia, setShouldCreateAsVia] = useState(false)
   const isElementSelected = selectedElement !== null
   const in_edit_trace_mode = useGlobalStore((s) => s.in_draw_trace_mode)
 
@@ -125,7 +127,7 @@ export const EditTraceHintOverlay = ({
               isInsideOf(e, rwMousePoint, 10 / transform.a)
             ) {
               setSelectedElement(e)
-              // setActivePcbComponent(e.pcb_component_id)
+              setShouldCreateAsVia(false)
               setDragState({
                 dragStart: rwMousePoint,
                 originalCenter: { x: e.x, y: e.y },
@@ -133,25 +135,67 @@ export const EditTraceHintOverlay = ({
                 editEvent: {
                   pcb_edit_event_type: "edit_trace_hint",
                   pcb_port_id: e.pcb_port_id!,
-                  route: [{ x: e.x, y: e.y }],
+                  pcb_trace_hint_id: Math.random().toString(),
+                  route: [],
                   created_at: Date.now(),
                   edit_event_id: Math.random().toString(),
                   in_progress: true,
                 },
+                shouldDrawRouteHint: false,
               })
 
               cancelPanDrag()
               break
             }
           }
-        } else if (dragState) {
+        } else {
+          setDragState({
+            ...(dragState as any),
+            dragStart: rwMousePoint,
+            shouldDrawRouteHint: true,
+          })
+        }
+      }}
+      onMouseMove={(e) => {
+        if (!isElementSelected || !dragState) return
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        if (isNaN(x) || isNaN(y)) return
+        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+        setDragState({
+          ...dragState,
+          dragEnd: rwMousePoint,
+        })
+      }}
+      onMouseUp={(e) => {
+        if (!isElementSelected) return
+        if (!dragState?.shouldDrawRouteHint) return
+
+        // Compute distance that has been dragged
+        const { dragStart, dragEnd } = dragState
+        const rwDist = Math.sqrt(
+          (dragEnd.x - dragStart.x) ** 2 + (dragEnd.y - dragStart.y) ** 2,
+        )
+        const screenDist = rwDist * transform.a
+
+        // If the user dragged, don't create a point
+        if (screenDist > 20) return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        if (isNaN(x) || isNaN(y)) return
+        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+
+        if (dragState) {
           cancelPanDrag()
           const lastPointScreen = applyToPoint(
             transform,
-            dragState.editEvent.route.slice(-1)[0]
+            dragState.editEvent.route.slice(-1)[0] ?? dragState.originalCenter,
           )
           const distanceFromLastPoint = Math.sqrt(
-            (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2
+            (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2,
           )
           if (distanceFromLastPoint < 20) {
             // Close the trace hint
@@ -168,47 +212,13 @@ export const EditTraceHintOverlay = ({
             ...dragState,
             editEvent: {
               ...dragState.editEvent,
-              route: [...dragState.editEvent.route, rwMousePoint],
+              route: [
+                ...dragState.editEvent.route,
+                { ...rwMousePoint, via: shouldCreateAsVia },
+              ],
             },
           })
         }
-      }}
-      onMouseMove={(e) => {
-        if (!isElementSelected || !dragState) return
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        if (isNaN(x) || isNaN(y)) return
-        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
-        setDragState({
-          ...dragState,
-          dragEnd: rwMousePoint,
-        })
-        // onModifyEditEvent({
-        //   edit_event_id: dragState.edit_event_id,
-        //   new_center: {
-        //     x:
-        //       dragState.originalCenter.x +
-        //       rwMousePoint.x -
-        //       dragState.dragStart.x,
-        //     y:
-        //       dragState.originalCenter.y +
-        //       rwMousePoint.y -
-        //       dragState.dragStart.y,
-        //   },
-        // })
-      }}
-      onMouseUp={(e) => {
-        if (!isElementSelected) return
-        // setActivePcbComponent(null)
-        // setIsMovingComponent(false)
-        // if (dragState) {
-        //   onModifyEditEvent({
-        //     edit_event_id: dragState.edit_event_id,
-        //     in_progress: false,
-        //   })
-        //   setDragState(null)
-        // }
       }}
     >
       {children}
@@ -235,17 +245,37 @@ export const EditTraceHintOverlay = ({
                 .map((p) => `L ${p.x} ${p.y}`)
                 .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}
             />
-            {/* <line
-            x1={ogCenterScreen.x}
-            y1={ogCenterScreen.y}
-            x2={dragEndScreen.x}
-            y2={dragEndScreen.y}
-            stroke="red"
-          /> */}
+            {dragState?.editEvent.route.map((r, i) => {
+              const rScreen = applyToPoint(transform!, r)
+              return (
+                <Fragment key={`r-${i}`}>
+                  {r.via && (
+                    <circle cx={rScreen.x} cy={rScreen.y} r={16} stroke="red" />
+                  )}
+                  <circle cx={rScreen.x} cy={rScreen.y} r={8} stroke="red" />
+                </Fragment>
+              )
+            })}
+            {shouldCreateAsVia && (
+              <circle
+                key="via-outer-circle"
+                cx={dragEndScreen.x}
+                cy={dragEndScreen.y}
+                r={16}
+                stroke="red"
+              />
+            )}
+            <circle
+              cx={dragEndScreen.x}
+              cy={dragEndScreen.y}
+              r={8}
+              stroke="red"
+            />
           </svg>
         )}
       {!disabled && (
         <svg
+          key={"pcb-trace-hints"}
           style={{
             position: "absolute",
             left: 0,
@@ -264,7 +294,7 @@ export const EditTraceHintOverlay = ({
               const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
               const pcb_port_screen = applyToPoint(transform!, pcb_port)
               return (
-                <>
+                <Fragment key={e.pcb_trace_hint_id}>
                   <rect
                     key={`rect-${e.pcb_port_id}`}
                     x={pcb_port_screen.x - 10}
@@ -282,20 +312,22 @@ export const EditTraceHintOverlay = ({
                       .join(" ")}`}
                   />
                   {route
-                    .map((r) => applyToPoint(transform, r))
+                    .map((r) => ({ ...r, ...applyToPoint(transform, r) }))
                     .map((r, i) => (
                       <Fragment key={i}>
                         <circle cx={r.x} cy={r.y} r={8} stroke="red" />
-                        <circle
-                          cx={r.x}
-                          cy={r.y}
-                          r={16}
-                          stroke="red"
-                          fill="transparent"
-                        />
+                        {r.via && (
+                          <circle
+                            cx={r.x}
+                            cy={r.y}
+                            r={16}
+                            stroke="red"
+                            fill="transparent"
+                          />
+                        )}
                       </Fragment>
                     ))}
-                </>
+                </Fragment>
               )
             })}
         </svg>
@@ -307,22 +339,29 @@ export const EditTraceHintOverlay = ({
           bottom: 0,
         }}
       >
-        <HotkeyActionMenu
-          hotkeys={[
-            {
-              key: "v",
-              name: "Via",
-            },
-            {
-              key: "del",
-              name: "Delete Node",
-            },
-            {
-              key: "r",
-              name: "Delete Route",
-            },
-          ]}
-        />
+        {isElementSelected && (
+          <HotkeyActionMenu
+            hotkeys={[
+              {
+                key: "v",
+                name: "Toggle Via",
+                onUse: () => {
+                  setShouldCreateAsVia(!shouldCreateAsVia)
+                },
+              },
+              // {
+              //   key: "del",
+              //   name: "Delete Node",
+              //   onUse: () => {},
+              // },
+              // {
+              //   key: "r",
+              //   name: "Delete Route",
+              //   onUse: () => {},
+              // },
+            ]}
+          />
+        )}
       </div>
     </div>
   )

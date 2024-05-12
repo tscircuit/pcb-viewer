@@ -1,16 +1,16 @@
 import { AnySoupElement } from "@tscircuit/soup"
 import { EditTraceHintEvent } from "lib/edit-events"
+import { su } from "@tscircuit/soup-util"
 
 export const applyTraceHintEditEvent = (
   soup: AnySoupElement[],
-  edit_event: EditTraceHintEvent
+  edit_event: EditTraceHintEvent,
 ): AnySoupElement[] => {
   const existing_trace_hint = soup.find(
     (th) =>
       th.type === "pcb_trace_hint" &&
-      th.pcb_trace_hint_id === edit_event.pcb_trace_hint_id
+      th.pcb_trace_hint_id === edit_event.pcb_trace_hint_id,
   )
-  console.log("apply trace hint called", existing_trace_hint)
 
   if (existing_trace_hint) {
     soup = soup.map((e: any) =>
@@ -19,20 +19,33 @@ export const applyTraceHintEditEvent = (
             ...e,
             route: edit_event.route,
           }
-        : e
+        : e,
     )
   } else {
     // create the trace hint
-    console.log("creating trace hint")
-    soup = soup.concat([
-      {
-        type: "pcb_trace_hint",
-        pcb_trace_hint_id: edit_event.pcb_trace_hint_id!,
-        route: edit_event.route,
-        pcb_port_id: edit_event.pcb_port_id!,
-        pcb_component_id: "",
-      },
-    ])
+    const pcb_port = su(soup).pcb_port.get(edit_event.pcb_port_id!)
+
+    // console.log("edit_event", edit_event, pcb_port)
+
+    soup = soup
+      // TODO until builder supports multiple trace hints, replace any
+      // old trace hints on this same port
+      .filter(
+        (e) =>
+          !(
+            e.type === "pcb_trace_hint" &&
+            e.pcb_port_id === edit_event.pcb_port_id
+          ),
+      )
+      .concat([
+        {
+          type: "pcb_trace_hint",
+          pcb_trace_hint_id: edit_event.pcb_trace_hint_id!,
+          route: edit_event.route,
+          pcb_port_id: edit_event.pcb_port_id!,
+          pcb_component_id: pcb_port?.pcb_component_id!,
+        },
+      ])
   }
 
   return soup

@@ -53,22 +53,22 @@ export const PCBViewer = ({
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
     const { center, width, height } = elements.some((e) =>
-      e.type.startsWith("pcb_")
+      e.type.startsWith("pcb_"),
     )
       ? findBoundsAndCenter(elements.filter((e) => e.type.startsWith("pcb_")))
       : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
     const scaleFactor = Math.min(
       (elmBounds.width ?? 0) / width,
       (elmBounds.height ?? 0) / height,
-      100
+      100,
     )
     setTransform(
       compose(
         translate((elmBounds.width ?? 0) / 2, (elmBounds.height ?? 0) / 2),
         // translate(100, 0),
         scale(scaleFactor, -scaleFactor, 0, 0),
-        translate(-center.x, -center.y)
-      )
+        translate(-center.x, -center.y),
+      ),
     )
   }
 
@@ -99,7 +99,7 @@ export const PCBViewer = ({
   if (error) return <div style={{ color: "red" }}> {error} </div>
 
   const pcbElmsPreEdit: AnySoupElement[] = (soup ?? stateElements).filter(
-    (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_")
+    (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
   )
 
   const elements = useMemo(() => {
@@ -114,7 +114,7 @@ export const PCBViewer = ({
     const newEditEvents = editEvents.map((e) =>
       e.edit_event_id === modifiedEvent.edit_event_id
         ? { ...e, ...modifiedEvent }
-        : e
+        : e,
     )
     setEditEvents(newEditEvents)
     onEditEventsChanged?.(newEditEvents)
