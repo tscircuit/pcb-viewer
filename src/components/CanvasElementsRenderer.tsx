@@ -9,8 +9,9 @@ import { MouseElementTracker } from "./MouseElementTracker"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
-import { EditOverlay } from "./EditOverlay"
+import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditEvent } from "lib/edit-events"
+import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnySoupElement[]
@@ -33,7 +34,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   }, [props.elements])
   return (
     <MouseElementTracker transform={props.transform} primitives={primitives}>
-      <EditOverlay
+      <EditPlacementOverlay
         disabled={!props.allowEditing}
         transform={props.transform}
         soup={props.elements}
@@ -41,20 +42,32 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         onCreateEditEvent={props.onCreateEditEvent}
         onModifyEditEvent={props.onModifyEditEvent}
       >
-        <DimensionOverlay transform={props.transform!}>
-          <ToolbarOverlay elements={props.elements}>
-            <ErrorOverlay transform={props.transform} elements={props.elements}>
-              <CanvasPrimitiveRenderer
+        <EditTraceHintOverlay
+          disabled={!props.allowEditing}
+          transform={props.transform}
+          soup={props.elements}
+          cancelPanDrag={props.cancelPanDrag}
+          onCreateEditEvent={props.onCreateEditEvent as any}
+          onModifyEditEvent={props.onModifyEditEvent as any}
+        >
+          <DimensionOverlay transform={props.transform!}>
+            <ToolbarOverlay elements={props.elements}>
+              <ErrorOverlay
                 transform={props.transform}
-                primitives={primitives}
-                width={props.width}
-                height={props.height}
-                grid={props.grid}
-              />
-            </ErrorOverlay>
-          </ToolbarOverlay>
-        </DimensionOverlay>
-      </EditOverlay>
+                elements={props.elements}
+              >
+                <CanvasPrimitiveRenderer
+                  transform={props.transform}
+                  primitives={primitives}
+                  width={props.width}
+                  height={props.height}
+                  grid={props.grid}
+                />
+              </ErrorOverlay>
+            </ToolbarOverlay>
+          </DimensionOverlay>
+        </EditTraceHintOverlay>
+      </EditPlacementOverlay>
     </MouseElementTracker>
   )
 }

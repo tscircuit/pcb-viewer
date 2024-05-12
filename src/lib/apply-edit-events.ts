@@ -5,6 +5,7 @@ import {
 } from "@tscircuit/builder"
 import { EditEvent } from "./edit-events"
 import { translate } from "transformation-matrix"
+import { applyTraceHintEditEvent } from "./apply-edit-events/apply-edit-trace-hint-event"
 
 export const applyEditEvents = (
   soup: AnySoupElement[],
@@ -24,6 +25,8 @@ export const applyEditEvents = (
           ? e
           : transformPCBElement(e, mat)
       )
+    } else if (edit_event.pcb_edit_event_type === "edit_trace_hint") {
+      soup = applyTraceHintEditEvent(soup, edit_event)
     }
   }
 
