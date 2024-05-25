@@ -11,12 +11,20 @@ export const SilkscreenExample: React.FC = () => {
           name="R1"
           footprint={
             <footprint>
-              <silkscreentext
+              {/* <silkscreentext
                 text="hello world"
                 pcbX={0}
                 pcbY={0}
                 pcbRotation={0}
                 layer="top"
+              /> */}
+              <smtpad
+                pcbX={0}
+                pcbY={0}
+                shape="rect"
+                layer="top"
+                width={1}
+                height={1}
               />
             </footprint>
           }
