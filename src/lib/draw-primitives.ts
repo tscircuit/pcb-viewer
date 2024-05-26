@@ -25,8 +25,20 @@ export const drawText = (drawer: Drawer, text: Text) => {
   // Non-gerber compatible
   // drawer.text(text.text, text.x, text.y)
 
-  const lines = convertTextToLines(text)
-  for (const line of lines) {
+  console.log("attempting to draw text")
+  drawer.equip({
+    size: 0.1,
+    shape: "circle",
+    color: "red",
+  })
+  drawer.moveTo(0, 0)
+  drawer.lineTo(1, 1)
+  console.log(text)
+  text.x ??= 0
+  text.y ??= 0
+  const text_lines = convertTextToLines(text)
+  console.log(text_lines)
+  for (const line of text_lines) {
     drawLine(drawer, line)
   }
 }
@@ -60,7 +72,7 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
       return drawCircle(drawer, primitive)
   }
   throw new Error(
-    `Unknown primitive type: ${(primitive as any).pcb_drawing_type}`
+    `Unknown primitive type: ${(primitive as any).pcb_drawing_type}`,
   )
 }
 

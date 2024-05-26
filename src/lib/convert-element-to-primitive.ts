@@ -1,16 +1,22 @@
-import { Soup } from "@tscircuit/builder"
 import { Primitive } from "./types"
+import type { AnySoupElement, PCBHole } from "@tscircuit/soup"
+
+type MetaData = {
+  _parent_pcb_component?: any
+  _parent_source_component?: any
+  _source_port?: any
+}
 
 export const convertElementToPrimitives = (
-  element: Soup.AnySoupElement,
-  allElements: Soup.AnySoupElement[]
-): Primitive[] => {
+  element: AnySoupElement,
+  allElements: AnySoupElement[],
+): (Primitive & MetaData)[] => {
   const _parent_pcb_component =
     "pcb_component_id" in element
       ? allElements.find(
           (elm) =>
             elm.type === "pcb_component" &&
-            elm.pcb_component_id === element.pcb_component_id
+            elm.pcb_component_id === element.pcb_component_id,
         )
       : undefined
   const _parent_source_component =
@@ -19,7 +25,7 @@ export const convertElementToPrimitives = (
           (elm) =>
             elm.type === "source_component" &&
             elm.source_component_id ===
-              _parent_pcb_component.source_component_id
+              _parent_pcb_component.source_component_id,
         )
       : undefined
   const _source_port =
@@ -27,7 +33,7 @@ export const convertElementToPrimitives = (
       ? allElements.find(
           (e) =>
             e.type === "source_port" &&
-            e.source_port_id === element.source_port_id
+            e.source_port_id === element.source_port_id,
         )
       : undefined
 
@@ -117,7 +123,7 @@ export const convertElementToPrimitives = (
       }
     }
     case "pcb_hole": {
-      const { x, y, hole_diameter } = element as Soup.PCBHole
+      const { x, y, hole_diameter } = element as PCBHole
 
       return [
         {
@@ -225,6 +231,19 @@ export const convertElementToPrimitives = (
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_text": {
+      return [
+        {
+          pcb_drawing_type: "text",
+          x: element.pcbX,
+          y: element.pcbY,
+          layer: "top",
+          text: element.text,
+          size: 12, // Add the required 'size' property
         },
       ]
     }
