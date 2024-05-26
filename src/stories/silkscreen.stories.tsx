@@ -54,7 +54,7 @@ export const SilkscreenExample: React.FC = () => {
                 anchorAlignment="center"
                 fontSize={0.25}
                 pcbRotation={0}
-                layer="top"
+                layer="bottom"
               />
             </footprint>
           }

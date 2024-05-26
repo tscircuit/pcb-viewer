@@ -236,12 +236,14 @@ export const convertElementToPrimitives = (
     }
 
     case "pcb_silkscreen_text": {
+      console.log(element)
       return [
         {
           pcb_drawing_type: "text",
           x: element.anchor_position.x,
           y: element.anchor_position.y,
-          layer: "top",
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
           align: element.anchor_alignment ?? "center",
           text: element.text,
           size: element.font_size, // Add the required 'size' property

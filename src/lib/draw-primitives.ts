@@ -22,15 +22,15 @@ export const drawText = (drawer: Drawer, text: Text) => {
   const textWidth = getTextWidth(text)
   const textHeight = text.size
   if (text.align === "top_left") {
-    alignOffset.y = -text.size
+    alignOffset.y = -textHeight
   } else if (text.align === "bottom_right") {
     alignOffset.x = -textWidth
   } else if (text.align === "top_right") {
     alignOffset.x = -textWidth
-    alignOffset.y = -text.size
+    alignOffset.y = -textHeight
   } else if (text.align === "center") {
     alignOffset.x = -textWidth / 2
-    alignOffset.y = -text.size / 2
+    alignOffset.y = -textHeight / 2
   }
 
   // Non-gerber compatible
