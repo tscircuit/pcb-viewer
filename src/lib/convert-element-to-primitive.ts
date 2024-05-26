@@ -235,8 +235,81 @@ export const convertElementToPrimitives = (
       ]
     }
 
+    case "pcb_silkscreen_rect": {
+      return [
+        {
+          pcb_drawing_type: "rect",
+          x: element.center.x,
+          y: element.center.y,
+          w: element.width,
+          h: element.height,
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_circle": {
+      return [
+        {
+          pcb_drawing_type: "circle",
+          x: element.center.x,
+          y: element.center.y,
+          r: element.radius,
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_line": {
+      return [
+        {
+          pcb_drawing_type: "line",
+          x1: element.x1,
+          y1: element.y1,
+          x2: element.x2,
+          y2: element.y2,
+          width: 0.1, // TODO add strokewidth
+          squareCap: false,
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_path": {
+      const {
+        layer,
+        pcb_component_id,
+        pcb_silkscreen_path_id,
+        route, // Array<{ x: number, y: number }>
+        type,
+      } = element
+
+      return route
+        .slice(0, -1)
+        .map((point, index) => {
+          const nextPoint = route[index + 1]
+          return {
+            pcb_drawing_type: "line",
+            x1: point.x,
+            y1: point.y,
+            x2: nextPoint.x,
+            y2: nextPoint.y,
+            width: 0.1, // TODO add strokewidth
+            squareCap: false,
+            layer: layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          } as Primitive & MetaData
+        })
+        .filter(Boolean)
+    }
+
     case "pcb_silkscreen_text": {
-      console.log(element)
       return [
         {
           pcb_drawing_type: "text",

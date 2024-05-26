@@ -25,7 +25,7 @@
     "@tscircuit/builder": "^1.5.100",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/props": "^0.0.4",
-    "@tscircuit/react-fiber": "^1.1.19",
+    "@tscircuit/react-fiber": "^1.1.20",
     "@tscircuit/soup": "^0.0.22",
     "@types/node": "18.7.23",
     "@types/react": "^18.0.21",
