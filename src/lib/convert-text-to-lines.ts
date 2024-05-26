@@ -1,10 +1,20 @@
 import { lineAlphabet } from "../assets/alphabet"
 import { Line, Text } from "./types"
 
+export const LETTER_HEIGHT_TO_WIDTH_RATIO = 0.6
+export const LETTER_HEIGHT_TO_SPACE_RATIO = 0.2
+
+export const getTextWidth = (text: Text): number => {
+  return (
+    text.text.length * text.size * LETTER_HEIGHT_TO_WIDTH_RATIO +
+    (text.text.length - 1) * text.size * LETTER_HEIGHT_TO_SPACE_RATIO
+  )
+}
+
 export const convertTextToLines = (text: Text): Line[] => {
   const strokeWidth = text.size / 8
-  const letterWidth = text.size * 0.6
-  const letterSpace = text.size * 0.2
+  const letterWidth = text.size * LETTER_HEIGHT_TO_WIDTH_RATIO
+  const letterSpace = text.size * LETTER_HEIGHT_TO_SPACE_RATIO
 
   const lines: Line[] = []
   for (let letterIndex = 0; letterIndex < text.text.length; letterIndex++) {

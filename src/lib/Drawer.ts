@@ -46,8 +46,13 @@ export const LAYER_NAME_TO_COLOR = {
   tkeepout: colors.board.b_crtyd,
   tplace: colors.board.b_silks,
 
+  top_silkscreen: colors.board.f_silks,
+  bottom_silkscreen: colors.board.b_silks,
+
   ...colors.board,
 }
+
+export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
 
 export const DEFAULT_DRAW_ORDER = [
   "top",
@@ -94,7 +99,7 @@ export class Drawer {
       Object.entries(canvasLayerMap).map(([name, canvas]) => [
         name,
         canvas.getContext("2d")!,
-      ])
+      ]),
     )
     this.transform = identity()
     // positive is up (cartesian)
@@ -237,7 +242,7 @@ export class Drawer {
         lastPoint$.x - size$ / 2,
         lastPoint$.y - size$ / 2,
         size$,
-        size$
+        size$,
       )
     ctx.beginPath()
     ctx.moveTo(lastPoint$.x, lastPoint$.y)

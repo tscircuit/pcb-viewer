@@ -1,6 +1,6 @@
 import { Primitive, Line, Text, Circle, Rect } from "./types"
 import { Drawer } from "./Drawer"
-import { convertTextToLines } from "./convert-text-to-lines"
+import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
 
 export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
@@ -17,16 +17,33 @@ export const drawText = (drawer: Drawer, text: Text) => {
     fontSize: text.size,
     color: text.layer,
   })
-  // TODO handle align
-  if (text.align && text.align !== "top-left") {
-    console.warn("Unhandled text align", text.align)
+
+  let alignOffset = { x: 0, y: 0 }
+  const textWidth = getTextWidth(text)
+  const textHeight = text.size
+  if (text.align === "top_left") {
+    alignOffset.y = -textHeight
+  } else if (text.align === "bottom_right") {
+    alignOffset.x = -textWidth
+  } else if (text.align === "top_right") {
+    alignOffset.x = -textWidth
+    alignOffset.y = -textHeight
+  } else if (text.align === "center") {
+    alignOffset.x = -textWidth / 2
+    alignOffset.y = -textHeight / 2
   }
 
   // Non-gerber compatible
   // drawer.text(text.text, text.x, text.y)
 
-  const lines = convertTextToLines(text)
-  for (const line of lines) {
+  text.x ??= 0
+  text.y ??= 0
+  const text_lines = convertTextToLines({
+    ...text,
+    x: text.x + alignOffset.x,
+    y: text.y + alignOffset.y,
+  })
+  for (const line of text_lines) {
     drawLine(drawer, line)
   }
 }
@@ -60,7 +77,7 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
       return drawCircle(drawer, primitive)
   }
   throw new Error(
-    `Unknown primitive type: ${(primitive as any).pcb_drawing_type}`
+    `Unknown primitive type: ${(primitive as any).pcb_drawing_type}`,
   )
 }
 

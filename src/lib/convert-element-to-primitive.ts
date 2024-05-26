@@ -1,16 +1,22 @@
-import { Soup } from "@tscircuit/builder"
 import { Primitive } from "./types"
+import type { AnySoupElement, PCBHole } from "@tscircuit/soup"
+
+type MetaData = {
+  _parent_pcb_component?: any
+  _parent_source_component?: any
+  _source_port?: any
+}
 
 export const convertElementToPrimitives = (
-  element: Soup.AnySoupElement,
-  allElements: Soup.AnySoupElement[]
-): Primitive[] => {
+  element: AnySoupElement,
+  allElements: AnySoupElement[],
+): (Primitive & MetaData)[] => {
   const _parent_pcb_component =
     "pcb_component_id" in element
       ? allElements.find(
           (elm) =>
             elm.type === "pcb_component" &&
-            elm.pcb_component_id === element.pcb_component_id
+            elm.pcb_component_id === element.pcb_component_id,
         )
       : undefined
   const _parent_source_component =
@@ -19,7 +25,7 @@ export const convertElementToPrimitives = (
           (elm) =>
             elm.type === "source_component" &&
             elm.source_component_id ===
-              _parent_pcb_component.source_component_id
+              _parent_pcb_component.source_component_id,
         )
       : undefined
   const _source_port =
@@ -27,7 +33,7 @@ export const convertElementToPrimitives = (
       ? allElements.find(
           (e) =>
             e.type === "source_port" &&
-            e.source_port_id === element.source_port_id
+            e.source_port_id === element.source_port_id,
         )
       : undefined
 
@@ -117,7 +123,7 @@ export const convertElementToPrimitives = (
       }
     }
     case "pcb_hole": {
-      const { x, y, hole_diameter } = element as Soup.PCBHole
+      const { x, y, hole_diameter } = element as PCBHole
 
       return [
         {
@@ -225,6 +231,95 @@ export const convertElementToPrimitives = (
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_rect": {
+      return [
+        {
+          pcb_drawing_type: "rect",
+          x: element.center.x,
+          y: element.center.y,
+          w: element.width,
+          h: element.height,
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_circle": {
+      return [
+        {
+          pcb_drawing_type: "circle",
+          x: element.center.x,
+          y: element.center.y,
+          r: element.radius,
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_line": {
+      return [
+        {
+          pcb_drawing_type: "line",
+          x1: element.x1,
+          y1: element.y1,
+          x2: element.x2,
+          y2: element.y2,
+          width: 0.1, // TODO add strokewidth
+          squareCap: false,
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
+      ]
+    }
+
+    case "pcb_silkscreen_path": {
+      const {
+        layer,
+        pcb_component_id,
+        pcb_silkscreen_path_id,
+        route, // Array<{ x: number, y: number }>
+        type,
+      } = element
+
+      return route
+        .slice(0, -1)
+        .map((point, index) => {
+          const nextPoint = route[index + 1]
+          return {
+            pcb_drawing_type: "line",
+            x1: point.x,
+            y1: point.y,
+            x2: nextPoint.x,
+            y2: nextPoint.y,
+            width: 0.1, // TODO add strokewidth
+            squareCap: false,
+            layer: layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          } as Primitive & MetaData
+        })
+        .filter(Boolean)
+    }
+
+    case "pcb_silkscreen_text": {
+      return [
+        {
+          pcb_drawing_type: "text",
+          x: element.anchor_position.x,
+          y: element.anchor_position.y,
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+          align: element.anchor_alignment ?? "center",
+          text: element.text,
+          size: element.font_size, // Add the required 'size' property
         },
       ]
     }
