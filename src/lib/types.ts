@@ -1,15 +1,15 @@
 import type { AnyElement } from "@tscircuit/builder"
 
 export type AlignString =
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "center-left"
+  | "top_left"
+  | "top_center"
+  | "top_right"
+  | "center_left"
   | "center"
-  | "center-right"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right"
+  | "center_right"
+  | "bottom_left"
+  | "bottom_center"
+  | "bottom_right"
 
 export type LayerRef = string
 

@@ -239,11 +239,12 @@ export const convertElementToPrimitives = (
       return [
         {
           pcb_drawing_type: "text",
-          x: element.pcbX,
-          y: element.pcbY,
+          x: element.anchor_position.x,
+          y: element.anchor_position.y,
           layer: "top",
+          align: element.anchor_alignment ?? "center",
           text: element.text,
-          size: 12, // Add the required 'size' property
+          size: element.font_size, // Add the required 'size' property
         },
       ]
     }
