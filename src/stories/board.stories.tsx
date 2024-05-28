@@ -6,7 +6,7 @@ export const BoardExample: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer>
-        <board center_x={0} center_y={0} width="50mm" height="50mm" />
+        <board pcbCenterX={0} pcbCenterY={0} width="50mm" height="50mm" />
       </PCBViewer>
     </div>
   )
