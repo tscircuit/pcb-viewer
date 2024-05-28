@@ -7,14 +7,12 @@ export const ViaExample: React.FC = () => {
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer>
         <via
-          x={0}
-          y={0}
           pcbX="0mm"
           pcbY="0mm"
-          hole_diameter="1mm"
-          outer_diameter="2mm"
-          from_layer="top"
-          to_layer="bottom"
+          holeDiameter="1mm"
+          outerDiameter="2mm"
+          fromLayer="top"
+          toLayer="bottom"
           name="V1"
         />
       </PCBViewer>

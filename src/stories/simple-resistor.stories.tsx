@@ -18,8 +18,8 @@ export const SimpleResistorThruHole = () => {
         {/* <resistor footprint="dip" resistance="10k" /> */}
         {/* TODO use resistor with some kind of through hole footprint name */}
         <component name="R1">
-          <platedhole x={0} y={0} hole_diameter="1mm" outer_diameter="2mm" />
-          <platedhole x={6} y={0} hole_diameter="1mm" outer_diameter="2mm" />
+          <platedhole pcbX={0} pcbY={0} holeDiameter="1mm" outerDiameter="2mm" />
+          <platedhole pcbX={6} pcbY={0} holeDiameter="1mm" outerDiameter="2mm" />
         </component>
       </PCBViewer>
     </div>

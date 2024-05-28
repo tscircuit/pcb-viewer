@@ -9,8 +9,6 @@ export const TraceErrorCircuit1: React.FC = () => {
         <resistor
           name="R1"
           resistance="10k"
-          x={-2}
-          y={0}
           pcbX={-2}
           pcbY={1}
           footprint="0402"
@@ -18,14 +16,12 @@ export const TraceErrorCircuit1: React.FC = () => {
         <resistor
           name="R2"
           resistance="10k"
-          x={2}
-          y={0}
           pcbX={2}
           pcbY={0}
           footprint="0402"
-          pcb_layer="bottom"
+          pcbLayer="bottom"
         />
-        <trace from=".R1 > .right" to=".R2 > .left" />
+        <trace path={[".R1 > .right", ".R2 > .left"]} />
       </PCBViewer>
     </div>
   )
@@ -38,14 +34,12 @@ export const TraceErrorCircuit2: React.FC = () => {
         <resistor
           name="R1"
           resistance="10k"
-          x={-2}
-          y={0}
           pcbX={-2}
           pcbY={1}
           footprint="0402"
         />
-        <resistor name="R2" resistance="10k" x={2} y={0} pcb_layer="bottom" />
-        <trace from=".R1 > .right" to=".R2 > .left" />
+        <resistor name="R2" resistance="10k" pcbLayer="bottom" />
+        <trace path={[".R1 > .right", ".R2 > .left"]} />
       </PCBViewer>
     </div>
   )
@@ -60,33 +54,31 @@ export const TraceErrorCircuit3 = () => (
           footprint={
             <footprint>
               <platedhole
-                x={0}
-                y={-4}
-                port_hints={[`1`]}
-                hole_diameter={0.8}
-                outer_diameter={2}
-                inner_diameter={1.2}
+                pcbX={0}
+                pcbY={-4}
+                portHints={[`1`]}
+                holeDiameter={0.8}
+                outerDiameter={2}
+                innerDiameter={1.2}
               />
               <platedhole
-                x={0}
-                y={4}
-                port_hints={[`2`]}
-                hole_diameter={0.8}
-                outer_diameter={2}
-                inner_diameter={1.2}
+                pcbX={0}
+                pcbY={4}
+                portHints={[`2`]}
+                holeDiameter={0.8}
+                outerDiameter={2}
+                innerDiameter={1.2}
               />
             </footprint>
           }
         >
-          <port x={0} y={-0.7} name="plus" pin_number={1} direction="up" />
-          <port x={0} y={0.7} name="minus" pin_number={2} direction="down" />
+          <port pcbX={0} pcbY={-0.7} name="plus" pinNumber={1} direction="up" />
+          <port pcbX={0} pcbY={0.7} name="minus" pinNumber={2} direction="down" />
         </component>
         <resistor
           name="R1"
-          x={2}
-          y={0}
-          pcb_x={8}
-          pcb_y={0}
+          pcbX={8}
+          pcbY={0}
           resistance={"10k"}
           footprint={"0805"}
         />
