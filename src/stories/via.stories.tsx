@@ -9,8 +9,8 @@ export const ViaExample: React.FC = () => {
         <via
           x={0}
           y={0}
-          pcb_x="0mm"
-          pcb_y="0mm"
+          pcbX="0mm"
+          pcbY="0mm"
           hole_diameter="1mm"
           outer_diameter="2mm"
           from_layer="top"
