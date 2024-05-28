@@ -9,8 +9,8 @@ export const CoordinateFlip: React.FC = () => {
         <resistor
           name="R1"
           footprint="0402"
-          pcb_x="1mm"
-          pcb_y="1mm"
+          pcbX="1mm"
+          pcbY="1mm"
           resistance="1k"
         />
       </PCBViewer>

@@ -19,7 +19,7 @@ export const MultiLayerCircuit: React.FC = () => {
           pcbX={2}
           pcbY={0}
           footprint="0402"
-          pcbLayer="bottom"
+          layer="bottom"
         />
         <trace
           path={[".R1 > .right", ".R2 > .left"]}

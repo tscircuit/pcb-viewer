@@ -80,7 +80,7 @@ export const PCBViewer = ({
       await createRoot()
         .render(children, projectBuilder as any)
         .then((elements) => {
-          setStateElements(elements)
+          setStateElements(elements as any)
           setError(null)
         })
     }
@@ -111,9 +111,9 @@ export const PCBViewer = ({
     onEditEventsChanged?.([...editEvents, event])
   }
   const onModifyEditEvent = (modifiedEvent: Partial<EditEvent>) => {
-    const newEditEvents = editEvents.map((e) =>
+    const newEditEvents: EditEvent[] = editEvents.map((e) =>
       e.edit_event_id === modifiedEvent.edit_event_id
-        ? { ...e, ...modifiedEvent }
+        ? ({ ...e, ...modifiedEvent } as EditEvent)
         : e,
     )
     setEditEvents(newEditEvents)

@@ -13,6 +13,7 @@ export const ViaExample: React.FC = () => {
           outerDiameter="2mm"
           fromLayer="top"
           toLayer="bottom"
+          // @ts-ignore
           name="V1"
         />
       </PCBViewer>

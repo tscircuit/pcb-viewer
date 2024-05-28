@@ -7,22 +7,22 @@ const ConnectedResistors = () => {
       <PCBViewer>
         <resistor
           name="R1"
-          pcb_x={-4}
-          pcb_y={0}
+          pcbX={-4}
+          pcbY={0}
           footprint="1210"
           resistance="10kohm"
         />
         <resistor
           name="R2"
-          pcb_x={2}
-          pcb_y={3}
+          pcbX={2}
+          pcbY={3}
           footprint="0603"
           resistance="10kohm"
         />
         <resistor
           name="R3"
-          pcb_x={0}
-          pcb_y={6}
+          pcbX={0}
+          pcbY={6}
           footprint="0805"
           resistance="10kohm"
         />

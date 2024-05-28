@@ -7,15 +7,15 @@ export const SpacedResistors = () => {
       <PCBViewer>
         <resistor
           name="R1"
-          pcb_x="500mm"
-          pcb_y="500mm"
+          pcbX="500mm"
+          pcbY="500mm"
           footprint="0805"
           resistance="10k"
         />
         <resistor
           name="R2"
-          pcb_x="540mm"
-          pcb_y="510mm"
+          pcbX="540mm"
+          pcbY="510mm"
           footprint="0805"
           resistance="10k"
         />

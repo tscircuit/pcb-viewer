@@ -19,7 +19,7 @@ export const TraceErrorCircuit1: React.FC = () => {
           pcbX={2}
           pcbY={0}
           footprint="0402"
-          pcbLayer="bottom"
+          layer="bottom"
         />
         <trace path={[".R1 > .right", ".R2 > .left"]} />
       </PCBViewer>
@@ -38,7 +38,7 @@ export const TraceErrorCircuit2: React.FC = () => {
           pcbY={1}
           footprint="0402"
         />
-        <resistor name="R2" resistance="10k" pcbLayer="bottom" />
+        <resistor name="R2" resistance="10k" layer="bottom" />
         <trace path={[".R1 > .right", ".R2 > .left"]} />
       </PCBViewer>
     </div>
@@ -59,7 +59,6 @@ export const TraceErrorCircuit3 = () => (
                 portHints={[`1`]}
                 holeDiameter={0.8}
                 outerDiameter={2}
-                innerDiameter={1.2}
               />
               <platedhole
                 pcbX={0}
@@ -67,13 +66,18 @@ export const TraceErrorCircuit3 = () => (
                 portHints={[`2`]}
                 holeDiameter={0.8}
                 outerDiameter={2}
-                innerDiameter={1.2}
               />
             </footprint>
           }
         >
           <port pcbX={0} pcbY={-0.7} name="plus" pinNumber={1} direction="up" />
-          <port pcbX={0} pcbY={0.7} name="minus" pinNumber={2} direction="down" />
+          <port
+            pcbX={0}
+            pcbY={0.7}
+            name="minus"
+            pinNumber={2}
+            direction="down"
+          />
         </component>
         <resistor
           name="R1"
