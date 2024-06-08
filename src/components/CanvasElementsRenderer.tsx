@@ -28,7 +28,7 @@ export interface CanvasElementsRendererProps {
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const primitives = useMemo(() => {
     const primitives = props.elements.flatMap((elm) =>
-      convertElementToPrimitives(elm, props.elements)
+      convertElementToPrimitives(elm, props.elements),
     )
     return primitives
   }, [props.elements])

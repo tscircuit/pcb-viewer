@@ -1,4 +1,4 @@
-import { Primitive } from "./types"
+import type { Primitive } from "./types"
 import type { AnySoupElement, PCBHole } from "@tscircuit/soup"
 
 type MetaData = {
@@ -278,14 +278,27 @@ export const convertElementToPrimitives = (
       ]
     }
 
+    case "pcb_fabrication_note_path":
     case "pcb_silkscreen_path": {
       const {
-        layer,
         pcb_component_id,
-        pcb_silkscreen_path_id,
         route, // Array<{ x: number, y: number }>
         type,
       } = element
+
+      let layer:
+        | "bottom_silkscreen"
+        | "top_silkscreen"
+        | "bottom_fabrication"
+        | "top_fabrication"
+        | null
+
+      if (type === "pcb_silkscreen_path") {
+        layer =
+          element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen"
+      } else if (type === "pcb_fabrication_note_path") {
+        layer = "top_fabrication"
+      }
 
       return route
         .slice(0, -1)
@@ -299,7 +312,7 @@ export const convertElementToPrimitives = (
             y2: nextPoint.y,
             width: 0.1, // TODO add strokewidth
             squareCap: false,
-            layer: layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+            layer: layer!,
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -320,6 +333,23 @@ export const convertElementToPrimitives = (
           align: element.anchor_alignment ?? "center",
           text: element.text,
           size: element.font_size, // Add the required 'size' property
+        },
+      ]
+    }
+
+    case "pcb_fabrication_note_text": {
+      return [
+        {
+          pcb_drawing_type: "text",
+          x: element.anchor_position.x,
+          y: element.anchor_position.y,
+          layer:
+            element.layer === "bottom"
+              ? "bottom_fabrication"
+              : "top_fabrication",
+          size: element.font_size,
+          align: element.anchor_alignment ?? "center",
+          text: element.text,
         },
       ]
     }
