@@ -80,6 +80,7 @@ export const PCBViewer = ({
       await createRoot()
         .render(children, projectBuilder as any)
         .then((elements) => {
+          console.log(elements)
           setStateElements(elements as any)
           setError(null)
         })
