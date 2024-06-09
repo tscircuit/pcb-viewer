@@ -9,6 +9,7 @@ import {
 } from "@tscircuit/builder"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
+import packageJson from "../../package.json"
 
 interface Props {
   children?: any
@@ -102,6 +103,22 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       }}
     >
       {children}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 4,
+          right: 8,
+          pointerEvents: "none",
+          color: "white",
+          fontSize: 11,
+          opacity: isMouseOverContainer ? 0.5 : 0,
+          transition: "opacity 1s",
+          transitionDelay: "2s",
+          fontFamily: "sans-serif",
+        }}
+      >
+        @tscircuit/pcb-viewer@{packageJson.version}
+      </div>
       <div
         style={{
           position: "absolute",
