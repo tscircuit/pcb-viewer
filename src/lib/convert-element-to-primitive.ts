@@ -121,22 +121,28 @@ export const convertElementToPrimitives = (
           },
         ]
       }
+      return []
     }
     case "pcb_hole": {
-      const { x, y, hole_diameter } = element as PCBHole
+      if (element.hole_shape === "round" || !element.hole_shape) {
+        const { x, y, hole_diameter } = element
 
-      return [
-        {
-          pcb_drawing_type: "circle",
-          x,
-          y,
-          r: hole_diameter / 2,
-          layer: "drill",
-          _element: element,
-          _parent_pcb_component,
-          _parent_source_component,
-        },
-      ]
+        return [
+          {
+            pcb_drawing_type: "circle",
+            x,
+            y,
+            r: hole_diameter / 2,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+          },
+        ]
+      }
+      // TODO square hole
+      // TODO oval hole
+      return []
     }
     case "pcb_plated_hole": {
       const { x, y, hole_diameter, outer_diameter } = element

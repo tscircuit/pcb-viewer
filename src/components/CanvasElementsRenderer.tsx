@@ -1,6 +1,6 @@
 import React, { useCallback } from "react"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import { AnyElement, AnySoupElement } from "@tscircuit/builder"
+import type { AnySoupElement } from "@tscircuit/soup"
 import { useMemo } from "react"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { Matrix } from "transformation-matrix"

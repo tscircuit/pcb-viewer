@@ -1,5 +1,6 @@
 import { css } from "@emotion/css"
-import { AnySoupElement, PCBPort, PCBTraceError } from "@tscircuit/builder"
+import { PCBPort, PCBTraceError } from "@tscircuit/builder"
+import type { AnySoupElement } from "@tscircuit/soup"
 import { useEffect, useRef, useState } from "react"
 import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
 
@@ -24,11 +25,11 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
 
           const port1 = elements.find(
             (el): el is PCBPort =>
-              el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[0]
+              el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[0],
           )
           const port2 = elements.find(
             (el): el is PCBPort =>
-              el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[1]
+              el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[1],
           )
 
           if (!port1 || !port2) return null

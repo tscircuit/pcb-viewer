@@ -1,17 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { createRoot } from "@tscircuit/react-fiber"
-import {
-  AnyElement,
-  AnySoupElement,
-  createProjectBuilder,
-} from "@tscircuit/builder"
+import { createProjectBuilder } from "@tscircuit/builder"
+import type { AnySoupElement } from "@tscircuit/soup"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import { findBoundsAndCenter } from "@tscircuit/builder"
 import { ContextProviders } from "components/ContextProviders"
-import { EditEvent } from "lib/edit-events"
+import type { EditEvent } from "lib/edit-events"
 import { applyEditEvents } from "lib/apply-edit-events"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
@@ -33,7 +30,7 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
 }: Props) => {
-  const [stateElements, setStateElements] = useState<Array<AnyElement>>([])
+  const [stateElements, setStateElements] = useState<Array<AnySoupElement>>([])
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -55,7 +52,9 @@ export const PCBViewer = ({
     const { center, width, height } = elements.some((e) =>
       e.type.startsWith("pcb_"),
     )
-      ? findBoundsAndCenter(elements.filter((e) => e.type.startsWith("pcb_")))
+      ? findBoundsAndCenter(
+          elements.filter((e) => e.type.startsWith("pcb_")) as any,
+        )
       : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
     const scaleFactor =
       Math.min(

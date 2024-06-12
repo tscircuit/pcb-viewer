@@ -1,12 +1,12 @@
 import { Fragment, useState } from "react"
 import { css } from "@emotion/css"
 import {
-  AnySoupElement,
   LayerRef,
   PCBTraceError,
   SourceError,
   all_layers,
 } from "@tscircuit/builder"
+import type { AnySoupElement } from "@tscircuit/soup"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
 import packageJson from "../../package.json"
