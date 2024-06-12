@@ -56,7 +56,7 @@ export const SilkscreenText: React.FC = () => {
             />
           </footprint>
         }
-      ></component>
+      />
     </PCBViewer>
   )
 }
