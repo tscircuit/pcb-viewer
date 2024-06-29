@@ -145,33 +145,35 @@ export const convertElementToPrimitives = (
       return []
     }
     case "pcb_plated_hole": {
-      const { x, y, hole_diameter, outer_diameter } = element
+      if(element.shape === "circle") {
+        const { x, y, hole_diameter, outer_diameter } = element
 
-      return [
-        {
-          pcb_drawing_type: "circle",
-          x,
-          y,
-          r: outer_diameter / 2,
-          // TODO support layer on pcb_plated_hole
-          layer: "top",
-          _element: element,
-          _parent_pcb_component,
-          _parent_source_component,
-          _source_port,
-        },
-        {
-          pcb_drawing_type: "circle",
-          x,
-          y,
-          r: hole_diameter / 2,
-          // TODO support layer on pcb_plated_hole
-          layer: "drill",
+        return [
+          {
+            pcb_drawing_type: "circle",
+            x,
+            y,
+            r: outer_diameter / 2,
+            // TODO support layer on pcb_plated_hole
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          },
+          {
+            pcb_drawing_type: "circle",
+            x,
+            y,
+            r: hole_diameter / 2,
+            // TODO support layer on pcb_plated_hole
+            layer: "drill",
 
-          // double highlights are annoying
-          // _element: element,
-        },
-      ]
+            // double highlights are annoying
+            // _element: element,
+          },
+        ]
+      }     
     }
     case "pcb_trace": {
       const primitives: Primitive[] = []
@@ -265,6 +267,19 @@ export const convertElementToPrimitives = (
           layer:
             element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
         },
+      ]
+    }
+
+    case "pcb_silkscreen_oval": {
+      return [
+        {
+          pcb_drawing_type: "oval",
+          x: element.center.x,
+          y: element.center.y,
+          rX: element.radiusX / 2,
+          rY: element.radiusY / 2,
+          layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        }
       ]
     }
 
