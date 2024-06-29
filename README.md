@@ -6,6 +6,8 @@
 
 Render PCBs w/ React
 
+![image](https://github.com/tscircuit/pcb-viewer/assets/1910070/e010f44e-b8c0-4e1d-9d59-1ea66716427f)
+
 ## Usage
 
 ```
