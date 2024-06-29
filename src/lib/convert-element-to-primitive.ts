@@ -276,8 +276,8 @@ export const convertElementToPrimitives = (
           pcb_drawing_type: "oval",
           x: element.center.x,
           y: element.center.y,
-          rX: element.radiusX / 2,
-          rY: element.radiusY / 2,
+          rX: element.radius_x / 2,
+          rY: element.radius_y / 2,
           layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
         }
       ]
