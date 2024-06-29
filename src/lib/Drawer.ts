@@ -147,6 +147,18 @@ export class Drawer {
     ctx.closePath()
   }
 
+  oval(x: number, y: number, rx: number, ry: number) {
+    const rx$ = scaleOnly(this.transform, rx)
+    const ry$ = scaleOnly(this.transform, ry)
+    const [x$, y$] = applyToPoint(this.transform, [x, y])
+    this.applyAperture()
+    const ctx = this.getLayerCtx()
+    ctx.beginPath()
+    ctx.ellipse(x$, y$, rx$, ry$, 0, 0, 2 * Math.PI)
+    ctx.fill()
+    ctx.closePath()
+  }
+
   /* NOTE: This is not gerber compatible */
   debugText(text: string, x: number, y: number) {
     const [x$, y$] = applyToPoint(this.transform, [x, y])

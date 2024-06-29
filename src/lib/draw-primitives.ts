@@ -1,6 +1,6 @@
-import { Primitive, Line, Text, Circle, Rect } from "./types"
 import { Drawer } from "./Drawer"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
+import { Circle, Line, Oval, Primitive, Rect, Text } from "./types"
 
 export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
@@ -65,6 +65,13 @@ export const drawCircle = (drawer: Drawer, circle: Circle) => {
   drawer.circle(circle.x, circle.y, circle.r)
 }
 
+export const drawOval = (drawer: Drawer, oval: Oval) => {
+  drawer.equip({
+    color: oval.layer,
+  })
+  drawer.oval(oval.x, oval.y, oval.rX, oval.rY)
+}
+
 export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
   switch (primitive.pcb_drawing_type) {
     case "line":
@@ -75,10 +82,9 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
       return drawRect(drawer, primitive)
     case "circle":
       return drawCircle(drawer, primitive)
+    case "oval":
+      return drawOval(drawer, primitive)
   }
-  throw new Error(
-    `Unknown primitive type: ${(primitive as any).pcb_drawing_type}`,
-  )
 }
 
 export const drawPrimitives = (drawer: Drawer, primitives: Primitive[]) => {
