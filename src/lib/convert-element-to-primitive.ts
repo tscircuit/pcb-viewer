@@ -283,6 +283,19 @@ export const convertElementToPrimitives = (
       ]
     }
 
+    case "pcb_silkscreen_pill": {
+      return [
+        {
+          pcb_drawing_type: "pill",
+          x: element.center.x,
+          y: element.center.y,
+          w: element.width,
+          h: element.height,
+          layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
+      ]
+    }
+
     case "pcb_silkscreen_line": {
       return [
         {
