@@ -211,16 +211,6 @@ export const PlatedHolePillShape: React.FC = () => {
           },
         ]}
       />
-      {/* <platedhole
-            shape="oval"
-            pcbX={0}
-            pcbY={0}
-            outerHeight="1mm"
-            outerWidth="2mm"
-            innerHeight={"0.5mm"}
-            innerWidth={"1mm"}
-          /> */}
-      {/* </PCBViewer> */}
     </div>
   );
 };
