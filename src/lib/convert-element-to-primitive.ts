@@ -1,5 +1,5 @@
+import type { AnySoupElement } from "@tscircuit/soup"
 import type { Primitive } from "./types"
-import type { AnySoupElement, PCBHole } from "@tscircuit/soup"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -173,7 +173,34 @@ export const convertElementToPrimitives = (
             // _element: element,
           },
         ]
-      }     
+      } else if(element.shape === "oval") {
+          const { x, y, outer_height, outer_width, hole_height, hole_width, layers } = element
+          
+          return [
+            {
+              pcb_drawing_type: "oval",
+              x,
+              y,
+              rX: outer_width / 2,
+              rY: outer_height / 2,
+              layer: "top", // TODO: Confirm layer handling for oval plated holes
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+            },
+            {
+              pcb_drawing_type: "oval",
+              x,
+              y,
+              rX: hole_width / 2,
+              rY: hole_height / 2,
+              layer: "drill",
+            },
+          ]
+        } else {
+          return []
+        }
     }
     case "pcb_trace": {
       const primitives: Primitive[] = []
@@ -283,18 +310,18 @@ export const convertElementToPrimitives = (
       ]
     }
 
-    case "pcb_silkscreen_pill": {
-      return [
-        {
-          pcb_drawing_type: "pill",
-          x: element.center.x,
-          y: element.center.y,
-          w: element.width,
-          h: element.height,
-          layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-        },
-      ]
-    }
+    // case "pcb_silkscreen_pill": {
+    //   return [
+    //     {
+    //       pcb_drawing_type: "pill",
+    //       x: element.center.x,
+    //       y: element.center.y,
+    //       w: element.width,
+    //       h: element.height,
+    //       layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+    //     },
+    //   ]
+    // }
 
     case "pcb_silkscreen_line": {
       return [
