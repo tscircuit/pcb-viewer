@@ -76,7 +76,7 @@ export const drawPill = (drawer: Drawer, pill: Pill) => {
   drawer.equip({
     color: pill.layer,
   })
-  drawer.pill(pill.x, pill.y, pill.w, pill.h)
+  drawer.pill(pill.x, pill.y, pill.rX, pill.rY)
 }
 
 export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {

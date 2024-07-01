@@ -159,19 +159,35 @@ export class Drawer {
     ctx.closePath()
   }
 
-  pill(x: number, y: number, w: number, h: number) {
-    const [x$, y$] = applyToPoint(this.transform, [x - w / 2, y + h / 2]);
-    const width$ = scaleOnly(this.transform, w)
-    const height$ = scaleOnly(this.transform, h)
-    const radius = Math.min(width$, height$) / 2
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
-    ctx.beginPath()
-    ctx.arc(x$ + radius, y$ + radius, radius, Math.PI, Math.PI * 1.5);
-    ctx.arc(x$ + width$ - radius, y$ + radius, radius, Math.PI * 1.5, 0);
-    ctx.arc(x$ + width$ - radius, y$ + height$  - radius, radius, 0, Math.PI * 0.5);
-    ctx.arc(x$ + radius, y$ + height$  - radius, radius, Math.PI * 0.5, Math.PI);
+  pill(x: number, y: number, rx: number, ry: number) {
+    const [x$, y$] = applyToPoint(this.transform, [x, y]);
+    const rx$ = scaleOnly(this.transform, rx);
+    const ry$ = scaleOnly(this.transform, ry);
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
+    const width$ = rx$ * 2;
+    const height$ = ry$ * 2;
+    const outerRadius$ = Math.min(rx$, ry$);
+    const holeRadius$ = outerRadius$ * 0.5;
+    const outerStraightLength = width$ - 2 * outerRadius$;
+    const holeStraightLength = (width$ - 2 * holeRadius$) * 0.8;
+    this.drawPillShape(ctx, x$ - rx$, y$ - ry$, height$, outerRadius$, outerStraightLength);
     ctx.fill();
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    const holeX = x$ - rx$ + (width$ - holeStraightLength - 2 * holeRadius$) / 2;
+    const holeY = y$ - holeRadius$;
+    this.drawPillShape(ctx, holeX, holeY, 2 * holeRadius$, holeRadius$, holeStraightLength);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawPillShape(ctx: CanvasRenderingContext2D, x: number, y: number, height: number, radius: number, straightLength: number) {
+    ctx.beginPath();
+    ctx.arc(x + radius, y + height / 2, radius, Math.PI / 2, -Math.PI / 2);
+    ctx.lineTo(x + radius + straightLength, y);
+    ctx.arc(x + radius + straightLength, y + height / 2, radius, -Math.PI / 2, Math.PI / 2);
+    ctx.lineTo(x + radius, y + height);
     ctx.closePath();
   }
 

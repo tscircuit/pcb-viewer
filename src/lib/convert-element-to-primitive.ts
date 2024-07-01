@@ -289,8 +289,8 @@ export const convertElementToPrimitives = (
           pcb_drawing_type: "pill",
           x: element.center.x,
           y: element.center.y,
-          w: element.width,
-          h: element.height,
+          rX: element.radius_x / 2,
+          rY: element.radius_y / 2,
           layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
         },
       ]
