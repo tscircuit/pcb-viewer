@@ -68,8 +68,8 @@ export interface Pill extends PCBDrawingObject {
   pcb_drawing_type: "pill"
   x: number
   y: number
-  w: number
-  h: number
+  rX: number
+  rY: number
 }
 
 export type Primitive = Line | Text | Rect | Circle | Oval | Pill
