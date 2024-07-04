@@ -174,7 +174,7 @@ export const convertElementToPrimitives = (
           },
         ]
       } else if(element.shape === "oval") {
-          const { x, y, outer_height, outer_width, hole_height, hole_width, layers } = element
+          const { x, y, outer_height, outer_width, hole_height, hole_width } = element
           
           return [
             {
@@ -198,7 +198,33 @@ export const convertElementToPrimitives = (
               layer: "drill",
             },
           ]
-        } else {
+        } else if (element.shape === "pill") {
+          const { x, y, outer_height, outer_width, hole_height, hole_width } = element
+          
+          return [
+            {
+              pcb_drawing_type: "pill",
+              x,
+              y,
+              w: outer_width,
+              h: outer_height,
+              layer: "top", // TODO: Confirm layer handling for oval plated holes
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+            },
+            {
+              pcb_drawing_type: "pill",
+              x,
+              y,
+              w: hole_width,
+              h: hole_height,
+              layer: "drill",
+            },
+          ]
+        }
+        else {
           return []
         }
     }

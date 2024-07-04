@@ -35,7 +35,12 @@ export const PlatedHolePillShape: React.FC = () => {
             x: 0,
             y: 0,
             layers: ["top", "bottom"],
-            port_hints: ["1"],
+            outer_width: 2.6,
+            outer_height: 3.78,
+            hole_width: 1.1,
+            hole_height: 2.28,
+            shape: "pill",
+            port_hints: [],
             pcb_component_id: "pcb_generic_component_0",
           },
           {
