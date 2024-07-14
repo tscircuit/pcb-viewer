@@ -1,5 +1,6 @@
 import type { AnySoupElement } from "@tscircuit/soup"
 import type { Primitive } from "./types"
+import { su } from "@tscircuit/soup-util"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -9,14 +10,14 @@ type MetaData = {
 
 export const convertElementToPrimitives = (
   element: AnySoupElement,
-  allElements: AnySoupElement[],
+  allElements: AnySoupElement[]
 ): (Primitive & MetaData)[] => {
   const _parent_pcb_component =
     "pcb_component_id" in element
       ? allElements.find(
           (elm) =>
             elm.type === "pcb_component" &&
-            elm.pcb_component_id === element.pcb_component_id,
+            elm.pcb_component_id === element.pcb_component_id
         )
       : undefined
   const _parent_source_component =
@@ -25,17 +26,22 @@ export const convertElementToPrimitives = (
           (elm) =>
             elm.type === "source_component" &&
             elm.source_component_id ===
-              _parent_pcb_component.source_component_id,
+              _parent_pcb_component.source_component_id
         )
       : undefined
-  const _source_port =
+
+  const _source_port_id =
     "source_port_id" in element
-      ? allElements.find(
-          (e) =>
-            e.type === "source_port" &&
-            e.source_port_id === element.source_port_id,
-        )
-      : undefined
+      ? element.source_port_id
+      : "pcb_port_id" in element
+        ? su(allElements).pcb_port.get(element.pcb_port_id!)?.source_port_id
+        : undefined
+
+  const _source_port = _source_port_id
+    ? allElements.find(
+        (e) => e.type === "source_port" && e.source_port_id === _source_port_id
+      )
+    : undefined
 
   switch (element.type) {
     case "pcb_board": {
@@ -145,7 +151,7 @@ export const convertElementToPrimitives = (
       return []
     }
     case "pcb_plated_hole": {
-      if(element.shape === "circle") {
+      if (element.shape === "circle") {
         const { x, y, hole_diameter, outer_diameter } = element
 
         return [
@@ -173,60 +179,61 @@ export const convertElementToPrimitives = (
             // _element: element,
           },
         ]
-      } else if(element.shape === "oval") {
-          const { x, y, outer_height, outer_width, hole_height, hole_width } = element
-          
-          return [
-            {
-              pcb_drawing_type: "oval",
-              x,
-              y,
-              rX: outer_width / 2,
-              rY: outer_height / 2,
-              layer: "top", // TODO: Confirm layer handling for oval plated holes
-              _element: element,
-              _parent_pcb_component,
-              _parent_source_component,
-              _source_port,
-            },
-            {
-              pcb_drawing_type: "oval",
-              x,
-              y,
-              rX: hole_width / 2,
-              rY: hole_height / 2,
-              layer: "drill",
-            },
-          ]
-        } else if (element.shape === "pill") {
-          const { x, y, outer_height, outer_width, hole_height, hole_width } = element
-          
-          return [
-            {
-              pcb_drawing_type: "pill",
-              x,
-              y,
-              w: outer_width,
-              h: outer_height,
-              layer: "top", // TODO: Confirm layer handling for oval plated holes
-              _element: element,
-              _parent_pcb_component,
-              _parent_source_component,
-              _source_port,
-            },
-            {
-              pcb_drawing_type: "pill",
-              x,
-              y,
-              w: hole_width,
-              h: hole_height,
-              layer: "drill",
-            },
-          ]
-        }
-        else {
-          return []
-        }
+      } else if (element.shape === "oval") {
+        const { x, y, outer_height, outer_width, hole_height, hole_width } =
+          element
+
+        return [
+          {
+            pcb_drawing_type: "oval",
+            x,
+            y,
+            rX: outer_width / 2,
+            rY: outer_height / 2,
+            layer: "top", // TODO: Confirm layer handling for oval plated holes
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          },
+          {
+            pcb_drawing_type: "oval",
+            x,
+            y,
+            rX: hole_width / 2,
+            rY: hole_height / 2,
+            layer: "drill",
+          },
+        ]
+      } else if (element.shape === "pill") {
+        const { x, y, outer_height, outer_width, hole_height, hole_width } =
+          element
+
+        return [
+          {
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: outer_width,
+            h: outer_height,
+            layer: "top", // TODO: Confirm layer handling for oval plated holes
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          },
+          {
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill",
+          },
+        ]
+      } else {
+        return []
+      }
     }
     case "pcb_trace": {
       const primitives: Primitive[] = []
@@ -331,8 +338,9 @@ export const convertElementToPrimitives = (
           y: element.center.y,
           rX: element.radius_x / 2,
           rY: element.radius_y / 2,
-          layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-        }
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+        },
       ]
     }
 
@@ -344,7 +352,8 @@ export const convertElementToPrimitives = (
           y: element.center.y,
           w: element.width,
           h: element.height,
-          layer: element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+          layer:
+            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
         },
       ]
     }

@@ -15,12 +15,13 @@ const containerStyle = {
 } as const
 
 export const getTextForHighlightedPrimitive = (
-  prim: HighlightedPrimitive
+  prim: HighlightedPrimitive,
 ): string => {
   const {
     _element: element,
     _parent_pcb_component,
     _parent_source_component,
+    _source_port,
   } = prim
   switch (element.type) {
     case "pcb_smtpad":
@@ -34,9 +35,21 @@ export const getTextForHighlightedPrimitive = (
       ) {
         s += `.${_parent_source_component.name} > `
       }
-      s += (element.port_hints ?? (element as any)._source_port?.port_hints)
-        .map((ph: string) => `port.${ph}`)
+
+      const port_hints = Array.from(
+        new Set(
+          (element.port_hints ?? []).concat(
+            (_source_port as any)?.port_hints ?? [],
+          ),
+        ),
+      )
+        // reverse alphabetical order
+        .sort((a, b) => b.localeCompare(a))
+
+      s += port_hints
+        .map((ph: string) => (ph.match(/^[0-9]+$/) ? `port.${ph}` : `.${ph}`))
         .join(", ")
+
       return s
     }
     default: {

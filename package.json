@@ -23,7 +23,7 @@
     "@storybook/nextjs": "^8.0.6",
     "@storybook/react": "^8.0.6",
     "@swc/core": "^1.4.12",
-    "@tscircuit/builder": "^1.5.117",
+    "@tscircuit/builder": "^1.5.142",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/props": "^0.0.7",
     "@tscircuit/react-fiber": "^1.1.25",
