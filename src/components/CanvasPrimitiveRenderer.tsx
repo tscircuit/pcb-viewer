@@ -1,12 +1,12 @@
 import { drawGrid } from "lib/draw-grid"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import React, { useEffect, useRef } from "react"
-import { Matrix } from "transformation-matrix"
+import type { Matrix } from "transformation-matrix"
 import { drawPrimitives } from "../lib/draw-primitives"
 import { Drawer } from "../lib/Drawer"
-import { GridConfig, Primitive } from "../lib/types"
+import type { GridConfig, Primitive } from "../lib/types"
 import { useGlobalStore } from "global-store"
-import { all_layers } from "@tscircuit/builder"
+import { all_layers } from "@tscircuit/soup"
 
 interface Props {
   primitives: Primitive[]
