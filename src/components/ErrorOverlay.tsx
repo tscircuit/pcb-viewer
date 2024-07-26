@@ -10,10 +10,55 @@ interface Props {
   children: any
 }
 
+const ErrorSVG = ({ screenPort1, screenPort2, errorCenter, canLineBeDrawn }) => (
+  <svg
+    style={{
+      position: "absolute",
+      left: 0,
+      top: 0,
+      pointerEvents: "none",
+      mixBlendMode: "difference",
+      zIndex: 1000,
+    }}
+    width="100%"
+    height="100%"
+  >
+    {canLineBeDrawn && (
+      <>
+        <line
+          x1={screenPort1.x}
+          y1={screenPort1.y}
+          x2={errorCenter.x}
+          y2={errorCenter.y}
+          strokeWidth={1.5}
+          strokeDasharray="2,2"
+          stroke="red"
+        />
+        <line
+          x1={errorCenter.x}
+          y1={errorCenter.y}
+          x2={screenPort2.x}
+          y2={screenPort2.y}
+          strokeWidth={1.5}
+          strokeDasharray="2,2"
+          stroke="red"
+        />
+        <rect
+          x={errorCenter.x - 5}
+          y={errorCenter.y - 5}
+          width={10}
+          height={10}
+          transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
+          fill="red"
+        />
+      </>
+    )}
+  </svg>
+)
+
 export const ErrorOverlay = ({ children, transform, elements }: Props) => {
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const containerBounds = containerRef?.current?.getBoundingClientRect()
 
   return (
     <div style={{ position: "relative" }} ref={containerRef}>
@@ -63,49 +108,12 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
 
           return (
             <>
-              <svg
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  pointerEvents: "none",
-                  mixBlendMode: "difference",
-                  zIndex: 1000,
-                }}
-                width={containerBounds?.width}
-                height={containerBounds?.height}
-              >
-                {canLineBeDrawn && (
-                  <>
-                    <line
-                      x1={screenPort1.x}
-                      y1={screenPort1.y}
-                      x2={errorCenter.x}
-                      y2={errorCenter.y}
-                      strokeWidth={1.5}
-                      strokeDasharray="2,2"
-                      stroke="red"
-                    />
-                    <line
-                      x1={errorCenter.x}
-                      y1={errorCenter.y}
-                      x2={screenPort2.x}
-                      y2={screenPort2.y}
-                      strokeWidth={1.5}
-                      strokeDasharray="2,2"
-                      stroke="red"
-                    />
-                    <rect
-                      x={errorCenter.x - 5}
-                      y={errorCenter.y - 5}
-                      width={10}
-                      height={10}
-                      transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
-                      fill="red"
-                    />
-                  </>
-                )}
-              </svg>
+              <ErrorSVG
+                screenPort1={screenPort1}
+                screenPort2={screenPort2}
+                errorCenter={errorCenter}
+                canLineBeDrawn={canLineBeDrawn}
+              />
               <div
                 className={css`
                   position: absolute;
