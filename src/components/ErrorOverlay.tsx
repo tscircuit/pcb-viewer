@@ -1,8 +1,8 @@
 import { css } from "@emotion/css"
 import { PCBPort, PCBTraceError } from "@tscircuit/builder"
 import type { AnySoupElement } from "@tscircuit/soup"
-import { useEffect, useRef, useState } from "react"
-import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
+import { useRef } from "react"
+import { Matrix, applyToPoint, identity } from "transformation-matrix"
 
 interface Props {
   transform?: Matrix
@@ -50,16 +50,14 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
             isNaN(screenPort2.y)
           )
 
-          const midPoint = {
-            x: (screenPort1.x + screenPort2.x) / 2,
-            y: (screenPort1.y + screenPort2.y) / 2,
-          }
+          const errorCenter = el.center
+            ? applyToPoint(transform, { x: el.center.x, y: el.center.y })
+            : {
+                x: (screenPort1.x + screenPort2.x) / 2,
+                y: (screenPort1.y + screenPort2.y) / 2,
+              }
 
-          if (isNaN(midPoint.x) || isNaN(midPoint.y)) {
-            midPoint.x = isNaN(screenPort1.x) ? screenPort2.x : screenPort1.x
-            midPoint.y = isNaN(screenPort1.y) ? screenPort2.y : screenPort1.y
-          }
-          if (isNaN(midPoint.x) || isNaN(midPoint.y)) {
+          if (isNaN(errorCenter.x) || isNaN(errorCenter.y)) {
             return null
           }
 
@@ -78,25 +76,42 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
                 height={containerBounds?.height}
               >
                 {canLineBeDrawn && (
-                  <line
-                    x1={screenPort1.x}
-                    y1={screenPort1.y}
-                    x2={screenPort2.x}
-                    y2={screenPort2.y}
-                    markerEnd="url(#head)"
-                    strokeWidth={1.5}
-                    strokeDasharray={"2,2"}
-                    fill="none"
-                    stroke="red"
-                  />
+                  <>
+                    <line
+                      x1={screenPort1.x}
+                      y1={screenPort1.y}
+                      x2={errorCenter.x}
+                      y2={errorCenter.y}
+                      strokeWidth={1.5}
+                      strokeDasharray="2,2"
+                      stroke="red"
+                    />
+                    <line
+                      x1={errorCenter.x}
+                      y1={errorCenter.y}
+                      x2={screenPort2.x}
+                      y2={screenPort2.y}
+                      strokeWidth={1.5}
+                      strokeDasharray="2,2"
+                      stroke="red"
+                    />
+                    <rect
+                      x={errorCenter.x - 5}
+                      y={errorCenter.y - 5}
+                      width={10}
+                      height={10}
+                      transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
+                      fill="red"
+                    />
+                  </>
                 )}
               </svg>
               <div
                 className={css`
                   position: absolute;
                   z-index: 1000;
-                  left: ${midPoint.x}px;
-                  top: ${midPoint.y}px;
+                  left: ${errorCenter.x}px;
+                  top: ${errorCenter.y}px;
                   color: red;
                   text-align: center;
                   font-family: sans-serif;
