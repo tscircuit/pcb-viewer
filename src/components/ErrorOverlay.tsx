@@ -10,7 +10,12 @@ interface Props {
   children: any
 }
 
-const ErrorSVG = ({ screenPort1, screenPort2, errorCenter, canLineBeDrawn }) => (
+const ErrorSVG = ({
+  screenPort1,
+  screenPort2,
+  errorCenter,
+  canLineBeDrawn,
+}) => (
   <svg
     style={{
       position: "absolute",

@@ -12,6 +12,7 @@ import { ErrorOverlay } from "./ErrorOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditEvent } from "lib/edit-events"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
+import { RatsNestOverlay } from "./RatsNestOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnySoupElement[]
@@ -26,6 +27,7 @@ export interface CanvasElementsRendererProps {
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
+  const { transform, elements } = props
   const primitives = useMemo(() => {
     const primitives = props.elements.flatMap((elm) =>
       convertElementToPrimitives(elm, props.elements),
@@ -33,36 +35,35 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     return primitives
   }, [props.elements])
   return (
-    <MouseElementTracker transform={props.transform} primitives={primitives}>
+    <MouseElementTracker transform={transform} primitives={primitives}>
       <EditPlacementOverlay
         disabled={!props.allowEditing}
-        transform={props.transform}
-        soup={props.elements}
+        transform={transform}
+        soup={elements}
         cancelPanDrag={props.cancelPanDrag}
         onCreateEditEvent={props.onCreateEditEvent}
         onModifyEditEvent={props.onModifyEditEvent}
       >
         <EditTraceHintOverlay
           disabled={!props.allowEditing}
-          transform={props.transform}
-          soup={props.elements}
+          transform={transform}
+          soup={elements}
           cancelPanDrag={props.cancelPanDrag}
           onCreateEditEvent={props.onCreateEditEvent as any}
           onModifyEditEvent={props.onModifyEditEvent as any}
         >
-          <DimensionOverlay transform={props.transform!}>
-            <ToolbarOverlay elements={props.elements}>
-              <ErrorOverlay
-                transform={props.transform}
-                elements={props.elements}
-              >
-                <CanvasPrimitiveRenderer
-                  transform={props.transform}
-                  primitives={primitives}
-                  width={props.width}
-                  height={props.height}
-                  grid={props.grid}
-                />
+          <DimensionOverlay transform={transform!}>
+            <ToolbarOverlay elements={elements}>
+              <ErrorOverlay transform={transform} elements={elements}>
+                <RatsNestOverlay transform={transform} soup={elements}>
+                  <CanvasPrimitiveRenderer
+                    transform={transform}
+                    primitives={primitives}
+                    width={props.width}
+                    height={props.height}
+                    grid={props.grid}
+                  />
+                </RatsNestOverlay>
               </ErrorOverlay>
             </ToolbarOverlay>
           </DimensionOverlay>

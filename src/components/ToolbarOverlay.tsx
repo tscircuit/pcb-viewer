@@ -77,11 +77,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [selectedLayer, selectLayer] = useGlobalStore(
     (s) => [s.selected_layer, s.selectLayer] as const,
   )
-  const [in_move_footprint_mode, in_draw_trace_mode] = useGlobalStore((s) => [
-    s.in_move_footprint_mode,
-    s.in_draw_trace_mode,
-  ])
+  const [in_move_footprint_mode, in_draw_trace_mode, is_showing_rats_nest] =
+    useGlobalStore((s) => [
+      s.in_move_footprint_mode,
+      s.in_draw_trace_mode,
+      s.is_showing_rats_nest,
+    ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
+  const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
@@ -211,6 +214,17 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           <div>
             {in_move_footprint_mode ? "✖ " : ""}
             Move Components
+          </div>
+        </ToolbarButton>
+        <ToolbarButton
+          style={{}}
+          onClick={() => {
+            setIsShowingRatsNest(!is_showing_rats_nest)
+          }}
+        >
+          <div>
+            {is_showing_rats_nest ? "✖ " : ""}
+            Rats Nest
           </div>
         </ToolbarButton>
       </div>

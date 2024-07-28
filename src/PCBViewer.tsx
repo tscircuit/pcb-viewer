@@ -10,6 +10,7 @@ import { findBoundsAndCenter } from "@tscircuit/builder"
 import { ContextProviders } from "components/ContextProviders"
 import type { EditEvent } from "lib/edit-events"
 import { applyEditEvents } from "lib/apply-edit-events"
+import { RatsNestOverlay } from "./components/RatsNestOverlay"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
