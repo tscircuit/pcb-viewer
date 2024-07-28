@@ -26,7 +26,11 @@ export interface State {
   setIsShowingRatsNest: (is_showing: boolean) => void
 }
 
-export const createStore = () =>
+export type StateProps = {
+  [key in keyof State]: State[key] extends boolean ? boolean : never
+}
+
+export const createStore = (initialState: Partial<StateProps> = {}) =>
   createZustandStore<State>(
     (set) =>
       ({
@@ -40,6 +44,7 @@ export const createStore = () =>
         is_drawing_trace: false,
 
         is_showing_rats_nest: false,
+        ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
         setEditMode: (mode) =>

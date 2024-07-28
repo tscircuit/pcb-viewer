@@ -15,8 +15,6 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
   const isShowingRatsNest = useGlobalStore((s) => s.is_showing_rats_nest)
   if (!soup || !isShowingRatsNest) return children
   if (!transform) transform = identity()
-  const pcbPorts = su(soup).pcb_port.list()
-  const sourcePorts = su(soup).source_port.list()
   const sourceTraces = su(soup).source_trace.list()
 
   const groups: PCBPort[][] = []

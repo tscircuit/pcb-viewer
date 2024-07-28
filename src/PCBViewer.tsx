@@ -11,6 +11,7 @@ import { ContextProviders } from "components/ContextProviders"
 import type { EditEvent } from "lib/edit-events"
 import { applyEditEvents } from "lib/apply-edit-events"
 import { RatsNestOverlay } from "./components/RatsNestOverlay"
+import type { StateProps } from "global-store"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -20,6 +21,7 @@ type Props = {
   height?: number
   allowEditing?: boolean
   editEvents?: EditEvent[]
+  initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
 }
 
@@ -27,6 +29,7 @@ export const PCBViewer = ({
   children,
   soup,
   height = 600,
+  initialState,
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
@@ -124,7 +127,7 @@ export const PCBViewer = ({
   return (
     <div ref={transformRef as any}>
       <div ref={ref as any}>
-        <ContextProviders>
+        <ContextProviders initialState={initialState}>
           <CanvasElementsRenderer
             key={refDimensions.width}
             transform={transform}
