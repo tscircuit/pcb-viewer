@@ -4,7 +4,7 @@ import {
   UseBoundStore,
 } from "zustand"
 import { StoreContext } from "./components/ContextProviders"
-import type { LayerRef } from "@tscircuit/builder"
+import type { LayerRef } from "@tscircuit/soup"
 import { useContext } from "react"
 
 export interface State {
