@@ -10,6 +10,7 @@ export const FabricationPath: React.FC = () => {
         footprint={
           <footprint>
             <fabricationnotepath
+              strokeWidth={0.05}
               route={[
                 { x: 0, y: 0 },
                 { x: 1, y: 1 },

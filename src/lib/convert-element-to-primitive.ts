@@ -10,14 +10,14 @@ type MetaData = {
 
 export const convertElementToPrimitives = (
   element: AnySoupElement,
-  allElements: AnySoupElement[]
+  allElements: AnySoupElement[],
 ): (Primitive & MetaData)[] => {
   const _parent_pcb_component =
     "pcb_component_id" in element
       ? allElements.find(
           (elm) =>
             elm.type === "pcb_component" &&
-            elm.pcb_component_id === element.pcb_component_id
+            elm.pcb_component_id === element.pcb_component_id,
         )
       : undefined
   const _parent_source_component =
@@ -26,7 +26,7 @@ export const convertElementToPrimitives = (
           (elm) =>
             elm.type === "source_component" &&
             elm.source_component_id ===
-              _parent_pcb_component.source_component_id
+              _parent_pcb_component.source_component_id,
         )
       : undefined
 
@@ -39,7 +39,7 @@ export const convertElementToPrimitives = (
 
   const _source_port = _source_port_id
     ? allElements.find(
-        (e) => e.type === "source_port" && e.source_port_id === _source_port_id
+        (e) => e.type === "source_port" && e.source_port_id === _source_port_id,
       )
     : undefined
 
@@ -406,7 +406,7 @@ export const convertElementToPrimitives = (
             y1: point.y,
             x2: nextPoint.x,
             y2: nextPoint.y,
-            width: 0.1, // TODO add strokewidth
+            width: element.stroke_width ?? 0.1,
             squareCap: false,
             layer: layer!,
             _element: element,

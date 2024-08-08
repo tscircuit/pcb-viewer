@@ -49,6 +49,9 @@ export const LAYER_NAME_TO_COLOR = {
   top_silkscreen: colors.board.f_silks,
   bottom_silkscreen: colors.board.b_silks,
 
+  top_fabrication: colors.board.f_fab,
+  bottom_fabrication: colors.board.b_fab,
+
   ...colors.board,
 }
 
@@ -160,19 +163,25 @@ export class Drawer {
   }
 
   pill(x: number, y: number, w: number, h: number) {
-    const [x$, y$] = applyToPoint(this.transform, [x - w / 2, y + h / 2]);
+    const [x$, y$] = applyToPoint(this.transform, [x - w / 2, y + h / 2])
     const width$ = scaleOnly(this.transform, w)
     const height$ = scaleOnly(this.transform, h)
     const radius = Math.min(width$, height$) / 2
     this.applyAperture()
     const ctx = this.getLayerCtx()
     ctx.beginPath()
-    ctx.arc(x$ + radius, y$ + radius, radius, Math.PI, Math.PI * 1.5);
-    ctx.arc(x$ + width$ - radius, y$ + radius, radius, Math.PI * 1.5, 0);
-    ctx.arc(x$ + width$ - radius, y$ + height$  - radius, radius, 0, Math.PI * 0.5);
-    ctx.arc(x$ + radius, y$ + height$  - radius, radius, Math.PI * 0.5, Math.PI);
-    ctx.fill();
-    ctx.closePath();
+    ctx.arc(x$ + radius, y$ + radius, radius, Math.PI, Math.PI * 1.5)
+    ctx.arc(x$ + width$ - radius, y$ + radius, radius, Math.PI * 1.5, 0)
+    ctx.arc(
+      x$ + width$ - radius,
+      y$ + height$ - radius,
+      radius,
+      0,
+      Math.PI * 0.5,
+    )
+    ctx.arc(x$ + radius, y$ + height$ - radius, radius, Math.PI * 0.5, Math.PI)
+    ctx.fill()
+    ctx.closePath()
   }
 
   /* NOTE: This is not gerber compatible */
