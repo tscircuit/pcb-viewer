@@ -302,6 +302,7 @@ export const EditTraceHintOverlay = ({
                   <path
                     key={`path-${e.pcb_port_id}`}
                     stroke="red"
+                    strokeWidth={e.trace_width}
                     d={`M ${pcb_port_screen.x} ${pcb_port_screen.y} ${route
                       .map((r) => applyToPoint(transform!, r))
                       .map((r) => `L ${r.x} ${r.y}`)
