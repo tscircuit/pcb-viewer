@@ -1,8 +1,7 @@
 import { css } from "@emotion/css"
-import { PCBPort, PCBTraceError } from "@tscircuit/builder"
-import type { AnySoupElement } from "@tscircuit/soup"
+import type { AnySoupElement, PCBPort, PCBTraceError } from "@tscircuit/soup"
 import { useRef } from "react"
-import { Matrix, applyToPoint, identity } from "transformation-matrix"
+import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 
 interface Props {
   transform?: Matrix
@@ -100,12 +99,10 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
             isNaN(screenPort2.y)
           )
 
-          const errorCenter = el.center
-            ? applyToPoint(transform, { x: el.center.x, y: el.center.y })
-            : {
-                x: (screenPort1.x + screenPort2.x) / 2,
-                y: (screenPort1.y + screenPort2.y) / 2,
-              }
+          const errorCenter = {
+            x: (screenPort1.x + screenPort2.x) / 2,
+            y: (screenPort1.y + screenPort2.y) / 2,
+          }
 
           if (isNaN(errorCenter.x) || isNaN(errorCenter.y)) {
             return null

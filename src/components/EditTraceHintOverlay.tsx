@@ -1,5 +1,4 @@
-import type { PCBComponent, PCBSMTPad } from "@tscircuit/builder"
-import type { AnySoupElement } from "@tscircuit/soup"
+import type { AnySoupElement,PCBSMTPad } from "@tscircuit/soup"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 import { EditEvent, EditTraceHintEvent } from "lib/edit-events"
