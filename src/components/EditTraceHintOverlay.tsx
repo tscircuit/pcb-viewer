@@ -1,10 +1,14 @@
-import type { AnySoupElement,PCBSMTPad } from "@tscircuit/soup"
+import type { AnySoupElement, PCBSMTPad, PcbTraceHint } from "@tscircuit/soup"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
-import { EditEvent, EditTraceHintEvent } from "lib/edit-events"
+import { type EditTraceHintEvent } from "lib/edit-events"
 import { Fragment, useEffect, useRef, useState } from "react"
-import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
-import type { PcbRouteHint, PcbTraceHint } from "@tscircuit/soup"
+import {
+  type Matrix,
+  applyToPoint,
+  identity,
+  inverse,
+} from "transformation-matrix"
 import { HotkeyActionMenu } from "./HotkeyActionMenu"
 
 interface Props {
@@ -17,10 +21,12 @@ interface Props {
   onModifyEditEvent: (event: Partial<EditTraceHintEvent>) => void
 }
 
+type Point = { x: number, y: number };
+
 const isInsideOf = (
   elm: PCBSMTPad,
   point: { x: number; y: number },
-  padding: number = 0,
+  padding = 0,
 ) => {
   if (elm.shape === "circle") {
     // Not implemented
@@ -284,48 +290,68 @@ export const EditTraceHintOverlay = ({
           height={containerBounds?.height}
         >
           {soup
-            .filter((e): e is PcbTraceHint => e.type === "pcb_trace_hint")
-            .map((e) => {
-              const { route } = e
-              const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
-              const pcb_port_screen = applyToPoint(transform!, pcb_port)
-              return (
-                <Fragment key={e.pcb_trace_hint_id}>
-                  <rect
-                    key={`rect-${e.pcb_port_id}`}
-                    x={pcb_port_screen.x - 10}
-                    y={pcb_port_screen.y - 10}
-                    width={20}
-                    height={20}
-                    stroke="red"
-                  />
-                  <path
-                    key={`path-${e.pcb_port_id}`}
-                    stroke="red"
-                    d={`M ${pcb_port_screen.x} ${pcb_port_screen.y} ${route
-                      .map((r) => applyToPoint(transform!, r))
-                      .map((r) => `L ${r.x} ${r.y}`)
-                      .join(" ")}`}
-                  />
-                  {route
-                    .map((r) => ({ ...r, ...applyToPoint(transform, r) }))
-                    .map((r, i) => (
-                      <Fragment key={i}>
-                        <circle cx={r.x} cy={r.y} r={8} stroke="red" />
-                        {r.via && (
-                          <circle
-                            cx={r.x}
-                            cy={r.y}
-                            r={16}
-                            stroke="red"
-                            fill="transparent"
-                          />
-                        )}
-                      </Fragment>
-                    ))}
-                </Fragment>
-              )
-            })}
+  .filter((e): e is PcbTraceHint => e.type === "pcb_trace_hint")
+  .map((e) => {
+    const { route } = e
+    const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
+    const pcb_port_screen = applyToPoint(transform!, pcb_port)
+    
+    return (
+      <Fragment key={e.pcb_trace_hint_id}>
+        <rect
+          key={`rect-${e.pcb_port_id}`}
+          x={pcb_port_screen.x - 10}
+          y={pcb_port_screen.y - 10}
+          width={20}
+          height={20}
+          stroke="red"
+        />
+        {route.map((r, index) => {
+          const start = index === 0 ? pcb_port_screen : applyToPoint(transform!, route[index - 1] as Point) as Point;
+          const end = applyToPoint(transform!, r as Point) as Point;
+          const width = r?.trace_width; // Use 1 as default if trace_width is not defined
+
+          // Calculate the angle of the line
+          const angle = Math.atan2(end.y - start.y, end.x - start.x);
+          
+          // Calculate the offsets perpendicular to the line
+          const dx = width ?? 0.5 * Math.sin(angle);
+          const dy = width ?? 0.5 * -Math.cos(angle);
+
+          // Calculate the four corners of the "thick line"
+          const topLeft = `${start.x - dx},${start.y - dy}`;
+          const topRight = `${end.x - dx},${end.y - dy}`;
+          const bottomRight = `${end.x + dx},${end.y + dy}`;
+          const bottomLeft = `${start.x + dx},${start.y + dy}`;
+
+          return (
+            <path
+              key={`path-${e.pcb_port_id}-${index}`}
+              fill="red"
+              d={`M ${topLeft} L ${topRight} L ${bottomRight} L ${bottomLeft} Z`}
+            />
+          );
+        })}
+        {route
+          .map((r) => ({ ...r, ...applyToPoint(transform, r as Point) as Point }))
+          .map((r, i) => (
+            <Fragment key={i}>
+              <circle cx={r.x} cy={r.y} r={8} stroke="red" />
+              {r.via && (
+                <circle
+                  cx={r.x}
+                  cy={r.y}
+                  r={16}
+                  stroke="red"
+                  fill="transparent"
+                />
+              )}
+            </Fragment>
+          ))}
+      </Fragment>
+    )
+  })
+}
         </svg>
       )}
       <div

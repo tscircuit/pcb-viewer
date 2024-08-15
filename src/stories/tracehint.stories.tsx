@@ -14,6 +14,16 @@ export const TraceHintExample: React.FC = () => {
               x: 1,
               y: 1,
             },
+            {
+              x: 1,
+              y: 3,
+              trace_width: 2,
+            },
+            {
+              x: 4,
+              y: 3,
+              trace_width: 1.1,
+            }
           ]}
         />
       </PCBViewer>
