@@ -17,7 +17,7 @@ export const TraceHintExample: React.FC = () => {
             {
               x: 1,
               y: 3,
-              trace_width: 2,
+              trace_width: 20,
             },
             {
               x: 4,

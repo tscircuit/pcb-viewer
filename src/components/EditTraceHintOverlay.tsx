@@ -309,26 +309,64 @@ export const EditTraceHintOverlay = ({
         {route.map((r, index) => {
           const start = index === 0 ? pcb_port_screen : applyToPoint(transform!, route[index - 1] as Point) as Point;
           const end = applyToPoint(transform!, r as Point) as Point;
-          const width = r?.trace_width; // Use 1 as default if trace_width is not defined
+          const baseWidth = r?.trace_width ?? 0.5; // Use 1 as default if trace_width is not defined
 
-          // Calculate the angle of the line
-          const angle = Math.atan2(end.y - start.y, end.x - start.x);
-          
-          // Calculate the offsets perpendicular to the line
-          const dx = width ?? 0.5 * Math.sin(angle);
-          const dy = width ?? 0.5 * -Math.cos(angle);
+          // Function to calculate width at any point along the path
+          const getWidthAtPoint = (t: number) => {
+            // t is a value from 0 to 1 representing position along the path
+            // This function creates a bulge in the middle and tapers at both ends
+            return baseWidth * Math.sin(t * Math.PI) + 0.5;
+          };
 
-          // Calculate the four corners of the "thick line"
-          const topLeft = `${start.x - dx},${start.y - dy}`;
-          const topRight = `${end.x - dx},${end.y - dy}`;
-          const bottomRight = `${end.x + dx},${end.y + dy}`;
-          const bottomLeft = `${start.x + dx},${start.y + dy}`;
+          // Number of segments to approximate the curve (increase for smoother curves)
+          const segments = 30;
+
+          let pathData = '';
+
+          for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const x = start.x + (end.x - start.x) * t;
+            const y = start.y + (end.y - start.y) * t;
+            const width = getWidthAtPoint(t);
+
+            // Calculate the angle of the line
+            const angle = Math.atan2(end.y - start.y, end.x - start.x);
+            
+            // Calculate the offsets perpendicular to the line
+            const dx = width * Math.sin(angle);
+            const dy = width * -Math.cos(angle);
+
+            if (i === 0) {
+              pathData += `M ${x - dx},${y - dy}`;
+            } else {
+              pathData += ` L ${x - dx},${y - dy}`;
+            }
+          }
+
+          // Add the bottom half of the path
+          for (let i = segments; i >= 0; i--) {
+            const t = i / segments;
+            const x = start.x + (end.x - start.x) * t;
+            const y = start.y + (end.y - start.y) * t;
+            const width = getWidthAtPoint(t);
+
+            // Calculate the angle of the line
+            const angle = Math.atan2(end.y - start.y, end.x - start.x);
+            
+            // Calculate the offsets perpendicular to the line
+            const dx = width * Math.sin(angle);
+            const dy = width * -Math.cos(angle);
+
+            pathData += ` L ${x + dx},${y + dy}`;
+          }
+
+          pathData += ' Z'; // Close the path
 
           return (
             <path
               key={`path-${e.pcb_port_id}-${index}`}
               fill="red"
-              d={`M ${topLeft} L ${topRight} L ${bottomRight} L ${bottomLeft} Z`}
+              d={pathData}
             />
           );
         })}
