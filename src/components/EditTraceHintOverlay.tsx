@@ -334,25 +334,21 @@ export const EditTraceHintOverlay = ({
                     key={`expanded-path-${e.pcb_port_id}`}
                     d={expandedPath}
                     fill="red"
-                    opacity="0.5"
-                  />
-                  <path
-                    key={`original-path-${e.pcb_port_id}`}
-                    d={originalPath}
-                    stroke="red"
-                    strokeWidth="1"
-                    fill="none"
                   />
                   {strokeInput.map((r, i) => (
                     <Fragment key={i}>
-                      <circle cx={r.x} cy={r.y} r={8} stroke="red" /> 
+                      <circle
+                        cx={r.x}
+                        cy={r.y}
+                        r={r.trace_width ? r.trace_width / 2 : 8}
+                        stroke="red"
+                      />
                       {(r as any).via && (
                         <circle
                           cx={r.x}
                           cy={r.y}
-                          r={8}
+                          r={r.trace_width ? r.trace_width / 2 : 8}
                           stroke="red"
-                          fill="transparent"
                         />
                       )}
                     </Fragment>
