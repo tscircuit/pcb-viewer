@@ -13,16 +13,17 @@ export const TraceHintExample: React.FC = () => {
             {
               x: 1,
               y: 1,
+              trace_width: 10,
             },
             {
               x: 1,
               y: 3,
-              trace_width: 20,
+              trace_width: 50,
             },
             {
               x: 4,
-              y: 3,
-              trace_width: 1.1,
+              y: 6,
+              trace_width: 3,
             }
           ]}
         />

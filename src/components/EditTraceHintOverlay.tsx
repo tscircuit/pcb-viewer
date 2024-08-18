@@ -21,7 +21,11 @@ interface Props {
   onModifyEditEvent: (event: Partial<EditTraceHintEvent>) => void
 }
 
-type Point = { x: number, y: number };
+interface Point {
+  x: number;
+  y: number;
+  trace_width?: number;
+}
 
 const isInsideOf = (
   elm: PCBSMTPad,
@@ -290,106 +294,73 @@ export const EditTraceHintOverlay = ({
           height={containerBounds?.height}
         >
           {soup
-  .filter((e): e is PcbTraceHint => e.type === "pcb_trace_hint")
-  .map((e) => {
-    const { route } = e
-    const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
-    const pcb_port_screen = applyToPoint(transform!, pcb_port)
-    
-    return (
-      <Fragment key={e.pcb_trace_hint_id}>
-        <rect
-          key={`rect-${e.pcb_port_id}`}
-          x={pcb_port_screen.x - 10}
-          y={pcb_port_screen.y - 10}
-          width={20}
-          height={20}
-          stroke="red"
-        />
-        {route.map((r, index) => {
-          const start = index === 0 ? pcb_port_screen : applyToPoint(transform!, route[index - 1] as Point) as Point;
-          const end = applyToPoint(transform!, r as Point) as Point;
-          const baseWidth = r?.trace_width ?? 0.5; // Use 1 as default if trace_width is not defined
+            .filter((e): e is PcbTraceHint => e.type === "pcb_trace_hint")
+            .map((e) => {
+              const { route } = e
+              const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
+              const pcb_port_screen = applyToPoint(transform!, pcb_port)
+              
+              // Prepare the stroke input including the pcb_port_screen as the starting point
+              const strokeInput: Point[] = [
+                { x: pcb_port_screen.x, y: pcb_port_screen.y, trace_width: 0.5 }, // Start with a small width
+                ...route.map((r) => {
+                  if (r === undefined) {
+                    throw new Error("route contains undefined point");
+                  }
+                  return {
+                    x: applyToPoint(transform!, r as Point).x,
+                    y: applyToPoint(transform!, r as Point).y,
+                    trace_width: r.trace_width
+                  };
+                })
+              ];
+              
+              // Use getExpandedStroke to generate the polygon points
+              const expandedStroke = getExpandedStroke(strokeInput, 0.5); // Use 0.5 as default width
+              
+              // Generate the path data from the expanded stroke
+              const expandedPath = expandedStroke
+                .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x},${point.y}`)
+                .join(' ') + ' Z'; // Close the path
 
-          // Function to calculate width at any point along the path
-          const getWidthAtPoint = (t: number) => {
-            // t is a value from 0 to 1 representing position along the path
-            // This function creates a bulge in the middle and tapers at both ends
-            return baseWidth * Math.sin(t * Math.PI) + 0.5;
-          };
+              // Generate the original path for rendering the centerline
+              const originalPath = strokeInput
+                .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x},${point.y}`)
+                .join(' ');
 
-          // Number of segments to approximate the curve (increase for smoother curves)
-          const segments = 30;
-
-          let pathData = '';
-
-          for (let i = 0; i <= segments; i++) {
-            const t = i / segments;
-            const x = start.x + (end.x - start.x) * t;
-            const y = start.y + (end.y - start.y) * t;
-            const width = getWidthAtPoint(t);
-
-            // Calculate the angle of the line
-            const angle = Math.atan2(end.y - start.y, end.x - start.x);
-            
-            // Calculate the offsets perpendicular to the line
-            const dx = width * Math.sin(angle);
-            const dy = width * -Math.cos(angle);
-
-            if (i === 0) {
-              pathData += `M ${x - dx},${y - dy}`;
-            } else {
-              pathData += ` L ${x - dx},${y - dy}`;
-            }
+              return (
+                <Fragment key={e.pcb_trace_hint_id}>
+                  <path
+                    key={`expanded-path-${e.pcb_port_id}`}
+                    d={expandedPath}
+                    fill="red"
+                    opacity="0.5"
+                  />
+                  <path
+                    key={`original-path-${e.pcb_port_id}`}
+                    d={originalPath}
+                    stroke="red"
+                    strokeWidth="1"
+                    fill="none"
+                  />
+                  {strokeInput.map((r, i) => (
+                    <Fragment key={i}>
+                      <circle cx={r.x} cy={r.y} r={8} stroke="red" /> 
+                      {(r as any).via && (
+                        <circle
+                          cx={r.x}
+                          cy={r.y}
+                          r={8}
+                          stroke="red"
+                          fill="transparent"
+                        />
+                      )}
+                    </Fragment>
+                  ))}
+                </Fragment>
+              )
+            })
           }
-
-          // Add the bottom half of the path
-          for (let i = segments; i >= 0; i--) {
-            const t = i / segments;
-            const x = start.x + (end.x - start.x) * t;
-            const y = start.y + (end.y - start.y) * t;
-            const width = getWidthAtPoint(t);
-
-            // Calculate the angle of the line
-            const angle = Math.atan2(end.y - start.y, end.x - start.x);
-            
-            // Calculate the offsets perpendicular to the line
-            const dx = width * Math.sin(angle);
-            const dy = width * -Math.cos(angle);
-
-            pathData += ` L ${x + dx},${y + dy}`;
-          }
-
-          pathData += ' Z'; // Close the path
-
-          return (
-            <path
-              key={`path-${e.pcb_port_id}-${index}`}
-              fill="red"
-              d={pathData}
-            />
-          );
-        })}
-        {route
-          .map((r) => ({ ...r, ...applyToPoint(transform, r as Point) as Point }))
-          .map((r, i) => (
-            <Fragment key={i}>
-              <circle cx={r.x} cy={r.y} r={8} stroke="red" />
-              {r.via && (
-                <circle
-                  cx={r.x}
-                  cy={r.y}
-                  r={16}
-                  stroke="red"
-                  fill="transparent"
-                />
-              )}
-            </Fragment>
-          ))}
-      </Fragment>
-    )
-  })
-}
         </svg>
       )}
       <div
@@ -425,4 +396,93 @@ export const EditTraceHintOverlay = ({
       </div>
     </div>
   )
+}
+
+function getExpandedStroke(
+  strokeInput: (Point | [number, number] | number[])[],
+  defaultWidth: number
+): Point[] {
+  if (strokeInput.length < 2) {
+    throw new Error("Stroke must have at least two points");
+  }
+  
+  const stroke: Point[] = strokeInput.map(point => {
+    if (Array.isArray(point)) {
+      return { x: point[0], y: point[1] };
+    }
+    return point as Point;
+  });
+
+  const leftSide: Point[] = [];
+  const rightSide: Point[] = [];
+
+  function getNormal(p1: Point, p2: Point): Point {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    return { x: -dy / length, y: dx / length };
+  }
+
+  function addPoint(point: Point, normal: Point, factor: number, width: number) {
+    const halfWidth = width / 2;
+    const newPoint = {
+      x: point.x + normal.x * halfWidth * factor,
+      y: point.y + normal.y * halfWidth * factor,
+    };
+    if (factor > 0) {
+      leftSide.push(newPoint);
+    } else {
+      rightSide.unshift(newPoint);
+    }
+  }
+
+  // Handle the first point
+  const firstNormal = getNormal(stroke[0]!, stroke[1]!);
+  const firstWidth = stroke[0]!.trace_width ?? defaultWidth;
+  addPoint(stroke[0]!, firstNormal, 1, firstWidth);
+  addPoint(stroke[0]!, firstNormal, -1, firstWidth);
+
+  // Handle middle points
+  for (let i = 1; i < stroke.length - 1; i++) {
+    const prev = stroke[i - 1]!;
+    const current = stroke[i]!;
+    const next = stroke[i + 1]!;
+
+    const normalPrev = getNormal(prev, current);
+    const normalNext = getNormal(current, next);
+
+    // Calculate miter line
+    const miterX = normalPrev.x + normalNext.x;
+    const miterY = normalPrev.y + normalNext.y;
+    const miterLength = Math.sqrt(miterX * miterX + miterY * miterY);
+
+    const currentWidth = current.trace_width ?? defaultWidth;
+
+    // Check if miter is too long (sharp corner)
+    const miterLimit = 2; // Adjust this value to control when to bevel
+    if (miterLength / 2 > miterLimit * (currentWidth / 2)) {
+      // Use bevel join
+      addPoint(current, normalPrev, 1, currentWidth);
+      addPoint(current, normalNext, 1, currentWidth);
+      addPoint(current, normalPrev, -1, currentWidth);
+      addPoint(current, normalNext, -1, currentWidth);
+    } else {
+      // Use miter join
+      const scale = 1 / miterLength;
+      addPoint(current, { x: miterX * scale, y: miterY * scale }, 1, currentWidth);
+      addPoint(current, { x: miterX * scale, y: miterY * scale }, -1, currentWidth);
+    }
+  }
+
+  // Handle the last point
+  const lastNormal = getNormal(
+    stroke[stroke.length - 2]!,
+    stroke[stroke.length - 1]!
+  );
+  const lastWidth = stroke[stroke.length - 1]!.trace_width ?? defaultWidth;
+  addPoint(stroke[stroke.length - 1]!, lastNormal, 1, lastWidth);
+  addPoint(stroke[stroke.length - 1]!, lastNormal, -1, lastWidth);
+
+  // Combine left and right sides to form a closed polygon
+  return [...leftSide, ...rightSide];
 }
