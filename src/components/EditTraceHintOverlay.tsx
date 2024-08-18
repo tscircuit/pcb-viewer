@@ -329,14 +329,20 @@ export const EditTraceHintOverlay = ({
                 .join(' ');
 
               return (
-                <Fragment key={e.pcb_trace_hint_id}>
+                <g key={e.pcb_trace_hint_id}>
                   <path
                     key={`expanded-path-${e.pcb_port_id}`}
                     d={expandedPath}
                     fill="red"
                   />
+                  <path
+                    key={`original-path-${e.pcb_port_id}`}
+                    d={originalPath}
+                    style={{ mixBlendMode: "difference" }}
+                    stroke="red"
+                  />
                   {strokeInput.map((r, i) => (
-                    <Fragment key={i}>
+                    <g key={i}>
                       <circle
                         cx={r.x}
                         cy={r.y}
@@ -351,9 +357,9 @@ export const EditTraceHintOverlay = ({
                           stroke="red"
                         />
                       )}
-                    </Fragment>
+                    </g>
                   ))}
-                </Fragment>
+                </g>
               )
             })
           }
