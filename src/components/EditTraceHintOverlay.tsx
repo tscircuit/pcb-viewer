@@ -1,4 +1,4 @@
-import type { AnySoupElement, PCBSMTPad, PcbTraceHint } from "@tscircuit/soup"
+import type { AnySoupElement, PCBSMTPad, PcbTraceHint, PCBPlatedHole } from "@tscircuit/soup"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 import { type EditTraceHintEvent } from "lib/edit-events"
@@ -47,6 +47,29 @@ const isInsideOf = (
   return point.x > left && point.x < right && point.y > top && point.y < bottom
 }
 
+const isInsideOfPlatedHole = (
+  hole: PCBPlatedHole,
+  point: { x: number; y: number },
+  padding = 0,
+) => {
+  if (hole.shape === "circle") {
+    const distance = Math.sqrt(
+      Math.pow(point.x - hole.x, 2) + Math.pow(point.y - hole.y, 2)
+    );
+    return distance <= (hole.outer_diameter / 2 + padding);
+  } else {
+    const halfWidth = hole.hole_width / 2;
+    const halfHeight = hole.hole_height / 2;
+
+    const left = hole.x - halfWidth - padding;
+    const right = hole.x + halfWidth + padding;
+    const top = hole.y - halfHeight - padding;
+    const bottom = hole.y + halfHeight + padding;
+
+    return point.x > left && point.x < right && point.y > top && point.y < bottom;
+  }
+};
+
 /**
  * The trace hit overlay allows you to click a pad, after
  * clicking a pad you'll start dragging out a trace.
@@ -77,7 +100,7 @@ export const EditTraceHintOverlay = ({
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const containerBounds = containerRef.current?.getBoundingClientRect()
-  const [selectedElement, setSelectedElement] = useState<null | PCBSMTPad>(null)
+  const [selectedElement, setSelectedElement] = useState<null | PCBSMTPad | PCBPlatedHole>(null)
   const [dragState, setDragState] = useState<{
     dragStart: { x: number; y: number }
     originalCenter: { x: number; y: number }
@@ -129,8 +152,8 @@ export const EditTraceHintOverlay = ({
         if (!isElementSelected) {
           for (const e of soup) {
             if (
-              e.type === "pcb_smtpad" &&
-              isInsideOf(e, rwMousePoint, 10 / transform.a)
+              (e.type === "pcb_smtpad" && isInsideOf(e, rwMousePoint, 10 / transform.a)) ||
+              (e.type === "pcb_plated_hole" && isInsideOfPlatedHole(e, rwMousePoint, 10 / transform.a))
             ) {
               setSelectedElement(e)
               setShouldCreateAsVia(false)
