@@ -27,7 +27,7 @@ interface Point {
   trace_width?: number;
 }
 
-const isInsideOf = (
+const isInsideOfSmtpad = (
   elm: PCBSMTPad,
   point: { x: number; y: number },
   padding = 0,
@@ -152,7 +152,7 @@ export const EditTraceHintOverlay = ({
         if (!isElementSelected) {
           for (const e of soup) {
             if (
-              (e.type === "pcb_smtpad" && isInsideOf(e, rwMousePoint, 10 / transform.a)) ||
+              (e.type === "pcb_smtpad" && isInsideOfSmtpad(e, rwMousePoint, 10 / transform.a)) ||
               (e.type === "pcb_plated_hole" && isInsideOfPlatedHole(e, rwMousePoint, 10 / transform.a))
             ) {
               setSelectedElement(e)
