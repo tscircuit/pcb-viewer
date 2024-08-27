@@ -1,6 +1,6 @@
 import { Drawer } from "./Drawer"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
-import { Circle, Line, Oval, Pill, Primitive, Rect, Text } from "./types"
+import { Circle, Line, Oval, Pill, Polygon, Primitive, Rect, Text } from "./types"
 
 export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
@@ -79,6 +79,13 @@ export const drawPill = (drawer: Drawer, pill: Pill) => {
   drawer.pill(pill.x, pill.y, pill.w, pill.h)
 }
 
+export const drawPolygon = (drawer: Drawer, polygon: Polygon) => {
+  drawer.equip({
+    color: polygon.layer,
+  })
+  drawer.polygon(polygon.points)
+}
+
 export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
   switch (primitive.pcb_drawing_type) {
     case "line":
@@ -93,6 +100,8 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
       return drawOval(drawer, primitive)
     case "pill":
       return drawPill(drawer, primitive)
+    case "polygon":
+      return drawPolygon(drawer, primitive)
   }
 }
 
