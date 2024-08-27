@@ -1,6 +1,7 @@
 import type { AnySoupElement } from "@tscircuit/soup"
 import type { Primitive } from "./types"
 import { su } from "@tscircuit/soup-util"
+import { getExpandedStroke, Point } from "./util/expand-stroke"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -236,32 +237,66 @@ export const convertElementToPrimitives = (
       }
     }
     case "pcb_trace": {
-      const primitives: Primitive[] = []
-      let prevX: number | null = null
-      let prevY: number | null = null
-
-      for (const route of element.route) {
-        if (route.route_type === "wire") {
-          if (prevX !== null && prevY !== null) {
-            primitives.push({
-              pcb_drawing_type: "line",
-              x1: prevX,
-              y1: prevY,
-              x2: route.x,
-              y2: route.y,
-              width: route.width,
-              squareCap: false,
-              layer: route.layer,
-            })
+      const primitives: Primitive[] = [];
+    
+      if (element.route_thickness_mode === 'constant') {
+        let prevX: number | null = null;
+        let prevY: number | null = null;
+    
+        for (const route of element.route) {
+          if (route.route_type === "wire") {
+            if (prevX !== null && prevY !== null) {
+              primitives.push({
+                pcb_drawing_type: "line",
+                x1: prevX,
+                y1: prevY,
+                x2: route.x,
+                y2: route.y,
+                width: route.width,
+                squareCap: false,
+                layer: route.layer,
+              });
+            }
+    
+            prevX = route.x;
+            prevY = route.y;
           }
-
-          prevX = route.x
-          prevY = route.y
+          // Ignore "via" routes for now
         }
-        // Ignore "via" routes for now
+      } else if (element.route_thickness_mode === 'interpolated') {
+        // Prepare the stroke input
+        const strokeInput: Point[] = element.route.map((r) => ({
+          x: r.x,
+          y: r.y,
+          trace_width: r.route_type === "wire" ? r.width : 0.5
+        }));
+    
+        // Use getExpandedStroke to generate the polygon points
+        const expandedStroke = getExpandedStroke(strokeInput, 0.5); // Use 0.5 as default width
+    
+        // Generate a single polygon primitive from the expanded stroke
+        primitives.push({
+          pcb_drawing_type: "polygon",
+          points: expandedStroke,
+          layer: element.route[0].layer, // same layer for all points
+        });
+    
+        // Add circles for vias
+        element.route.forEach((r) => {
+          if (r.route_type === "via") {
+            primitives.push({
+              pcb_drawing_type: "circle",
+              x: r.x,
+              y: r.y,
+              radius: r.outer_diameter / 2,
+              fill: true,
+              layer: element.route.layer,
+            });
+          }
+        });
       }
-
-      return primitives
+    
+      return primitives;
     }
     // The builder currently outputs these as smtpads and holes, so pcb_via isn't
     // used, but that maybe should be changed

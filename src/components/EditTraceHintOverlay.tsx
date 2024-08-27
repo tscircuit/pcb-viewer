@@ -322,70 +322,43 @@ export const EditTraceHintOverlay = ({
               const { route } = e
               const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
               const pcb_port_screen = applyToPoint(transform!, pcb_port)
-              
-              // Prepare the stroke input including the pcb_port_screen as the starting point
-              const strokeInput: Point[] = [
-                { x: pcb_port_screen.x, y: pcb_port_screen.y, trace_width: 0.5 }, // Start with a small width
-                ...route.map((r) => {
-                  if (r === undefined) {
-                    throw new Error("route contains undefined point");
-                  }
-                  return {
-                    x: applyToPoint(transform!, r as Point).x,
-                    y: applyToPoint(transform!, r as Point).y,
-                    trace_width: r.trace_width
-                  };
-                })
-              ];
-              
-              // Use getExpandedStroke to generate the polygon points
-              const expandedStroke = getExpandedStroke(strokeInput, 0.5); // Use 0.5 as default width
-              
-              // Generate the path data from the expanded stroke
-              const expandedPath = expandedStroke
-                .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x},${point.y}`)
-                .join(' ') + ' Z'; // Close the path
-
-              // Generate the original path for rendering the centerline
-              const originalPath = strokeInput
-                .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x},${point.y}`)
-                .join(' ');
-
               return (
-                <g key={e.pcb_trace_hint_id}>
-                  <path
-                    key={`expanded-path-${e.pcb_port_id}`}
-                    d={expandedPath}
-                    fill="red"
-                  />
-                  <path
-                    key={`original-path-${e.pcb_port_id}`}
-                    d={originalPath}
-                    style={{ mixBlendMode: "difference" }}
+                <Fragment key={e.pcb_trace_hint_id}>
+                  <rect
+                    key={`rect-${e.pcb_port_id}`}
+                    x={pcb_port_screen.x - 10}
+                    y={pcb_port_screen.y - 10}
+                    width={20}
+                    height={20}
                     stroke="red"
                   />
-                  {strokeInput.map((r, i) => (
-                    <g key={i}>
-                      <circle
-                        cx={r.x}
-                        cy={r.y}
-                        r={r.trace_width ? r.trace_width / 2 : 8}
-                        stroke="red"
-                      />
-                      {(r as any).via && (
-                        <circle
-                          cx={r.x}
-                          cy={r.y}
-                          r={r.trace_width ? r.trace_width / 2 : 8}
-                          stroke="red"
-                        />
-                      )}
-                    </g>
-                  ))}
-                </g>
+                  <path
+                    key={`path-${e.pcb_port_id}`}
+                    stroke="red"
+                    d={`M ${pcb_port_screen.x} ${pcb_port_screen.y} ${route
+                      .map((r) => applyToPoint(transform!, r))
+                      .map((r) => `L ${r.x} ${r.y}`)
+                      .join(" ")}`}
+                  />
+                  {route
+                    .map((r) => ({ ...r, ...applyToPoint(transform, r) }))
+                    .map((r, i) => (
+                      <Fragment key={i}>
+                        <circle cx={r.x} cy={r.y} r={8} stroke="red" />
+                        {r.via && (
+                          <circle
+                            cx={r.x}
+                            cy={r.y}
+                            r={16}
+                            stroke="red"
+                            fill="transparent"
+                          />
+                        )}
+                      </Fragment>
+                    ))}
+                </Fragment>
               )
-            })
-          }
+            })}
         </svg>
       )}
       <div

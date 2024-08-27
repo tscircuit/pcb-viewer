@@ -32,6 +32,7 @@ export interface Line extends PCBDrawingObject {
   width: number
   zoomIndependent?: boolean
 }
+
 export interface Text extends PCBDrawingObject {
   pcb_drawing_type: "text"
   text: string
@@ -40,6 +41,7 @@ export interface Text extends PCBDrawingObject {
   size: number
   align?: AlignString
 }
+
 export interface Rect extends PCBDrawingObject {
   pcb_drawing_type: "rect"
   x: number
@@ -49,6 +51,7 @@ export interface Rect extends PCBDrawingObject {
   roundness?: number
   align?: AlignString
 }
+
 export interface Circle extends PCBDrawingObject {
   pcb_drawing_type: "circle"
   x: number
@@ -72,7 +75,12 @@ export interface Pill extends PCBDrawingObject {
   h: number
 }
 
-export type Primitive = Line | Text | Rect | Circle | Oval | Pill
+export interface Polygon extends PCBDrawingObject {
+  pcb_drawing_type: "polygon"
+  points: { x: number; y: number }[]
+}
+
+export type Primitive = Line | Text | Rect | Circle | Oval | Pill | Polygon
 
 export type GridConfig = {
   spacing: number
