@@ -80,57 +80,10 @@ export const drawPill = (drawer: Drawer, pill: Pill) => {
 }
 
 export const drawPolygon = (drawer: Drawer, polygon: Polygon) => {
-  if (polygon.points.length < 3) {
-    console.warn("Polygon must have at least 3 points")
-    return
-  }
-
-  // Draw the outline of the polygon using lines
-  for (let i = 0; i < polygon.points.length; i++) {
-    const startPoint = polygon.points[i]
-    const endPoint = polygon.points[(i + 1) % polygon.points.length] // Wrap around to the first point
-
-    drawer.equip({
-      size: 0.1, // Use a thin line for the outline
-      color: polygon.layer,
-      shape: "square", // Use square cap for sharp corners
-    })
-
-    drawer.moveTo(startPoint.x, startPoint.y)
-    drawer.lineTo(endPoint.x, endPoint.y)
-  }
-
-  // Fill the polygon using a series of lines
-  // This is a simple scanline fill algorithm
-  const minY = Math.min(...polygon.points.map(p => p.y))
-  const maxY = Math.max(...polygon.points.map(p => p.y))
-
-  for (let y = minY; y <= maxY; y += 0.1) { // Adjust step size for fill density
-    let intersections = []
-    for (let i = 0; i < polygon.points.length; i++) {
-      const p1 = polygon.points[i]
-      const p2 = polygon.points[(i + 1) % polygon.points.length]
-      
-      if ((p1.y > y && p2.y <= y) || (p2.y > y && p1.y <= y)) {
-        const x = p1.x + (y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y)
-        intersections.push(x)
-      }
-    }
-
-    intersections.sort((a, b) => a - b)
-
-    for (let i = 0; i < intersections.length; i += 2) {
-      if (i + 1 < intersections.length) {
-        drawer.equip({
-          size: 0.1, // Use a thin line for filling
-          color: polygon.layer,
-          shape: "square",
-        })
-        drawer.moveTo(intersections[i], y)
-        drawer.lineTo(intersections[i + 1], y)
-      }
-    }
-  }
+  drawer.equip({
+    color: polygon.layer,
+  })
+  drawer.polygon(polygon.points)
 }
 
 export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {

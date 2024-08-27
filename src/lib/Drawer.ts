@@ -184,6 +184,35 @@ export class Drawer {
     ctx.closePath()
   }
 
+  polygon(points: { x: number; y: number }[]) {
+    if (points.length < 3) {
+      console.warn("Polygon must have at least 3 points")
+      return
+    }
+
+    this.applyAperture()
+    const ctx = this.getLayerCtx()
+
+    // Transform all points
+    const transformedPoints = points.map(point => 
+      applyToPoint(this.transform, [point.x, point.y])
+    )
+
+    // Draw the filled polygon
+    ctx.beginPath()
+    ctx.moveTo(transformedPoints[0][0], transformedPoints[0][1])
+    for (let i = 1; i < transformedPoints.length; i++) {
+      ctx.lineTo(transformedPoints[i][0], transformedPoints[i][1])
+    }
+    ctx.closePath()
+    ctx.fill()
+
+    // Draw the outline
+    const lineWidth = scaleOnly(this.transform, this.aperture.size)
+    ctx.lineWidth = lineWidth
+    ctx.stroke()
+  }
+
   /* NOTE: This is not gerber compatible */
   debugText(text: string, x: number, y: number) {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
