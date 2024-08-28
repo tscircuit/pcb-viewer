@@ -11,9 +11,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "devDependencies": {
     "@biomejs/biome": "^1.7.3",
     "@semantic-release/commit-analyzer": "^9.0.2",
@@ -23,11 +21,11 @@
     "@storybook/nextjs": "^8.0.6",
     "@storybook/react": "^8.0.6",
     "@swc/core": "^1.4.12",
-    "@tscircuit/builder": "^1.11.0",
+    "@tscircuit/builder": "^1.11.4",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
-    "@tscircuit/props": "^0.0.31",
+    "@tscircuit/props": "^0.0.46",
     "@tscircuit/react-fiber": "^1.1.25",
-    "@tscircuit/soup": "^0.0.56",
+    "@tscircuit/soup": "^0.0.58",
     "@tscircuit/soup-util": "^0.0.13",
     "@types/node": "18.7.23",
     "@types/react": "^18.3.3",
