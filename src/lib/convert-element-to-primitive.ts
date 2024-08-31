@@ -1,7 +1,7 @@
 import type { AnySoupElement } from "@tscircuit/soup"
-import type { Primitive } from "./types"
 import { su } from "@tscircuit/soup-util"
-import { getExpandedStroke, Point } from "./util/expand-stroke"
+import type { Primitive } from "./types"
+import { type Point, getExpandedStroke } from "./util/expand-stroke"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -255,31 +255,7 @@ export const convertElementToPrimitives = (
     case "pcb_trace": {
       const primitives: Primitive[] = []
 
-      if (element.route_thickness_mode === "constant") {
-        let prevX: number | null = null
-        let prevY: number | null = null
-
-        for (const route of element.route) {
-          if (route.route_type === "wire") {
-            if (prevX !== null && prevY !== null) {
-              primitives.push({
-                pcb_drawing_type: "line",
-                x1: prevX,
-                y1: prevY,
-                x2: route.x,
-                y2: route.y,
-                width: route.width,
-                squareCap: false,
-                layer: route.layer,
-              })
-            }
-
-            prevX = route.x
-            prevY = route.y
-          }
-          // Ignore "via" routes for now
-        }
-      } else if (element.route_thickness_mode === "interpolated") {
+      if (element.route_thickness_mode === "interpolated") {
         // Prepare the stroke input
         const strokeInput: Point[] = element.route.map((r) => ({
           x: r.x,
@@ -310,6 +286,30 @@ export const convertElementToPrimitives = (
             })
           }
         })
+
+        return primitives
+      }
+      let prevX: number | null = null
+      let prevY: number | null = null
+
+      for (const route of element.route) {
+        if (route.route_type === "wire") {
+          if (prevX !== null && prevY !== null) {
+            primitives.push({
+              pcb_drawing_type: "line",
+              x1: prevX,
+              y1: prevY,
+              x2: route.x,
+              y2: route.y,
+              width: route.width,
+              squareCap: false,
+              layer: route.layer,
+            })
+          }
+
+          prevX = route.x
+          prevY = route.y
+        }
       }
 
       return primitives
