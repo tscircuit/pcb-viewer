@@ -52,17 +52,14 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
   drawer.equip({
     color: rect.layer,
   })
-  if (rect.align && rect.align !== "center") {
-    console.warn("Unhandled rect align", rect.align)
-  }
-  drawer.rect(rect.x, rect.y, rect.w, rect.h)
+  drawer.rect(rect.x, rect.y, rect.w, rect.h, true)
 }
 
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
   drawer.equip({
     color: circle.layer,
   })
-  drawer.circle(circle.x, circle.y, circle.r)
+  drawer.circle(circle.x, circle.y, circle.r, true)
 }
 
 export const drawOval = (drawer: Drawer, oval: Oval) => {

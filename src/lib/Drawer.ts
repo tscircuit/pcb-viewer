@@ -1,14 +1,13 @@
-import { scaleOnly } from "./util/scale-only"
 import {
-  identity,
-  Matrix,
+  type Matrix,
   applyToPoint,
-  translate,
   compose,
+  identity,
   inverse,
+  translate,
 } from "transformation-matrix"
 import colors from "./colors"
-import { convertTextToLines } from "./convert-text-to-lines"
+import { scaleOnly } from "./util/scale-only"
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -131,23 +130,86 @@ export class Drawer {
     }
   }
 
-  rect(x: number, y: number, w: number, h: number) {
+  drawMeshPattern(x: number, y: number, width: number, height: number, spacing: number, angle: number = 45) {
+    const ctx = this.getLayerCtx()
+    const [x1, y1] = applyToPoint(this.transform, [x, y])
+    const [x2, y2] = applyToPoint(this.transform, [x + width, y + height])
+    const spacing$ = scaleOnly(this.transform, spacing)
+
+    // Set line properties for the mesh
+    ctx.lineWidth = 1
+    ctx.strokeStyle = this.aperture.color
+
+    const drawLines = (angle: number) => {
+      const sin = Math.sin(angle)
+      const cos = Math.cos(angle)
+      const diag = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+      
+      for (let i = -diag; i <= diag; i += spacing$) {
+        ctx.beginPath()
+        ctx.moveTo(x1 + i * cos - diag * sin, y1 + i * sin + diag * cos)
+        ctx.lineTo(x1 + i * cos + diag * sin, y1 + i * sin - diag * cos)
+        ctx.stroke()
+      }
+    }
+
+    // Draw first set of parallel lines
+    drawLines(angle * Math.PI / 180)
+    // Draw second set of parallel lines (perpendicular to the first set)
+    drawLines((angle + 90) * Math.PI / 180)
+  }
+
+  rect(x: number, y: number, w: number, h: number, mesh_fill?: boolean) {
     const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
     const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
     this.applyAperture()
     const ctx = this.getLayerCtx()
-    ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+    
+    if (mesh_fill) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      ctx.clip()
+      
+      // Draw the mesh pattern
+      this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15) // Adjust spacing as needed
+      
+      ctx.restore()
+
+      // Draw the outline
+      ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+    } else {
+      ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+    }
   }
 
-  circle(x: number, y: number, r: number) {
+  circle(x: number, y: number, r: number, mesh_fill?: boolean) {
     const r$ = scaleOnly(this.transform, r)
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
     const ctx = this.getLayerCtx()
-    ctx.beginPath()
-    ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
-    ctx.fill()
-    ctx.closePath()
+    
+    if (mesh_fill) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
+      ctx.clip()
+      
+      // Draw the mesh pattern
+      // We need to cover the entire circular area, so we use a square that fully encloses the circle
+      this.drawMeshPattern(x - r, y - r, r * 2, r * 2, 0.15) // Adjust spacing as needed
+      
+      ctx.restore()
+
+      // Draw the outline
+      ctx.beginPath()
+      ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
+      ctx.stroke()
+    } else {
+      ctx.beginPath()
+      ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
+      ctx.fill()
+    }
   }
 
   oval(x: number, y: number, rx: number, ry: number) {
