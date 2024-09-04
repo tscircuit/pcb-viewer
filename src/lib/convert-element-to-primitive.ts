@@ -262,7 +262,7 @@ export const convertElementToPrimitives = (
             x: center.x,
             y: center.y,
             r: radius,
-            layer: "drill",
+            layer: "top",
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
