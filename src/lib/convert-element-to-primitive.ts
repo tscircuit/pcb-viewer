@@ -252,6 +252,42 @@ export const convertElementToPrimitives = (
         return []
       }
     }
+    case "pcb_keepout": {
+      if (element.shape === "circle") {
+        const { center, radius } = element
+
+        return [
+          {
+            pcb_drawing_type: "circle",
+            x: center.x,
+            y: center.y,
+            r: radius,
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            mesh_fill: true,
+          },
+        ]
+      } else if (element.shape === "rect") { 
+        const { x, y, width, height } = element
+
+        return [
+          {
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: width,
+            h: height,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            mesh_fill: true,
+          },
+        ]
+      }
+    }
     case "pcb_trace": {
       const primitives: Primitive[] = []
 

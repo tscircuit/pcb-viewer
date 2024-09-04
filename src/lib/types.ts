@@ -50,6 +50,7 @@ export interface Rect extends PCBDrawingObject {
   h: number
   roundness?: number
   align?: AlignString
+  mesh_fill?: boolean
 }
 
 export interface Circle extends PCBDrawingObject {
@@ -57,6 +58,7 @@ export interface Circle extends PCBDrawingObject {
   x: number
   y: number
   r: number
+  mesh_fill?: boolean
 }
 
 export interface Oval extends PCBDrawingObject {
