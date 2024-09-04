@@ -52,14 +52,14 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
   drawer.equip({
     color: rect.layer,
   })
-  drawer.rect(rect.x, rect.y, rect.w, rect.h, true)
+  drawer.rect(rect.x, rect.y, rect.w, rect.h, rect.mesh_fill)
 }
 
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
   drawer.equip({
     color: circle.layer,
   })
-  drawer.circle(circle.x, circle.y, circle.r, true)
+  drawer.circle(circle.x, circle.y, circle.r, circle.mesh_fill)
 }
 
 export const drawOval = (drawer: Drawer, oval: Oval) => {
