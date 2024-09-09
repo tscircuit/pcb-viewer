@@ -1,6 +1,30 @@
-import { Drawer } from "./Drawer"
+import { Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
-import { Circle, Line, Oval, Pill, Polygon, Primitive, Rect, Text } from "./types"
+import {
+  Circle,
+  Line,
+  Oval,
+  Pill,
+  Polygon,
+  Primitive,
+  Rect,
+  Text,
+} from "./types"
+import color from "color"
+
+function getColor(primitive: Primitive) {
+  if (primitive.is_mouse_over) {
+    return color(
+      LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR],
+    )
+      .lighten(0.5)
+      .rgb()
+      .toString()
+  }
+  return LAYER_NAME_TO_COLOR[
+    primitive.layer as keyof typeof LAYER_NAME_TO_COLOR
+  ]
+}
 
 export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
@@ -50,7 +74,8 @@ export const drawText = (drawer: Drawer, text: Text) => {
 
 export const drawRect = (drawer: Drawer, rect: Rect) => {
   drawer.equip({
-    color: rect.layer,
+    color: getColor(rect),
+    layer: rect.layer,
   })
   drawer.rect(rect.x, rect.y, rect.w, rect.h, rect.mesh_fill)
 }

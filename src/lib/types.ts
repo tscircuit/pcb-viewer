@@ -14,12 +14,17 @@ export type AlignString =
 export type LayerRef = string
 
 export interface PCBDrawingObject {
+  _pcb_drawing_object_id: string
+
   layer: LayerRef
   unit?: string
   _element?: AnyElement
   _parent_pcb_component?: AnyElement
   _parent_source_component?: AnyElement
   _source_port?: AnyElement
+
+  is_mouse_over?: boolean
+  is_in_highlighted_net?: boolean
 }
 
 export interface Line extends PCBDrawingObject {
