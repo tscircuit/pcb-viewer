@@ -166,7 +166,6 @@ export const convertElementToPrimitives = (
             y,
             r: hole_diameter / 2,
             layer: "drill",
-            _element: element,
             _parent_pcb_component,
             _parent_source_component,
           },
@@ -322,6 +321,7 @@ export const convertElementToPrimitives = (
         // Generate a single polygon primitive from the expanded stroke
         primitives.push({
           _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+          _element: element,
           pcb_drawing_type: "polygon",
           points: expandedStroke,
           layer: element.route[0].layer, // same layer for all points
@@ -332,6 +332,7 @@ export const convertElementToPrimitives = (
           if (r.route_type === "via") {
             primitives.push({
               _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              _element: element,
               pcb_drawing_type: "circle",
               x: r.x,
               y: r.y,
@@ -352,6 +353,7 @@ export const convertElementToPrimitives = (
           if (prevX !== null && prevY !== null) {
             primitives.push({
               _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+              _element: element,
               pcb_drawing_type: "line",
               x1: prevX,
               y1: prevY,
@@ -395,7 +397,6 @@ export const convertElementToPrimitives = (
           y,
           r: hole_diameter / 2,
           layer: "drill",
-          _element: element,
           _parent_pcb_component,
           _parent_source_component,
         },

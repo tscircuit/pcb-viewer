@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
+    "circuit-json-to-connectivity-map": "^0.0.8",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",

@@ -24,7 +24,7 @@ export const LAYER_NAME_TO_COLOR = {
   red: "red",
   black: "black",
   green: "green",
-  board: "white",
+  board: "rgb(255, 255, 255)",
   other: "#eee",
   // TODO more builtin html colors
 

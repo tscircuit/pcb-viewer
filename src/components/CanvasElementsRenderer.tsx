@@ -13,6 +13,7 @@ import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditEvent } from "lib/edit-events"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 
 export interface CanvasElementsRendererProps {
   elements: AnySoupElement[]
@@ -28,12 +29,16 @@ export interface CanvasElementsRendererProps {
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
-  const primitivesWithoutInteractionMetadata = useMemo(() => {
-    const primitivesWithoutInteractionMetadata = props.elements.flatMap((elm) =>
-      convertElementToPrimitives(elm, props.elements),
-    )
-    return primitivesWithoutInteractionMetadata
-  }, [props.elements])
+  const [primitivesWithoutInteractionMetadata, connectivityMap] =
+    useMemo(() => {
+      const primitivesWithoutInteractionMetadata = props.elements.flatMap(
+        (elm) => convertElementToPrimitives(elm, props.elements),
+      )
+      const connectivityMap = getFullConnectivityMapFromCircuitJson(
+        props.elements,
+      )
+      return [primitivesWithoutInteractionMetadata, connectivityMap]
+    }, [props.elements])
 
   const [primitives, setPrimitives] = useState<Primitive[]>(
     primitivesWithoutInteractionMetadata,
@@ -44,6 +49,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       transform={transform}
       primitives={primitivesWithoutInteractionMetadata}
       onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
+        const connectedPrimitiveIds: string[] = []
+        for (const primitive of primitivesHoveredOver) {
+          const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
+            primitive?._element?.pcb_port_id,
+          )
+          connectedPrimitiveIds.push(
+            ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
+          )
+        }
+
         const primitiveIdsWithMouseOver = new Set(
           primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
         )
@@ -52,14 +67,17 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           const newPrimitive = { ...primitive }
           if (primitiveIdsWithMouseOver.has(primitive._pcb_drawing_object_id)) {
             newPrimitive.is_mouse_over = true
+          } else if (
+            connectedPrimitiveIds.includes(primitive?._element?.pcb_trace_id) ||
+            connectedPrimitiveIds.includes(primitive?._element?.pcb_port_id)
+          ) {
+            newPrimitive.is_in_highlighted_net = true
           } else {
+            newPrimitive.is_in_highlighted_net = false
             newPrimitive.is_mouse_over = false
           }
           newPrimitives.push(newPrimitive)
         }
-
-        // Compute which primitives are connected via the same net
-        // to do this, use a netlist created above
 
         setPrimitives(newPrimitives)
       }}
