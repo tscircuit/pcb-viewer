@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import type { AnySoupElement } from "@tscircuit/soup"
+import { pcb_port, type AnySoupElement } from "@tscircuit/soup"
 import { useMemo } from "react"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { Matrix } from "transformation-matrix"
@@ -51,12 +51,14 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
         const connectedPrimitiveIds: string[] = []
         for (const primitive of primitivesHoveredOver) {
-          const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
-            primitive?._element?.pcb_port_id,
-          )
-          connectedPrimitiveIds.push(
-            ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
-          )
+          if (primitive._element && "pcb_port_id" in primitive._element) {
+            const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
+              primitive._element.pcb_port_id!,
+            )
+            connectedPrimitiveIds.push(
+              ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
+            )
+          }
         }
 
         const primitiveIdsWithMouseOver = new Set(
@@ -68,8 +70,15 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           if (primitiveIdsWithMouseOver.has(primitive._pcb_drawing_object_id)) {
             newPrimitive.is_mouse_over = true
           } else if (
-            connectedPrimitiveIds.includes(primitive?._element?.pcb_trace_id) ||
-            connectedPrimitiveIds.includes(primitive?._element?.pcb_port_id)
+            primitive._element &&
+            (("pcb_trace_id" in primitive._element &&
+              connectedPrimitiveIds.includes(
+                primitive._element.pcb_trace_id,
+              )) ||
+              ("pcb_port_id" in primitive._element &&
+                connectedPrimitiveIds.includes(
+                  primitive._element.pcb_port_id!,
+                )))
           ) {
             newPrimitive.is_in_highlighted_net = true
           } else {
