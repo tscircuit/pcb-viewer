@@ -14,7 +14,7 @@ import { EditEvent } from "lib/edit-events"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
-import { primitivesToBeHighlighted } from "lib/util/primitivesToBeHighlighted"
+import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 
 export interface CanvasElementsRendererProps {
   elements: AnySoupElement[]
@@ -62,14 +62,14 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           }
         }
 
-        const primitiveIdsWithMouseOver = new Set(
+        const drawingObjectIdsWithMouseOver = new Set(
           primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
         )
-        const newPrimitives = primitivesToBeHighlighted(
+        const newPrimitives = addInteractionMetadataToPrimitives({
           primitivesWithoutInteractionMetadata,
-          primitiveIdsWithMouseOver,
+          drawingObjectIdsWithMouseOver,
           primitiveIdsInMousedOverNet,
-        )
+        })
 
         setPrimitives(newPrimitives)
       }}

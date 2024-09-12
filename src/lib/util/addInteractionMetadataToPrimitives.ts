@@ -1,18 +1,22 @@
 import { Primitive } from "lib/types"
 
-export function primitivesToBeHighlighted(
-  oldPrimitives: Primitive[],
-  primitiveIdsWithMouseOver: Set<string>,
-  primitiveIdsInMousedOverNet: string[],
-): Primitive[] {
+export function addInteractionMetadataToPrimitives({
+  primitivesWithoutInteractionMetadata,
+  drawingObjectIdsWithMouseOver,
+  primitiveIdsInMousedOverNet,
+}: {
+  primitivesWithoutInteractionMetadata: Primitive[]
+  drawingObjectIdsWithMouseOver: Set<string>
+  primitiveIdsInMousedOverNet: string[]
+}): Primitive[] {
   const newPrimitives = []
-  for (const primitive of oldPrimitives) {
+  for (const primitive of primitivesWithoutInteractionMetadata) {
     const newPrimitive = { ...primitive }
     if (primitive?.layer === "drill") {
       newPrimitive.is_in_highlighted_net = false
       newPrimitive.is_mouse_over = false
     } else if (
-      primitiveIdsWithMouseOver.has(primitive._pcb_drawing_object_id)
+      drawingObjectIdsWithMouseOver.has(primitive._pcb_drawing_object_id)
     ) {
       newPrimitive.is_mouse_over = true
     } else if (
