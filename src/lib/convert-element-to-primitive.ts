@@ -166,6 +166,7 @@ export const convertElementToPrimitives = (
             y,
             r: hole_diameter / 2,
             layer: "drill",
+            _element: element,
             _parent_pcb_component,
             _parent_source_component,
           },
@@ -201,6 +202,7 @@ export const convertElementToPrimitives = (
             r: hole_diameter / 2,
             // TODO support layer on pcb_plated_hole
             layer: "drill",
+            _element: element,
 
             // double highlights are annoying
             // _element: element,
@@ -226,6 +228,7 @@ export const convertElementToPrimitives = (
           },
           {
             _pcb_drawing_object_id: `oval_${globalPcbDrawingObjectCount++}`,
+            _element: element,
             pcb_drawing_type: "oval",
             x,
             y,
@@ -254,6 +257,7 @@ export const convertElementToPrimitives = (
           },
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            _element: element,
             pcb_drawing_type: "pill",
             x,
             y,
@@ -392,6 +396,7 @@ export const convertElementToPrimitives = (
         },
         {
           _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+          _element: element,
           pcb_drawing_type: "circle",
           x,
           y,

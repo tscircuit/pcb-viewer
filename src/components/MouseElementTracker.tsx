@@ -24,6 +24,7 @@ export const MouseElementTracker = ({
     for (const primitive of mousedPrimitives) {
       if (primitive._element?.type === "pcb_via") continue
       if (primitive._element?.type === "pcb_component") continue
+      if (primitive?.layer === "drill") continue
       const screenPos = applyToPoint(
         transform!,
         primitive as { x: number; y: number },

@@ -14,6 +14,7 @@ import { EditEvent } from "lib/edit-events"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 
 export interface CanvasElementsRendererProps {
   elements: AnySoupElement[]
@@ -49,44 +50,26 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       transform={transform}
       primitives={primitivesWithoutInteractionMetadata}
       onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
-        const connectedPrimitiveIds: string[] = []
+        const primitiveIdsInMousedOverNet: string[] = []
         for (const primitive of primitivesHoveredOver) {
           if (primitive._element && "pcb_port_id" in primitive._element) {
             const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
               primitive._element.pcb_port_id!,
             )
-            connectedPrimitiveIds.push(
+            primitiveIdsInMousedOverNet.push(
               ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
             )
           }
         }
 
-        const primitiveIdsWithMouseOver = new Set(
+        const drawingObjectIdsWithMouseOver = new Set(
           primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
         )
-        const newPrimitives = []
-        for (const primitive of primitivesWithoutInteractionMetadata) {
-          const newPrimitive = { ...primitive }
-          if (primitiveIdsWithMouseOver.has(primitive._pcb_drawing_object_id)) {
-            newPrimitive.is_mouse_over = true
-          } else if (
-            primitive._element &&
-            (("pcb_trace_id" in primitive._element &&
-              connectedPrimitiveIds.includes(
-                primitive._element.pcb_trace_id,
-              )) ||
-              ("pcb_port_id" in primitive._element &&
-                connectedPrimitiveIds.includes(
-                  primitive._element.pcb_port_id!,
-                )))
-          ) {
-            newPrimitive.is_in_highlighted_net = true
-          } else {
-            newPrimitive.is_in_highlighted_net = false
-            newPrimitive.is_mouse_over = false
-          }
-          newPrimitives.push(newPrimitive)
-        }
+        const newPrimitives = addInteractionMetadataToPrimitives({
+          primitivesWithoutInteractionMetadata,
+          drawingObjectIdsWithMouseOver,
+          primitiveIdsInMousedOverNet,
+        })
 
         setPrimitives(newPrimitives)
       }}
