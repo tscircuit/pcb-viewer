@@ -13,7 +13,7 @@ import {
 import color from "color"
 
 function getColor(primitive: Primitive) {
-  if (primitive.is_mouse_over) {
+  if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
     return color(
       LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR],
     )
@@ -30,7 +30,8 @@ export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.equip({
     size: line.zoomIndependent ? line.width / drawer.transform.a : line.width,
     shape: line.squareCap ? "square" : "circle",
-    color: line.layer,
+    color: getColor(line),
+    layer: line.layer,
   })
   drawer.moveTo(line.x1, line.y1)
   drawer.lineTo(line.x2, line.y2)
@@ -82,28 +83,32 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
 
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
   drawer.equip({
-    color: circle.layer,
+    color: getColor(circle),
+    layer: circle.layer,
   })
   drawer.circle(circle.x, circle.y, circle.r, circle.mesh_fill)
 }
 
 export const drawOval = (drawer: Drawer, oval: Oval) => {
   drawer.equip({
-    color: oval.layer,
+    color: getColor(oval),
+    layer: oval.layer,
   })
   drawer.oval(oval.x, oval.y, oval.rX, oval.rY)
 }
 
 export const drawPill = (drawer: Drawer, pill: Pill) => {
   drawer.equip({
-    color: pill.layer,
+    color: getColor(pill),
+    layer: pill.layer,
   })
   drawer.pill(pill.x, pill.y, pill.w, pill.h)
 }
 
 export const drawPolygon = (drawer: Drawer, polygon: Polygon) => {
   drawer.equip({
-    color: polygon.layer,
+    color: getColor(polygon),
+    layer: polygon.layer,
   })
   drawer.polygon(polygon.points)
 }
