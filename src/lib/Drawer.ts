@@ -326,11 +326,8 @@ export class Drawer {
   applyAperture() {
     const { transform, aperture } = this
     let { size, mode, color, fontSize, layer } = aperture
-    if (layer in this.ctxLayerMap) {
-      // this.aperture.layer = layer 
-    } else {
-      this.aperture.layer = "other"
-    }
+    if (!(layer in this.ctxLayerMap)) this.aperture.layer = "other"
+
     const ctx = this.getLayerCtx()
     if (!ctx) {
       throw new Error(`No context for layer "${this.foregroundLayer}"`)
