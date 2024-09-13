@@ -325,9 +325,9 @@ export class Drawer {
 
   applyAperture() {
     const { transform, aperture } = this
-    let { size, mode, color, fontSize } = aperture
-    if (color in this.ctxLayerMap) {
-      this.aperture.layer = color
+    let { size, mode, color, fontSize, layer } = aperture
+    if (layer in this.ctxLayerMap) {
+      // this.aperture.layer = layer 
     } else {
       this.aperture.layer = "other"
     }
