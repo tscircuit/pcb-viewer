@@ -4,15 +4,18 @@ import { Matrix, applyToPoint, inverse } from "transformation-matrix"
 import { Primitive } from "lib/types"
 import { ElementOverlayBox } from "./ElementOverlayBox"
 import { AnyElement } from "@tscircuit/builder"
+import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 
 export const MouseElementTracker = ({
   children,
   transform,
   primitives,
+  onMouseHoverOverPrimitives,
 }: {
   children: any
   transform?: Matrix
   primitives: Primitive[]
+  onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void
 }) => {
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
 
@@ -21,9 +24,10 @@ export const MouseElementTracker = ({
     for (const primitive of mousedPrimitives) {
       if (primitive._element?.type === "pcb_via") continue
       if (primitive._element?.type === "pcb_component") continue
+      if (primitive?.layer === "drill") continue
       const screenPos = applyToPoint(
         transform!,
-        primitive as { x: number; y: number }
+        primitive as { x: number; y: number },
       )
       const w =
         "w" in primitive ? primitive.w : "r" in primitive ? primitive.r * 2 : 0
@@ -41,7 +45,7 @@ export const MouseElementTracker = ({
           screenPos.x === hp.screen_x &&
           screenPos.y === hp.screen_y &&
           screenSize.w === hp.screen_w &&
-          screenSize.h === hp.screen_h
+          screenSize.h === hp.screen_h,
       ).length
 
       highlightedPrimitives.push({
@@ -66,7 +70,7 @@ export const MouseElementTracker = ({
           const y = e.clientY - rect.top
           const rwPoint = applyToPoint(inverse(transform), { x, y })
 
-          const mousedPrimitives: Primitive[] = []
+          const newMousedPrimitives: Primitive[] = []
           for (const primitive of primitives) {
             if (
               !(
@@ -85,10 +89,21 @@ export const MouseElementTracker = ({
               Math.abs(primitive.x - rwPoint.x) < w / 2 &&
               Math.abs(primitive.y - rwPoint.y) < h / 2
             ) {
-              mousedPrimitives.push(primitive)
+              newMousedPrimitives.push(primitive)
             }
           }
-          setMousedPrimitives(mousedPrimitives)
+
+          if (
+            ifSetsMatchExactly(
+              new Set(newMousedPrimitives.map((p) => p._pcb_drawing_object_id)),
+              new Set(mousedPrimitives.map((p) => p._pcb_drawing_object_id)),
+            )
+          ) {
+            return
+          }
+
+          setMousedPrimitives(newMousedPrimitives)
+          onMouseHoverOverPrimitives(newMousedPrimitives)
         }
       }}
     >

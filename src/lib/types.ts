@@ -14,12 +14,17 @@ export type AlignString =
 export type LayerRef = string
 
 export interface PCBDrawingObject {
+  _pcb_drawing_object_id: string
+
   layer: LayerRef
   unit?: string
   _element?: AnyElement
   _parent_pcb_component?: AnyElement
   _parent_source_component?: AnyElement
   _source_port?: AnyElement
+
+  is_mouse_over?: boolean
+  is_in_highlighted_net?: boolean
 }
 
 export interface Line extends PCBDrawingObject {
@@ -32,6 +37,7 @@ export interface Line extends PCBDrawingObject {
   width: number
   zoomIndependent?: boolean
 }
+
 export interface Text extends PCBDrawingObject {
   pcb_drawing_type: "text"
   text: string
@@ -40,6 +46,7 @@ export interface Text extends PCBDrawingObject {
   size: number
   align?: AlignString
 }
+
 export interface Rect extends PCBDrawingObject {
   pcb_drawing_type: "rect"
   x: number
@@ -48,12 +55,15 @@ export interface Rect extends PCBDrawingObject {
   h: number
   roundness?: number
   align?: AlignString
+  mesh_fill?: boolean
 }
+
 export interface Circle extends PCBDrawingObject {
   pcb_drawing_type: "circle"
   x: number
   y: number
   r: number
+  mesh_fill?: boolean
 }
 
 export interface Oval extends PCBDrawingObject {
@@ -72,7 +82,12 @@ export interface Pill extends PCBDrawingObject {
   h: number
 }
 
-export type Primitive = Line | Text | Rect | Circle | Oval | Pill
+export interface Polygon extends PCBDrawingObject {
+  pcb_drawing_type: "polygon"
+  points: { x: number; y: number }[]
+}
+
+export type Primitive = Line | Text | Rect | Circle | Oval | Pill | Polygon
 
 export type GridConfig = {
   spacing: number

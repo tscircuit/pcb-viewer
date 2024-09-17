@@ -119,7 +119,7 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
               <div
                 className={css`
                   position: absolute;
-                  z-index: 1000;
+                  z-index: 100;
                   left: ${errorCenter.x}px;
                   top: ${errorCenter.y}px;
                   color: red;

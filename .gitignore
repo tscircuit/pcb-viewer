@@ -11,3 +11,4 @@ yarn-error.log
 .yalc
 yalc.lock
 .aider*
+bun.lockb

@@ -1,10 +1,10 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useState } from "react"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import type { AnySoupElement } from "@tscircuit/soup"
+import { pcb_port, type AnySoupElement } from "@tscircuit/soup"
 import { useMemo } from "react"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { Matrix } from "transformation-matrix"
-import { GridConfig } from "lib/types"
+import { GridConfig, Primitive } from "lib/types"
 import { MouseElementTracker } from "./MouseElementTracker"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
@@ -13,6 +13,8 @@ import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditEvent } from "lib/edit-events"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 
 export interface CanvasElementsRendererProps {
   elements: AnySoupElement[]
@@ -28,14 +30,50 @@ export interface CanvasElementsRendererProps {
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
-  const primitives = useMemo(() => {
-    const primitives = props.elements.flatMap((elm) =>
-      convertElementToPrimitives(elm, props.elements),
-    )
-    return primitives
-  }, [props.elements])
+  const [primitivesWithoutInteractionMetadata, connectivityMap] =
+    useMemo(() => {
+      const primitivesWithoutInteractionMetadata = props.elements.flatMap(
+        (elm) => convertElementToPrimitives(elm, props.elements),
+      )
+      const connectivityMap = getFullConnectivityMapFromCircuitJson(
+        props.elements,
+      )
+      return [primitivesWithoutInteractionMetadata, connectivityMap]
+    }, [props.elements])
+
+  const [primitives, setPrimitives] = useState<Primitive[]>(
+    primitivesWithoutInteractionMetadata,
+  )
+
   return (
-    <MouseElementTracker transform={transform} primitives={primitives}>
+    <MouseElementTracker
+      transform={transform}
+      primitives={primitivesWithoutInteractionMetadata}
+      onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
+        const primitiveIdsInMousedOverNet: string[] = []
+        for (const primitive of primitivesHoveredOver) {
+          if (primitive._element && "pcb_port_id" in primitive._element) {
+            const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
+              primitive._element.pcb_port_id!,
+            )
+            primitiveIdsInMousedOverNet.push(
+              ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
+            )
+          }
+        }
+
+        const drawingObjectIdsWithMouseOver = new Set(
+          primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
+        )
+        const newPrimitives = addInteractionMetadataToPrimitives({
+          primitivesWithoutInteractionMetadata,
+          drawingObjectIdsWithMouseOver,
+          primitiveIdsInMousedOverNet,
+        })
+
+        setPrimitives(newPrimitives)
+      }}
+    >
       <EditPlacementOverlay
         disabled={!props.allowEditing}
         transform={transform}

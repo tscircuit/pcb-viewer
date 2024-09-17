@@ -10,6 +10,8 @@ import { useContext } from "react"
 export interface State {
   selected_layer: LayerRef
 
+  pcb_viewer_id: string
+
   in_edit_mode: boolean
   in_move_footprint_mode: boolean
   in_draw_trace_mode: boolean
@@ -35,6 +37,8 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
     (set) =>
       ({
         selected_layer: "top",
+
+        pcb_viewer_id: `pcb_viewer_${Math.random().toString().slice(2, 10)}`,
 
         in_edit_mode: false,
         in_move_footprint_mode: false,

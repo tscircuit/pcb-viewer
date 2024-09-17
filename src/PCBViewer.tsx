@@ -12,6 +12,7 @@ import type { EditEvent } from "lib/edit-events"
 import { applyEditEvents } from "lib/apply-edit-events"
 import { RatsNestOverlay } from "./components/RatsNestOverlay"
 import type { StateProps } from "global-store"
+import { ToastContainer } from "lib/toast"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -148,6 +149,7 @@ export const PCBViewer = ({
             }}
             elements={elements}
           />
+          <ToastContainer />
         </ContextProviders>
       </div>
     </div>

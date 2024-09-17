@@ -1,4 +1,9 @@
-import type { AnySoupElement, PCBSMTPad, PcbTraceHint, PCBPlatedHole } from "@tscircuit/soup"
+import type {
+  AnySoupElement,
+  PCBSMTPad,
+  PcbTraceHint,
+  PCBPlatedHole,
+} from "@tscircuit/soup"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 import { type EditTraceHintEvent } from "lib/edit-events"
@@ -10,6 +15,7 @@ import {
   inverse,
 } from "transformation-matrix"
 import { HotkeyActionMenu } from "./HotkeyActionMenu"
+import { useToast } from "lib/toast"
 
 interface Props {
   transform?: Matrix
@@ -22,9 +28,9 @@ interface Props {
 }
 
 interface Point {
-  x: number;
-  y: number;
-  trace_width?: number;
+  x: number
+  y: number
+  trace_width?: number
 }
 
 const isInsideOfSmtpad = (
@@ -54,21 +60,23 @@ const isInsideOfPlatedHole = (
 ) => {
   if (hole.shape === "circle") {
     const distance = Math.sqrt(
-      Math.pow(point.x - hole.x, 2) + Math.pow(point.y - hole.y, 2)
-    );
-    return distance <= (hole.outer_diameter / 2 + padding);
+      Math.pow(point.x - hole.x, 2) + Math.pow(point.y - hole.y, 2),
+    )
+    return distance <= hole.outer_diameter / 2 + padding
   } else {
-    const halfWidth = hole.hole_width / 2;
-    const halfHeight = hole.hole_height / 2;
+    const halfWidth = hole.hole_width / 2
+    const halfHeight = hole.hole_height / 2
 
-    const left = hole.x - halfWidth - padding;
-    const right = hole.x + halfWidth + padding;
-    const top = hole.y - halfHeight - padding;
-    const bottom = hole.y + halfHeight + padding;
+    const left = hole.x - halfWidth - padding
+    const right = hole.x + halfWidth + padding
+    const top = hole.y - halfHeight - padding
+    const bottom = hole.y + halfHeight + padding
 
-    return point.x > left && point.x < right && point.y > top && point.y < bottom;
+    return (
+      point.x > left && point.x < right && point.y > top && point.y < bottom
+    )
   }
-};
+}
 
 /**
  * The trace hit overlay allows you to click a pad, after
@@ -100,7 +108,10 @@ export const EditTraceHintOverlay = ({
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const containerBounds = containerRef.current?.getBoundingClientRect()
-  const [selectedElement, setSelectedElement] = useState<null | PCBSMTPad | PCBPlatedHole>(null)
+  const [selectedElement, setSelectedElement] = useState<
+    null | PCBSMTPad | PCBPlatedHole
+  >(null)
+  const toast = useToast()
   const [dragState, setDragState] = useState<{
     dragStart: { x: number; y: number }
     originalCenter: { x: number; y: number }
@@ -152,9 +163,15 @@ export const EditTraceHintOverlay = ({
         if (!isElementSelected) {
           for (const e of soup) {
             if (
-              (e.type === "pcb_smtpad" && isInsideOfSmtpad(e, rwMousePoint, 10 / transform.a)) ||
-              (e.type === "pcb_plated_hole" && isInsideOfPlatedHole(e, rwMousePoint, 10 / transform.a))
+              (e.type === "pcb_smtpad" &&
+                isInsideOfSmtpad(e, rwMousePoint, 10 / transform.a)) ||
+              (e.type === "pcb_plated_hole" &&
+                isInsideOfPlatedHole(e, rwMousePoint, 10 / transform.a))
             ) {
+              if (!e.pcb_port_id) {
+                toast.error(`pcb_port_id is null on the selected "${e.type}"`)
+                return
+              }
               setSelectedElement(e)
               setShouldCreateAsVia(false)
               setDragState({
@@ -269,7 +286,9 @@ export const EditTraceHintOverlay = ({
           >
             <path
               stroke="red"
-              d={`M ${ogCenterScreen.x} ${ogCenterScreen.y} ${dragState?.editEvent.route
+              d={`M ${ogCenterScreen.x} ${
+                ogCenterScreen.y
+              } ${dragState?.editEvent.route
                 .map((p) => applyToPoint(transform!, p))
                 .map((p) => `L ${p.x} ${p.y}`)
                 .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}
@@ -322,70 +341,43 @@ export const EditTraceHintOverlay = ({
               const { route } = e
               const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
               const pcb_port_screen = applyToPoint(transform!, pcb_port)
-              
-              // Prepare the stroke input including the pcb_port_screen as the starting point
-              const strokeInput: Point[] = [
-                { x: pcb_port_screen.x, y: pcb_port_screen.y, trace_width: 0.5 }, // Start with a small width
-                ...route.map((r) => {
-                  if (r === undefined) {
-                    throw new Error("route contains undefined point");
-                  }
-                  return {
-                    x: applyToPoint(transform!, r as Point).x,
-                    y: applyToPoint(transform!, r as Point).y,
-                    trace_width: r.trace_width
-                  };
-                })
-              ];
-              
-              // Use getExpandedStroke to generate the polygon points
-              const expandedStroke = getExpandedStroke(strokeInput, 0.5); // Use 0.5 as default width
-              
-              // Generate the path data from the expanded stroke
-              const expandedPath = expandedStroke
-                .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x},${point.y}`)
-                .join(' ') + ' Z'; // Close the path
-
-              // Generate the original path for rendering the centerline
-              const originalPath = strokeInput
-                .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x},${point.y}`)
-                .join(' ');
-
               return (
-                <g key={e.pcb_trace_hint_id}>
-                  <path
-                    key={`expanded-path-${e.pcb_port_id}`}
-                    d={expandedPath}
-                    fill="red"
-                  />
-                  <path
-                    key={`original-path-${e.pcb_port_id}`}
-                    d={originalPath}
-                    style={{ mixBlendMode: "difference" }}
+                <Fragment key={e.pcb_trace_hint_id}>
+                  <rect
+                    key={`rect-${e.pcb_port_id}`}
+                    x={pcb_port_screen.x - 10}
+                    y={pcb_port_screen.y - 10}
+                    width={20}
+                    height={20}
                     stroke="red"
                   />
-                  {strokeInput.map((r, i) => (
-                    <g key={i}>
-                      <circle
-                        cx={r.x}
-                        cy={r.y}
-                        r={r.trace_width ? r.trace_width / 2 : 8}
-                        stroke="red"
-                      />
-                      {(r as any).via && (
-                        <circle
-                          cx={r.x}
-                          cy={r.y}
-                          r={r.trace_width ? r.trace_width / 2 : 8}
-                          stroke="red"
-                        />
-                      )}
-                    </g>
-                  ))}
-                </g>
+                  <path
+                    key={`path-${e.pcb_port_id}`}
+                    stroke="red"
+                    d={`M ${pcb_port_screen.x} ${pcb_port_screen.y} ${route
+                      .map((r) => applyToPoint(transform!, r!))
+                      .map((r) => `L ${r.x} ${r.y}`)
+                      .join(" ")}`}
+                  />
+                  {route
+                    .map((r) => ({ ...r, ...applyToPoint(transform, r!) }))
+                    .map((r, i) => (
+                      <Fragment key={i}>
+                        <circle cx={r.x} cy={r.y} r={8} stroke="red" />
+                        {r.via && (
+                          <circle
+                            cx={r.x}
+                            cy={r.y}
+                            r={16}
+                            stroke="red"
+                            fill="transparent"
+                          />
+                        )}
+                      </Fragment>
+                    ))}
+                </Fragment>
               )
-            })
-          }
+            })}
         </svg>
       )}
       <div
@@ -425,89 +417,104 @@ export const EditTraceHintOverlay = ({
 
 function getExpandedStroke(
   strokeInput: (Point | [number, number] | number[])[],
-  defaultWidth: number
+  defaultWidth: number,
 ): Point[] {
   if (strokeInput.length < 2) {
-    throw new Error("Stroke must have at least two points");
+    throw new Error("Stroke must have at least two points")
   }
-  
-  const stroke: Point[] = strokeInput.map(point => {
-    if (Array.isArray(point)) {
-      return { x: point[0], y: point[1] };
-    }
-    return point as Point;
-  });
 
-  const leftSide: Point[] = [];
-  const rightSide: Point[] = [];
+  const stroke: Point[] = strokeInput.map((point) => {
+    if (Array.isArray(point)) {
+      return { x: point[0], y: point[1] }
+    }
+    return point as Point
+  })
+
+  const leftSide: Point[] = []
+  const rightSide: Point[] = []
 
   function getNormal(p1: Point, p2: Point): Point {
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    return { x: -dy / length, y: dx / length };
+    const dx = p2.x - p1.x
+    const dy = p2.y - p1.y
+    const length = Math.sqrt(dx * dx + dy * dy)
+    return { x: -dy / length, y: dx / length }
   }
 
-  function addPoint(point: Point, normal: Point, factor: number, width: number) {
-    const halfWidth = width / 2;
+  function addPoint(
+    point: Point,
+    normal: Point,
+    factor: number,
+    width: number,
+  ) {
+    const halfWidth = width / 2
     const newPoint = {
       x: point.x + normal.x * halfWidth * factor,
       y: point.y + normal.y * halfWidth * factor,
-    };
+    }
     if (factor > 0) {
-      leftSide.push(newPoint);
+      leftSide.push(newPoint)
     } else {
-      rightSide.unshift(newPoint);
+      rightSide.unshift(newPoint)
     }
   }
 
   // Handle the first point
-  const firstNormal = getNormal(stroke[0]!, stroke[1]!);
-  const firstWidth = stroke[0]!.trace_width ?? defaultWidth;
-  addPoint(stroke[0]!, firstNormal, 1, firstWidth);
-  addPoint(stroke[0]!, firstNormal, -1, firstWidth);
+  const firstNormal = getNormal(stroke[0]!, stroke[1]!)
+  const firstWidth = stroke[0]!.trace_width ?? defaultWidth
+  addPoint(stroke[0]!, firstNormal, 1, firstWidth)
+  addPoint(stroke[0]!, firstNormal, -1, firstWidth)
 
   // Handle middle points
   for (let i = 1; i < stroke.length - 1; i++) {
-    const prev = stroke[i - 1]!;
-    const current = stroke[i]!;
-    const next = stroke[i + 1]!;
+    const prev = stroke[i - 1]!
+    const current = stroke[i]!
+    const next = stroke[i + 1]!
 
-    const normalPrev = getNormal(prev, current);
-    const normalNext = getNormal(current, next);
+    const normalPrev = getNormal(prev, current)
+    const normalNext = getNormal(current, next)
 
     // Calculate miter line
-    const miterX = normalPrev.x + normalNext.x;
-    const miterY = normalPrev.y + normalNext.y;
-    const miterLength = Math.sqrt(miterX * miterX + miterY * miterY);
+    const miterX = normalPrev.x + normalNext.x
+    const miterY = normalPrev.y + normalNext.y
+    const miterLength = Math.sqrt(miterX * miterX + miterY * miterY)
 
-    const currentWidth = current.trace_width ?? defaultWidth;
+    const currentWidth = current.trace_width ?? defaultWidth
 
     // Check if miter is too long (sharp corner)
-    const miterLimit = 2; // Adjust this value to control when to bevel
+    const miterLimit = 2 // Adjust this value to control when to bevel
     if (miterLength / 2 > miterLimit * (currentWidth / 2)) {
       // Use bevel join
-      addPoint(current, normalPrev, 1, currentWidth);
-      addPoint(current, normalNext, 1, currentWidth);
-      addPoint(current, normalPrev, -1, currentWidth);
-      addPoint(current, normalNext, -1, currentWidth);
+      addPoint(current, normalPrev, 1, currentWidth)
+      addPoint(current, normalNext, 1, currentWidth)
+      addPoint(current, normalPrev, -1, currentWidth)
+      addPoint(current, normalNext, -1, currentWidth)
     } else {
       // Use miter join
-      const scale = 1 / miterLength;
-      addPoint(current, { x: miterX * scale, y: miterY * scale }, 1, currentWidth);
-      addPoint(current, { x: miterX * scale, y: miterY * scale }, -1, currentWidth);
+      const scale = 1 / miterLength
+      addPoint(
+        current,
+        { x: miterX * scale, y: miterY * scale },
+        1,
+        currentWidth,
+      )
+      addPoint(
+        current,
+        { x: miterX * scale, y: miterY * scale },
+        -1,
+        currentWidth,
+      )
     }
   }
 
   // Handle the last point
   const lastNormal = getNormal(
     stroke[stroke.length - 2]!,
-    stroke[stroke.length - 1]!
-  );
-  const lastWidth = stroke[stroke.length - 1]!.trace_width ?? defaultWidth;
-  addPoint(stroke[stroke.length - 1]!, lastNormal, 1, lastWidth);
-  addPoint(stroke[stroke.length - 1]!, lastNormal, -1, lastWidth);
+    stroke[stroke.length - 1]!,
+  )
+  const lastWidth = stroke[stroke.length - 1]!.trace_width ?? defaultWidth
+  addPoint(stroke[stroke.length - 1]!, lastNormal, 1, lastWidth)
+  addPoint(stroke[stroke.length - 1]!, lastNormal, -1, lastWidth)
 
   // Combine left and right sides to form a closed polygon
-  return [...leftSide, ...rightSide];
+  return [...leftSide, ...rightSide]
 }
