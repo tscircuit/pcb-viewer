@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PCBTraceError, all_layers } from "@tscircuit/soup"
 import type { AnySoupElement } from "@tscircuit/soup"
@@ -85,6 +85,22 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "1") {
+        selectLayer("top")
+      } else if (event.key === "2") {
+        selectLayer("bottom")
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  })
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
