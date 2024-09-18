@@ -88,19 +88,43 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "1") {
-        selectLayer("top")
-      } else if (event.key === "2") {
-        selectLayer("bottom")
-      }
+      if (event.ctrlKey) {
+        switch (event.key) {
+          case "1":
+            selectLayer('top');
+            break;
+          case "2":
+            selectLayer('bottom');
+            break;
+          case "3":
+            selectLayer('inner1');
+            break;
+          case "4":
+            selectLayer('inner2');
+            break;
+          case "5":
+            selectLayer('inner3');
+            break;
+          case "6":
+            selectLayer('inner4');
+            break;
+          case "7":
+            selectLayer('inner5');
+            break;
+          case "8":
+            selectLayer('inner6');
+            break;
+          default:
+            break;
+        }
+      };
     }
-
-    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  })
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedLayer]);
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
