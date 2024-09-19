@@ -5,7 +5,7 @@ import type { AnySoupElement } from "@tscircuit/soup"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
 import packageJson from "../../package.json"
-
+import { useHotKey } from "hooks/useHotKey"
 interface Props {
   children?: any
   elements?: AnySoupElement[]
@@ -86,45 +86,38 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey) {
-        switch (event.key) {
-          case "1":
-            selectLayer('top');
-            break;
-          case "2":
-            selectLayer('bottom');
-            break;
-          case "3":
-            selectLayer('inner1');
-            break;
-          case "4":
-            selectLayer('inner2');
-            break;
-          case "5":
-            selectLayer('inner3');
-            break;
-          case "6":
-            selectLayer('inner4');
-            break;
-          case "7":
-            selectLayer('inner5');
-            break;
-          case "8":
-            selectLayer('inner6');
-            break;
-          default:
-            break;
-        }
-      };
-    }
-    window.addEventListener("keydown", handleKeyDown);
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [selectedLayer]);
+  useHotKey([
+    { key: "1", onUse: () => selectLayer("top") },
+    {
+      key: "2",
+      onUse: () => selectLayer("bottom"),
+    },
+    {
+      key: "3",
+      onUse: () => selectLayer("inner1"),
+    },
+    {
+      key: "4",
+      onUse: () => selectLayer("inner2"),
+    },
+    {
+      key: "5",
+      onUse: () => selectLayer("inner3"),
+    },
+    {
+      key: "6",
+      onUse: () => selectLayer("inner4"),
+    },
+    {
+      key: "7",
+      onUse: () => selectLayer("inner5"),
+    },
+    {
+      key: "8",
+      onUse: () => selectLayer("inner6"),
+    },
+  ])
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
