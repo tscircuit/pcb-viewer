@@ -1,23 +1,21 @@
-import { useEffect } from "react";
+import { useEffect } from "react"
 
-export const useHotKey = (hotkeys: Array<{ key: string; onUse: Function }>) => {
+export const useHotKey = (key: string, onUse: Function) => {
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            hotkeys.forEach((hotkey) => {
-                const keyParts = hotkey.key.split('+');
+            const keyParts = key.split("+");
 
-                const ctrlRequired = keyParts.includes('ctrl');
-                const shiftRequired = keyParts.includes('shift');
-                const mainKey = keyParts[keyParts.length - 1];
+            const ctrlRequired = keyParts.includes("ctrl");
+            const shiftRequired = keyParts.includes("shift");
+            const mainKey = keyParts[keyParts.length - 1];
 
-                if (
-                    (!ctrlRequired || (ctrlRequired && event.ctrlKey)) &&
-                    (!shiftRequired || (shiftRequired && event.shiftKey)) &&
-                    event.key.toLowerCase() === mainKey.toLowerCase()
-                ) {
-                    hotkey.onUse();
-                }
-            });
+            if (
+                (!ctrlRequired || (ctrlRequired && event.ctrlKey)) &&
+                (!shiftRequired || (shiftRequired && event.shiftKey)) &&
+                event.key.toLowerCase() === mainKey.toLowerCase()
+            ) {
+                onUse();
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -25,5 +23,5 @@ export const useHotKey = (hotkeys: Array<{ key: string; onUse: Function }>) => {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [hotkeys]);
+    }, [key]);
 };

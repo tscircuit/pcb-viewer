@@ -86,38 +86,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
 
-
-  useHotKey([
-    { key: "1", onUse: () => selectLayer("top") },
-    {
-      key: "2",
-      onUse: () => selectLayer("bottom"),
-    },
-    {
-      key: "3",
-      onUse: () => selectLayer("inner1"),
-    },
-    {
-      key: "4",
-      onUse: () => selectLayer("inner2"),
-    },
-    {
-      key: "5",
-      onUse: () => selectLayer("inner3"),
-    },
-    {
-      key: "6",
-      onUse: () => selectLayer("inner4"),
-    },
-    {
-      key: "7",
-      onUse: () => selectLayer("inner5"),
-    },
-    {
-      key: "8",
-      onUse: () => selectLayer("inner6"),
-    },
-  ])
+  useHotKey('1', () => selectLayer('top'))
+  useHotKey('2', () => selectLayer('bottom'))
+  useHotKey('3', () => selectLayer('inner1'))
+  useHotKey('4', () => selectLayer('inner2'))
+  useHotKey('5', () => selectLayer('inner3'))
+  useHotKey('6', () => selectLayer('inner4'))
+  useHotKey('7', () => selectLayer('inner5'))
+  useHotKey('8', () => selectLayer('inner6'))
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
