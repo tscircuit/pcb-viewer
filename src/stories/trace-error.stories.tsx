@@ -1,7 +1,7 @@
 import React from "react"
 import { Meta, StoryObj } from "@storybook/react"
 import { PCBViewer } from "../PCBViewer"
-import { PCBTraceError } from "@tscircuit/soup"
+import { PCBTraceError } from "circuit-json"
 
 export const TraceErrorCircuit1: React.FC = () => {
   return (

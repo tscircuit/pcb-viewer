@@ -1,4 +1,4 @@
-import type { AnyElement } from "@tscircuit/builder"
+import type { AnyCircuitElement } from "circuit-json"
 
 export type AlignString =
   | "top_left"
@@ -18,10 +18,10 @@ export interface PCBDrawingObject {
 
   layer: LayerRef
   unit?: string
-  _element?: AnyElement
-  _parent_pcb_component?: AnyElement
-  _parent_source_component?: AnyElement
-  _source_port?: AnyElement
+  _element?: AnyCircuitElement
+  _parent_pcb_component?: AnyCircuitElement
+  _parent_source_component?: AnyCircuitElement
+  _source_port?: AnyCircuitElement
 
   is_mouse_over?: boolean
   is_in_highlighted_net?: boolean

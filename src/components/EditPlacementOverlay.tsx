@@ -1,4 +1,4 @@
-import type { AnySoupElement, PCBComponent } from "@tscircuit/soup"
+import type { AnySoupElement, PCBComponent } from "circuit-json"
 import { useGlobalStore } from "global-store"
 import { EditEvent } from "lib/edit-events"
 import { useEffect, useRef, useState } from "react"
