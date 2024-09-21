@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { createRoot } from "@tscircuit/react-fiber"
 import { createProjectBuilder } from "@tscircuit/builder"
-import type { AnySoupElement } from "@tscircuit/soup"
+import type { AnySoupElement } from "circuit-json"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"

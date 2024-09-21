@@ -1,4 +1,4 @@
-import { AnySoupElement } from "@tscircuit/soup"
+import { AnySoupElement } from "circuit-json"
 
 export function getNetListMap(soup: AnySoupElement[]): {
   soup_id_to_net_id_map: Record<string, string>

@@ -1,4 +1,4 @@
-import { AnySoupElement } from "@tscircuit/soup"
+import { AnySoupElement } from "circuit-json"
 import { EditTraceHintEvent } from "lib/edit-events"
 import { su } from "@tscircuit/soup-util"
 

@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import { Matrix, applyToPoint, inverse } from "transformation-matrix"
 import { Primitive } from "lib/types"
 import { ElementOverlayBox } from "./ElementOverlayBox"
-import { AnyElement } from "@tscircuit/builder"
+import { AnyCircuitElement } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 
 export const MouseElementTracker = ({
@@ -119,10 +119,10 @@ export type HighlightedPrimitive = {
   w: number
   h: number
   same_space_index?: number
-  _element: AnyElement
-  _parent_pcb_component?: AnyElement
-  _parent_source_component?: AnyElement
-  _source_port?: AnyElement
+  _element: AnyCircuitElement
+  _parent_pcb_component?: AnyCircuitElement
+  _parent_source_component?: AnyCircuitElement
+  _source_port?: AnyCircuitElement
   screen_x: number
   screen_y: number
   screen_w: number

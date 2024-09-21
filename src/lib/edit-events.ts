@@ -1,4 +1,4 @@
-import type { LayerRef } from "@tscircuit/soup"
+import type { LayerRef } from "circuit-json"
 
 export type EditComponentLocationEvent = {
   edit_event_id: string

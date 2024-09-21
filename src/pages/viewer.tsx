@@ -1,4 +1,3 @@
-import { GroupBuilder } from "@tscircuit/builder"
 import React, { useEffect, useRef } from "react"
 import { PCBViewer } from "../PCBViewer"
 
@@ -25,14 +24,14 @@ export default () => {
                   .setShape("rect")
                   .setLayer("top")
                   .setPosition(100, 100)
-                  .setSize(20, 20)
+                  .setSize(20, 20),
               )
               cb.footprint.addPad((pb: any) =>
                 pb
                   .setShape("rect")
                   .setLayer("top")
                   .setPosition(140, 100)
-                  .setSize(20, 20)
+                  .setSize(20, 20),
               )
             })
           }}
