@@ -12,7 +12,8 @@ export const HoleExample: React.FC = () => {
         name="U1"
         footprint={
           <footprint>
-            <hole pcbX="2mm" pcbY="0mm" holeDiameter="1mm" />
+            {/* @ts-ignore */}
+            <hole pcbX="2mm" pcbY="0mm" diameter="1mm" />
             <smtpad
               portHints={["1"]}
               pcbX="0mm"
@@ -28,7 +29,6 @@ export const HoleExample: React.FC = () => {
   )
 
   const soup = circuit.getCircuitJson()
-  console.log(soup)
 
   return (
     <div style={{ backgroundColor: "black" }}>
