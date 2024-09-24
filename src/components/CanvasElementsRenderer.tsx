@@ -52,9 +52,13 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
         const primitiveIdsInMousedOverNet: string[] = []
         for (const primitive of primitivesHoveredOver) {
-          if (primitive._element && "pcb_port_id" in primitive._element) {
+          if (primitive._element) {
             const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
-              primitive._element.pcb_port_id!,
+              "pcb_port_id" in primitive._element
+                ? primitive._element?.pcb_port_id!
+                : "pcb_trace_id" in primitive._element
+                  ? primitive._element?.pcb_trace_id
+                  : "",
             )
             primitiveIdsInMousedOverNet.push(
               ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
