@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.10.3",
+  "version": "1.10.5",
   "main": "dist/index.js",
   "repository": "tscircuit/pcb-viewer",
   "license": "MIT",
@@ -11,9 +11,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "devDependencies": {
     "@biomejs/biome": "^1.7.3",
     "@semantic-release/commit-analyzer": "^9.0.2",
@@ -24,15 +22,15 @@
     "@storybook/react": "^8.0.6",
     "@swc/core": "^1.4.12",
     "@tscircuit/builder": "^1.11.4",
-    "@tscircuit/core": "^0.0.41",
+    "@tscircuit/core": "^0.0.88",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/props": "^0.0.46",
     "@tscircuit/react-fiber": "^1.1.25",
-    "@tscircuit/soup": "^0.0.61",
     "@tscircuit/soup-util": "^0.0.13",
     "@types/color": "^3.0.6",
     "@types/node": "18.7.23",
     "@types/react": "^18.3.3",
+    "circuit-json": "^0.0.77",
     "next": "^14.1.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -51,7 +49,8 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
-    "circuit-json-to-connectivity-map": "^0.0.8",
+    "circuit-json-to-connectivity-map": "^0.0.16",
+    "circuit-to-svg": "^0.0.36",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",
