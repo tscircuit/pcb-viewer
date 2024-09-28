@@ -1,6 +1,6 @@
 import type React from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
-import type { AnySoupElement, PCBPort } from "@tscircuit/soup"
+import type { AnySoupElement, PCBPort } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 

@@ -6,7 +6,7 @@ import { drawPrimitives } from "../lib/draw-primitives"
 import { Drawer } from "../lib/Drawer"
 import type { GridConfig, Primitive } from "../lib/types"
 import { useGlobalStore } from "global-store"
-import { all_layers } from "@tscircuit/soup"
+import { all_layers } from "circuit-json"
 
 interface Props {
   primitives: Primitive[]

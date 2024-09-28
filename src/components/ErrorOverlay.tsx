@@ -1,5 +1,5 @@
 import { css } from "@emotion/css"
-import type { AnySoupElement, PCBPort, PCBTraceError } from "@tscircuit/soup"
+import type { AnySoupElement, PCBPort, PCBTraceError } from "circuit-json"
 import { useRef } from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 
@@ -14,7 +14,7 @@ const ErrorSVG = ({
   screenPort2,
   errorCenter,
   canLineBeDrawn,
-}) => (
+}: any) => (
   <svg
     style={{
       position: "absolute",

@@ -3,7 +3,7 @@ import type {
   PCBSMTPad,
   PcbTraceHint,
   PCBPlatedHole,
-} from "@tscircuit/soup"
+} from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 import { type EditTraceHintEvent } from "lib/edit-events"
@@ -339,7 +339,7 @@ export const EditTraceHintOverlay = ({
             .filter((e): e is PcbTraceHint => e.type === "pcb_trace_hint")
             .map((e) => {
               const { route } = e
-              const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)!
+              const pcb_port = su(soup as any).pcb_port.get(e.pcb_port_id)!
               const pcb_port_screen = applyToPoint(transform!, pcb_port)
               return (
                 <Fragment key={e.pcb_trace_hint_id}>

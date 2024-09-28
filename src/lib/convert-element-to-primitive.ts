@@ -1,4 +1,4 @@
-import type { AnySoupElement } from "@tscircuit/soup"
+import type { AnyCircuitElement } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
@@ -11,8 +11,8 @@ type MetaData = {
 
 let globalPcbDrawingObjectCount = 0
 export const convertElementToPrimitives = (
-  element: AnySoupElement,
-  allElements: AnySoupElement[],
+  element: AnyCircuitElement,
+  allElements: AnyCircuitElement[],
 ): (Primitive & MetaData)[] => {
   const _parent_pcb_component =
     "pcb_component_id" in element
@@ -36,7 +36,8 @@ export const convertElementToPrimitives = (
     "source_port_id" in element
       ? element.source_port_id
       : "pcb_port_id" in element
-        ? su(allElements).pcb_port.get(element.pcb_port_id!)?.source_port_id
+        ? su(allElements as any).pcb_port.get(element.pcb_port_id!)
+            ?.source_port_id
         : undefined
 
   const _source_port = _source_port_id
@@ -155,7 +156,7 @@ export const convertElementToPrimitives = (
       return []
     }
     case "pcb_hole": {
-      if (element.hole_shape === "round" || !element.hole_shape) {
+      if (element.hole_shape === "circle" || !element.hole_shape) {
         const { x, y, hole_diameter } = element
 
         return [

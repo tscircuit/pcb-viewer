@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import { pcb_port, type AnySoupElement } from "@tscircuit/soup"
+import { pcb_port, type AnySoupElement } from "circuit-json"
 import { useMemo } from "react"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { Matrix } from "transformation-matrix"
@@ -36,7 +36,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         (elm) => convertElementToPrimitives(elm, props.elements),
       )
       const connectivityMap = getFullConnectivityMapFromCircuitJson(
-        props.elements,
+        props.elements as any,
       )
       return [primitivesWithoutInteractionMetadata, connectivityMap]
     }, [props.elements])
@@ -52,9 +52,13 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
         const primitiveIdsInMousedOverNet: string[] = []
         for (const primitive of primitivesHoveredOver) {
-          if (primitive._element && "pcb_port_id" in primitive._element) {
+          if (primitive._element) {
             const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
-              primitive._element.pcb_port_id!,
+              "pcb_port_id" in primitive._element
+                ? primitive._element?.pcb_port_id!
+                : "pcb_trace_id" in primitive._element
+                  ? primitive._element?.pcb_trace_id
+                  : "",
             )
             primitiveIdsInMousedOverNet.push(
               ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
