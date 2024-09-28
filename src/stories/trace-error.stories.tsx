@@ -1,7 +1,7 @@
 import React from "react"
 import { Meta, StoryObj } from "@storybook/react"
 import { PCBViewer } from "../PCBViewer"
-import { PCBTraceError } from "circuit-json"
+import { PcbTraceError } from "circuit-json"
 
 export const TraceErrorCircuit1: React.FC = () => {
   return (
@@ -60,6 +60,7 @@ export const TraceErrorCircuit3 = () => (
                 portHints={[`1`]}
                 holeDiameter={0.8}
                 outerDiameter={2}
+                shape="circle"
               />
               <platedhole
                 pcbX={0}
@@ -67,6 +68,7 @@ export const TraceErrorCircuit3 = () => (
                 portHints={[`2`]}
                 holeDiameter={0.8}
                 outerDiameter={2}
+                shape="circle"
               />
             </footprint>
           }
@@ -166,16 +168,16 @@ export const TraceErrorCircuit4 = () => (
           ],
         },
         {
-          type: "pcb_error",
+          type: "pcb_trace_error",
           message: "Trace error",
           center: { x: 3, y: 1 },
           pcb_port_ids: ["pcb_port_0", "pcb_port_1"],
           error_type: "pcb_trace_error",
           pcb_component_ids: ["pcb_generic_component_0"],
-          pcb_error_id: "pcb_error_0",
+          pcb_trace_error_id: "pcb_error_0", // Changed from pcb_error_id to pcb_trace_error_id
           pcb_trace_id: "pcb_trace_0",
           source_trace_id: "source_trace_0",
-        } as PCBTraceError,
+        } as PcbTraceError,
       ]}
     />
   </div>

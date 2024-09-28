@@ -1,27 +1,26 @@
 import type React from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
-import type { AnySoupElement, PCBPort } from "circuit-json"
+import type { AnyCircuitElement, PcbPort } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 
 interface Props {
   transform?: Matrix
-  soup?: AnySoupElement[]
+  soup?: AnyCircuitElement[]
   children: any
 }
 type Point = { x: number; y: number }
-
 export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
   const isShowingRatsNest = useGlobalStore((s) => s.is_showing_rats_nest)
   if (!soup || !isShowingRatsNest) return children
   if (!transform) transform = identity()
   const sourceTraces = su(soup).source_trace.list()
 
-  const groups: PCBPort[][] = []
+  const groups: PcbPort[][] = []
 
   sourceTraces.forEach((sourceTrace) => {
     if (sourceTrace.connected_source_port_ids) {
-      const group: PCBPort[] = []
+      const group: PcbPort[] = []
       sourceTrace.connected_source_port_ids.forEach(
         (source_port_id: string) => {
           const pcbPort = su(soup).pcb_port.getWhere({ source_port_id })

@@ -1,11 +1,11 @@
 import { css } from "@emotion/css"
-import type { AnySoupElement, PCBPort, PCBTraceError } from "circuit-json"
+import type { AnyCircuitElement, PcbPort, PcbTraceError } from "circuit-json"
 import { useRef } from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 
 interface Props {
   transform?: Matrix
-  elements?: AnySoupElement[]
+  elements?: AnyCircuitElement[]
   children: any
 }
 
@@ -68,16 +68,16 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
     <div style={{ position: "relative" }} ref={containerRef}>
       {children}
       {elements
-        ?.filter((el): el is PCBTraceError => el.type === "pcb_error")
-        .map((el: PCBTraceError) => {
+        ?.filter((el): el is PcbTraceError => el.type === "pcb_trace_error")
+        .map((el: PcbTraceError) => {
           const { pcb_port_ids } = el
 
           const port1 = elements.find(
-            (el): el is PCBPort =>
+            (el): el is PcbPort =>
               el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[0],
           )
           const port2 = elements.find(
-            (el): el is PCBPort =>
+            (el): el is PcbPort =>
               el.type === "pcb_port" && el.pcb_port_id === pcb_port_ids?.[1],
           )
 

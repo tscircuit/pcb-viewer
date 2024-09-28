@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { createRoot } from "@tscircuit/react-fiber"
 import { createProjectBuilder } from "@tscircuit/builder"
-import type { AnySoupElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"
@@ -35,7 +35,7 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
 }: Props) => {
-  const [stateElements, setStateElements] = useState<Array<AnySoupElement>>([])
+  const [stateElements, setStateElements] = useState<Array<AnyCircuitElement>>([])
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -58,8 +58,8 @@ export const PCBViewer = ({
       e.type.startsWith("pcb_"),
     )
       ? findBoundsAndCenter(
-          elements.filter((e) => e.type.startsWith("pcb_")) as any,
-        )
+        elements.filter((e) => e.type.startsWith("pcb_")) as any,
+      )
       : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
     const scaleFactor =
       Math.min(
@@ -103,7 +103,7 @@ export const PCBViewer = ({
 
   if (error) return <div style={{ color: "red" }}> {error} </div>
 
-  const pcbElmsPreEdit: AnySoupElement[] = (soup ?? stateElements).filter(
+  const pcbElmsPreEdit: AnyCircuitElement[] = (soup ?? stateElements).filter(
     (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
   )
 

@@ -1,6 +1,6 @@
-import { AnySoupElement } from "circuit-json"
+import { AnyCircuitElement } from "circuit-json"
 
-export function getNetListMap(soup: AnySoupElement[]): {
+export function getNetListMap(soup: AnyCircuitElement[]): {
   soup_id_to_net_id_map: Record<string, string>
   net_id_to_soup_id_map: Record<string, string[]>
 } {

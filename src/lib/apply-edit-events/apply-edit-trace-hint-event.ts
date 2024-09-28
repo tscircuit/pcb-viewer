@@ -1,11 +1,11 @@
-import { AnySoupElement } from "circuit-json"
+import { AnyCircuitElement } from "circuit-json"
 import { EditTraceHintEvent } from "lib/edit-events"
 import { su } from "@tscircuit/soup-util"
 
 export const applyTraceHintEditEvent = (
-  soup: AnySoupElement[],
+  soup: AnyCircuitElement[],
   edit_event: EditTraceHintEvent,
-): AnySoupElement[] => {
+): AnyCircuitElement[] => {
   const existing_trace_hint = soup.find(
     (th) =>
       th.type === "pcb_trace_hint" &&
@@ -16,9 +16,9 @@ export const applyTraceHintEditEvent = (
     soup = soup.map((e: any) =>
       e.pcb_trace_hint_id === edit_event.pcb_trace_hint_id
         ? {
-            ...e,
-            route: edit_event.route,
-          }
+          ...e,
+          route: edit_event.route,
+        }
         : e,
     )
   } else {
