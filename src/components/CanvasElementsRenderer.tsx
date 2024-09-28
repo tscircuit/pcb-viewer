@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import { pcb_port, type AnySoupElement } from "circuit-json"
+import { pcb_port, type AnyCircuitElement } from "circuit-json"
 import { useMemo } from "react"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { Matrix } from "transformation-matrix"
@@ -17,7 +17,7 @@ import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectiv
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 
 export interface CanvasElementsRendererProps {
-  elements: AnySoupElement[]
+  elements: AnyCircuitElement[]
   transform?: Matrix
   width?: number
   height?: number

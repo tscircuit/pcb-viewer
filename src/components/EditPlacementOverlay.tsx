@@ -1,4 +1,4 @@
-import type { AnySoupElement, PCBComponent } from "circuit-json"
+import type { AnyCircuitElement, PcbComponent } from "circuit-json"
 import { useGlobalStore } from "global-store"
 import { EditEvent } from "lib/edit-events"
 import { useEffect, useRef, useState } from "react"
@@ -7,7 +7,7 @@ import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
 interface Props {
   transform?: Matrix
   children: any
-  soup: AnySoupElement[]
+  soup: AnyCircuitElement[]
   disabled?: boolean
   cancelPanDrag: Function
   onCreateEditEvent: (event: EditEvent) => void
@@ -15,7 +15,7 @@ interface Props {
 }
 
 const isInsideOf = (
-  pcb_component: PCBComponent,
+  pcb_component: PcbComponent,
   point: { x: number; y: number },
   padding: number = 0,
 ) => {
@@ -153,7 +153,7 @@ export const EditPlacementOverlay = ({
       {children}
       {!disabled &&
         soup
-          .filter((e): e is PCBComponent => e.type === "pcb_component")
+          .filter((e): e is PcbComponent => e.type === "pcb_component")
           .map((e) => {
             if (!e?.center) return null
             const projectedCenter = applyToPoint(transform, e.center)
@@ -172,7 +172,7 @@ export const EditPlacementOverlay = ({
                   transform: "translate(-50%, -50%)",
                   background:
                     isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
+                      activePcbComponentId === e.pcb_component_id
                       ? "rgba(255, 0, 0, 0.2)"
                       : "",
                 }}

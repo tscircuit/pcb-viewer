@@ -1,14 +1,14 @@
 import { Fragment, useEffect, useState } from "react"
 import { css } from "@emotion/css"
-import { type LayerRef, type PCBTraceError, all_layers } from "circuit-json"
-import type { AnySoupElement } from "circuit-json"
+import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
 import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
 interface Props {
   children?: any
-  elements?: AnySoupElement[]
+  elements?: AnyCircuitElement[]
 }
 
 export const LayerButton = ({
@@ -193,7 +193,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               style={{ display: "grid", gridTemplateColumns: "100px 300px" }}
             >
               {elements
-                ?.filter((e): e is PCBTraceError => e.type.includes("error"))
+                ?.filter((e): e is PcbTraceError => e.type.includes("error"))
                 .map((e, i) => (
                   <Fragment key={i}>
                     <div>{e.error_type}</div>

@@ -1,8 +1,8 @@
 import type {
-  AnySoupElement,
-  PCBSMTPad,
+  AnyCircuitElement,
+  PcbSmtPad,
   PcbTraceHint,
-  PCBPlatedHole,
+  PcbPlatedHole,
 } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
@@ -20,7 +20,7 @@ import { useToast } from "lib/toast"
 interface Props {
   transform?: Matrix
   children: any
-  soup: AnySoupElement[]
+  soup: AnyCircuitElement[]
   disabled?: boolean
   cancelPanDrag: Function
   onCreateEditEvent: (event: EditTraceHintEvent) => void
@@ -34,7 +34,7 @@ interface Point {
 }
 
 const isInsideOfSmtpad = (
-  elm: PCBSMTPad,
+  elm: PcbSmtPad,
   point: { x: number; y: number },
   padding = 0,
 ) => {
@@ -54,7 +54,7 @@ const isInsideOfSmtpad = (
 }
 
 const isInsideOfPlatedHole = (
-  hole: PCBPlatedHole,
+  hole: PcbPlatedHole,
   point: { x: number; y: number },
   padding = 0,
 ) => {
@@ -109,7 +109,7 @@ export const EditTraceHintOverlay = ({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const containerBounds = containerRef.current?.getBoundingClientRect()
   const [selectedElement, setSelectedElement] = useState<
-    null | PCBSMTPad | PCBPlatedHole
+    null | PcbSmtPad | PcbPlatedHole
   >(null)
   const toast = useToast()
   const [dragState, setDragState] = useState<{
@@ -286,12 +286,11 @@ export const EditTraceHintOverlay = ({
           >
             <path
               stroke="red"
-              d={`M ${ogCenterScreen.x} ${
-                ogCenterScreen.y
-              } ${dragState?.editEvent.route
-                .map((p) => applyToPoint(transform!, p))
-                .map((p) => `L ${p.x} ${p.y}`)
-                .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}
+              d={`M ${ogCenterScreen.x} ${ogCenterScreen.y
+                } ${dragState?.editEvent.route
+                  .map((p) => applyToPoint(transform!, p))
+                  .map((p) => `L ${p.x} ${p.y}`)
+                  .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}
             />
             {dragState?.editEvent.route.map((r, i) => {
               const rScreen = applyToPoint(transform!, r)

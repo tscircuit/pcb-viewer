@@ -1,13 +1,13 @@
 import { transformPCBElement, transformPCBElements } from "@tscircuit/soup-util"
-import type { AnySoupElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import type { EditEvent } from "./edit-events"
 import { translate } from "transformation-matrix"
 import { applyTraceHintEditEvent } from "./apply-edit-events/apply-edit-trace-hint-event"
 
 export const applyEditEvents = (
-  soup: AnySoupElement[],
+  soup: AnyCircuitElement[],
   edit_events: EditEvent[],
-): AnySoupElement[] => {
+): AnyCircuitElement[] => {
   soup = JSON.parse(JSON.stringify(soup))
 
   for (const edit_event of edit_events) {
