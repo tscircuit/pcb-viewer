@@ -1,11 +1,11 @@
-import { Fragment, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PCBTraceError, all_layers } from "circuit-json"
 import type { AnySoupElement } from "circuit-json"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
 import packageJson from "../../package.json"
-
+import { useHotKey } from "hooks/useHotKey"
 interface Props {
   children?: any
   elements?: AnySoupElement[]
@@ -85,6 +85,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
+
+  useHotKey('1', () => selectLayer('top'))
+  useHotKey('2', () => selectLayer('bottom'))
+  useHotKey('3', () => selectLayer('inner1'))
+  useHotKey('4', () => selectLayer('inner2'))
+  useHotKey('5', () => selectLayer('inner3'))
+  useHotKey('6', () => selectLayer('inner4'))
+  useHotKey('7', () => selectLayer('inner5'))
+  useHotKey('8', () => selectLayer('inner6'))
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
