@@ -15,7 +15,7 @@ export interface State {
   in_edit_mode: boolean
   in_move_footprint_mode: boolean
   in_draw_trace_mode: boolean
-
+  is_mouse_over_container: boolean
   is_moving_component: boolean
   is_drawing_trace: boolean
 
@@ -26,6 +26,7 @@ export interface State {
   setIsMovingComponent: (is_moving: boolean) => void
   setIsDrawingTrace: (is_drawing: boolean) => void
   setIsShowingRatsNest: (is_showing: boolean) => void
+  setIsMouseOverContainer: (is_focused: boolean) => void
 }
 
 export type StateProps = {
@@ -46,6 +47,7 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
 
         is_moving_component: false,
         is_drawing_trace: false,
+        is_mouse_over_container: false,
 
         is_showing_rats_nest: false,
         ...initialState,
@@ -65,6 +67,8 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
           set({ is_moving_component: is_moving }),
         setIsDrawingTrace: (is_drawing) =>
           set({ is_drawing_trace: is_drawing }),
+        setIsMouseOverContainer: (is_focused) =>
+          set({ is_mouse_over_container: is_focused }),
       }) as const,
   )
 
