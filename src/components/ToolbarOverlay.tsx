@@ -71,7 +71,8 @@ export const ToolbarButton = ({ children, ...props }: any) => (
 )
 
 export const ToolbarOverlay = ({ children, elements }: Props) => {
-  const [isMouseOverContainer, setIsMouseOverContainer] = useGlobalStore((s) => [s.is_mouse_over_container, s.seIsMouseOverContainer]) as [boolean, (isFocused: boolean) => void]
+  const [isMouseOverContainer, setIsMouseOverContainer] = useGlobalStore(
+    (s) => [s.is_mouse_over_container, s.setIsMouseOverContainer]) as [boolean, (isFocused: boolean) => void]
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [selectedLayer, selectLayer] = useGlobalStore(
