@@ -71,7 +71,7 @@ export const ToolbarButton = ({ children, ...props }: any) => (
 )
 
 export const ToolbarOverlay = ({ children, elements }: Props) => {
-  const [isMouseOverContainer, setIsMouseOverContainer] = useState(false)
+  const [isMouseOverContainer, setIsMouseOverContainer] = useGlobalStore((s) => [s.is_mouse_over_container, s.seIsMouseOverContainer]) as [boolean, (isFocused: boolean) => void]
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [selectedLayer, selectLayer] = useGlobalStore(
@@ -86,6 +86,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
 
+
   useHotKey('1', () => selectLayer('top'))
   useHotKey('2', () => selectLayer('bottom'))
   useHotKey('3', () => selectLayer('inner1'))
@@ -95,9 +96,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   useHotKey('7', () => selectLayer('inner5'))
   useHotKey('8', () => selectLayer('inner6'))
 
+
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
-
   return (
     <div
       style={{ position: "relative" }}
@@ -143,6 +144,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           fontFamily: "sans-serif",
         }}
       >
+
         <ToolbarButton
           onClick={() => {
             setLayerMenuOpen(!isLayerMenuOpen)
@@ -181,6 +183,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                 ))}
             </div>
           )}
+
         </ToolbarButton>
         <ToolbarButton
           style={errorCount > 0 ? { color: "red" } : {}}
