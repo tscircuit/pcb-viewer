@@ -95,6 +95,7 @@ export const HighlightedPrimitiveBoxWithText = ({
   return (
     <div
       style={{
+        zIndex: 98,
         position: "absolute",
         left: x - w / 2 - 8,
         top: y - h / 2 - 8,
