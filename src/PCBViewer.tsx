@@ -13,6 +13,7 @@ import { applyEditEvents } from "lib/apply-edit-events"
 import { RatsNestOverlay } from "./components/RatsNestOverlay"
 import type { StateProps } from "global-store"
 import { ToastContainer } from "lib/toast"
+import { useRenderedElements } from "@tscircuit/core"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -35,7 +36,10 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
 }: Props) => {
-  const [stateElements, setStateElements] = useState<Array<AnyCircuitElement>>([])
+  const { circuitJson: circuitJsonFromChildren, error: errorFromChildren } =
+    useRenderedElements(children)
+  const stateElements = circuitJsonFromChildren ?? soup
+
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -51,6 +55,10 @@ export const PCBViewer = ({
 
   const [error, setError] = useState(null)
 
+  useEffect(() => {
+    setError(errorFromChildren)
+  }, [errorFromChildren])
+
   const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
@@ -58,8 +66,8 @@ export const PCBViewer = ({
       e.type.startsWith("pcb_"),
     )
       ? findBoundsAndCenter(
-        elements.filter((e) => e.type.startsWith("pcb_")) as any,
-      )
+          elements.filter((e) => e.type.startsWith("pcb_")) as any,
+        )
       : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
     const scaleFactor =
       Math.min(
@@ -76,24 +84,6 @@ export const PCBViewer = ({
       ),
     )
   }
-
-  useEffect(() => {
-    if (!children || children?.length === 0) return
-    async function doRender() {
-      // TODO re-use project builder
-      const projectBuilder = createProjectBuilder()
-      await createRoot()
-        .render(children, projectBuilder as any)
-        .then((elements) => {
-          setStateElements(elements as any)
-          setError(null)
-        })
-    }
-    doRender().catch((e) => {
-      setError(e.toString())
-      console.log(e.toString())
-    })
-  }, [children])
 
   useEffect(() => {
     if (refDimensions && refDimensions.width !== 0 && (children || soup)) {
