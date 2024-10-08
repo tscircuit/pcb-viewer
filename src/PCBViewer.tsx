@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { createRoot } from "@tscircuit/react-fiber"
-import { createProjectBuilder } from "@tscircuit/builder"
 import type { AnyCircuitElement } from "circuit-json"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
-import { findBoundsAndCenter } from "@tscircuit/builder"
+import { getBoundsOfPcbElements } from "@tscircuit/soup-util"
 import { ContextProviders } from "components/ContextProviders"
 import type { EditEvent } from "lib/edit-events"
 import { applyEditEvents } from "lib/apply-edit-events"
@@ -61,13 +59,18 @@ export const PCBViewer = ({
   const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
-    const { center, width, height } = elements.some((e) =>
+    const { minX, minY, maxX, maxY } = elements.some((e) =>
       e.type.startsWith("pcb_"),
     )
-      ? findBoundsAndCenter(
+      ? getBoundsOfPcbElements(
           elements.filter((e) => e.type.startsWith("pcb_")) as any,
         )
-      : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
+      : { minX: -0.001, minY: -0.001, maxX: 0.001, maxY: 0.001 }
+
+    const width = maxX - minX
+    const height = maxY - minY
+    const center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+
     const scaleFactor =
       Math.min(
         (elmBounds.width ?? 0) / width,
