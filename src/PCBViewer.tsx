@@ -13,8 +13,7 @@ import { applyEditEvents } from "lib/apply-edit-events"
 import { RatsNestOverlay } from "./components/RatsNestOverlay"
 import type { StateProps } from "global-store"
 import { ToastContainer } from "lib/toast"
-import { useRenderedElements } from "@tscircuit/core"
-
+import { useRenderedCircuit } from "@tscircuit/core"
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
 type Props = {
@@ -37,8 +36,8 @@ export const PCBViewer = ({
   onEditEventsChanged,
 }: Props) => {
   const { circuitJson: circuitJsonFromChildren, error: errorFromChildren } =
-    useRenderedElements(children)
-  const stateElements = circuitJsonFromChildren ?? soup
+    useRenderedCircuit(children)
+  const stateElements = circuitJsonFromChildren ?? soup ?? []
 
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
@@ -53,10 +52,10 @@ export const PCBViewer = ({
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setError(errorFromChildren)
+    setError(errorFromChildren ? errorFromChildren.toString() : null)
   }, [errorFromChildren])
 
   const resetTransform = () => {
