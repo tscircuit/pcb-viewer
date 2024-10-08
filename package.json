@@ -23,12 +23,10 @@
     "@storybook/nextjs": "^8.0.6",
     "@storybook/react": "^8.0.6",
     "@swc/core": "^1.4.12",
-    "@tscircuit/builder": "^1.11.4",
-    "@tscircuit/core": "^0.0.88",
+    "@tscircuit/core": "^0.0.106",
     "@tscircuit/eagle-xml-converter": "^0.0.6",
     "@tscircuit/props": "^0.0.46",
-    "@tscircuit/react-fiber": "^1.1.25",
-    "@tscircuit/soup-util": "^0.0.13",
+    "@tscircuit/soup-util": "^0.0.32",
     "@types/color": "^3.0.6",
     "@types/node": "18.7.23",
     "@types/react": "^18.3.3",
@@ -45,9 +43,8 @@
     "zod": "^3.23.5"
   },
   "peerDependencies": {
-    "@tscircuit/builder": "*",
-    "@tscircuit/react-fiber": "*",
-    "react": "*"
+    "react": "*",
+    "@tscircuit/core": "*"
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
