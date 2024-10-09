@@ -1,19 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { createRoot } from "@tscircuit/react-fiber"
-import { createProjectBuilder } from "@tscircuit/builder"
 import type { AnyCircuitElement } from "circuit-json"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
-import { findBoundsAndCenter } from "@tscircuit/builder"
+import { getBoundsOfPcbElements } from "@tscircuit/soup-util"
 import { ContextProviders } from "components/ContextProviders"
 import type { EditEvent } from "lib/edit-events"
 import { applyEditEvents } from "lib/apply-edit-events"
 import { RatsNestOverlay } from "./components/RatsNestOverlay"
 import type { StateProps } from "global-store"
 import { ToastContainer } from "lib/toast"
-
+import { useRenderedCircuit } from "@tscircuit/core"
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
 type Props = {
@@ -35,7 +33,10 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
 }: Props) => {
-  const [stateElements, setStateElements] = useState<Array<AnyCircuitElement>>([])
+  const { circuitJson: circuitJsonFromChildren, error: errorFromChildren } =
+    useRenderedCircuit(children)
+  const stateElements = circuitJsonFromChildren ?? soup ?? []
+
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -49,18 +50,27 @@ export const PCBViewer = ({
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setError(errorFromChildren ? errorFromChildren.toString() : null)
+  }, [errorFromChildren])
 
   const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
-    const { center, width, height } = elements.some((e) =>
+    const { minX, minY, maxX, maxY } = elements.some((e) =>
       e.type.startsWith("pcb_"),
     )
-      ? findBoundsAndCenter(
-        elements.filter((e) => e.type.startsWith("pcb_")) as any,
-      )
-      : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
+      ? getBoundsOfPcbElements(
+          elements.filter((e) => e.type.startsWith("pcb_")) as any,
+        )
+      : { minX: -0.001, minY: -0.001, maxX: 0.001, maxY: 0.001 }
+
+    const width = maxX - minX
+    const height = maxY - minY
+    const center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+
     const scaleFactor =
       Math.min(
         (elmBounds.width ?? 0) / width,
@@ -76,24 +86,6 @@ export const PCBViewer = ({
       ),
     )
   }
-
-  useEffect(() => {
-    if (!children || children?.length === 0) return
-    async function doRender() {
-      // TODO re-use project builder
-      const projectBuilder = createProjectBuilder()
-      await createRoot()
-        .render(children, projectBuilder as any)
-        .then((elements) => {
-          setStateElements(elements as any)
-          setError(null)
-        })
-    }
-    doRender().catch((e) => {
-      setError(e.toString())
-      console.log(e.toString())
-    })
-  }, [children])
 
   useEffect(() => {
     if (refDimensions && refDimensions.width !== 0 && (children || soup)) {
