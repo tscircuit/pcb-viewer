@@ -1,10 +1,13 @@
-import React from "react"
-import { Meta, StoryObj } from "@storybook/react"
-import { PCBViewer } from "../../PCBViewer"
+import { type Meta } from "@storybook/react";
+import { Circuit } from "@tscircuit/core";
+import type React from "react";
+import { PCBViewer } from "../../PCBViewer";
 
 export const SilkscreenLine: React.FC = () => {
-  return (
-    <PCBViewer>
+  const circuit = new Circuit();
+
+  circuit.add(
+    <board width="10mm" height="10mm">
       <component
         name="R1"
         footprint={
@@ -20,14 +23,22 @@ export const SilkscreenLine: React.FC = () => {
             />
           </footprint>
         }
-      ></component>
-    </PCBViewer>
-  )
-}
+      />
+    </board>
+  );
+
+  const soup = circuit.getCircuitJson();
+
+  return (
+    <div style={{ backgroundColor: "black" }}>
+      <PCBViewer soup={soup} />
+    </div>
+  );
+};
 
 const meta: Meta<typeof SilkscreenLine> = {
   title: "Silkscreen",
   component: SilkscreenLine,
-}
+};
 
-export default meta
+export default meta;

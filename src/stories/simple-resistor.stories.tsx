@@ -1,60 +1,88 @@
-import type { Meta, StoryObj } from "@storybook/react"
-import { PCBViewer } from "../PCBViewer"
+import type { Meta, StoryObj } from "@storybook/react";
+import { Circuit } from "@tscircuit/core";
+import { PCBViewer } from "../PCBViewer";
 
-export const SimpleResistorSMD = () => {
+export const SimpleResistorSMD: React.FC = () => {
+  const circuit = new Circuit();
+
+  circuit.add(
+    <board width="10mm" height="10mm">
+      <resistor name="R1" footprint="0805" resistance="10k" />
+    </board>
+  );
+
+  const soup = circuit.getCircuitJson();
+
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer>
-        <resistor name="R1" footprint="0805" resistance="10k" />
-      </PCBViewer>
+      <PCBViewer soup={soup} />
     </div>
-  )
-}
+  );
+};
 
-export const SimpleResistorThruHole = () => {
+export const SimpleResistorThruHole: React.FC = () => {
+  const circuit = new Circuit();
+
+  circuit.add(
+    <board width="10mm" height="10mm">
+      <platedhole
+        shape="circle"
+        pcbX={0}
+        pcbY={0}
+        holeDiameter="1mm"
+        outerDiameter="2mm"
+      />
+      <platedhole
+        shape="circle"
+        pcbX={6}
+        pcbY={0}
+        holeDiameter="1mm"
+        outerDiameter="2mm"
+      />
+    </board>
+  );
+
+  const soup = circuit.getCircuitJson();
+
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer>
-        {/* <resistor footprint="dip" resistance="10k" /> */}
-        {/* TODO use resistor with some kind of through hole footprint name */}
-        <component name="R1">
-          <platedhole shape="circle" pcbX={0} pcbY={0} holeDiameter="1mm" outerDiameter="2mm" />
-          <platedhole shape="circle" pcbX={6} pcbY={0} holeDiameter="1mm" outerDiameter="2mm" />
-        </component>
-      </PCBViewer>
+      <PCBViewer soup={soup} />
     </div>
-  )
-}
+  );
+};
 
-export const SimpleResistorsOffCenter = () => {
+export const SimpleResistorsOffCenter: React.FC = () => {
+  const circuit = new Circuit();
+
+  circuit.add(
+    <board width="30mm" height="30mm">
+      <resistor name="R1" footprint="0805" resistance="10k" pcbX={5} pcbY={5} />
+      {/* Uncomment this if you want to add the second resistor
+      <resistor
+        name="R2"
+        footprint="0805"
+        resistance="10k"
+        pcbX={20}
+        pcbY={20}
+      /> */}
+    </board>
+  );
+
+  const soup = circuit.getCircuitJson();
+
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer>
-        <resistor
-          name="R1"
-          footprint="0805"
-          resistance="10k"
-          pcbX={5}
-          pcbY={5}
-        />
-        {/* <resistor
-          name="R2"
-          footprint="0805"
-          resistance="10k"
-          pcbX={20}
-          pcbY={20}
-        /> */}
-      </PCBViewer>
+      <PCBViewer soup={soup} />
     </div>
-  )
-}
+  );
+};
 
 const meta: Meta<typeof SimpleResistorSMD> = {
   title: "SimpleResistor",
   component: SimpleResistorSMD,
   tags: [],
   argTypes: {},
-}
+};
 
-export default meta
-type Story = StoryObj<typeof SimpleResistorSMD>
+export default meta;
+type Story = StoryObj<typeof SimpleResistorSMD>;

@@ -1,25 +1,31 @@
-import React from "react"
-import { Meta, StoryObj } from "@storybook/react"
-import { PCBViewer } from "../../PCBViewer"
+import type { Meta } from "@storybook/react";
+import { Circuit } from "@tscircuit/core";
+import type React from "react";
+import { PCBViewer } from "../../PCBViewer";
 
 export const SilkscreenCircle: React.FC = () => {
+  const circuit = new Circuit();
+
+  circuit.add(
+    <board width="10mm" height="10mm">
+      <footprint>
+        <silkscreencircle pcbX={0} pcbY={0} radius={0.5} />
+      </footprint>
+    </board>
+  );
+
+  const soup = circuit.getCircuitJson();
+
   return (
-    <PCBViewer>
-      <component
-        name="R1"
-        footprint={
-          <footprint>
-            <silkscreencircle pcbX={0} pcbY={0} radius={0.5} />
-          </footprint>
-        }
-      ></component>
-    </PCBViewer>
-  )
-}
+    <div style={{ backgroundColor: "black" }}>
+      <PCBViewer soup={soup} />
+    </div>
+  );
+};
 
 const meta: Meta<typeof SilkscreenCircle> = {
   title: "Silkscreen",
   component: SilkscreenCircle,
-}
+};
 
-export default meta
+export default meta;

@@ -1,32 +1,38 @@
-import type React from "react"
-import type { Meta, StoryObj } from "@storybook/react"
-import { PCBViewer } from "../../PCBViewer"
+import type { Meta } from "@storybook/react";
+import { Circuit } from "@tscircuit/core";
+import type React from "react";
+import { PCBViewer } from "../../PCBViewer";
 
 export const FabricationPath: React.FC = () => {
+  const circuit = new Circuit();
+
+  circuit.add(
+    <board width="10mm" height="10mm">
+      <footprint>
+        <fabricationnotepath
+          strokeWidth={0.05}
+          route={[
+            { x: 0, y: 0 },
+            { x: 1, y: 1 },
+            { x: 2, y: 1 },
+          ]}
+        />
+      </footprint>
+    </board>
+  );
+
+  const soup = circuit.getCircuitJson();
+
   return (
-    <PCBViewer>
-      <component
-        name="R1"
-        footprint={
-          <footprint>
-            <fabricationnotepath
-              strokeWidth={0.05}
-              route={[
-                { x: 0, y: 0 },
-                { x: 1, y: 1 },
-                { x: 2, y: 1 },
-              ]}
-            />
-          </footprint>
-        }
-      />
-    </PCBViewer>
-  )
-}
+    <div style={{ backgroundColor: "black" }}>
+      <PCBViewer soup={soup} />
+    </div>
+  );
+};
 
 const meta: Meta<typeof FabricationPath> = {
   title: "FabricationNote",
   component: FabricationPath,
-}
+};
 
-export default meta
+export default meta;

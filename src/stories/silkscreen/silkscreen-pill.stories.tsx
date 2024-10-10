@@ -1,5 +1,5 @@
-import { Meta } from "@storybook/react";
-import React from "react";
+import type { Meta } from "@storybook/react";
+import type React from "react";
 import { PCBViewer } from "../../PCBViewer";
 
 export const SilkscreenPill: React.FC = () => {
@@ -7,50 +7,50 @@ export const SilkscreenPill: React.FC = () => {
     <PCBViewer
       soup={[
         {
-          "type": "source_component",
-          "source_component_id": "generic_0",
-          "name": "R1",
-          "supplier_part_numbers": {}
+          type: "source_component",
+          source_component_id: "generic_0",
+          name: "R1",
+          supplier_part_numbers: {},
         },
         {
-          "type": "schematic_component",
-          "schematic_component_id": "schematic_generic_component_0",
-          "source_component_id": "generic_0",
-          "center": {
-            "x": 0,
-            "y": 0
+          type: "schematic_component",
+          schematic_component_id: "schematic_generic_component_0",
+          source_component_id: "generic_0",
+          center: {
+            x: 0,
+            y: 0,
           },
-          "rotation": 0,
-          "size": {
-            "width": 0,
-            "height": 0
-          }
-        },
-        {
-          "type": "pcb_component",
-          "source_component_id": "generic_0",
-          "pcb_component_id": "pcb_generic_component_0",
-          "layer": "top",
-          "center": {
-            "x": 0,
-            "y": 0
+          rotation: 0,
+          size: {
+            width: 0,
+            height: 0,
           },
-          "rotation": 0,
-          "width": 0,
-          "height": 0
         },
         {
-          "type": "pcb_silkscreen_pill",
-          "layer": "top",
-          "pcb_component_id": "pcb_generic_component_0",
-          "pcb_silkscreen_pill_id": "pcb_silkscreen_pill_0",
-          "width": 1,
-          "height": 0.5,
-          "center": {
-            "x": 0,
-            "y": 0
-          }
-        }
+          type: "pcb_component",
+          source_component_id: "generic_0",
+          pcb_component_id: "pcb_generic_component_0",
+          layer: "top",
+          center: {
+            x: 0,
+            y: 0,
+          },
+          rotation: 0,
+          width: 0,
+          height: 0,
+        },
+        {
+          type: "pcb_silkscreen_pill",
+          layer: "top",
+          pcb_component_id: "pcb_generic_component_0",
+          pcb_silkscreen_pill_id: "pcb_silkscreen_pill_0",
+          width: 1,
+          height: 0.5,
+          center: {
+            x: 0,
+            y: 0,
+          },
+        },
       ]}
     />
   );
@@ -59,6 +59,6 @@ export const SilkscreenPill: React.FC = () => {
 const meta: Meta<typeof SilkscreenPill> = {
   title: "Silkscreen",
   component: SilkscreenPill,
-}
+};
 
-export default meta
+export default meta;
