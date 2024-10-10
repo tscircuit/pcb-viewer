@@ -63,53 +63,55 @@ export const TraceErrorCircuit2: React.FC = () => {
   );
 };
 
-export const TraceErrorCircuit3: React.FC = () => {
-  const circuit = new Circuit();
+// TODO: Fix failing because of `Component` is missing in Core
+// export const TraceErrorCircuit3: React.FC = () => {
+//   const circuit = new Circuit();
 
-  circuit.add(
-    <board width="20mm" height="20mm">
-      <group>
-        <footprint>
-          <platedhole
-            pcbX={0}
-            pcbY={-4}
-            portHints={[`1`]}
-            holeDiameter={0.8}
-            outerDiameter={2}
-            shape="circle"
-          />
-          <platedhole
-            pcbX={0}
-            pcbY={4}
-            portHints={[`2`]}
-            holeDiameter={0.8}
-            outerDiameter={2}
-            shape="circle"
-          />
-        </footprint>
-        <port pcbX={0} pcbY={-0.7} name="plus" pinNumber={1} direction="up" />
-        <port pcbX={0} pcbY={0.7} name="minus" pinNumber={2} direction="down" />
+//   circuit.add(
+//     <board width="20mm" height="20mm">
+//       <group>
+//         <footprint>
+//           <platedhole
+//             pcbX={0}
+//             pcbY={-4}
+//             portHints={[`1`]}
+//             holeDiameter={0.8}
+//             outerDiameter={2}
+//             shape="circle"
+//             name="B1"
+//           />
+//           <platedhole
+//             pcbX={0}
+//             pcbY={4}
+//             // portHints={[`2`]}
+//             holeDiameter={0.8}
+//             outerDiameter={2}
+//             shape="circle"
+//           />
+//         </footprint>
+//         {/* <port pcbX={0} pcbY={-0.7} name="plus" pinNumber={1} direction="up" />
+//         <port pcbX={0} pcbY={0.7} name="minus" pinNumber={2} direction="down" /> */}
 
-        <resistor
-          name="R1"
-          pcbX={8}
-          pcbY={0}
-          resistance={"10k"}
-          footprint={"0805"}
-        />
-        <trace to=".B1 > .plus" from=".R1 > .left" />
-      </group>
-    </board>
-  );
+//         <resistor
+//           name="R1"
+//           pcbX={8}
+//           pcbY={0}
+//           resistance={"10k"}
+//           footprint={"0805"}
+//         />
+//         {/* <trace to=".B1 > .plus" from=".R1 > .left" /> */}
+//       </group>
+//     </board>
+//   );
 
-  const soup = circuit.getCircuitJson();
+//   const soup = circuit.getCircuitJson();
 
-  return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
-    </div>
-  );
-};
+//   return (
+//     <div style={{ backgroundColor: "black" }}>
+//       <PCBViewer soup={soup} />
+//     </div>
+//   );
+// };
 
 // Trace error with custom location, manually create soup for this one
 export const TraceErrorCircuit4 = () => (

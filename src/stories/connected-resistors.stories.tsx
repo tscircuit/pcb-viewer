@@ -29,7 +29,8 @@ const ConnectedResistors: React.FC = () => {
         footprint="0805"
         resistance="10kohm"
       />
-      <trace path={[".R1 > .right", ".R2 > .left", ".R3 > .left"]} />
+      <trace path={[".R1 > .right", ".R2 > .left"]} />
+      <trace path={[".R2 > .left", ".R3 > .left"]} />
     </board>
   );
 
