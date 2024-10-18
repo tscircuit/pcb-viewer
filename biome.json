@@ -7,10 +7,14 @@
     "enabled": true,
     "indentStyle": "space"
   },
+  "files": {
+    "ignore": ["cosmos-export", "dist", "package.json"]
+  },
   "javascript": {
     "formatter": {
       "jsxQuoteStyle": "double",
       "quoteProperties": "asNeeded",
+      "trailingCommas": "all",
       "semicolons": "asNeeded",
       "arrowParentheses": "always",
       "bracketSpacing": true,
@@ -18,7 +22,7 @@
     }
   },
   "linter": {
-    "enabled": false,
+    "enabled": true,
     "rules": {
       "recommended": true,
       "suspicious": {
@@ -26,6 +30,7 @@
       },
       "style": {
         "noNonNullAssertion": "off",
+        "useNumberNamespace": "off",
         "useFilenamingConvention": {
           "level": "error",
           "options": {
