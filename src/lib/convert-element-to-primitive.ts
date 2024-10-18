@@ -518,6 +518,8 @@ export const convertElementToPrimitives = (
         layer = "top_fabrication"
       }
 
+      console.log("route", route, layer)
+
       return route
         .slice(0, -1)
         .map((point, index) => {

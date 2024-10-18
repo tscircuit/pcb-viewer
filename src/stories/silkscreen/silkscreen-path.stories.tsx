@@ -5,17 +5,21 @@ import { PCBViewer } from "../../PCBViewer";
 export const SilkscreenPath: React.FC = () => {
   return (
     <PCBViewer>
-      <footprint>
-        <silkscreenpath
-          pcbX={0}
-          pcbY={0}
-          route={[
-            { x: 0, y: 0 },
-            { x: 1, y: 1 },
-            { x: 2, y: 1 },
-          ]}
-        />
-      </footprint>
+      <board width="10mm" height="10mm">
+        <chip  name="U1" footprint={
+          <footprint>
+            <silkscreenpath
+              pcbX={0}
+              pcbY={0}
+              route={[
+                { x: 0, y: 0 },
+                { x: 1, y: 1 },
+                { x: 2, y: 1 },
+              ]}
+            />
+          </footprint>
+        } />
+        </board>
     </PCBViewer>
   );
 };
