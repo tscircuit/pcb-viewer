@@ -38,7 +38,6 @@ export const PCBViewer = ({
     error: errorFromChildren,
     isLoading,
   } = useRenderedCircuit(children)
-  console.log("circuitJsonFromChildren", circuitJsonFromChildren, children)
 
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
