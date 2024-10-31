@@ -1,3 +1,4 @@
+import {zIndexMap} from "lib/util/z-index-map"
 import { useEffect, useRef, useState } from "react"
 import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
 
@@ -130,7 +131,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
               marginTop: arrowScreenBounds.flipY ? 0 : -20,
               fontSize: 12,
               fontFamily: "sans-serif",
-              zIndex: 1000,
+              zIndex: zIndexMap.dimensionOverlay,
             }}
           >
             {Math.abs(dStart.x - dEnd.x).toFixed(2)}
@@ -149,7 +150,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
               mixBlendMode: "difference",
               fontSize: 12,
               fontFamily: "sans-serif",
-              zIndex: 1000,
+              zIndex: zIndexMap.dimensionOverlay,
             }}
           >
             <div
@@ -168,7 +169,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
               top: 0,
               pointerEvents: "none",
               mixBlendMode: "difference",
-              zIndex: 1000,
+              zIndex: zIndexMap.dimensionOverlay,
             }}
             width={containerBounds.width}
             height={containerBounds.height}

@@ -8,6 +8,7 @@ import {
 } from "transformation-matrix"
 import colors from "./colors"
 import { scaleOnly } from "./util/scale-only"
+import {zIndexMap} from "./util/z-index-map"
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -318,7 +319,7 @@ export class Drawer {
     order.forEach((layer, i) => {
       const canvas = canvasLayerMap[layer]
       if (!canvas) return
-      canvas.style.zIndex = `${100 - i}`
+      canvas.style.zIndex = `${zIndexMap.topLayer - i}`
       canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
     })
   }

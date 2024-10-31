@@ -6,6 +6,7 @@ import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
 import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
+import {zIndexMap} from "lib/util/z-index-map"
 interface Props {
   children?: any
   elements?: AnyCircuitElement[]
@@ -137,7 +138,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           transition: isMouseOverContainer
             ? "opacity 100ms linear"
             : "opacity 1s linear",
-          zIndex: 100,
+          zIndex: zIndexMap.toolbarOverlay,
           color: "red",
           display: "flex",
           fontSize: 12,

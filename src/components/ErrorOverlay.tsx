@@ -1,5 +1,6 @@
 import { css } from "@emotion/css"
 import type { AnyCircuitElement, PcbPort, PcbTraceError } from "circuit-json"
+import { zIndexMap } from "lib/util/z-index-map"
 import { useRef } from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 
@@ -22,7 +23,7 @@ const ErrorSVG = ({
       top: 0,
       pointerEvents: "none",
       mixBlendMode: "difference",
-      zIndex: 1000,
+      zIndex: zIndexMap.errorOverlay,
     }}
     width="100%"
     height="100%"

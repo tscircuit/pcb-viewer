@@ -16,6 +16,7 @@ import {
 } from "transformation-matrix"
 import { HotkeyActionMenu } from "./HotkeyActionMenu"
 import { useToast } from "lib/toast"
+import {zIndexMap} from "lib/util/z-index-map"
 
 interface Props {
   transform?: Matrix
@@ -279,7 +280,7 @@ export const EditTraceHintOverlay = ({
               top: 0,
               pointerEvents: "none",
               mixBlendMode: "difference",
-              zIndex: 1000,
+              zIndex: zIndexMap.editTraceHintOverlay,
             }}
             width={containerBounds?.width}
             height={containerBounds?.height}
@@ -329,7 +330,7 @@ export const EditTraceHintOverlay = ({
             top: 0,
             pointerEvents: "none",
             mixBlendMode: "difference",
-            zIndex: 1000,
+            zIndex: zIndexMap.editTraceHintOverlay,
           }}
           width={containerBounds?.width}
           height={containerBounds?.height}

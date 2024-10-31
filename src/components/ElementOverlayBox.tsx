@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { HighlightedPrimitive } from "./MouseElementTracker"
 import colors from "lib/colors"
 import { useGlobalStore } from "global-store"
+import { zIndexMap } from "lib/util/z-index-map"
 
 const containerStyle = {
   position: "absolute",
@@ -95,7 +96,7 @@ export const HighlightedPrimitiveBoxWithText = ({
   return (
     <div
       style={{
-        zIndex: 98,
+        zIndex: zIndexMap.elementOverlay,
         position: "absolute",
         left: x - w / 2 - 8,
         top: y - h / 2 - 8,
