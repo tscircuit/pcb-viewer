@@ -16,7 +16,8 @@ const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
 type Props = {
   children?: any
-  soup?: any
+  circuitJson?: AnyCircuitElement[]
+  soup?: any // @deprecated Use circuitJson instead
   height?: number
   allowEditing?: boolean
   editEvents?: EditEvent[]
@@ -27,12 +28,14 @@ type Props = {
 export const PCBViewer = ({
   children,
   soup,
+  circuitJson,
   height = 600,
   initialState,
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
 }: Props) => {
+  soup ??= circuitJson
   const {
     circuitJson: circuitJsonFromChildren,
     error: errorFromChildren,
@@ -85,7 +88,11 @@ export const PCBViewer = ({
     }
   }, [children, refDimensions])
 
-  const pcbElmsPreEdit: AnyCircuitElement[] = (soup ?? stateElements).filter(
+  const pcbElmsPreEdit: AnyCircuitElement[] = (
+    circuitJson ??
+    soup ??
+    stateElements
+  ).filter(
     (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
   )
 

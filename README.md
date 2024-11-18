@@ -18,7 +18,7 @@ npm install @tscircuit/pcb-viewer
 
 There are two main ways to use the PCBViewer:
 
-### 1. Using Circuit Components (Recommended)
+### 1. Using Circuit Components
 
 This approach allows you to declaratively define your circuit using React components:
 
@@ -46,22 +46,20 @@ If you already have circuit JSON data, you can pass it directly:
 import React from "react"
 import { PCBViewer } from "@tscircuit/pcb-viewer"
 
-const circuitJson = {
-  elements: [
-    {
-      type: "pcb_component",
-      pcb_component_id: "R1",
-      center: { x: 0, y: 0 },
-      // ... other component properties
-    }
-    // ... more elements
-  ]
-}
+const circuitJson = [
+  {
+    type: "pcb_component",
+    pcb_component_id: "R1",
+    center: { x: 0, y: 0 },
+    // ... other component properties
+  },
+  // ... more elements
+]
 
 export default () => {
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={circuitJson.elements} />
+      <PCBViewer circuitJson={circuitJson} />
     </div>
   )
 }
@@ -72,7 +70,7 @@ export default () => {
 The PCBViewer component accepts these props:
 
 - `children`: Circuit components to render
-- `soup`: Circuit JSON elements array (alternative to children)
+- `circuitJson`: Circuit JSON elements array (alternative to children)
 - `height`: Height of viewer in pixels (default: 600)
 - `allowEditing`: Enable/disable editing capabilities (default: true)
 - `editEvents`: Array of edit events to apply
