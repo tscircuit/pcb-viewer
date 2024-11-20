@@ -1,6 +1,6 @@
-import type { Meta } from "@storybook/react";
-import type React from "react";
-import { PCBViewer } from "../../PCBViewer";
+import type { Meta } from "@storybook/react"
+import type React from "react"
+import { PCBViewer } from "../../PCBViewer"
 
 export const SilkscreenPill: React.FC = () => {
   return (
@@ -53,12 +53,12 @@ export const SilkscreenPill: React.FC = () => {
         },
       ]}
     />
-  );
-};
+  )
+}
 
 const meta: Meta<typeof SilkscreenPill> = {
   title: "Silkscreen",
   component: SilkscreenPill,
-};
+}
 
-export default meta;
+export default meta

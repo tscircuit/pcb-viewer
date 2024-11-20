@@ -1,27 +1,27 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { Circuit } from "@tscircuit/core";
-import { PCBViewer } from "../PCBViewer";
+import type { Meta, StoryObj } from "@storybook/react"
+import { Circuit } from "@tscircuit/core"
+import { PCBViewer } from "../PCBViewer"
 
 export const SimpleResistorSMD: React.FC = () => {
-  const circuit = new Circuit();
+  const circuit = new Circuit()
 
   circuit.add(
     <board width="10mm" height="10mm">
       <resistor name="R1" footprint="0805" resistance="10k" />
-    </board>
-  );
+    </board>,
+  )
 
-  const soup = circuit.getCircuitJson();
+  const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer soup={soup} />
     </div>
-  );
-};
+  )
+}
 
 export const SimpleResistorThruHole: React.FC = () => {
-  const circuit = new Circuit();
+  const circuit = new Circuit()
 
   circuit.add(
     <board width="10mm" height="10mm">
@@ -39,20 +39,20 @@ export const SimpleResistorThruHole: React.FC = () => {
         holeDiameter="1mm"
         outerDiameter="2mm"
       />
-    </board>
-  );
+    </board>,
+  )
 
-  const soup = circuit.getCircuitJson();
+  const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer soup={soup} />
     </div>
-  );
-};
+  )
+}
 
 export const SimpleResistorsOffCenter: React.FC = () => {
-  const circuit = new Circuit();
+  const circuit = new Circuit()
 
   circuit.add(
     <board width="30mm" height="30mm">
@@ -65,24 +65,24 @@ export const SimpleResistorsOffCenter: React.FC = () => {
         pcbX={20}
         pcbY={20}
       /> */}
-    </board>
-  );
+    </board>,
+  )
 
-  const soup = circuit.getCircuitJson();
+  const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer soup={soup} />
     </div>
-  );
-};
+  )
+}
 
 const meta: Meta<typeof SimpleResistorSMD> = {
   title: "SimpleResistor",
   component: SimpleResistorSMD,
   tags: [],
   argTypes: {},
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof SimpleResistorSMD>;
+export default meta
+type Story = StoryObj<typeof SimpleResistorSMD>

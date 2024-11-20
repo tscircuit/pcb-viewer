@@ -3,7 +3,7 @@ import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import type { AnyCircuitElement, PcbPort } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
-import {zIndexMap} from "lib/util/z-index-map"
+import { zIndexMap } from "lib/util/z-index-map"
 
 interface Props {
   transform?: Matrix

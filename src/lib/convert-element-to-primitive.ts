@@ -118,7 +118,7 @@ export const convertElementToPrimitives = (
       ]
     }
     case "pcb_smtpad": {
-      if (element.shape === "rect") {
+      if (element.shape === "rect" || element.shape === "rotated_rect") {
         const { shape, x, y, width, height, layer } = element
 
         return [

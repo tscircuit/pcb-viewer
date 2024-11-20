@@ -1,6 +1,6 @@
-import { Meta } from "@storybook/react";
-import React from "react";
-import { PCBViewer } from "../PCBViewer";
+import { Meta } from "@storybook/react"
+import React from "react"
+import { PCBViewer } from "../PCBViewer"
 
 export const PlatedHolePillShape: React.FC = () => {
   return (
@@ -217,12 +217,12 @@ export const PlatedHolePillShape: React.FC = () => {
         ]}
       />
     </div>
-  );
-};
+  )
+}
 
 const meta: Meta<typeof PlatedHolePillShape> = {
   title: "Plated Hole Pill Shape",
   component: PlatedHolePillShape,
-};
+}
 
-export default meta;
+export default meta

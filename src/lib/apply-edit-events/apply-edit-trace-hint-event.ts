@@ -16,9 +16,9 @@ export const applyTraceHintEditEvent = (
     soup = soup.map((e: any) =>
       e.pcb_trace_hint_id === edit_event.pcb_trace_hint_id
         ? {
-          ...e,
-          route: edit_event.route,
-        }
+            ...e,
+            route: edit_event.route,
+          }
         : e,
     )
   } else {

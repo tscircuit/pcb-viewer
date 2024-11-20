@@ -1,6 +1,6 @@
-import type { Meta } from "@storybook/react";
-import type React from "react";
-import { PCBViewer } from "../PCBViewer";
+import type { Meta } from "@storybook/react"
+import type React from "react"
+import { PCBViewer } from "../PCBViewer"
 
 export const KeepoutRectExample: React.FC = () => {
   return (
@@ -371,8 +371,8 @@ export const KeepoutRectExample: React.FC = () => {
         ]}
       />
     </div>
-  );
-};
+  )
+}
 
 export const KeepoutCircleExample: React.FC = () => {
   return (
@@ -744,11 +744,11 @@ export const KeepoutCircleExample: React.FC = () => {
         ]}
       />
     </div>
-  );
-};
+  )
+}
 
 const meta: Meta<typeof KeepoutRectExample> = {
   title: "Keepout",
   component: KeepoutRectExample,
-};
-export default meta;
+}
+export default meta

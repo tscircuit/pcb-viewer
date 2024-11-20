@@ -1,3 +1,4 @@
+import { Rotation } from "circuit-json"
 import { Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
 import {
@@ -81,6 +82,18 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
   drawer.rect(rect.x, rect.y, rect.w, rect.h, rect.mesh_fill)
 }
 
+export const drawRotatedRect = (
+  drawer: Drawer,
+  rect: Rect & { rotation: Rotation },
+) => {
+  drawer.equip({
+    color: getColor(rect),
+    layer: rect.layer,
+  })
+
+  drawer.rotatedRect(rect.x, rect.y, rect.w, rect.h, rect.rotation)
+}
+
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
   drawer.equip({
     color: getColor(circle),
@@ -120,6 +133,13 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
     case "text":
       return drawText(drawer, primitive)
     case "rect":
+      if (primitive._element?.shape === "rotated_rect") {
+        return drawRotatedRect(drawer, {
+          ...primitive,
+          rotation: primitive._element.rotation,
+          mesh_fill: primitive.mesh_fill,
+        })
+      }
       return drawRect(drawer, primitive)
     case "circle":
       return drawCircle(drawer, primitive)
