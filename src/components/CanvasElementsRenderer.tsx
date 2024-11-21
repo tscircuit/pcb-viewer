@@ -57,7 +57,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
               "pcb_port_id" in primitive._element
                 ? primitive._element?.pcb_port_id!
                 : "pcb_trace_id" in primitive._element
-                  ? primitive._element?.pcb_trace_id
+                  ? primitive._element?.pcb_trace_id!
                   : "",
             )
             primitiveIdsInMousedOverNet.push(
