@@ -12,8 +12,8 @@ export const drawEagle = (drawer: Drawer, eagle: EagleJSON) => {
   if (eagle.grid.unit === "inch") {
     drawer.transform = compose(
       fromDefinition(
-        fromTransformAttribute("translate(200, 200) scale(30,-30)")
-      )
+        fromTransformAttribute("translate(200, 200) scale(30,-30)"),
+      ),
     )
   }
 

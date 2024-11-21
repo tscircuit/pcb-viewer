@@ -1,7 +1,7 @@
 import React from "react"
 import type { Meta, StoryObj } from "@storybook/react"
 import { PCBViewer } from "../PCBViewer"
-import { Circuit } from '@tscircuit/core'
+import { Circuit } from "@tscircuit/core"
 
 export const ErrorInCircuit: React.FC = () => {
   const circuit = new Circuit()
@@ -10,7 +10,7 @@ export const ErrorInCircuit: React.FC = () => {
     <board width="10mm" height="10mm">
       {/* @ts-expect-error */}
       <resistor footprint="some-invalid-name" />
-    </board>
+    </board>,
   )
 
   const soup = circuit.getCircuitJson()

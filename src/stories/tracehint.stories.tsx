@@ -1,6 +1,6 @@
-import type { Meta } from "@storybook/react";
-import type React from "react";
-import { PCBViewer } from "../PCBViewer";
+import type { Meta } from "@storybook/react"
+import type React from "react"
+import { PCBViewer } from "../PCBViewer"
 export const TraceHintExample: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
@@ -245,10 +245,10 @@ export const TraceHintExample: React.FC = () => {
         ]}
       />
     </div>
-  );
-};
+  )
+}
 const meta: Meta<typeof TraceHintExample> = {
   title: "TraceHint",
   component: TraceHintExample,
-};
-export default meta;
+}
+export default meta

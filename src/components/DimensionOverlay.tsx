@@ -1,4 +1,4 @@
-import {zIndexMap} from "lib/util/z-index-map"
+import { zIndexMap } from "lib/util/z-index-map"
 import { useEffect, useRef, useState } from "react"
 import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
 

@@ -16,7 +16,7 @@ import {
 } from "transformation-matrix"
 import { HotkeyActionMenu } from "./HotkeyActionMenu"
 import { useToast } from "lib/toast"
-import {zIndexMap} from "lib/util/z-index-map"
+import { zIndexMap } from "lib/util/z-index-map"
 
 interface Props {
   transform?: Matrix
@@ -287,11 +287,12 @@ export const EditTraceHintOverlay = ({
           >
             <path
               stroke="red"
-              d={`M ${ogCenterScreen.x} ${ogCenterScreen.y
-                } ${dragState?.editEvent.route
-                  .map((p) => applyToPoint(transform!, p))
-                  .map((p) => `L ${p.x} ${p.y}`)
-                  .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}
+              d={`M ${ogCenterScreen.x} ${
+                ogCenterScreen.y
+              } ${dragState?.editEvent.route
+                .map((p) => applyToPoint(transform!, p))
+                .map((p) => `L ${p.x} ${p.y}`)
+                .join(" ")} L ${dragEndScreen.x} ${dragEndScreen.y}`}
             />
             {dragState?.editEvent.route.map((r, i) => {
               const rScreen = applyToPoint(transform!, r)

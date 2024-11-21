@@ -172,7 +172,7 @@ export const EditPlacementOverlay = ({
                   transform: "translate(-50%, -50%)",
                   background:
                     isPcbComponentActive &&
-                      activePcbComponentId === e.pcb_component_id
+                    activePcbComponentId === e.pcb_component_id
                       ? "rgba(255, 0, 0, 0.2)"
                       : "",
                 }}

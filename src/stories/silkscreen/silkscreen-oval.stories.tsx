@@ -1,6 +1,6 @@
-import { Meta } from "@storybook/react";
-import React from "react";
-import { PCBViewer } from "../../PCBViewer";
+import { Meta } from "@storybook/react"
+import React from "react"
+import { PCBViewer } from "../../PCBViewer"
 
 export const SilkscreenOval: React.FC = () => {
   return (
@@ -41,11 +41,11 @@ export const SilkscreenOval: React.FC = () => {
         },
       ]}
     />
-  );
-};
+  )
+}
 
 const meta: Meta<typeof SilkscreenOval> = {
   title: "Silkscreen/Oval",
   component: SilkscreenOval,
-};
-export default meta;
+}
+export default meta

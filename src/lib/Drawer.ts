@@ -8,7 +8,8 @@ import {
 } from "transformation-matrix"
 import colors from "./colors"
 import { scaleOnly } from "./util/scale-only"
-import {zIndexMap} from "./util/z-index-map"
+import { zIndexMap } from "./util/z-index-map"
+import { Rotation } from "circuit-json"
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -33,7 +34,7 @@ export const LAYER_NAME_TO_COLOR = {
   top: colors.board.copper.f,
   inner1: colors.board.copper.in1,
   inner2: colors.board.copper.in2,
-  inner3: colors.board.copper.in3,
+
   inner4: colors.board.copper.in4,
   inner5: colors.board.copper.in5,
   inner6: colors.board.copper.in6,
@@ -191,6 +192,42 @@ export class Drawer {
     }
   }
 
+  rotatedRect(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    ccw_rotation: Rotation,
+    mesh_fill?: boolean,
+  ) {
+    const ctx = this.getLayerCtx()
+    this.applyAperture()
+
+    const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
+    const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
+
+    ctx.save()
+
+    const [centerX, centerY] = applyToPoint(this.transform, [x, y])
+    ctx.translate(centerX, centerY)
+    ctx.rotate((ccw_rotation * Math.PI) / 180)
+    ctx.translate(-centerX, -centerY)
+
+    if (mesh_fill) {
+      ctx.beginPath()
+      ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      ctx.clip()
+
+      this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15)
+
+      ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+    } else {
+      ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+    }
+
+    ctx.restore()
+  }
+
   circle(x: number, y: number, r: number, mesh_fill?: boolean) {
     const r$ = scaleOnly(this.transform, r)
     const [x$, y$] = applyToPoint(this.transform, [x, y])
@@ -256,7 +293,6 @@ export class Drawer {
 
   polygon(points: { x: number; y: number }[]) {
     if (points.length < 3) {
-      console.warn("Polygon must have at least 3 points")
       return
     }
 

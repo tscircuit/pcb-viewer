@@ -6,7 +6,7 @@ import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "global-store"
 import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
-import {zIndexMap} from "lib/util/z-index-map"
+import { zIndexMap } from "lib/util/z-index-map"
 interface Props {
   children?: any
   elements?: AnyCircuitElement[]
@@ -73,7 +73,8 @@ export const ToolbarButton = ({ children, ...props }: any) => (
 
 export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isMouseOverContainer, setIsMouseOverContainer] = useGlobalStore(
-    (s) => [s.is_mouse_over_container, s.setIsMouseOverContainer]) as [boolean, (isFocused: boolean) => void]
+    (s) => [s.is_mouse_over_container, s.setIsMouseOverContainer],
+  ) as [boolean, (isFocused: boolean) => void]
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [selectedLayer, selectLayer] = useGlobalStore(
@@ -88,16 +89,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
 
-
-  useHotKey('1', () => selectLayer('top'))
-  useHotKey('2', () => selectLayer('bottom'))
-  useHotKey('3', () => selectLayer('inner1'))
-  useHotKey('4', () => selectLayer('inner2'))
-  useHotKey('5', () => selectLayer('inner3'))
-  useHotKey('6', () => selectLayer('inner4'))
-  useHotKey('7', () => selectLayer('inner5'))
-  useHotKey('8', () => selectLayer('inner6'))
-
+  useHotKey("1", () => selectLayer("top"))
+  useHotKey("2", () => selectLayer("bottom"))
+  useHotKey("3", () => selectLayer("inner1"))
+  useHotKey("4", () => selectLayer("inner2"))
+  useHotKey("5", () => selectLayer("inner3"))
+  useHotKey("6", () => selectLayer("inner4"))
+  useHotKey("7", () => selectLayer("inner5"))
+  useHotKey("8", () => selectLayer("inner6"))
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
@@ -146,7 +145,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           fontFamily: "sans-serif",
         }}
       >
-
         <ToolbarButton
           onClick={() => {
             setLayerMenuOpen(!isLayerMenuOpen)
@@ -185,7 +183,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                 ))}
             </div>
           )}
-
         </ToolbarButton>
         <ToolbarButton
           style={errorCount > 0 ? { color: "red" } : {}}

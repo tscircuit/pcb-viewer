@@ -1,10 +1,10 @@
-import type { Meta } from "@storybook/react";
-import { Circuit } from "@tscircuit/core";
-import type React from "react";
-import { PCBViewer } from "../../PCBViewer";
+import type { Meta } from "@storybook/react"
+import { Circuit } from "@tscircuit/core"
+import type React from "react"
+import { PCBViewer } from "../../PCBViewer"
 
 export const FabricationPath: React.FC = () => {
-  const circuit = new Circuit();
+  const circuit = new Circuit()
 
   circuit.add(
     <board width="10mm" height="10mm">
@@ -18,21 +18,21 @@ export const FabricationPath: React.FC = () => {
           ]}
         />
       </footprint>
-    </board>
-  );
+    </board>,
+  )
 
-  const soup = circuit.getCircuitJson();
+  const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer soup={soup} />
     </div>
-  );
-};
+  )
+}
 
 const meta: Meta<typeof FabricationPath> = {
   title: "FabricationNote",
   component: FabricationPath,
-};
+}
 
-export default meta;
+export default meta

@@ -1,11 +1,11 @@
-import type { Meta } from "@storybook/react";
-import { Circuit } from "@tscircuit/core";
-import { svgAlphabet } from "assets/alphabet";
-import type React from "react";
-import { PCBViewer } from "../../PCBViewer";
+import type { Meta } from "@storybook/react"
+import { Circuit } from "@tscircuit/core"
+import { svgAlphabet } from "assets/alphabet"
+import type React from "react"
+import { PCBViewer } from "../../PCBViewer"
 
 export const SilkscreenTextAlphabet: React.FC = () => {
-  const circuit = new Circuit();
+  const circuit = new Circuit()
 
   circuit.add(
     <board width="20mm" height="20mm">
@@ -20,21 +20,21 @@ export const SilkscreenTextAlphabet: React.FC = () => {
           layer="top"
         />
       </footprint>
-    </board>
-  );
+    </board>,
+  )
 
-  const soup = circuit.getCircuitJson();
+  const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer soup={soup} />
     </div>
-  );
-};
+  )
+}
 
 const meta: Meta<typeof SilkscreenTextAlphabet> = {
   title: "Silkscreen",
   component: SilkscreenTextAlphabet,
-};
+}
 
-export default meta;
+export default meta

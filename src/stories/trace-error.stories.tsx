@@ -1,11 +1,11 @@
-import type { Meta } from "@storybook/react";
-import { Circuit } from "@tscircuit/core";
-import type { PcbTraceError } from "circuit-json";
-import type React from "react";
-import { PCBViewer } from "../PCBViewer";
+import type { Meta } from "@storybook/react"
+import { Circuit } from "@tscircuit/core"
+import type { PcbTraceError } from "circuit-json"
+import type React from "react"
+import { PCBViewer } from "../PCBViewer"
 
 export const TraceErrorCircuit1: React.FC = () => {
-  const circuit = new Circuit();
+  const circuit = new Circuit()
 
   circuit.add(
     <board width="10mm" height="10mm">
@@ -25,20 +25,20 @@ export const TraceErrorCircuit1: React.FC = () => {
         layer="bottom"
       />
       <trace path={[".R1 > .right", ".R2 > .left"]} />
-    </board>
-  );
+    </board>,
+  )
 
-  const soup = circuit.getCircuitJson();
+  const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer soup={soup} />
     </div>
-  );
-};
+  )
+}
 
 export const TraceErrorCircuit2: React.FC = () => {
-  const circuit = new Circuit();
+  const circuit = new Circuit()
 
   circuit.add(
     <board width="10mm" height="10mm">
@@ -51,17 +51,17 @@ export const TraceErrorCircuit2: React.FC = () => {
       />
       <resistor name="R2" resistance="10k" layer="bottom" />
       <trace path={[".R1 > .right", ".R2 > .left"]} />
-    </board>
-  );
+    </board>,
+  )
 
-  const soup = circuit.getCircuitJson();
+  const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer soup={soup} />
     </div>
-  );
-};
+  )
+}
 
 // TODO: Fix failing because of `Component` is missing in Core
 // export const TraceErrorCircuit3: React.FC = () => {
@@ -199,11 +199,11 @@ export const TraceErrorCircuit4 = () => (
       ]}
     />
   </div>
-);
+)
 
 const meta: Meta<typeof TraceErrorCircuit1> = {
   title: "TraceError",
   component: TraceErrorCircuit1,
-};
+}
 
-export default meta;
+export default meta

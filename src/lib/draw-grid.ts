@@ -5,7 +5,7 @@ import { scaleOnly } from "./util/scale-only"
 
 export const transformBounds = (
   transform: Matrix,
-  bounds: { left: number; right: number; top: number; bottom: number }
+  bounds: { left: number; right: number; top: number; bottom: number },
 ) => {
   const { left, right, top, bottom } = bounds
   const [left$, top$] = applyToPoint(transform, [left, top])
@@ -23,7 +23,7 @@ export const drawGrid = (drawer: Drawer, grid_config: GridConfig) => {
 
   const transformed_window = transformBounds(
     inverse(drawer.transform),
-    view_window
+    view_window,
   )
 
   const { left, right, top, bottom } = transformed_window
