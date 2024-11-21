@@ -84,14 +84,14 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
 
 export const drawRotatedRect = (
   drawer: Drawer,
-  rect: Rect & { rotation: Rotation },
+  rect: Rect & { ccw_rotation: Rotation },
 ) => {
   drawer.equip({
     color: getColor(rect),
     layer: rect.layer,
   })
 
-  drawer.rotatedRect(rect.x, rect.y, rect.w, rect.h, rect.rotation)
+  drawer.rotatedRect(rect.x, rect.y, rect.w, rect.h, rect.ccw_rotation)
 }
 
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
@@ -136,7 +136,7 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
       if (primitive._element?.shape === "rotated_rect") {
         return drawRotatedRect(drawer, {
           ...primitive,
-          rotation: primitive._element.rotation,
+          ccw_rotation: primitive._element.ccw_rotation,
           mesh_fill: primitive.mesh_fill,
         })
       }

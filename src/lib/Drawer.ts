@@ -197,7 +197,7 @@ export class Drawer {
     y: number,
     w: number,
     h: number,
-    rotation: Rotation,
+    ccw_rotation: Rotation,
     mesh_fill?: boolean,
   ) {
     const ctx = this.getLayerCtx()
@@ -210,7 +210,7 @@ export class Drawer {
 
     const [centerX, centerY] = applyToPoint(this.transform, [x, y])
     ctx.translate(centerX, centerY)
-    ctx.rotate((rotation * Math.PI) / 180)
+    ctx.rotate((ccw_rotation * Math.PI) / 180)
     ctx.translate(-centerX, -centerY)
 
     if (mesh_fill) {
