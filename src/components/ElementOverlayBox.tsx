@@ -129,12 +129,18 @@ export const HighlightedPrimitiveBoxWithText = ({
         <div
           style={{
             position: "absolute",
-            left: 0,
             bottom: h + 20 + sip * si,
-            marginLeft: finalState ? `${-sip * si}px` : 0,
+            marginRight: finalState ? `${-sip * si}px` : 0,
             marginBottom: finalState ? 0 : -sip * si,
-            transition: "margin-left 0.2s, margin-bottom 0.2s",
-            lineHeight: "0.8em",
+            transition: "margin-right 0.2s, margin-bottom 0.2s",
+            backgroundColor: "#f2efcc",
+            color: "black",
+            padding: "6px 6px",
+            borderRadius: "6px",
+            fontSize: "14px",
+            transform: `rotate(${rotation}deg)`,
+            minWidth: "45px",
+            textAlign: "center",
           }}
         >
           {getTextForHighlightedPrimitive(primitive)}
