@@ -93,9 +93,6 @@ export const HighlightedPrimitiveBoxWithText = ({
         ?.layer as keyof typeof layerColorHightlightMap
     ] ?? "red"
 
-  // Check for rotation on the parent PCB component
-  const rotation = (primitive as any)?._parent_pcb_component?.rotation ?? 0
-
   return (
     <div
       style={{
@@ -106,8 +103,6 @@ export const HighlightedPrimitiveBoxWithText = ({
         width: w + 16,
         height: h + 16,
         color,
-        transform: `rotate(${-rotation}deg)`,
-        transformOrigin: "center center",
       }}
     >
       <div
