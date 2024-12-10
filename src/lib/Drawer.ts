@@ -210,8 +210,7 @@ export class Drawer {
 
     const [centerX, centerY] = applyToPoint(this.transform, [x, y])
     ctx.translate(centerX, centerY)
-    const cw_rotation = 360 - ccw_rotation
-    if (ccw_rotation) ctx.rotate((cw_rotation * Math.PI) / 180)
+    ctx.rotate((ccw_rotation * Math.PI) / 180)
     ctx.translate(-centerX, -centerY)
 
     if (mesh_fill) {
