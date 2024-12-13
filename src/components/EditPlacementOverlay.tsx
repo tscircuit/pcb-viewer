@@ -234,7 +234,6 @@ export const EditPlacementOverlay = ({
                         : "",
                   }}
                 > 
-                </div>
                 <div
                   style={{
                     position: "absolute",
@@ -248,6 +247,8 @@ export const EditPlacementOverlay = ({
                   }}
                   onMouseDown={(event) => handleRotationStart(event, e)}
                 />
+                </div>
+                
               </>
             )
           })}
