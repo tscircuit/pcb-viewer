@@ -50,12 +50,65 @@ export const EditPlacementOverlay = ({
     dragEnd: { x: number; y: number }
     edit_event_id: string
   } | null>(null)
+  const [isRotating, setIsRotating] = useState(false);
+  const [startAngle, setStartAngle] = useState(0);
+  const [currentRotation, setCurrentRotation] = useState(0);
   const isPcbComponentActive = activePcbComponentId !== null
   const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
 
   const disabled = disabledProp || !in_move_footprint_mode
+
+  const handleRotationStart = (e: React.MouseEvent, component: PcbComponent) => {
+    setIsRotating(true);
+    setActivePcbComponent(component.pcb_component_id);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+    setStartAngle(angle);
+    setCurrentRotation(component.rotation || 0);
+  };
+
+  const handleRotationMove = (e: MouseEvent) => {
+    if (!isRotating || !activePcbComponentId) return;
+
+    const rect = containerRef.current!.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+    const deltaAngle = angle - startAngle;
+    const newRotation = (currentRotation + deltaAngle) % 360;
+
+    onModifyEditEvent({
+      edit_event_id: Math.random().toString(),
+      pcb_edit_event_type: "edit_component_rotation",
+      pcb_component_id: activePcbComponentId,
+      rotation: newRotation,
+    });
+
+    setCurrentRotation(newRotation);
+  };
+
+  const handleRotationEnd = () => {
+    if (activePcbComponentId) {
+      setIsRotating(false);
+      setActivePcbComponent(null);
+    }
+  };
+
+  useEffect(() => {
+    if (isRotating) {
+      window.addEventListener("mousemove", handleRotationMove);
+      window.addEventListener("mouseup", handleRotationEnd);
+      return () => {
+        window.removeEventListener("mousemove", handleRotationMove);
+        window.removeEventListener("mouseup", handleRotationEnd);
+      };
+    }
+  }, [isRotating]);
+
 
   return (
     <div
@@ -157,26 +210,45 @@ export const EditPlacementOverlay = ({
           .map((e) => {
             if (!e?.center) return null
             const projectedCenter = applyToPoint(transform, e.center)
-
+            const rotationHandlePosition = applyToPoint(transform!, {
+              x: e.center.x + 20,
+              y: e.center.y,
+            });
             return (
-              <div
-                key={e.pcb_component_id}
-                style={{
-                  position: "absolute",
-                  pointerEvents: "none",
-                  // b/c of transform, this is actually center not left/top
-                  left: projectedCenter.x,
-                  top: projectedCenter.y,
-                  width: e.width * transform.a + 20,
-                  height: e.height * transform.a + 20,
-                  transform: "translate(-50%, -50%)",
-                  background:
-                    isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
-                      ? "rgba(255, 0, 0, 0.2)"
-                      : "",
-                }}
-              />
+              <>
+                <div
+                  key={e.pcb_component_id}
+                  style={{
+                    position: "absolute",
+                    pointerEvents: "none",
+                    // b/c of transform, this is actually center not left/top
+                    left: projectedCenter.x,
+                    top: projectedCenter.y,
+                    width: e.width * transform.a + 20,
+                    height: e.height * transform.a + 20,
+                    transform: "translate(-50%, -50%)",
+                    background:
+                      isPcbComponentActive &&
+                      activePcbComponentId === e.pcb_component_id
+                        ? "rgba(255, 0, 0, 0.2)"
+                        : "",
+                  }}
+                > 
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: rotationHandlePosition.x - projectedCenter.x - 5,
+                    top: rotationHandlePosition.y - projectedCenter.y - 5,
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    backgroundColor: "#4a9eff",
+                    cursor: "pointer",
+                  }}
+                  onMouseDown={(event) => handleRotationStart(event, e)}
+                />
+              </>
             )
           })}
     </div>

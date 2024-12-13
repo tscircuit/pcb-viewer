@@ -10,6 +10,13 @@ export type EditComponentLocationEvent = {
   created_at: number
 }
 
+export type EditComponentRotationEvent = {
+  edit_event_id: string
+  pcb_edit_event_type: "edit_component_rotation"
+  pcb_component_id: string
+  rotation: number
+}
+
 export type EditTraceHintEvent = {
   edit_event_id: string
   pcb_edit_event_type: "edit_trace_hint"
@@ -20,4 +27,4 @@ export type EditTraceHintEvent = {
   created_at: number
 }
 
-export type EditEvent = EditComponentLocationEvent | EditTraceHintEvent
+export type EditEvent = EditComponentLocationEvent | EditTraceHintEvent | EditComponentRotationEvent
