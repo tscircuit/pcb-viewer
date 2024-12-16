@@ -70,6 +70,7 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive: HighlightedPrimitive
 }) => {
   const [finalState, setFinalState] = useState(false)
+  const primitiveElement = primitive._element
 
   useEffect(() => {
     setTimeout(() => {
@@ -94,7 +95,13 @@ export const HighlightedPrimitiveBoxWithText = ({
     ] ?? "red"
 
   // Check for rotation on the parent PCB component
-  const rotation = (primitive as any)?._parent_pcb_component?.rotation ?? 0
+  let rotation = 0
+  if (
+    primitiveElement.type === "pcb_smtpad" &&
+    primitiveElement?.shape === "rotated_rect"
+  ) {
+    rotation = primitiveElement?.ccw_rotation
+  }
 
   return (
     <div
