@@ -78,7 +78,6 @@ export const drawText = (drawer: Drawer, text: Text) => {
     x: text.x + alignOffset.x,
     y: text.y + alignOffset.y,
   })
-  console.log(text.ccw_rotation)
   for (const line of text_lines) {
     // Rotate start and end points of each line around the text center
     if (text.ccw_rotation) {
