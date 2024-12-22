@@ -45,6 +45,7 @@ export interface Text extends PCBDrawingObject {
   y: number
   size: number
   align?: AlignString
+  ccw_rotation?: number
 }
 
 export interface Rect extends PCBDrawingObject {

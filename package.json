@@ -32,7 +32,7 @@
     "@types/color": "^3.0.6",
     "@types/node": "18.7.23",
     "@types/react": "^18.3.3",
-    "circuit-json": "^0.0.106",
+    "circuit-json": "^0.0.120",
     "next": "^14.1.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

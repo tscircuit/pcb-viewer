@@ -553,6 +553,7 @@ export const convertElementToPrimitives = (
           align: element.anchor_alignment ?? "center",
           text: element.text,
           size: element.font_size, // Add the required 'size' property
+          ccw_rotation: element.ccw_rotation,
         },
       ]
     }

@@ -12,6 +12,7 @@ import {
   Text,
 } from "./types"
 import color from "color"
+import { rotateText } from "./util/rotate-text-lines"
 
 function getColor(primitive: Primitive) {
   if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
@@ -44,6 +45,7 @@ export const drawText = (drawer: Drawer, text: Text) => {
     color: text.layer,
   })
 
+  // Alignment offset calculation
   let alignOffset = { x: 0, y: 0 }
   const textWidth = getTextWidth(text)
   const textHeight = text.size
@@ -61,15 +63,52 @@ export const drawText = (drawer: Drawer, text: Text) => {
 
   // Non-gerber compatible
   // drawer.text(text.text, text.x, text.y)
-
   text.x ??= 0
   text.y ??= 0
+
+  // Center of rotation for the text
+  const textCenter = {
+    x: text.x + alignOffset.x + textWidth / 2,
+    y: text.y + alignOffset.y + textHeight / 2,
+  }
+
+  // Generate the text lines
   const text_lines = convertTextToLines({
     ...text,
     x: text.x + alignOffset.x,
     y: text.y + alignOffset.y,
   })
+  console.log(text.ccw_rotation)
   for (const line of text_lines) {
+    // Rotate start and end points of each line around the text center
+    if (text.ccw_rotation) {
+      const textStart = {
+        x: line.x1,
+        y: line.y1,
+        angle: text.ccw_rotation ?? 0,
+        originX: textCenter.x,
+        originY: textCenter.y,
+      }
+      const textEnd = {
+        x: line.x2,
+        y: line.y2,
+        angle: text.ccw_rotation ?? 0,
+        originX: textCenter.x,
+        originY: textCenter.y,
+      }
+      const rotatedTextStart = rotateText(textStart)
+      const rotatedTextEnd = rotateText(textEnd)
+
+      // Use the rotated points for drawing
+      drawLine(drawer, {
+        ...line,
+        x1: rotatedTextStart.x,
+        y1: rotatedTextStart.y,
+        x2: rotatedTextEnd.x,
+        y2: rotatedTextEnd.y,
+      })
+      continue
+    }
     drawLine(drawer, line)
   }
 }
