@@ -46,7 +46,7 @@
   },
   "peerDependencies": {
     "react": "*",
-    "@tscircuit/core": "0.0.236"
+    "@tscircuit/core": "*"
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
