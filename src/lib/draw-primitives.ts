@@ -1,5 +1,6 @@
 import { Rotation } from "circuit-json"
 import { Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
+import { rotateText } from "./util/rotate-text"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
 import {
   Circle,
@@ -12,7 +13,6 @@ import {
   Text,
 } from "./types"
 import color from "color"
-import { rotateText } from "./util/rotate-text-lines"
 
 function getColor(primitive: Primitive) {
   if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
@@ -66,48 +66,25 @@ export const drawText = (drawer: Drawer, text: Text) => {
   text.x ??= 0
   text.y ??= 0
 
-  // Center of rotation for the text
-  const textCenter = {
-    x: text.x + alignOffset.x + textWidth / 2,
-    y: text.y + alignOffset.y + textHeight / 2,
+  // Get rotation anchor point based on alignment
+  const rotationAnchor = {
+    x: text.x,
+    y: text.y,
   }
 
-  // Generate the text lines
-  const text_lines = convertTextToLines({
+  // Generate the text lines with alignment offset
+  let text_lines = convertTextToLines({
     ...text,
     x: text.x + alignOffset.x,
     y: text.y + alignOffset.y,
   })
-  for (const line of text_lines) {
-    // Rotate start and end points of each line around the text center
-    if (text.ccw_rotation) {
-      const textStart = {
-        x: line.x1,
-        y: line.y1,
-        angle: text.ccw_rotation ?? 0,
-        originX: textCenter.x,
-        originY: textCenter.y,
-      }
-      const textEnd = {
-        x: line.x2,
-        y: line.y2,
-        angle: text.ccw_rotation ?? 0,
-        originX: textCenter.x,
-        originY: textCenter.y,
-      }
-      const rotatedTextStart = rotateText(textStart)
-      const rotatedTextEnd = rotateText(textEnd)
+  // Apply rotation if needed
+  if (text.ccw_rotation) {
+    text_lines = rotateText(text_lines, rotationAnchor, text.ccw_rotation)
+  }
 
-      // Use the rotated points for drawing
-      drawLine(drawer, {
-        ...line,
-        x1: rotatedTextStart.x,
-        y1: rotatedTextStart.y,
-        x2: rotatedTextEnd.x,
-        y2: rotatedTextEnd.y,
-      })
-      continue
-    }
+  // Draw all lines with transformed context
+  for (const line of text_lines) {
     drawLine(drawer, line)
   }
 }

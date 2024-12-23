@@ -7,47 +7,42 @@ export const SilkscreenTextRotation: React.FC = () => {
   const circuit = new Circuit()
 
   circuit.add(
-    <board width="10mm" height="10mm">
+    <board width="11mm" height="11mm">
       <footprint>
         <silkscreentext
           text="20 degrees"
-          pcbX={3}
-          pcbY={-1}
+          pcbX={4}
           fontSize={0.25}
           pcbRotation={20}
           layer="top"
         />
         <silkscreentext
-          text="45 degrees"
-          pcbX={1}
-          pcbY={-1}
+          text="50 degrees"
+          pcbX={2}
           fontSize={0.25}
-          pcbRotation={45}
+          pcbRotation={50}
           layer="top"
         />
         <silkscreentext
-          text="80 degrees"
-          pcbX={-1}
-          pcbY={-1}
+          text="70 degrees"
+          pcbX={0}
           fontSize={0.25}
-          pcbRotation={80}
+          pcbRotation={70}
           layer="top"
         />
         <silkscreentext
           text="90 degrees"
-          pcbX={-3}
-          pcbY={-1}
+          pcbX={-2}
           fontSize={0.25}
           pcbRotation={90}
           layer="top"
         />
         <silkscreentext
-          text="180 degrees"
-          pcbX={0}
-          pcbY={1}
-          fontSize={0.2599999999999999}
+          text="180 degree"
+          pcbX={-4}
+          fontSize={0.25}
           pcbRotation={180}
-          layer="bottom"
+          layer="top"
         />
       </footprint>
     </board>,
