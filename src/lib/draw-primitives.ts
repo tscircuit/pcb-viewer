@@ -1,5 +1,6 @@
 import { Rotation } from "circuit-json"
 import { Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
+import { rotateText } from "./util/rotate-text"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
 import {
   Circle,
@@ -44,6 +45,7 @@ export const drawText = (drawer: Drawer, text: Text) => {
     color: text.layer,
   })
 
+  // Alignment offset calculation
   let alignOffset = { x: 0, y: 0 }
   const textWidth = getTextWidth(text)
   const textHeight = text.size
@@ -61,14 +63,32 @@ export const drawText = (drawer: Drawer, text: Text) => {
 
   // Non-gerber compatible
   // drawer.text(text.text, text.x, text.y)
-
   text.x ??= 0
   text.y ??= 0
-  const text_lines = convertTextToLines({
+
+  // Get rotation anchor point based on alignment
+  const rotationAnchor = {
+    x: text.x,
+    y: text.y,
+  }
+
+  // Generate the text lines with alignment offset
+  let text_lines = convertTextToLines({
     ...text,
     x: text.x + alignOffset.x,
     y: text.y + alignOffset.y,
   })
+  // Apply rotation if needed
+  if (text.ccw_rotation) {
+    const rotateTextParams = {
+      lines: text_lines,
+      anchorPoint: rotationAnchor,
+      ccwRotation: text.ccw_rotation,
+    }
+    text_lines = rotateText(rotateTextParams)
+  }
+
+  // Draw all lines with transformed context
   for (const line of text_lines) {
     drawLine(drawer, line)
   }
