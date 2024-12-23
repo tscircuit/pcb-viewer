@@ -80,7 +80,12 @@ export const drawText = (drawer: Drawer, text: Text) => {
   })
   // Apply rotation if needed
   if (text.ccw_rotation) {
-    text_lines = rotateText(text_lines, rotationAnchor, text.ccw_rotation)
+    const rotateTextParams = {
+      lines: text_lines,
+      anchorPoint: rotationAnchor,
+      ccwRotation: text.ccw_rotation,
+    }
+    text_lines = rotateText(rotateTextParams)
   }
 
   // Draw all lines with transformed context

@@ -1,22 +1,15 @@
-import { compose, translate } from "transformation-matrix"
+import { compose, translate, rotate, applyToPoint } from "transformation-matrix"
 import { Line } from "../types"
 
-export function rotateText(
-  lines: Line[],
-  anchorPoint: { x: number; y: number },
-  ccwRotation: number,
-) {
+export function rotateText(rotateTextParams: {
+  lines: Line[]
+  anchorPoint: { x: number; y: number }
+  ccwRotation: number
+}) {
+  const { lines, anchorPoint, ccwRotation } = rotateTextParams
   if (!ccwRotation) return lines
-
-  const rad = (-ccwRotation * Math.PI) / 180
-  const rotationMatrix = {
-    a: Math.cos(rad),
-    b: -Math.sin(rad),
-    c: Math.sin(rad),
-    d: Math.cos(rad),
-    e: 0,
-    f: 0,
-  }
+  const rad = (ccwRotation * Math.PI) / 180
+  const rotationMatrix = rotate(rad)
 
   // Create rotation transform around anchor point
   const transform = compose(
@@ -24,24 +17,12 @@ export function rotateText(
     rotationMatrix,
     translate(-anchorPoint.x, -anchorPoint.y),
   )
-
+  applyToPoint(transform, anchorPoint)
   return lines.map((line) => ({
     ...line,
-    x1:
-      transform.a * (line.x1 - anchorPoint.x) +
-      transform.c * (line.y1 - anchorPoint.y) +
-      anchorPoint.x,
-    y1:
-      transform.b * (line.x1 - anchorPoint.x) +
-      transform.d * (line.y1 - anchorPoint.y) +
-      anchorPoint.y,
-    x2:
-      transform.a * (line.x2 - anchorPoint.x) +
-      transform.c * (line.y2 - anchorPoint.y) +
-      anchorPoint.x,
-    y2:
-      transform.b * (line.x2 - anchorPoint.x) +
-      transform.d * (line.y2 - anchorPoint.y) +
-      anchorPoint.y,
+    x1: applyToPoint(transform, { x: line.x1, y: line.y1 }).x,
+    y1: applyToPoint(transform, { x: line.x1, y: line.y1 }).y,
+    x2: applyToPoint(transform, { x: line.x2, y: line.y2 }).x,
+    y2: applyToPoint(transform, { x: line.x2, y: line.y2 }).y,
   }))
 }
