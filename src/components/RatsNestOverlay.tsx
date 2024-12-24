@@ -1,36 +1,108 @@
-import type React from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
-import type { AnyCircuitElement, PcbPort } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
 import { zIndexMap } from "lib/util/z-index-map"
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { useMemo } from "react"
 
 interface Props {
   transform?: Matrix
   soup?: AnyCircuitElement[]
   children: any
 }
+
 type Point = { x: number; y: number }
+type RatsNestLine = {
+  key: string
+  startPoint: Point
+  endPoint: Point
+  isInNet: boolean
+}
+
 export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
   const isShowingRatsNest = useGlobalStore((s) => s.is_showing_rats_nest)
+
+  const { netMap, idToNetMap } = useMemo(
+    () => getFullConnectivityMapFromCircuitJson(soup || []),
+    [soup],
+  )
+
+  const ratsNestLines = useMemo(() => {
+    if (!soup || !isShowingRatsNest) return []
+
+    const getElementPosition = (id: string): Point | null => {
+      const element = su(soup)[id.replace(/_\d+$/, "")].get(id)
+      if (element && "x" in element && "y" in element) {
+        return { x: element.x, y: element.y }
+      }
+      return null
+    }
+
+    const findNearestPointInNet = (
+      sourcePoint: Point,
+      netId: string,
+    ): Point | null => {
+      const connectedIds = netMap[netId] || []
+      let nearestPoint: Point | null = null
+      let minDistance = Infinity
+
+      connectedIds.forEach((id) => {
+        const pos = getElementPosition(id)
+        if (pos) {
+          const distance = Math.sqrt(
+            Math.pow(sourcePoint.x - pos.x, 2) +
+              Math.pow(sourcePoint.y - pos.y, 2),
+          )
+          if (distance < minDistance && distance > 0) {
+            minDistance = distance
+            nearestPoint = pos
+          }
+        }
+      })
+
+      return nearestPoint
+    }
+
+    const pcbPorts = su(soup).pcb_port.list()
+    const sourceTraces = su(soup).source_trace.list()
+    const lines: RatsNestLine[] = []
+
+    pcbPorts.forEach((port, index) => {
+      const portId = port.pcb_port_id
+      const netId = idToNetMap[portId]
+
+      let isInNet = false
+      for (const trace of sourceTraces) {
+        const sourceTrace = trace.connected_source_port_ids.includes(
+          su(soup).source_port.getUsing({ pcb_port_id: portId })
+            ?.source_port_id,
+        )
+        if (sourceTrace && trace.connected_source_net_ids.length > 0) {
+          isInNet = true
+        }
+      }
+
+      if (!netId) return
+
+      const startPoint = { x: port.x, y: port.y }
+      const nearestPoint = findNearestPointInNet(startPoint, netId)
+
+      if (!nearestPoint) return
+
+      lines.push({
+        key: `${portId}-${index}`,
+        startPoint,
+        endPoint: nearestPoint,
+        isInNet,
+      })
+    })
+
+    return lines
+  }, [soup, netMap, idToNetMap, isShowingRatsNest])
+
   if (!soup || !isShowingRatsNest) return children
   if (!transform) transform = identity()
-  const sourceTraces = su(soup).source_trace.list()
-
-  const groups: PcbPort[][] = []
-
-  sourceTraces.forEach((sourceTrace) => {
-    if (sourceTrace.connected_source_port_ids) {
-      const group: PcbPort[] = []
-      sourceTrace.connected_source_port_ids.forEach(
-        (source_port_id: string) => {
-          const pcbPort = su(soup).pcb_port.getWhere({ source_port_id })
-          if (pcbPort) group.push(pcbPort)
-        },
-      )
-      groups.push(group)
-    }
-  })
 
   return (
     <div style={{ position: "relative" }}>
@@ -47,36 +119,22 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
           zIndex: zIndexMap.ratsNestOverlay,
         }}
       >
-        {groups.map((group, index) => {
-          // Connect all ports in group with a line, so...
-          // 2 ports = 1 line
-          // 3 ports = 3 lines
-          // 4 ports = 6 lines
+        {ratsNestLines.map(({ key, startPoint, endPoint, isInNet }) => {
+          const transformedStart = applyToPoint(transform, startPoint)
+          const transformedEnd = applyToPoint(transform, endPoint)
 
-          const points: Array<Point> = group.map((port) =>
-            applyToPoint(transform, { x: port.x, y: port.y }),
+          return (
+            <line
+              key={key}
+              x1={transformedStart.x}
+              y1={transformedStart.y}
+              x2={transformedEnd.x}
+              y2={transformedEnd.y}
+              stroke="white"
+              strokeWidth="1"
+              strokeDasharray={isInNet ? "6,6" : undefined}
+            />
           )
-
-          const lines: Array<[Point, Point]> = []
-          for (let i = 0; i < points.length; i++) {
-            for (let j = i + 1; j < points.length; j++) {
-              lines.push([points[i], points[j]])
-            }
-          }
-
-          return lines.map(([start, end], index) => {
-            return (
-              <line
-                key={index}
-                x1={start.x}
-                y1={start.y}
-                x2={end.x}
-                y2={end.y}
-                stroke="white"
-                strokeWidth="1"
-              />
-            )
-          })
         })}
       </svg>
     </div>
