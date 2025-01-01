@@ -3,6 +3,9 @@ import { HighlightedPrimitive } from "./MouseElementTracker"
 import colors from "lib/colors"
 import { useGlobalStore } from "global-store"
 import { zIndexMap } from "lib/util/z-index-map"
+import { AnyCircuitElement } from "circuit-json"
+import { getHoveredTraces } from "lib/filter-unique-traces"
+import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
 
 const containerStyle = {
   position: "absolute",
@@ -25,6 +28,12 @@ export const getTextForHighlightedPrimitive = (
     _source_port,
   } = prim
   switch (element.type) {
+    case "pcb_trace": {
+      if (element.trace_length) {
+        return `${element.trace_length.toFixed(3)}`
+      }
+      return ""
+    }
     case "pcb_smtpad":
     case "pcb_plated_hole": {
       let s = ""
@@ -66,8 +75,18 @@ const layerColorHightlightMap = {
 
 export const HighlightedPrimitiveBoxWithText = ({
   primitive,
+  mousePos,
+  elements,
+  isMultipleTraces,
+  totalTraces,
+  traceIndex,
 }: {
+  elements: AnyCircuitElement[]
   primitive: HighlightedPrimitive
+  mousePos: { x: number; y: number }
+  isMultipleTraces: boolean
+  totalTraces: number
+  traceIndex: number
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -101,6 +120,49 @@ export const HighlightedPrimitiveBoxWithText = ({
     primitiveElement?.shape === "rotated_rect"
   ) {
     rotation = primitiveElement?.ccw_rotation
+  }
+  if (primitiveElement.type === "pcb_trace") {
+    const traceTextContext = { primitiveElement, elements, isMultipleTraces }
+    const overlayInfo = getTraceOverlayInfo(traceTextContext)
+    if (!overlayInfo) return null
+
+    // Calculate vertical position based on total traces and current trace index
+    const yOffset =
+      traceIndex >= 0
+        ? mousePos.y - 35 * (totalTraces - traceIndex)
+        : mousePos.y - 35
+
+    return (
+      <div
+        style={{
+          zIndex: zIndexMap.elementOverlay,
+          position: "absolute",
+          left: mousePos.x, // Use mousePos instead of x
+          top: yOffset, // Offset above cursor
+          color,
+          pointerEvents: "none",
+          transform: "translateX(-50%)", // Center horizontally
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#f2efcc",
+            color: overlayInfo.isOverLength ? "red" : "black",
+            textShadow: "none",
+            WebkitFontSmoothing: "antialiased",
+            MozOsxFontSmoothing: "grayscale",
+            padding: "6px 6px",
+            borderRadius: "6px",
+            fontSize: "14px",
+            minWidth: "45px",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {overlayInfo.text}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -162,16 +224,39 @@ export const HighlightedPrimitiveBoxWithText = ({
 
 export const ElementOverlayBox = ({
   highlightedPrimitives,
+  mousePos,
+  elements,
 }: {
+  elements: AnyCircuitElement[]
   highlightedPrimitives: HighlightedPrimitive[]
+  mousePos: { x: number; y: number }
 }) => {
   const is_moving_component = useGlobalStore((s) => s.is_moving_component)
+  const hasSmtPadAndTrace =
+    highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
+    highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
+  let primitives = highlightedPrimitives
+  // If both smtpad and trace are present, only return smtpads
+  if (hasSmtPadAndTrace) {
+    primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
+  }
+  const hoveredTraces = getHoveredTraces(primitives)
+
+  const hoveredTracesCount = hoveredTraces.length
 
   return (
     <div style={containerStyle}>
       {!is_moving_component &&
-        highlightedPrimitives.map((primitive, i) => (
-          <HighlightedPrimitiveBoxWithText key={i} primitive={primitive} />
+        primitives.map((primitive, i) => (
+          <HighlightedPrimitiveBoxWithText
+            key={i}
+            primitive={primitive}
+            mousePos={mousePos}
+            elements={elements}
+            isMultipleTraces={hoveredTracesCount > 1}
+            totalTraces={hoveredTracesCount}
+            traceIndex={hoveredTraces.indexOf(primitive)}
+          />
         ))}
     </div>
   )

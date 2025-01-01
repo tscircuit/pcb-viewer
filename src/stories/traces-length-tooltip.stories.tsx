@@ -1,0 +1,48 @@
+import type { Meta } from "@storybook/react"
+import { Circuit } from "@tscircuit/core"
+import type React from "react"
+import { PCBViewer } from "../PCBViewer"
+
+export const tracesLengthTooltip: React.FC = () => {
+  const circuit = new Circuit()
+
+  circuit.add(
+    <board width="40mm" height="20mm">
+      <chip name="U1" footprint="soic8" pcbX={-2} pcbY={4} pcbRotation={20} />
+      <chip name="U2" footprint="soic8" pcbX={10} pcbY={4} pcbRotation={45} />
+      <chip name="U3" footprint="soic8" pcbX={-12} pcbY={4} pcbRotation={80} />
+      <chip name="U4" footprint="soic8" pcbX={-2} pcbY={-4} pcbRotation={120} />
+      <chip name="U5" footprint="soic8" pcbX={10} pcbY={-4} pcbRotation={170} />
+      <capacitor
+        name="U6"
+        capacitance={"0.1uF"}
+        footprint="cap0402"
+        pcbX={-12}
+        pcbY={-4}
+        pcbRotation={250}
+        maxDecouplingTraceLength={30}
+      />
+      <trace maxLength={5} from=".U1 .pin1" to=".U2 .pin3" />
+      <trace maxLength={30} from=".U3 .pin1" to=".U4 .pin3" />
+      <trace from=".U5 .pin1" to=".U6 .pin2" />
+      <trace from=".U5 .pin1" to=".U3 .pin2" />
+      <trace from=".U5 .pin1" to=".U3 .pin3" />
+      <trace from=".U5 .pin1" to=".U3 .pin4" />
+    </board>,
+  )
+
+  const soup = circuit.getCircuitJson()
+
+  return (
+    <div style={{ backgroundColor: "black" }}>
+      <PCBViewer soup={soup} />
+    </div>
+  )
+}
+
+const meta: Meta<typeof tracesLengthTooltip> = {
+  title: "Traces Length",
+  component: tracesLengthTooltip,
+}
+
+export default meta

@@ -47,6 +47,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   return (
     <MouseElementTracker
+      elements={elements}
       transform={transform}
       primitives={primitivesWithoutInteractionMetadata}
       onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
