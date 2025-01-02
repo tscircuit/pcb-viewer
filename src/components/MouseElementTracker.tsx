@@ -5,6 +5,7 @@ import { Primitive } from "lib/types"
 import { ElementOverlayBox } from "./ElementOverlayBox"
 import { AnyCircuitElement } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
 
 export const MouseElementTracker = ({
   elements,
@@ -72,53 +73,25 @@ export const MouseElementTracker = ({
           const y = e.clientY - rect.top
           setMousePos({ x, y })
           const rwPoint = applyToPoint(inverse(transform), { x, y })
-
           const newMousedPrimitives: Primitive[] = []
           for (const primitive of primitives) {
+            if (!primitive._element) continue
             if ("x1" in primitive && primitive._element?.type === "pcb_trace") {
-              // For traces, check if mouse point is near the line
-              const dx = primitive.x2 - primitive.x1
-              const dy = primitive.y2 - primitive.y1
-              const len = Math.sqrt(dx * dx + dy * dy)
+              const distance = pointToSegmentDistance(
+                { x: rwPoint.x, y: rwPoint.y },
+                { x: primitive.x1, y: primitive.y1 },
+                { x: primitive.x2, y: primitive.y2 },
+              )
 
-              if (len === 0) continue // Skip zero-length traces
-
-              // Calculate distance from point to line segment using a simpler method
               const lineWidth = primitive.width || 0.5
               const detectionThreshold =
-                Math.max(lineWidth * 20, 2) / transform!.a // Increased from 4 to 20
+                Math.max(lineWidth * 25, 2) / transform!.a
 
-              // Check if point is within bounding box first (optimization)
-              const minX =
-                Math.min(primitive.x1, primitive.x2) - detectionThreshold
-              const maxX =
-                Math.max(primitive.x1, primitive.x2) + detectionThreshold
-              const minY =
-                Math.min(primitive.y1, primitive.y2) - detectionThreshold
-              const maxY =
-                Math.max(primitive.y1, primitive.y2) + detectionThreshold
-
-              if (
-                rwPoint.x >= minX &&
-                rwPoint.x <= maxX &&
-                rwPoint.y >= minY &&
-                rwPoint.y <= maxY
-              ) {
-                // Calculate actual distance to line
-                const numerator = Math.abs(
-                  (primitive.x2 - primitive.x1) * (primitive.y1 - rwPoint.y) -
-                    (primitive.x1 - rwPoint.x) * (primitive.y2 - primitive.y1),
-                )
-                const distance = numerator / len
-
-                if (distance < detectionThreshold) {
-                  newMousedPrimitives.push(primitive)
-                }
+              if (distance < detectionThreshold) {
+                newMousedPrimitives.push(primitive)
               }
               continue
             }
-            if (!primitive._element) continue
-
             // Check if primitive has x,y coordinates
             if (!("x" in primitive && "y" in primitive)) continue
 

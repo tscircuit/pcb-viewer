@@ -4,8 +4,8 @@ import colors from "lib/colors"
 import { useGlobalStore } from "global-store"
 import { zIndexMap } from "lib/util/z-index-map"
 import { AnyCircuitElement } from "circuit-json"
-import { getHoveredTraces } from "lib/filter-unique-traces"
 import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
+import { getShortestTrace } from "lib/get-shortest-trace"
 
 const containerStyle = {
   position: "absolute",
@@ -77,16 +77,10 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
   elements,
-  isMultipleTraces,
-  totalTraces,
-  traceIndex,
 }: {
   elements: AnyCircuitElement[]
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
-  isMultipleTraces: boolean
-  totalTraces: number
-  traceIndex: number
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -121,27 +115,24 @@ export const HighlightedPrimitiveBoxWithText = ({
   ) {
     rotation = primitiveElement?.ccw_rotation
   }
+  // In HighlightedPrimitiveBoxWithText component
   if (primitiveElement.type === "pcb_trace") {
-    const traceTextContext = { primitiveElement, elements, isMultipleTraces }
+    const traceTextContext = { primitiveElement, elements }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
     if (!overlayInfo) return null
 
-    // Calculate vertical position based on total traces and current trace index
-    const yOffset =
-      traceIndex >= 0
-        ? mousePos.y - 35 * (totalTraces - traceIndex)
-        : mousePos.y - 35
+    const yOffset = mousePos.y - 35
 
     return (
       <div
         style={{
           zIndex: zIndexMap.elementOverlay,
           position: "absolute",
-          left: mousePos.x, // Use mousePos instead of x
-          top: yOffset, // Offset above cursor
+          left: mousePos.x,
+          top: yOffset,
           color,
           pointerEvents: "none",
-          transform: "translateX(-50%)", // Center horizontally
+          transform: "translateX(-50%)",
         }}
       >
         <div
@@ -235,14 +226,14 @@ export const ElementOverlayBox = ({
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
+
   let primitives = highlightedPrimitives
   // If both smtpad and trace are present, only return smtpads
   if (hasSmtPadAndTrace) {
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
-  const hoveredTraces = getHoveredTraces(primitives)
-
-  const hoveredTracesCount = hoveredTraces.length
+  // When having multiple traces filter traces to get only the shortest one
+  primitives = getShortestTrace(primitives)
 
   return (
     <div style={containerStyle}>
@@ -253,9 +244,6 @@ export const ElementOverlayBox = ({
             primitive={primitive}
             mousePos={mousePos}
             elements={elements}
-            isMultipleTraces={hoveredTracesCount > 1}
-            totalTraces={hoveredTracesCount}
-            traceIndex={hoveredTraces.indexOf(primitive)}
           />
         ))}
     </div>
