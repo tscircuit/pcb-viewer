@@ -5,7 +5,7 @@ import { useGlobalStore } from "global-store"
 import { zIndexMap } from "lib/util/z-index-map"
 import { AnyCircuitElement } from "circuit-json"
 import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
-import { getSingleTrace } from "lib/get-single-trace"
+import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
 
 const containerStyle = {
   position: "absolute",
@@ -233,7 +233,7 @@ export const ElementOverlayBox = ({
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
   // When having multiple traces filter traces to get only the shortest one
-  primitives = getSingleTrace(primitives)
+  primitives = filterTracesIfMultiple(primitives)
 
   return (
     <div style={containerStyle}>

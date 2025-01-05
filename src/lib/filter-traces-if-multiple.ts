@@ -1,6 +1,6 @@
 import { HighlightedPrimitive } from "../components/MouseElementTracker"
 
-export function getSingleTrace(
+export function filterTracesIfMultiple(
   primitives: HighlightedPrimitive[],
 ): HighlightedPrimitive[] {
   const DISPLAY_ALL_TRACE_LENGTHS = false
