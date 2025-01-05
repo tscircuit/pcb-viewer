@@ -5,20 +5,23 @@ import { Primitive } from "lib/types"
 import { ElementOverlayBox } from "./ElementOverlayBox"
 import { AnyCircuitElement } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
 
 export const MouseElementTracker = ({
+  elements,
   children,
   transform,
   primitives,
   onMouseHoverOverPrimitives,
 }: {
+  elements: AnyCircuitElement[]
   children: any
   transform?: Matrix
   primitives: Primitive[]
   onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void
 }) => {
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
-
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const highlightedPrimitives = useMemo(() => {
     const highlightedPrimitives: HighlightedPrimitive[] = []
     for (const primitive of mousedPrimitives) {
@@ -68,26 +71,47 @@ export const MouseElementTracker = ({
           const rect = e.currentTarget.getBoundingClientRect()
           const x = e.clientX - rect.left
           const y = e.clientY - rect.top
+          setMousePos({ x, y })
           const rwPoint = applyToPoint(inverse(transform), { x, y })
-
           const newMousedPrimitives: Primitive[] = []
           for (const primitive of primitives) {
-            if (
-              !(
-                "x" in primitive &&
-                "y" in primitive &&
-                (("w" in primitive && "h" in primitive) || "r" in primitive)
-              )
-            )
-              continue
             if (!primitive._element) continue
+            if ("x1" in primitive && primitive._element?.type === "pcb_trace") {
+              const distance = pointToSegmentDistance(
+                { x: rwPoint.x, y: rwPoint.y },
+                { x: primitive.x1, y: primitive.y1 },
+                { x: primitive.x2, y: primitive.y2 },
+              )
 
-            const w = "w" in primitive ? primitive.w : primitive.r * 2
-            const h = "h" in primitive ? primitive.h : primitive.r * 2
+              const lineWidth = primitive.width || 0.5
+              const detectionThreshold =
+                Math.max(lineWidth * 25, 2) / transform!.a
+
+              if (distance < detectionThreshold) {
+                newMousedPrimitives.push(primitive)
+              }
+              continue
+            }
+            // Check if primitive has x,y coordinates
+            if (!("x" in primitive && "y" in primitive)) continue
+
+            // Handle different primitive types
+            let w = 0,
+              h = 0
+
+            if ("w" in primitive && "h" in primitive) {
+              w = primitive.w
+              h = primitive.h
+            } else if ("r" in primitive) {
+              w = (primitive as any).r * 2
+              h = (primitive as any).r * 2
+            } else {
+              continue // Skip primitives without size
+            }
 
             if (
-              Math.abs(primitive.x - rwPoint.x) < w / 2 &&
-              Math.abs(primitive.y - rwPoint.y) < h / 2
+              Math.abs((primitive as any).x - rwPoint.x) < w / 2 &&
+              Math.abs((primitive as any).y - rwPoint.y) < h / 2
             ) {
               newMousedPrimitives.push(primitive)
             }
@@ -108,7 +132,11 @@ export const MouseElementTracker = ({
       }}
     >
       {children}
-      <ElementOverlayBox highlightedPrimitives={highlightedPrimitives} />
+      <ElementOverlayBox
+        elements={elements}
+        mousePos={mousePos}
+        highlightedPrimitives={highlightedPrimitives}
+      />
     </div>
   )
 }
