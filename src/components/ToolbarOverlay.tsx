@@ -300,9 +300,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               <span
                 style={{
                   fontSize: "8px",
-                  marginTop: "2px",
                   transform: isViewMenuOpen ? "rotate(180deg)" : "rotate(0)",
-                  transition: "transform 0.15s ease",
+                  transition: "transform 0.1s ease",
                   display: "inline-block",
                 }}
               >
@@ -312,7 +311,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             {isViewMenuOpen && (
               <div style={{ marginTop: 4, minWidth: 120 }}>
                 <CheckboxMenuItem
-                  label="Show Overlapped Traces"
+                  label="Show All Trace Lengths"
                   checked={is_showing_multiple_traces_length}
                   onClick={() => {
                     setIsShowingMultipleTracesLength(

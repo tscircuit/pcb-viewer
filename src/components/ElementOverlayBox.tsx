@@ -77,16 +77,10 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
   elements,
-  isMultipleTraces,
-  totalTraces,
-  traceIndex,
 }: {
   elements: AnyCircuitElement[]
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
-  isMultipleTraces: boolean
-  totalTraces: number
-  traceIndex: number
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -121,19 +115,13 @@ export const HighlightedPrimitiveBoxWithText = ({
   ) {
     rotation = primitiveElement?.ccw_rotation
   }
-
+  // In HighlightedPrimitiveBoxWithText component
   if (primitiveElement.type === "pcb_trace") {
     const traceTextContext = { primitiveElement, elements }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
     if (!overlayInfo) return null
 
-    // Calculate vertical offset based on trace index
-    const baseOffset = 35
-    const spacing = 30 // Space between traces
-    const yOffset =
-      isMultipleTraces && traceIndex >= 0
-        ? mousePos.y - baseOffset - traceIndex * spacing
-        : mousePos.y - baseOffset
+    const yOffset = mousePos.y - 35
 
     return (
       <div
@@ -239,29 +227,20 @@ export const ElementOverlayBox = ({
       s.is_moving_component,
       s.is_showing_multiple_traces_length,
     ])
-  const hasSmtPadAndTrace = highlightedPrimitives.some(
-    (p) =>
-      p._element.type === "pcb_smtpad" &&
-      highlightedPrimitives.some((p) => p._element.type === "pcb_trace"),
-  )
+  const hasSmtPadAndTrace =
+    highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
+    highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
 
   let primitives = highlightedPrimitives
   // If both smtpad and trace are present, only return smtpads
   if (hasSmtPadAndTrace) {
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
-
-  // Get filtered traces
-  const traces = filterTracesIfMultiple({
+  // When having multiple traces filter traces to get only the shortest one
+  primitives = filterTracesIfMultiple({
     primitives,
     is_showing_multiple_traces_length,
   })
-  const tracesCount = traces.length
-
-  // Update primitives to use filtered traces
-  primitives = primitives
-    .filter((p) => p._element.type !== "pcb_trace")
-    .concat(traces)
 
   return (
     <div style={containerStyle}>
@@ -272,9 +251,6 @@ export const ElementOverlayBox = ({
             primitive={primitive}
             mousePos={mousePos}
             elements={elements}
-            isMultipleTraces={tracesCount > 1}
-            totalTraces={tracesCount}
-            traceIndex={traces.indexOf(primitive)}
           />
         ))}
     </div>
