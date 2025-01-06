@@ -1,11 +1,11 @@
 import { HighlightedPrimitive } from "../components/MouseElementTracker"
-import { useGlobalStore } from "global-store"
 
-export function filterTracesIfMultiple(filterTraces: {
-  primitives: HighlightedPrimitive[]
+export function filterTracesIfMultiple(filterTraces:{
+  primitives: HighlightedPrimitive[],
   is_showing_multiple_traces_length: boolean
-}) {
-  const { primitives, is_showing_multiple_traces_length } = filterTraces
+}
+): HighlightedPrimitive[] {
+  const { primitives, is_showing_multiple_traces_length: DISPLAY_ALL_TRACE_LENGTHS } = filterTraces
   // Filter traces to get only the shortest one
   const traces = primitives.filter(
     (
@@ -23,10 +23,19 @@ export function filterTracesIfMultiple(filterTraces: {
     //  to choose if we want to display multiple traces when we hover on them
 
     // Ignore all traces if we hover on multiple traces
-    if (!is_showing_multiple_traces_length)
+    if (!DISPLAY_ALL_TRACE_LENGTHS)
       return primitives.filter((p) => p._element.type !== "pcb_trace")
+
+    const shortestTrace = traces.reduce((shortest, current) => {
+      const shortestLength = shortest._element.trace_length
+      const currentLength = current._element.trace_length
+      return currentLength! < shortestLength! ? current : shortest
+    }, traces[0])
+
+    return primitives
+      .filter((p) => p._element.type !== "pcb_trace")
+      .concat([shortestTrace])
   }
 
-  // Return all traces
-  return traces
+  return primitives
 }
