@@ -162,7 +162,6 @@ export const HighlightedPrimitiveBoxWithText = ({
             whiteSpace: "nowrap",
           }}
         >
-          {isMultipleTraces ? `${traceIndex + 1}/${totalTraces}: ` : ""}
           {overlayInfo.text}
         </div>
       </div>
