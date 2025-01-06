@@ -1,12 +1,13 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.10.26",
+  "version": "1.11.0",
   "main": "dist/index.js",
+  "type": "module",
   "repository": "tscircuit/pcb-viewer",
   "license": "MIT",
   "scripts": {
     "start": "storybook dev -p 6006",
-    "build": "tsup ./src/index.tsx --dts --sourcemap --outDir dist",
+    "build": "tsup ./src/index.tsx --dts --sourcemap --format esm --outDir dist",
     "yalc": "npm run build && yalc push",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
