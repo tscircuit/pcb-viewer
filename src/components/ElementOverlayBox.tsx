@@ -77,10 +77,16 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
   elements,
+  isMultipleTraces,
+  totalTraces,
+  traceIndex,
 }: {
   elements: AnyCircuitElement[]
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
+  isMultipleTraces: boolean
+  totalTraces: number
+  traceIndex: number
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -115,13 +121,19 @@ export const HighlightedPrimitiveBoxWithText = ({
   ) {
     rotation = primitiveElement?.ccw_rotation
   }
-  // In HighlightedPrimitiveBoxWithText component
+
   if (primitiveElement.type === "pcb_trace") {
     const traceTextContext = { primitiveElement, elements }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
     if (!overlayInfo) return null
 
-    const yOffset = mousePos.y - 35
+    // Calculate vertical offset based on trace index
+    const baseOffset = 35
+    const spacing = 30 // Space between traces
+    const yOffset =
+      isMultipleTraces && traceIndex >= 0
+        ? mousePos.y - baseOffset - traceIndex * spacing
+        : mousePos.y - baseOffset
 
     return (
       <div
@@ -150,6 +162,7 @@ export const HighlightedPrimitiveBoxWithText = ({
             whiteSpace: "nowrap",
           }}
         >
+          {isMultipleTraces ? `${traceIndex + 1}/${totalTraces}: ` : ""}
           {overlayInfo.text}
         </div>
       </div>
@@ -223,17 +236,26 @@ export const ElementOverlayBox = ({
   mousePos: { x: number; y: number }
 }) => {
   const is_moving_component = useGlobalStore((s) => s.is_moving_component)
-  const hasSmtPadAndTrace =
-    highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
-    highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
+  const hasSmtPadAndTrace = highlightedPrimitives.some(
+    (p) =>
+      p._element.type === "pcb_smtpad" &&
+      highlightedPrimitives.some((p) => p._element.type === "pcb_trace"),
+  )
 
   let primitives = highlightedPrimitives
   // If both smtpad and trace are present, only return smtpads
   if (hasSmtPadAndTrace) {
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
-  // When having multiple traces filter traces to get only the shortest one
-  primitives = filterTracesIfMultiple(primitives)
+
+  // Get filtered traces
+  const traces = filterTracesIfMultiple(primitives)
+  const tracesCount = traces.length
+
+  // Update primitives to use filtered traces
+  primitives = primitives
+    .filter((p) => p._element.type !== "pcb_trace")
+    .concat(traces)
 
   return (
     <div style={containerStyle}>
@@ -244,6 +266,9 @@ export const ElementOverlayBox = ({
             primitive={primitive}
             mousePos={mousePos}
             elements={elements}
+            isMultipleTraces={tracesCount > 1}
+            totalTraces={tracesCount}
+            traceIndex={traces.indexOf(primitive)}
           />
         ))}
     </div>
