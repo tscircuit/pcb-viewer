@@ -3,6 +3,9 @@ import { HighlightedPrimitive } from "./MouseElementTracker"
 import colors from "lib/colors"
 import { useGlobalStore } from "global-store"
 import { zIndexMap } from "lib/util/z-index-map"
+import { AnyCircuitElement } from "circuit-json"
+import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
+import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
 
 const containerStyle = {
   position: "absolute",
@@ -25,6 +28,12 @@ export const getTextForHighlightedPrimitive = (
     _source_port,
   } = prim
   switch (element.type) {
+    case "pcb_trace": {
+      if (element.trace_length) {
+        return `${element.trace_length.toFixed(3)}`
+      }
+      return ""
+    }
     case "pcb_smtpad":
     case "pcb_plated_hole": {
       let s = ""
@@ -66,8 +75,12 @@ const layerColorHightlightMap = {
 
 export const HighlightedPrimitiveBoxWithText = ({
   primitive,
+  mousePos,
+  elements,
 }: {
+  elements: AnyCircuitElement[]
   primitive: HighlightedPrimitive
+  mousePos: { x: number; y: number }
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -101,6 +114,46 @@ export const HighlightedPrimitiveBoxWithText = ({
     primitiveElement?.shape === "rotated_rect"
   ) {
     rotation = primitiveElement?.ccw_rotation
+  }
+  // In HighlightedPrimitiveBoxWithText component
+  if (primitiveElement.type === "pcb_trace") {
+    const traceTextContext = { primitiveElement, elements }
+    const overlayInfo = getTraceOverlayInfo(traceTextContext)
+    if (!overlayInfo) return null
+
+    const yOffset = mousePos.y - 35
+
+    return (
+      <div
+        style={{
+          zIndex: zIndexMap.elementOverlay,
+          position: "absolute",
+          left: mousePos.x,
+          top: yOffset,
+          color,
+          pointerEvents: "none",
+          transform: "translateX(-50%)",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#f2efcc",
+            color: overlayInfo.isOverLength ? "red" : "black",
+            textShadow: "none",
+            WebkitFontSmoothing: "antialiased",
+            MozOsxFontSmoothing: "grayscale",
+            padding: "6px 6px",
+            borderRadius: "6px",
+            fontSize: "14px",
+            minWidth: "45px",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {overlayInfo.text}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -162,16 +215,36 @@ export const HighlightedPrimitiveBoxWithText = ({
 
 export const ElementOverlayBox = ({
   highlightedPrimitives,
+  mousePos,
+  elements,
 }: {
+  elements: AnyCircuitElement[]
   highlightedPrimitives: HighlightedPrimitive[]
+  mousePos: { x: number; y: number }
 }) => {
   const is_moving_component = useGlobalStore((s) => s.is_moving_component)
+  const hasSmtPadAndTrace =
+    highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
+    highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
+
+  let primitives = highlightedPrimitives
+  // If both smtpad and trace are present, only return smtpads
+  if (hasSmtPadAndTrace) {
+    primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
+  }
+  // When having multiple traces filter traces to get only the shortest one
+  primitives = filterTracesIfMultiple(primitives)
 
   return (
     <div style={containerStyle}>
       {!is_moving_component &&
-        highlightedPrimitives.map((primitive, i) => (
-          <HighlightedPrimitiveBoxWithText key={i} primitive={primitive} />
+        primitives.map((primitive, i) => (
+          <HighlightedPrimitiveBoxWithText
+            key={i}
+            primitive={primitive}
+            mousePos={mousePos}
+            elements={elements}
+          />
         ))}
     </div>
   )
