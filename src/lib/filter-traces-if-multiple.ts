@@ -1,14 +1,12 @@
 import { HighlightedPrimitive } from "../components/MouseElementTracker"
 import { useGlobalStore } from "global-store"
 
-export function filterTracesIfMultiple(
-  primitives: HighlightedPrimitive[],
-): HighlightedPrimitive[] {
-  const is_showing_multiple_traces_length = useGlobalStore(
-    (s) => s.is_showing_multiple_traces_length,
-  )
-
+export function filterTracesIfMultiple(filterTraces: {
+  primitives: HighlightedPrimitive[]
+  is_showing_multiple_traces_length: boolean
+}): HighlightedPrimitive[] {
   // Filter traces
+  const { primitives, is_showing_multiple_traces_length } = filterTraces
   const traces = primitives.filter((p) => p._element.type === "pcb_trace")
 
   if (traces.length > 1) {

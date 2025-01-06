@@ -234,7 +234,11 @@ export const ElementOverlayBox = ({
   highlightedPrimitives: HighlightedPrimitive[]
   mousePos: { x: number; y: number }
 }) => {
-  const is_moving_component = useGlobalStore((s) => s.is_moving_component)
+  const [is_moving_component, is_showing_multiple_traces_length] =
+    useGlobalStore((s) => [
+      s.is_moving_component,
+      s.is_showing_multiple_traces_length,
+    ])
   const hasSmtPadAndTrace = highlightedPrimitives.some(
     (p) =>
       p._element.type === "pcb_smtpad" &&
@@ -248,7 +252,10 @@ export const ElementOverlayBox = ({
   }
 
   // Get filtered traces
-  const traces = filterTracesIfMultiple(primitives)
+  const traces = filterTracesIfMultiple({
+    primitives,
+    is_showing_multiple_traces_length,
+  })
   const tracesCount = traces.length
 
   // Update primitives to use filtered traces
