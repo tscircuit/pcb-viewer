@@ -240,6 +240,7 @@ export const ElementOverlayBox = ({
   primitives = filterTracesIfMultiple({
     primitives,
     is_showing_multiple_traces_length,
+    elements,
   })
 
   return (
