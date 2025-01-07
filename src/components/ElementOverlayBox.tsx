@@ -222,7 +222,11 @@ export const ElementOverlayBox = ({
   highlightedPrimitives: HighlightedPrimitive[]
   mousePos: { x: number; y: number }
 }) => {
-  const is_moving_component = useGlobalStore((s) => s.is_moving_component)
+  const [is_moving_component, is_showing_multiple_traces_length] =
+    useGlobalStore((s) => [
+      s.is_moving_component,
+      s.is_showing_multiple_traces_length,
+    ])
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
@@ -233,7 +237,11 @@ export const ElementOverlayBox = ({
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
   // When having multiple traces filter traces to get only the shortest one
-  primitives = filterTracesIfMultiple(primitives)
+  primitives = filterTracesIfMultiple({
+    primitives,
+    is_showing_multiple_traces_length,
+    elements,
+  })
 
   return (
     <div style={containerStyle}>

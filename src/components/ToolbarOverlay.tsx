@@ -70,24 +70,68 @@ export const ToolbarButton = ({ children, ...props }: any) => (
     {children}
   </div>
 )
+const CheckboxMenuItem = ({
+  label,
+  checked,
+  onClick,
+}: {
+  label: string
+  checked: boolean
+  onClick: () => void
+}) => {
+  return (
+    <div
+      className={css`
+        margin-top: 2px;
+        padding: 4px;
+        padding-left: 8px;
+        padding-right: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+      `}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick()
+      }}
+    >
+      <input type="checkbox" checked={checked} />
+      <span style={{ color: "#eee" }}>{label}</span>
+    </div>
+  )
+}
 
 export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isMouseOverContainer, setIsMouseOverContainer] = useGlobalStore(
     (s) => [s.is_mouse_over_container, s.setIsMouseOverContainer],
   ) as [boolean, (isFocused: boolean) => void]
+  const [isViewMenuOpen, setViewMenuOpen] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [selectedLayer, selectLayer] = useGlobalStore(
     (s) => [s.selected_layer, s.selectLayer] as const,
   )
-  const [in_move_footprint_mode, in_draw_trace_mode, is_showing_rats_nest] =
-    useGlobalStore((s) => [
-      s.in_move_footprint_mode,
-      s.in_draw_trace_mode,
-      s.is_showing_rats_nest,
-    ])
+  const [
+    in_move_footprint_mode,
+    in_draw_trace_mode,
+    is_showing_rats_nest,
+    is_showing_multiple_traces_length,
+  ] = useGlobalStore((s) => [
+    s.in_move_footprint_mode,
+    s.in_draw_trace_mode,
+    s.is_showing_rats_nest,
+    s.is_showing_multiple_traces_length,
+  ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
+  const setIsShowingMultipleTracesLength = useGlobalStore(
+    (s) => s.setIsShowingMultipleTracesLength,
+  )
 
   useHotKey("1", () => selectLayer("top"))
   useHotKey("2", () => selectLayer("bottom"))
@@ -236,6 +280,47 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           <div>
             {is_showing_rats_nest ? "✖ " : ""}
             Rats Nest
+          </div>
+        </ToolbarButton>
+
+        <ToolbarButton
+          onClick={() => {
+            setViewMenuOpen(!isViewMenuOpen)
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              View{" "}
+              <span
+                style={{
+                  fontSize: "8px",
+                  transform: isViewMenuOpen ? "rotate(180deg)" : "rotate(0)",
+                  transition: "transform 0.1s ease",
+                  display: "inline-block",
+                }}
+              >
+                ▼
+              </span>
+            </div>
+            {isViewMenuOpen && (
+              <div style={{ marginTop: 4, minWidth: 120 }}>
+                <CheckboxMenuItem
+                  label="Show All Trace Lengths"
+                  checked={is_showing_multiple_traces_length}
+                  onClick={() => {
+                    setIsShowingMultipleTracesLength(
+                      !is_showing_multiple_traces_length,
+                    )
+                  }}
+                />
+              </div>
+            )}
           </div>
         </ToolbarButton>
       </div>
