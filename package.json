@@ -27,7 +27,7 @@
     "@storybook/react": "^8.0.6",
     "@swc/core": "^1.4.12",
     "@tscircuit/core": "0.0.254",
-    "@tscircuit/eagle-xml-converter": "^0.0.6",
+    "@tscircuit/eagle-xml-converter": "^0.0.7",
     "@tscircuit/props": "^0.0.124",
     "@tscircuit/soup-util": "^0.0.38",
     "@types/color": "^3.0.6",
