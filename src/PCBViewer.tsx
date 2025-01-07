@@ -35,12 +35,13 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
 }: Props) => {
-  soup ??= circuitJson
+  circuitJson ??= soup
   const {
     circuitJson: circuitJsonFromChildren,
     error: errorFromChildren,
     isLoading,
   } = useRenderedCircuit(children)
+  circuitJson ??= circuitJsonFromChildren ?? []
 
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
@@ -54,8 +55,6 @@ export const PCBViewer = ({
   })
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
-
-  const stateElements = circuitJsonFromChildren ?? soup ?? []
 
   const resetTransform = () => {
     const elmBounds =
@@ -88,12 +87,12 @@ export const PCBViewer = ({
     }
   }, [children, refDimensions])
 
-  const pcbElmsPreEdit: AnyCircuitElement[] = (
-    circuitJson ??
-    soup ??
-    stateElements
-  ).filter(
-    (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
+  const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
+    () =>
+      circuitJson.filter(
+        (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
+      ),
+    [circuitJson],
   )
 
   const elements = useMemo(() => {
