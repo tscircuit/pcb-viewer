@@ -51,8 +51,8 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
+    "circuit-json-to-connectivity-map": "^0.0.18",
     "@tscircuit/math-utils": "^0.0.7",
-    "circuit-json-to-connectivity-map": "^0.0.16",
     "circuit-to-svg": "^0.0.36",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
