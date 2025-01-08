@@ -29,7 +29,7 @@
     "@tscircuit/core": "0.0.255",
     "@tscircuit/eagle-xml-converter": "^0.0.7",
     "@tscircuit/props": "^0.0.128",
-    "@tscircuit/soup-util": "^0.0.38",
+    "@tscircuit/soup-util": "^0.0.41",
     "@types/color": "^3.0.6",
     "@types/node": "18.7.23",
     "@types/react": "^18.3.3",
