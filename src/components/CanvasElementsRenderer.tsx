@@ -23,6 +23,7 @@ export interface CanvasElementsRendererProps {
   height?: number
   grid?: GridConfig
   allowEditing: boolean
+  focusOnHover: boolean
   cancelPanDrag: Function
   onCreateEditEvent: (event: EditEvent) => void
   onModifyEditEvent: (event: Partial<EditEvent>) => void
@@ -50,6 +51,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       elements={elements}
       transform={transform}
       primitives={primitivesWithoutInteractionMetadata}
+      focusOnHover={props.focusOnHover}
       onMouseHoverOverPrimitives={(primitivesHoveredOver) => {
         const primitiveIdsInMousedOverNet: string[] = []
         for (const primitive of primitivesHoveredOver) {

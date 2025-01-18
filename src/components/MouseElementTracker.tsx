@@ -12,12 +12,14 @@ export const MouseElementTracker = ({
   children,
   transform,
   primitives,
+  focusOnHover,
   onMouseHoverOverPrimitives,
 }: {
   elements: AnyCircuitElement[]
   children: any
   transform?: Matrix
   primitives: Primitive[]
+  focusOnHover: boolean
   onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void
 }) => {
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
@@ -115,6 +117,14 @@ export const MouseElementTracker = ({
             ) {
               newMousedPrimitives.push(primitive)
             }
+          }
+
+          if (!focusOnHover) {
+            if (mousedPrimitives.length > 0) {
+              setMousedPrimitives([])
+              onMouseHoverOverPrimitives([])
+            }
+            return
           }
 
           if (
