@@ -47,8 +47,10 @@ const HoverBehaviorDemo: React.FC<{ focusOnHover?: boolean }> = ({
   const soup = circuit.getCircuitJson()
 
   return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} focusOnHover={focusOnHover} />
+    <div style={{ height: "200vh", padding: "100px 0" }}>
+      <div style={{ backgroundColor: "black", margin: "300px 0" }}>
+        <PCBViewer soup={soup} focusOnHover={focusOnHover} />
+      </div>
     </div>
   )
 }
@@ -62,7 +64,7 @@ export const HoverDisabled: Story = {
     docs: {
       description: {
         story:
-          "Hover focus is disabled by default. Hovering over components and traces will not highlight them.",
+          "Hover focus is disabled by default. Hovering over the PCB viewer will not cause the page to scroll or adjust focus position.",
       },
     },
   },
@@ -77,7 +79,7 @@ export const HoverEnabled: Story = {
     docs: {
       description: {
         story:
-          "Hover focus is enabled. Hovering over components and traces will highlight them and their connected elements.",
+          "Hover focus is enabled. Hovering over the PCB viewer will cause it to receive focus and may adjust the scroll position.",
       },
     },
   },
