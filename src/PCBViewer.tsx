@@ -23,6 +23,7 @@ type Props = {
   editEvents?: EditEvent[]
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
+  focusOnHover?: boolean
 }
 
 export const PCBViewer = ({
@@ -34,6 +35,7 @@ export const PCBViewer = ({
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
+  focusOnHover = false,
 }: Props) => {
   circuitJson ??= soup
   const {
@@ -123,6 +125,7 @@ export const PCBViewer = ({
             height={height}
             width={refDimensions.width}
             allowEditing={allowEditing}
+            focusOnHover={focusOnHover}
             cancelPanDrag={cancelPanDrag}
             onCreateEditEvent={onCreateEditEvent}
             onModifyEditEvent={onModifyEditEvent}

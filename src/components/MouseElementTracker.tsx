@@ -1,9 +1,9 @@
-import React, { useState } from "react"
-import { useMemo } from "react"
-import { Matrix, applyToPoint, inverse } from "transformation-matrix"
-import { Primitive } from "lib/types"
+import React, { useState, useMemo } from "react"
+import type { Matrix } from "transformation-matrix"
+import { applyToPoint, inverse } from "transformation-matrix"
+import type { Primitive } from "lib/types"
 import { ElementOverlayBox } from "./ElementOverlayBox"
-import { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 
@@ -43,7 +43,7 @@ export const MouseElementTracker = ({
 
       // FANCY: If 2+ highlighted primitives inhabit the same space, give
       // them an incrementing same_space_index
-      let same_space_index = highlightedPrimitives.filter(
+      const same_space_index = highlightedPrimitives.filter(
         (hp) =>
           screenPos.x === hp.screen_x &&
           screenPos.y === hp.screen_y &&
@@ -96,8 +96,8 @@ export const MouseElementTracker = ({
             if (!("x" in primitive && "y" in primitive)) continue
 
             // Handle different primitive types
-            let w = 0,
-              h = 0
+            let w = 0
+            let h = 0
 
             if ("w" in primitive && "h" in primitive) {
               w = primitive.w

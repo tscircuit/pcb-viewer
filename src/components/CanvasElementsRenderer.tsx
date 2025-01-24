@@ -3,14 +3,14 @@ import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { pcb_port, type AnyCircuitElement } from "circuit-json"
 import { useMemo } from "react"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
-import { Matrix } from "transformation-matrix"
-import { GridConfig, Primitive } from "lib/types"
+import type { Matrix } from "transformation-matrix"
+import type { GridConfig, Primitive } from "lib/types"
 import { MouseElementTracker } from "./MouseElementTracker"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
-import { EditEvent } from "lib/edit-events"
+import type { EditEvent } from "lib/edit-events"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
@@ -23,7 +23,8 @@ export interface CanvasElementsRendererProps {
   height?: number
   grid?: GridConfig
   allowEditing: boolean
-  cancelPanDrag: Function
+  focusOnHover: boolean
+  cancelPanDrag: () => void
   onCreateEditEvent: (event: EditEvent) => void
   onModifyEditEvent: (event: Partial<EditEvent>) => void
 }
@@ -95,7 +96,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           onCreateEditEvent={props.onCreateEditEvent as any}
           onModifyEditEvent={props.onModifyEditEvent as any}
         >
-          <DimensionOverlay transform={transform!}>
+          <DimensionOverlay transform={transform!} focusOnHover={props.focusOnHover}>
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>
                 <RatsNestOverlay transform={transform} soup={elements}>
