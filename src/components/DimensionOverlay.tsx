@@ -1,13 +1,15 @@
 import { zIndexMap } from "lib/util/z-index-map"
 import { useEffect, useRef, useState } from "react"
-import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
+import type { Matrix } from "transformation-matrix"
+import { applyToPoint, identity, inverse } from "transformation-matrix"
 
 interface Props {
   transform?: Matrix
   children: any
+  focusOnHover?: boolean
 }
 
-export const DimensionOverlay = ({ children, transform }: Props) => {
+export const DimensionOverlay = ({ children, transform, focusOnHover = false }: Props) => {
   if (!transform) transform = identity()
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
@@ -83,10 +85,11 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
   return (
     <div
       ref={containerRef}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: <explanation>
       tabIndex={0}
       style={{ position: "relative" }}
       onMouseEnter={() => {
-        if (containerRef.current) {
+        if (focusOnHover && containerRef.current) {
           containerRef.current.focus()
         }
       }}
@@ -162,6 +165,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
               {Math.abs(dStart.y - dEnd.y).toFixed(2)}
             </div>
           </div>
+          {/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
           <svg
             style={{
               position: "absolute",
@@ -232,7 +236,7 @@ export const DimensionOverlay = ({ children, transform }: Props) => {
             {dEnd.x.toFixed(2)},{dEnd.y.toFixed(2)})<br />
             dist:{" "}
             {Math.sqrt(
-              Math.pow(dEnd.x - dStart.x, 2) + Math.pow(dEnd.y - dStart.y, 2),
+              ((dEnd.x - dStart.x) ** 2) + ((dEnd.y - dStart.y) ** 2)
             ).toFixed(2)}
           </div>
         </>
