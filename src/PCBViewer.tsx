@@ -24,6 +24,7 @@ type Props = {
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
   focusOnHover?: boolean
+  clickToEnableZoom?: boolean
 }
 
 export const PCBViewer = ({
@@ -36,6 +37,7 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
   focusOnHover = false,
+  clickToEnableZoom = false,
 }: Props) => {
   circuitJson ??= soup
   const {
@@ -45,6 +47,7 @@ export const PCBViewer = ({
   } = useRenderedCircuit(children)
   circuitJson ??= circuitJsonFromChildren ?? []
 
+  const [isZoomEnabled, setIsZoomEnabled] = useState(!clickToEnableZoom)
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -84,12 +87,17 @@ export const PCBViewer = ({
   }
 
   useEffect(() => {
-    if (refDimensions && refDimensions.width !== 0 && (children || soup)) {
+    if (
+      refDimensions &&
+      refDimensions.width !== 0 &&
+      (children || soup) &&
+      (!clickToEnableZoom || isZoomEnabled)
+    ) {
       resetTransform()
     }
-  }, [children, refDimensions])
+  }, [children, soup, refDimensions, clickToEnableZoom, isZoomEnabled])
 
-  const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
+  const pcbElmsPreEdit = useMemo(
     () =>
       circuitJson.filter(
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
@@ -115,33 +123,64 @@ export const PCBViewer = ({
     onEditEventsChanged?.(newEditEvents)
   }
 
+  const renderContent = () => (
+    <div ref={ref as any}>
+      <ContextProviders initialState={initialState}>
+        <CanvasElementsRenderer
+          key={refDimensions.width}
+          transform={transform}
+          height={height}
+          width={refDimensions.width}
+          allowEditing={allowEditing}
+          focusOnHover={focusOnHover}
+          cancelPanDrag={isZoomEnabled ? cancelPanDrag : () => {}}
+          onCreateEditEvent={onCreateEditEvent}
+          onModifyEditEvent={onModifyEditEvent}
+          grid={{
+            spacing: 1,
+            view_window: {
+              left: 0,
+              right: refDimensions.width || 500,
+              top: height,
+              bottom: 0,
+            },
+          }}
+          elements={elements}
+        />
+        <ToastContainer />
+      </ContextProviders>
+    </div>
+  )
+
   return (
-    <div ref={transformRef as any}>
-      <div ref={ref as any}>
-        <ContextProviders initialState={initialState}>
-          <CanvasElementsRenderer
-            key={refDimensions.width}
-            transform={transform}
-            height={height}
-            width={refDimensions.width}
-            allowEditing={allowEditing}
-            focusOnHover={focusOnHover}
-            cancelPanDrag={cancelPanDrag}
-            onCreateEditEvent={onCreateEditEvent}
-            onModifyEditEvent={onModifyEditEvent}
-            grid={{
-              spacing: 1,
-              view_window: {
-                left: 0,
-                right: refDimensions.width || 500,
-                top: height,
-                bottom: 0,
-              },
-            }}
-            elements={elements}
-          />
-          <ToastContainer />
-        </ContextProviders>
+    <div
+      onClick={() => {
+        if (clickToEnableZoom && !isZoomEnabled) {
+          setIsZoomEnabled(true)
+        }
+      }}
+      style={{ position: "relative", width: "100%", height: "100%" }}
+    >
+      {clickToEnableZoom && !isZoomEnabled && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 10,
+            right: 10,
+            backgroundColor: "black",
+            color: "white",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            pointerEvents: "none",
+            zIndex: 100,
+          }}
+        >
+          Click to Enable Zoom
+        </div>
+      )}
+      <div ref={isZoomEnabled ? transformRef as any : undefined}>
+        {renderContent()}
       </div>
     </div>
   )
