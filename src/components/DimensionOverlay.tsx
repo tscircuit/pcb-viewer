@@ -9,7 +9,11 @@ interface Props {
   focusOnHover?: boolean
 }
 
-export const DimensionOverlay = ({ children, transform, focusOnHover = false }: Props) => {
+export const DimensionOverlay = ({
+  children,
+  transform,
+  focusOnHover = false,
+}: Props) => {
   if (!transform) transform = identity()
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
@@ -236,7 +240,7 @@ export const DimensionOverlay = ({ children, transform, focusOnHover = false }: 
             {dEnd.x.toFixed(2)},{dEnd.y.toFixed(2)})<br />
             dist:{" "}
             {Math.sqrt(
-              ((dEnd.x - dStart.x) ** 2) + ((dEnd.y - dStart.y) ** 2)
+              (dEnd.x - dStart.x) ** 2 + (dEnd.y - dStart.y) ** 2,
             ).toFixed(2)}
           </div>
         </>

@@ -179,7 +179,7 @@ export const PCBViewer = ({
           Click to Enable Zoom
         </div>
       )}
-      <div ref={isZoomEnabled ? transformRef as any : undefined}>
+      <div ref={isZoomEnabled ? (transformRef as any) : undefined}>
         {renderContent()}
       </div>
     </div>

@@ -96,7 +96,10 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           onCreateEditEvent={props.onCreateEditEvent as any}
           onModifyEditEvent={props.onModifyEditEvent as any}
         >
-          <DimensionOverlay transform={transform!} focusOnHover={props.focusOnHover}>
+          <DimensionOverlay
+            transform={transform!}
+            focusOnHover={props.focusOnHover}
+          >
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>
                 <RatsNestOverlay transform={transform} soup={elements}>
