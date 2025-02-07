@@ -176,7 +176,7 @@ export const PCBViewer = ({
               pointerEvents: "none",
             }}
           >
-            Click to Enable Zoom
+            Click to Interact
           </div>
         </div>
       )}
