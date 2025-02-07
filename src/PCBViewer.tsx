@@ -57,7 +57,9 @@ export const PCBViewer = ({
   } = useMouseMatrixTransform({
     transform,
     onSetTransform: setTransformInternal,
+    enabled: isZoomEnabled,
   })
+
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
@@ -95,9 +97,9 @@ export const PCBViewer = ({
     ) {
       resetTransform()
     }
-  }, [children, soup, refDimensions, clickToEnableZoom, isZoomEnabled])
+  }, [children, refDimensions, clickToEnableZoom, isZoomEnabled])
 
-  const pcbElmsPreEdit = useMemo(
+  const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
     () =>
       circuitJson.filter(
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
@@ -123,65 +125,61 @@ export const PCBViewer = ({
     onEditEventsChanged?.(newEditEvents)
   }
 
-  const renderContent = () => (
-    <div ref={ref as any}>
-      <ContextProviders initialState={initialState}>
-        <CanvasElementsRenderer
-          key={refDimensions.width}
-          transform={transform}
-          height={height}
-          width={refDimensions.width}
-          allowEditing={allowEditing}
-          focusOnHover={focusOnHover}
-          cancelPanDrag={isZoomEnabled ? cancelPanDrag : () => {}}
-          onCreateEditEvent={onCreateEditEvent}
-          onModifyEditEvent={onModifyEditEvent}
-          grid={{
-            spacing: 1,
-            view_window: {
-              left: 0,
-              right: refDimensions.width || 500,
-              top: height,
-              bottom: 0,
-            },
-          }}
-          elements={elements}
-        />
-        <ToastContainer />
-      </ContextProviders>
-    </div>
-  )
-
   return (
-    <div
-      onClick={() => {
-        if (clickToEnableZoom && !isZoomEnabled) {
-          setIsZoomEnabled(true)
-        }
-      }}
-      style={{ position: "relative", width: "100%", height: "100%" }}
-    >
+    <div ref={transformRef as any} style={{ position: "relative" }}>
+      <div ref={ref as any}>
+        <ContextProviders initialState={initialState}>
+          <CanvasElementsRenderer
+            key={refDimensions.width}
+            transform={transform}
+            height={height}
+            width={refDimensions.width}
+            allowEditing={allowEditing}
+            focusOnHover={focusOnHover}
+            cancelPanDrag={cancelPanDrag}
+            onCreateEditEvent={onCreateEditEvent}
+            onModifyEditEvent={onModifyEditEvent}
+            grid={{
+              spacing: 1,
+              view_window: {
+                left: 0,
+                right: refDimensions.width || 500,
+                top: height,
+                bottom: 0,
+              },
+            }}
+            elements={elements}
+          />
+          <ToastContainer />
+        </ContextProviders>
+      </div>
       {clickToEnableZoom && !isZoomEnabled && (
         <div
+          onClick={() => setIsZoomEnabled(true)}
           style={{
             position: "absolute",
-            bottom: 10,
-            right: 10,
-            backgroundColor: "black",
-            color: "white",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            pointerEvents: "none",
-            zIndex: 100,
+            inset: 0,
+            cursor: "pointer",
+            zIndex: 10,
           }}
         >
-          Click to Enable Zoom
+          <div
+            style={{
+              position: "absolute",
+              bottom: 10,
+              right: 10,
+              backgroundColor: "black",
+              color: "white",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              pointerEvents: "none",
+            }}
+          >
+            Click to Enable Zoom
+          </div>
         </div>
       )}
-      <div ref={isZoomEnabled ? (transformRef as any) : undefined}>
-        {renderContent()}
-      </div>
     </div>
   )
 }
