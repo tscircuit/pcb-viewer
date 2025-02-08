@@ -24,7 +24,7 @@ type Props = {
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
   focusOnHover?: boolean
-  clickToEnableZoom?: boolean
+  clickToEnableInteraction?: boolean
 }
 
 export const PCBViewer = ({
@@ -37,7 +37,7 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
   focusOnHover = false,
-  clickToEnableZoom = false,
+  clickToEnableInteraction = false,
 }: Props) => {
   circuitJson ??= soup
   const {
@@ -47,7 +47,7 @@ export const PCBViewer = ({
   } = useRenderedCircuit(children)
   circuitJson ??= circuitJsonFromChildren ?? []
 
-  const [isZoomEnabled, setIsZoomEnabled] = useState(!clickToEnableZoom)
+  const [isInteractionEnabled, setIsInteractionEnabled] = useState(!clickToEnableInteraction)
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -57,7 +57,7 @@ export const PCBViewer = ({
   } = useMouseMatrixTransform({
     transform,
     onSetTransform: setTransformInternal,
-    enabled: isZoomEnabled,
+    enabled: isInteractionEnabled,
   })
 
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
@@ -93,11 +93,11 @@ export const PCBViewer = ({
       refDimensions &&
       refDimensions.width !== 0 &&
       (children || soup) &&
-      (!clickToEnableZoom || isZoomEnabled)
+      (!clickToEnableInteraction || isInteractionEnabled)
     ) {
       resetTransform()
     }
-  }, [children, refDimensions, clickToEnableZoom, isZoomEnabled])
+  }, [children, refDimensions, clickToEnableInteraction, isInteractionEnabled])
 
   const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
     () =>
@@ -153,9 +153,9 @@ export const PCBViewer = ({
           <ToastContainer />
         </ContextProviders>
       </div>
-      {clickToEnableZoom && !isZoomEnabled && (
+      {clickToEnableInteraction && !isInteractionEnabled && (
         <div
-          onClick={() => setIsZoomEnabled(true)}
+          onClick={() => setIsInteractionEnabled(true)}
           style={{
             position: "absolute",
             inset: 0,

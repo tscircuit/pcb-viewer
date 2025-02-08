@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react"
 import { Circuit } from "@tscircuit/core"
 import { PCBViewer } from "../PCBViewer"
 
-const ClickToEnableZoomDemo: React.FC = () => {
+const ClickToEnableInteractionDemo: React.FC = () => {
   const circuit = new Circuit()
 
   circuit.add(
@@ -29,17 +29,17 @@ const ClickToEnableZoomDemo: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} clickToEnableZoom={true} />
+      <PCBViewer soup={soup} clickToEnableInteraction={true} />
     </div>
   )
 }
 
-const meta: Meta<typeof ClickToEnableZoomDemo> = {
-  title: "Features/Click to Enable Zoom",
-  component: ClickToEnableZoomDemo,
+const meta: Meta<typeof ClickToEnableInteractionDemo> = {
+  title: "Features/Click to Enable Interaction",
+  component: ClickToEnableInteractionDemo,
 }
 
 export default meta
 
-type Story = StoryObj<typeof ClickToEnableZoomDemo>
+type Story = StoryObj<typeof ClickToEnableInteractionDemo>
 export const Default: Story = {}
