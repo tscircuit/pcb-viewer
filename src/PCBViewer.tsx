@@ -63,7 +63,7 @@ export const PCBViewer = ({
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
-  const resetTransform = () => {
+  const resetTransform = (shouldAnimate: boolean = false) => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
     const { center, width, height } = elements.some((e) =>
@@ -79,13 +79,45 @@ export const PCBViewer = ({
         (elmBounds.height ?? 0) / height,
         100,
       ) * 0.75
-    setTransform(
-      compose(
-        translate((elmBounds.width ?? 0) / 2, (elmBounds.height ?? 0) / 2),
-        scale(scaleFactor, -scaleFactor, 0, 0),
-        translate(-center.x, -center.y),
-      ),
+
+    const targetTransform = compose(
+      translate((elmBounds.width ?? 0) / 2, (elmBounds.height ?? 0) / 2),
+      scale(scaleFactor, -scaleFactor, 0, 0),
+      translate(-center.x, -center.y),
     )
+
+    if (!shouldAnimate) {
+      setTransform(targetTransform)
+      return
+    }
+
+    const startTransform = { ...transform }
+    const startTime = Date.now()
+    const duration = 1000
+
+    const animateTransform = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      
+      const easeProgress = 1 - Math.pow(1 - progress, 3)
+
+      const newTransform = {
+        a: startTransform.a + (targetTransform.a - startTransform.a) * easeProgress,
+        b: startTransform.b + (targetTransform.b - startTransform.b) * easeProgress,
+        c: startTransform.c + (targetTransform.c - startTransform.c) * easeProgress,
+        d: startTransform.d + (targetTransform.d - startTransform.d) * easeProgress,
+        e: startTransform.e + (targetTransform.e - startTransform.e) * easeProgress,
+        f: startTransform.f + (targetTransform.f - startTransform.f) * easeProgress,
+      }
+
+      setTransform(newTransform)
+
+      if (progress < 1) {
+        requestAnimationFrame(animateTransform)
+      }
+    }
+
+    requestAnimationFrame(animateTransform)
   }
 
   useEffect(() => {
@@ -95,7 +127,7 @@ export const PCBViewer = ({
       (children || soup) &&
       (!clickToInteractEnabled || isInteractionEnabled)
     ) {
-      resetTransform()
+      resetTransform(false) // No animation for initial/component updates
     }
   }, [children, refDimensions, clickToInteractEnabled, isInteractionEnabled])
 
@@ -155,7 +187,10 @@ export const PCBViewer = ({
       </div>
       {clickToInteractEnabled && !isInteractionEnabled && (
         <div
-          onClick={() => setIsInteractionEnabled(true)}
+          onClick={() => {
+            setIsInteractionEnabled(true)
+            resetTransform(true) // Animate when clicking to interact
+          }}
           style={{
             position: "absolute",
             inset: 0,
