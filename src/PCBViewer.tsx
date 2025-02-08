@@ -161,18 +161,18 @@ export const PCBViewer = ({
             inset: 0,
             cursor: "pointer",
             zIndex: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <div
             style={{
-              position: "absolute",
-              bottom: 10,
-              right: 10,
-              backgroundColor: "black",
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
               color: "white",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "12px",
+              padding: "12px 24px",
+              borderRadius: "8px",
+              fontSize: "16px",
               pointerEvents: "none",
             }}
           >
