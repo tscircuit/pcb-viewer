@@ -29,7 +29,7 @@ const ClickToEnableInteractionDemo: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} clickToEnableInteraction={true} />
+      <PCBViewer soup={soup} clickToInteractEnabled={true} />
     </div>
   )
 }

@@ -24,7 +24,7 @@ type Props = {
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
   focusOnHover?: boolean
-  clickToEnableInteraction?: boolean
+  clickToInteractEnabled?: boolean
 }
 
 export const PCBViewer = ({
@@ -37,7 +37,7 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
   focusOnHover = false,
-  clickToEnableInteraction = false,
+  clickToInteractEnabled = false,
 }: Props) => {
   circuitJson ??= soup
   const {
@@ -47,7 +47,7 @@ export const PCBViewer = ({
   } = useRenderedCircuit(children)
   circuitJson ??= circuitJsonFromChildren ?? []
 
-  const [isInteractionEnabled, setIsInteractionEnabled] = useState(!clickToEnableInteraction)
+  const [isInteractionEnabled, setIsInteractionEnabled] = useState(!clickToInteractEnabled)
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -93,11 +93,11 @@ export const PCBViewer = ({
       refDimensions &&
       refDimensions.width !== 0 &&
       (children || soup) &&
-      (!clickToEnableInteraction || isInteractionEnabled)
+      (!clickToInteractEnabled || isInteractionEnabled)
     ) {
       resetTransform()
     }
-  }, [children, refDimensions, clickToEnableInteraction, isInteractionEnabled])
+  }, [children, refDimensions, clickToInteractEnabled, isInteractionEnabled])
 
   const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
     () =>
@@ -153,7 +153,7 @@ export const PCBViewer = ({
           <ToastContainer />
         </ContextProviders>
       </div>
-      {clickToEnableInteraction && !isInteractionEnabled && (
+      {clickToInteractEnabled && !isInteractionEnabled && (
         <div
           onClick={() => setIsInteractionEnabled(true)}
           style={{
