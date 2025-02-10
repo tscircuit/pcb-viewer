@@ -114,6 +114,20 @@ export const AtariBoard: React.FC = () => {
   )
 }
 
+export const DisabledAutoFocus: React.FC = () => {
+  const circuit = new Circuit()
+
+  circuit.add(<board pcbX={0} pcbY={0} width="50mm" height="50mm" />)
+
+  const soup = circuit.getCircuitJson()
+
+  return (
+    <div style={{ backgroundColor: "black" }}>
+      <PCBViewer soup={soup} disableAutoFocus={true} />
+    </div>
+  )
+}
+
 const meta: Meta<typeof BasicRectangleBoard> = {
   title: "Board",
   component: BasicRectangleBoard,
