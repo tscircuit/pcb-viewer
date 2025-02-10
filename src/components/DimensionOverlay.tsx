@@ -9,7 +9,11 @@ interface Props {
   focusOnHover?: boolean
 }
 
-export const DimensionOverlay = ({ children, transform, focusOnHover = false }: Props) => {
+export const DimensionOverlay = ({
+  children,
+  transform,
+  focusOnHover = false,
+}: Props) => {
   if (!transform) transform = identity()
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
