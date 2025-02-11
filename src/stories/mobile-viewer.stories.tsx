@@ -8,6 +8,9 @@ const meta: Meta<typeof MobilePCBViewer> = {
     nextjs: {
       appDirectory: true,
     },
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
   },
 };
 
@@ -18,6 +21,8 @@ export const Basic: Story = {
   args: {
     height: 400,
     enableTouchGestures: true,
+    maxScale: 3,
+    minScale: 0.5,
     children: (
       <>
         <resistor footprint="0805" resistance="10k" />
@@ -30,6 +35,9 @@ export const Basic: Story = {
 export const WithCircuitJson: Story = {
   args: {
     height: 400,
+    enableTouchGestures: true,
+    maxScale: 3,
+    minScale: 0.5,
     circuitJson: [
       {
         type: "pcb_component",
