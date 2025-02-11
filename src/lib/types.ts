@@ -100,6 +100,14 @@ export type GridConfig = {
   }
 }
 
+export interface PCBViewerProps {
+  height?: number;
+  allowEditing?: boolean;
+  editEvents?: any[];
+  onEditEventsChanged?: (events: any[]) => void;
+  initialState?: any;
+}
+
 export interface MobileViewerProps extends PCBViewerProps {
   enableTouchGestures?: boolean;
   maxScale?: number;
