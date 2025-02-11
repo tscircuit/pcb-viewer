@@ -99,3 +99,9 @@ export type GridConfig = {
     bottom: number
   }
 }
+
+export interface MobileViewerProps extends PCBViewerProps {
+  enableTouchGestures?: boolean;
+  maxScale?: number;
+  minScale?: number;
+}
