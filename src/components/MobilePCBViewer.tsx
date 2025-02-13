@@ -98,7 +98,7 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
     scale,
     translateX: position.x,
     translateY: position.y,
-    ...initialState
+    ...(initialState || {}) // Ensure initialState is not undefined
   };
 
   return (
