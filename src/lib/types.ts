@@ -105,7 +105,7 @@ export interface StateProps {
   scale: number;
   translateX: number;
   translateY: number;
-  [key: string]: any;
+  [key: string]: any; 
 }
 
 export interface PCBViewerProps {
