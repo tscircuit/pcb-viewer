@@ -1,7 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { PCBViewer } from '../PCBViewer';
-import type { MobileViewerProps, StateProps } from '../lib/types';
+import type { MobileViewerProps } from '../lib/types';
+
+// Define the StateProps interface if it's not properly imported
+interface StateProps {
+  scale?: number;
+  translateX?: number;
+  translateY?: number;
+  [key: string]: any; // Allow for additional properties
+}
 
 export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
   children,
@@ -10,7 +18,7 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
   allowEditing = true,
   editEvents,
   onEditEventsChanged,
-  initialState = {},
+  initialState = {} as StateProps, // Type assertion here
   enableTouchGestures = true,
   maxScale = 3,
   minScale = 0.5,
@@ -94,7 +102,8 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
     setTouchStart(null);
   };
 
-  const updatedState: Partial<StateProps> = {
+  // Create a new state object with the correct type
+  const updatedState: StateProps = {
     ...initialState,
     scale,
     translateX: position.x,
