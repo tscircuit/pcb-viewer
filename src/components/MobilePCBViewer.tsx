@@ -1,26 +1,28 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import { PCBViewer } from '../PCBViewer';
-import type { MobileViewerProps } from '../lib/types';
+import type { MobileViewerProps, StateProps } from '../lib/types';
 
-export const MobilePCBViewer: React.FC<MobileViewerProps> = ({ 
-  children, 
+export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
+  children,
   circuitJson,
   height = 600,
   allowEditing = true,
   editEvents,
   onEditEventsChanged,
-  initialState,
+  initialState = {},
   enableTouchGestures = true,
   maxScale = 3,
   minScale = 0.5,
-  ...props 
+  ...props
 }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance: number } | null>(null);
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(initialState.scale ?? 1);
+  const [position, setPosition] = useState({
+    x: initialState.translateX ?? 0,
+    y: initialState.translateY ?? 0
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -35,7 +37,7 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!enableTouchGestures) return;
-    
+
     if (e.touches.length === 2) {
       const distance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -63,10 +65,10 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      
+
       const newScale = scale * (distance / touchStart.distance);
       setScale(Math.min(Math.max(newScale, minScale), maxScale));
-      
+
       setTouchStart({
         ...touchStart,
         distance
@@ -74,12 +76,12 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
     } else if (e.touches.length === 1) {
       const dx = e.touches[0].clientX - touchStart.x;
       const dy = e.touches[0].clientY - touchStart.y;
-      
+
       setPosition(prev => ({
         x: prev.x + dx,
         y: prev.y + dy
       }));
-      
+
       setTouchStart({
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
@@ -90,6 +92,13 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
 
   const handleTouchEnd = () => {
     setTouchStart(null);
+  };
+
+  const updatedState: Partial<StateProps> = {
+    ...initialState,
+    scale,
+    translateX: position.x,
+    translateY: position.y,
   };
 
   return (
@@ -109,12 +118,7 @@ export const MobilePCBViewer: React.FC<MobileViewerProps> = ({
         allowEditing={allowEditing}
         editEvents={editEvents}
         onEditEventsChanged={onEditEventsChanged}
-        initialState={{
-          ...initialState,
-          scale,
-          translateX: position.x,
-          translateY: position.y,
-        }}
+        initialState={updatedState}
         {...props}
       >
         {children}
