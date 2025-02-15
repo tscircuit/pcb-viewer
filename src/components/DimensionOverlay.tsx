@@ -44,15 +44,15 @@ export const DimensionOverlay = ({
 
     const addKeyListener = () => {
       if (container) {
-        container.addEventListener("keydown", down)
-      }
+        document.addEventListener("keydown", down)  
+          }
     }
 
     const removeKeyListener = () => {
       if (container) {
-        container.removeEventListener("keydown", down)
+        document.addEventListener("keydown", down)   
+         }
       }
-    }
 
     if (container) {
       container.addEventListener("focus", addKeyListener)
