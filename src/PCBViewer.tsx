@@ -25,7 +25,6 @@ type Props = {
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
-  disableAutoFocus?: boolean
 }
 
 export const PCBViewer = ({
@@ -39,7 +38,6 @@ export const PCBViewer = ({
   onEditEventsChanged,
   focusOnHover = false,
   clickToInteractEnabled = false,
-  disableAutoFocus = false,
 }: Props) => {
   circuitJson ??= soup
   const {
@@ -124,7 +122,7 @@ export const PCBViewer = ({
 
   useEffect(() => {
     if (
-      !disableAutoFocus &&
+      !focusOnHover &&
       refDimensions &&
       refDimensions.width !== 0 &&
       (children || soup) &&
@@ -132,7 +130,13 @@ export const PCBViewer = ({
     ) {
       resetTransform(false) // No animation for initial/component updates
     }
-  }, [children, refDimensions, clickToInteractEnabled, isInteractionEnabled, disableAutoFocus])
+  }, [
+    children,
+    refDimensions,
+    clickToInteractEnabled,
+    isInteractionEnabled,
+    focusOnHover,
+  ])
 
   const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
     () =>
