@@ -40,13 +40,21 @@ export const PCBViewer = ({
   clickToInteractEnabled = false,
 }: Props) => {
   circuitJson ??= soup
-  const { circuitJson: circuitJsonFromChildren, error: errorFromChildren, isLoading } = useRenderedCircuit(children)
+  const {
+    circuitJson: circuitJsonFromChildren,
+    error: errorFromChildren,
+    isLoading,
+  } = useRenderedCircuit(children)
   circuitJson ??= circuitJsonFromChildren ?? []
 
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(!clickToInteractEnabled)
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
-  const { ref: transformRef, setTransform, cancelDrag: cancelPanDrag } = useMouseMatrixTransform({
+  const {
+    ref: transformRef,
+    setTransform,
+    cancelDrag: cancelPanDrag,
+  } = useMouseMatrixTransform({
     transform,
     onSetTransform: setTransformInternal,
     enabled: isInteractionEnabled,
@@ -56,15 +64,21 @@ export const PCBViewer = ({
   editEvents = editEventsProp ?? editEvents
 
   const resetTransform = (shouldAnimate: boolean = false) => {
-    const elmBounds = refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
-    const { center, width, height } = elements.some((e) => e.type.startsWith("pcb_"))
-      ? findBoundsAndCenter(elements.filter((e) => e.type.startsWith("pcb_")) as any)
+    const elmBounds =
+      refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
+    const { center, width, height } = elements.some((e) =>
+      e.type.startsWith("pcb_"),
+    )
+      ? findBoundsAndCenter(
+          elements.filter((e) => e.type.startsWith("pcb_")) as any,
+        )
       : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
-    const scaleFactor = Math.min(
-      (elmBounds.width ?? 0) / width,
-      (elmBounds.height ?? 0) / height,
-      100,
-    ) * 0.75
+    const scaleFactor =
+      Math.min(
+        (elmBounds.width ?? 0) / width,
+        (elmBounds.height ?? 0) / height,
+        100,
+      ) * 0.75
 
     const targetTransform = compose(
       translate((elmBounds.width ?? 0) / 2, (elmBounds.height ?? 0) / 2),
@@ -84,6 +98,7 @@ export const PCBViewer = ({
     const animateTransform = () => {
       const elapsed = Date.now() - startTime
       const progress = Math.min(elapsed / duration, 1)
+      
       const easeProgress = 1 - Math.pow(1 - progress, 3)
 
       const newTransform = {
@@ -107,7 +122,6 @@ export const PCBViewer = ({
 
   useEffect(() => {
     if (
-      !focusOnHover &&
       refDimensions &&
       refDimensions.width !== 0 &&
       (children || soup) &&
@@ -115,13 +129,7 @@ export const PCBViewer = ({
     ) {
       resetTransform(false) // No animation for initial/component updates
     }
-  }, [
-    children,
-    refDimensions,
-    clickToInteractEnabled,
-    isInteractionEnabled,
-    focusOnHover,
-  ])
+  }, [children, refDimensions, clickToInteractEnabled, isInteractionEnabled])
 
   const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
     () =>
@@ -159,7 +167,7 @@ export const PCBViewer = ({
             height={height}
             width={refDimensions.width}
             allowEditing={allowEditing}
-            focusOnHover={focusOnHover} // This flag now solely controls hover, no impact on transform
+            focusOnHover={focusOnHover}
             cancelPanDrag={cancelPanDrag}
             onCreateEditEvent={onCreateEditEvent}
             onModifyEditEvent={onModifyEditEvent}
