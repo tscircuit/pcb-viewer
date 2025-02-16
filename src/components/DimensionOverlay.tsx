@@ -27,7 +27,7 @@ export const DimensionOverlay = ({
   const containerBounds = container?.getBoundingClientRect()
   useEffect(() => {
     const container = containerRef.current
-
+  
     const down = (e: KeyboardEvent) => {
       if (e.key === "d") {
         setDStart({ x: mousePosRef.current.x, y: mousePosRef.current.y })
@@ -41,19 +41,20 @@ export const DimensionOverlay = ({
         setDimensionToolStretching(false)
       }
     }
-
+  
     const addKeyListener = () => {
       if (container) {
-        document.addEventListener("keydown", down)  
-          }
+        container.addEventListener("keydown", down)
+        container.focus()
+      }
     }
-
+  
     const removeKeyListener = () => {
       if (container) {
-        document.addEventListener("keydown", down)   
-         }
+        container.removeEventListener("keydown", down)
       }
-
+    }
+  
     if (container) {
       container.addEventListener("focus", addKeyListener)
       container.addEventListener("blur", removeKeyListener)
