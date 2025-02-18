@@ -114,16 +114,43 @@ export const AtariBoard: React.FC = () => {
   )
 }
 
-export const DisabledAutoFocus: React.FC = () => {
+export const NoAutoFocus: React.FC = () => {
   const circuit = new Circuit()
 
   circuit.add(<board pcbX={0} pcbY={0} width="50mm" height="50mm" />)
-
   const soup = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} disableAutoFocus={true} />
+      <PCBViewer soup={soup} focusOnHover={false} />
+    </div>
+  )
+}
+
+export const FocusOnHover: React.FC = () => {
+  const circuit = new Circuit()
+  circuit.add(<board pcbX={0} pcbY={0} width="50mm" height="50mm" />)
+  const soup = circuit.getCircuitJson()
+
+  return (
+    <div
+      style={{
+        backgroundColor: "black",
+        position: "relative",
+        height: "600px",
+        overflow: "hidden", 
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+        transform: "scale(1)",
+        boxShadow: "none",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "scale(1.2)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "scale(1)";
+      }}
+    >
+      <PCBViewer soup={soup} focusOnHover={true}/>
     </div>
   )
 }
