@@ -1,0 +1,30 @@
+{
+  "version": "v1",
+  "packages": {
+    "@tscircuit/soup": {
+      "signature": "0c042ca68ece6b2f7a34daf92a006e43",
+      "file": true,
+      "replaced": "^0.0.58"
+    },
+    "@tscircuit/builder": {
+      "signature": "b43a8ea704554b758bc8ea89fd0ecb1d",
+      "file": true,
+      "replaced": "^1.5.146"
+    },
+    "@tscircuit/props": {
+      "signature": "eb8b64a387be40c8987334c67ba2d71d",
+      "file": true,
+      "replaced": "^0.0.46"
+    },
+    "@tscircuit/soup-util": {
+      "signature": "7cc00e1826767b327eeba72aa181e4da",
+      "file": true,
+      "replaced": "^0.0.37"
+    },
+    "@tscircuit/core": {
+      "signature": "b2ba860a263be7b14b67af336de4c600",
+      "file": true,
+      "replaced": "^0.0.109"
+    }
+  }
+}

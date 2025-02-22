@@ -9,7 +9,4 @@ yarn-error.log
 !.env.example
 .DS_Store
 .yalc
-yalc.lock
 .aider*
-bun.lockb
-package-lock.json
