@@ -45,6 +45,7 @@ export const DimensionOverlay = ({
     const addKeyListener = () => {
       if (container) {
         container.addEventListener("keydown", down)
+        window.scrollTo(0, 0)
       }
     }
 
@@ -57,8 +58,14 @@ export const DimensionOverlay = ({
     if (container) {
       container.addEventListener("focus", addKeyListener)
       container.addEventListener("blur", removeKeyListener)
-      container.addEventListener("mouseenter", addKeyListener)
-      container.addEventListener("mouseleave", removeKeyListener)
+      container.addEventListener("mouseenter", () => {
+      addKeyListener()
+      container.focus()
+    })
+    container.addEventListener("mouseleave", () => {
+      removeKeyListener()
+      container.blur()
+    })
     }
     return () => {
       if (container) {
