@@ -44,13 +44,13 @@ export const DimensionOverlay = ({
 
     const addKeyListener = () => {
       if (container) {
-        container.addEventListener("keydown", down)
+        window.addEventListener("keydown", down)
       }
     }
 
     const removeKeyListener = () => {
       if (container) {
-        container.removeEventListener("keydown", down)
+        window.removeEventListener("keydown", down)
       }
     }
 
@@ -240,7 +240,7 @@ export const DimensionOverlay = ({
             {dEnd.x.toFixed(2)},{dEnd.y.toFixed(2)})<br />
             dist:{" "}
             {Math.sqrt(
-              ((dEnd.x - dStart.x) ** 2) + ((dEnd.y - dStart.y) ** 2)
+              (dEnd.x - dStart.x) ** 2 + (dEnd.y - dStart.y) ** 2,
             ).toFixed(2)}
           </div>
         </>
