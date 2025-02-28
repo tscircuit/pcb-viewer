@@ -50,7 +50,7 @@ export const AutoroutingAnimations: React.FC = () => {
   circuit.on("autorouting:progress", (event) => {
     if (Date.now() > lastEventTime.current + 100) {
       lastEventTime.current = Date.now()
-      // setDebugGraphics(event.debugGraphics)
+      setDebugGraphics(event.debugGraphics)
     }
   })
 
