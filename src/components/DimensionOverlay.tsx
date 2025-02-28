@@ -58,14 +58,8 @@ export const DimensionOverlay = ({
     if (container) {
       container.addEventListener("focus", addKeyListener)
       container.addEventListener("blur", removeKeyListener)
-      container.addEventListener("mouseenter", () => {
-      addKeyListener()
-      container.focus()
-    })
-    container.addEventListener("mouseleave", () => {
-      removeKeyListener()
-      container.blur()
-    })
+      container.addEventListener("mouseenter", addKeyListener)
+      container.addEventListener("mouseleave", removeKeyListener)
     }
     return () => {
       if (container) {

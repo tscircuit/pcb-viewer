@@ -12,7 +12,7 @@ export const BasicRectangleBoard: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer focusOnHover={true} soup={soup} />
     </div>
   )
 }
@@ -38,7 +38,7 @@ export const TriangleBoard: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer focusOnHover={true} soup={soup} />
     </div>
   )
 }
@@ -69,7 +69,7 @@ export const OctagonBoard: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer focusOnHover={true} soup={soup} />
     </div>
   )
 }
@@ -109,7 +109,7 @@ export const AtariBoard: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer focusOnHover={true} soup={soup} />
     </div>
   )
 }
@@ -123,7 +123,7 @@ export const DisabledAutoFocus: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} disableAutoFocus={true} />
+      <PCBViewer focusOnHover={true} soup={soup} disableAutoFocus={true} />
     </div>
   )
 }
