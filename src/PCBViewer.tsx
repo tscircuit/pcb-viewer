@@ -27,7 +27,7 @@ type Props = {
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   disableAutoFocus?: boolean
-  debugGraphics?: GraphicsObject
+  debugGraphics?: GraphicsObject | null
 }
 
 export const PCBViewer = ({

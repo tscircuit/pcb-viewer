@@ -6,7 +6,7 @@ import { useMeasure } from "react-use"
 
 interface Props {
   transform?: Matrix
-  debugGraphics?: GraphicsObject
+  debugGraphics?: GraphicsObject | null
   children?: any
 }
 
@@ -40,6 +40,8 @@ export const DebugGraphicsOverlay = ({
           position: "absolute",
           top: 0,
           left: 0,
+          opacity: 0.5,
+          zIndex: 100,
           width: "100%",
           height: "100%",
           pointerEvents: "none",

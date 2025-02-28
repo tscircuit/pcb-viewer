@@ -20,7 +20,7 @@ import type { GraphicsObject } from "graphics-debug"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
-  debugGraphics?: GraphicsObject
+  debugGraphics?: GraphicsObject | null
   transform?: Matrix
   width?: number
   height?: number
