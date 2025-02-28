@@ -2,6 +2,7 @@ import { PCBViewer } from "PCBViewer"
 import { Circuit } from "@tscircuit/core"
 import type { GraphicsObject } from "graphics-debug"
 import type { Meta } from "@storybook/react"
+import { useEffect, useState } from "react"
 
 export const DebugGraphics: React.FC = () => {
   const circuit = new Circuit()
@@ -27,19 +28,38 @@ export const DebugGraphics: React.FC = () => {
 
   const soup = circuit.getCircuitJson()
 
+  const [time, setTime] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime((prevTime) => prevTime + 0.05)
+    }, 10)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Calculate positions based on time
+  const lineAngle = time
+  const circleAngle = -time * 0.7 // Different speed and direction
+
+  const lineEndX = 10 * Math.cos(lineAngle)
+  const lineEndY = 10 * Math.sin(lineAngle)
+
+  const circleX = 8 * Math.cos(circleAngle)
+  const circleY = 8 * Math.sin(circleAngle)
+
   const debugGraphics: GraphicsObject = {
     lines: [
       {
         points: [
           { x: 0, y: 0 },
-          { x: 10, y: 10 },
+          { x: lineEndX, y: lineEndY },
         ],
         strokeColor: "green",
       },
     ],
     circles: [
       {
-        center: { x: 0, y: 0 },
+        center: { x: circleX, y: circleY },
         radius: 5,
         fill: "red",
       },
