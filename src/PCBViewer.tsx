@@ -11,6 +11,7 @@ import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
+import type { GraphicsObject } from "graphics-debug"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -26,12 +27,14 @@ type Props = {
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   disableAutoFocus?: boolean
+  debugGraphics?: GraphicsObject
 }
 
 export const PCBViewer = ({
   children,
   soup,
   circuitJson,
+  debugGraphics,
   height = 600,
   initialState,
   allowEditing = true,
@@ -49,7 +52,9 @@ export const PCBViewer = ({
   } = useRenderedCircuit(children)
   circuitJson ??= circuitJsonFromChildren ?? []
 
-  const [isInteractionEnabled, setIsInteractionEnabled] = useState(!clickToInteractEnabled)
+  const [isInteractionEnabled, setIsInteractionEnabled] = useState(
+    !clickToInteractEnabled,
+  )
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
@@ -100,16 +105,28 @@ export const PCBViewer = ({
     const animateTransform = () => {
       const elapsed = Date.now() - startTime
       const progress = Math.min(elapsed / duration, 1)
-      
+
       const easeProgress = 1 - Math.pow(1 - progress, 3)
 
       const newTransform = {
-        a: startTransform.a + (targetTransform.a - startTransform.a) * easeProgress,
-        b: startTransform.b + (targetTransform.b - startTransform.b) * easeProgress,
-        c: startTransform.c + (targetTransform.c - startTransform.c) * easeProgress,
-        d: startTransform.d + (targetTransform.d - startTransform.d) * easeProgress,
-        e: startTransform.e + (targetTransform.e - startTransform.e) * easeProgress,
-        f: startTransform.f + (targetTransform.f - startTransform.f) * easeProgress,
+        a:
+          startTransform.a +
+          (targetTransform.a - startTransform.a) * easeProgress,
+        b:
+          startTransform.b +
+          (targetTransform.b - startTransform.b) * easeProgress,
+        c:
+          startTransform.c +
+          (targetTransform.c - startTransform.c) * easeProgress,
+        d:
+          startTransform.d +
+          (targetTransform.d - startTransform.d) * easeProgress,
+        e:
+          startTransform.e +
+          (targetTransform.e - startTransform.e) * easeProgress,
+        f:
+          startTransform.f +
+          (targetTransform.f - startTransform.f) * easeProgress,
       }
 
       setTransform(newTransform)
@@ -132,7 +149,13 @@ export const PCBViewer = ({
     ) {
       resetTransform(false) // No animation for initial/component updates
     }
-  }, [children, refDimensions, clickToInteractEnabled, isInteractionEnabled, disableAutoFocus])
+  }, [
+    children,
+    refDimensions,
+    clickToInteractEnabled,
+    isInteractionEnabled,
+    disableAutoFocus,
+  ])
 
   const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
     () =>
@@ -184,6 +207,7 @@ export const PCBViewer = ({
               },
             }}
             elements={elements}
+            debugGraphics={debugGraphics}
           />
           <ToastContainer />
         </ContextProviders>

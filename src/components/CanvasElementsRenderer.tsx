@@ -15,9 +15,12 @@ import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
+import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
+import type { GraphicsObject } from "graphics-debug"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
+  debugGraphics?: GraphicsObject
   transform?: Matrix
   width?: number
   height?: number
@@ -103,13 +106,18 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>
                 <RatsNestOverlay transform={transform} soup={elements}>
-                  <CanvasPrimitiveRenderer
+                  <DebugGraphicsOverlay
                     transform={transform}
-                    primitives={primitives}
-                    width={props.width}
-                    height={props.height}
-                    grid={props.grid}
-                  />
+                    debugGraphics={props.debugGraphics}
+                  >
+                    <CanvasPrimitiveRenderer
+                      transform={transform}
+                      primitives={primitives}
+                      width={props.width}
+                      height={props.height}
+                      grid={props.grid}
+                    />
+                  </DebugGraphicsOverlay>
                 </RatsNestOverlay>
               </ErrorOverlay>
             </ToolbarOverlay>
