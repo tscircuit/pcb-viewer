@@ -31,6 +31,9 @@
       "correctness": {
         "useExhaustiveDependencies": "off"
       },
+      "a11y": {
+        "useKeyWithClickEvents": "off"
+      },
       "style": {
         "noNonNullAssertion": "off",
         "useNumberNamespace": "off",
