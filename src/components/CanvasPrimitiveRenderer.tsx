@@ -75,7 +75,7 @@ export const CanvasPrimitiveRenderer = ({
             }}
             width={width}
             height={height}
-          ></canvas>
+          />
         ))}
     </div>
   )

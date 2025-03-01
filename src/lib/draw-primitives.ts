@@ -175,8 +175,16 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
 export const drawPrimitives = (drawer: Drawer, primitives: Primitive[]) => {
   // sort primitives by draw order
   primitives.sort((a, b) => {
-    const layerOrder = ["bottom", "top", "drill"]
+    const layerOrder = [
+      "bottom",
+      "bottom_silkscreen",
+      "top",
+      "top_silkscreen",
+      "drill",
+    ]
     return layerOrder.indexOf(a.layer) - layerOrder.indexOf(b.layer)
   })
-  primitives.forEach((primitive) => drawPrimitive(drawer, primitive))
+  for (const primitive of primitives) {
+    drawPrimitive(drawer, primitive)
+  }
 }
