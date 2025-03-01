@@ -49,7 +49,7 @@ export const PCBViewer = ({
     circuitJson: circuitJsonFromChildren,
     error: errorFromChildren,
     isLoading,
-  } = useRenderedCircuit(children)
+  } = useRenderedCircuit(children) as any
   circuitJson ??= circuitJsonFromChildren ?? []
 
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
@@ -159,9 +159,9 @@ export const PCBViewer = ({
 
   const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
     () =>
-      circuitJson.filter(
+      circuitJson?.filter(
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
-      ),
+      ) ?? [],
     [circuitJson],
   )
 

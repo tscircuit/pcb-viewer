@@ -61,10 +61,20 @@ const isInsideOfPlatedHole = (
 ) => {
   if (hole.shape === "circle") {
     const distance = Math.sqrt(
-      Math.pow(point.x - hole.x, 2) + Math.pow(point.y - hole.y, 2),
+      (point.x - hole.x) ** 2 + (point.y - hole.y) ** 2,
     )
     return distance <= hole.outer_diameter / 2 + padding
-  } else {
+  } else if (hole.shape === "circular_hole_with_rect_pad") {
+    const dx = Math.abs(point.x - hole.x)
+    const dy = Math.abs(point.y - hole.y)
+    if (
+      dx < hole.rect_pad_width / 2 + padding &&
+      dy < hole.rect_pad_height / 2 + padding
+    ) {
+      return true
+    }
+    return false
+  } else if (hole.shape === "oval" || hole.shape === "pill") {
     const halfWidth = hole.hole_width / 2
     const halfHeight = hole.hole_height / 2
 

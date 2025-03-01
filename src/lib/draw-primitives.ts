@@ -1,8 +1,8 @@
-import { Rotation } from "circuit-json"
-import { Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
+import type { Rotation } from "circuit-json"
+import { type Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
 import { rotateText } from "./util/rotate-text"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
-import {
+import type {
   Circle,
   Line,
   Oval,
@@ -14,7 +14,7 @@ import {
 } from "./types"
 import color from "color"
 
-function getColor(primitive: Primitive) {
+function getColor(primitive: Primitive): string {
   if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
     return color(
       LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR],
@@ -153,9 +153,11 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
     case "text":
       return drawText(drawer, primitive)
     case "rect":
+      // @ts-ignore
       if (primitive._element?.shape === "rotated_rect") {
         return drawRotatedRect(drawer, {
           ...primitive,
+          // @ts-ignore
           ccw_rotation: primitive._element.ccw_rotation,
           mesh_fill: primitive.mesh_fill,
         })

@@ -53,7 +53,7 @@ export const LAYER_NAME_TO_COLOR = {
   top_fabrication: colors.board.f_fab,
   bottom_fabrication: colors.board.b_fab,
 
-  ...colors.board,
+  ...(colors.board as any),
 }
 
 export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
