@@ -37,8 +37,8 @@ export function filterTracesIfMultiple(filterTraces: {
     ),
   )
 
-  // If not showing multiple traces length, return non-traces and traces with ma
-  length
+  // If not showing multiple traces length, return non-traces and traces with
+  // max length
   if (!is_showing_multiple_traces_length) {
     return [...nonTraces, ...tracesWithMaxLength]
   }

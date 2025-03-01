@@ -310,8 +310,10 @@ export const KeepoutRectExample: React.FC = () => {
             shape: "rect",
             width: 1,
             height: 1,
-            x: 0,
-            y: 0,
+            center: {
+              x: 0,
+              y: 0,
+            },
           },
           {
             type: "pcb_trace",

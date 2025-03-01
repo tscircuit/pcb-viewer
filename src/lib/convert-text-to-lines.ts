@@ -1,5 +1,6 @@
 import { lineAlphabet } from "../assets/alphabet"
-import { Line, Text } from "./types"
+import { getNewPcbDrawingObjectId } from "./convert-element-to-primitive"
+import type { Line, Text } from "./types"
 
 export const LETTER_HEIGHT_TO_WIDTH_RATIO = 0.6
 export const LETTER_HEIGHT_TO_SPACE_RATIO = 0.2
@@ -23,6 +24,7 @@ export const convertTextToLines = (text: Text): Line[] => {
     if (!letterLines) continue
     for (const { x1, y1, x2, y2 } of letterLines) {
       lines.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId("line"),
         pcb_drawing_type: "line",
         x1:
           text.x + (letterWidth + letterSpace) * letterIndex + letterWidth * x1,

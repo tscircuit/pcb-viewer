@@ -18,6 +18,7 @@ export interface State {
   is_mouse_over_container: boolean
   is_moving_component: boolean
   is_drawing_trace: boolean
+  is_showing_autorouting: boolean
 
   is_showing_multiple_traces_length: boolean
   is_showing_rats_nest: boolean
@@ -28,6 +29,7 @@ export interface State {
   setIsDrawingTrace: (is_drawing: boolean) => void
   setIsShowingRatsNest: (is_showing: boolean) => void
   setIsMouseOverContainer: (is_focused: boolean) => void
+  setIsShowingAutorouting: (is_showing: boolean) => void
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
 }
 
@@ -53,6 +55,7 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
 
         is_showing_multiple_traces_length: false,
         is_showing_rats_nest: false,
+        is_showing_autorouting: true,
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
@@ -74,6 +77,8 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
           set({ is_mouse_over_container: is_focused }),
         setIsShowingMultipleTracesLength: (is_showing) =>
           set({ is_showing_multiple_traces_length: is_showing }),
+        setIsShowingAutorouting: (is_showing) =>
+          set({ is_showing_autorouting: is_showing }),
       }) as const,
   )
 

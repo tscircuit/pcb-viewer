@@ -32,6 +32,7 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
     if (!soup || !isShowingRatsNest) return []
 
     const getElementPosition = (id: string): Point | null => {
+      // @ts-ignore
       const element = su(soup)[id.replace(/_\d+$/, "")].get(id)
       if (element && "x" in element && "y" in element) {
         return { x: element.x, y: element.y }
@@ -51,8 +52,7 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
         const pos = getElementPosition(id)
         if (pos) {
           const distance = Math.sqrt(
-            Math.pow(sourcePoint.x - pos.x, 2) +
-              Math.pow(sourcePoint.y - pos.y, 2),
+            (sourcePoint.x - pos.x) ** 2 + (sourcePoint.y - pos.y) ** 2,
           )
           if (distance < minDistance && distance > 0) {
             minDistance = distance
@@ -69,14 +69,13 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
     const lines: RatsNestLine[] = []
 
     pcbPorts.forEach((port, index) => {
-      const portId = port.pcb_port_id
-      const netId = idToNetMap[portId]
+      const netId = idToNetMap[port.pcb_port_id]
 
       let isInNet = false
+
       for (const trace of sourceTraces) {
         const sourceTrace = trace.connected_source_port_ids.includes(
-          su(soup).source_port.getUsing({ pcb_port_id: portId })
-            ?.source_port_id,
+          port.source_port_id,
         )
         if (sourceTrace && trace.connected_source_net_ids.length > 0) {
           isInNet = true
@@ -91,7 +90,7 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
       if (!nearestPoint) return
 
       lines.push({
-        key: `${portId}-${index}`,
+        key: `${port.pcb_port_id}-${index}`,
         startPoint,
         endPoint: nearestPoint,
         isInNet,

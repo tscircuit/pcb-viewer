@@ -121,16 +121,21 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     in_draw_trace_mode,
     is_showing_rats_nest,
     is_showing_multiple_traces_length,
+    is_showing_autorouting,
   ] = useGlobalStore((s) => [
     s.in_move_footprint_mode,
     s.in_draw_trace_mode,
     s.is_showing_rats_nest,
     s.is_showing_multiple_traces_length,
+    s.is_showing_autorouting,
   ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
   const setIsShowingMultipleTracesLength = useGlobalStore(
     (s) => s.setIsShowingMultipleTracesLength,
+  )
+  const setIsShowingAutorouting = useGlobalStore(
+    (s) => s.setIsShowingAutorouting,
   )
 
   useHotKey("1", () => selectLayer("top"))
@@ -317,6 +322,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     setIsShowingMultipleTracesLength(
                       !is_showing_multiple_traces_length,
                     )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Autorouting Animation"
+                  checked={is_showing_autorouting}
+                  onClick={() => {
+                    setIsShowingAutorouting(!is_showing_autorouting)
                   }}
                 />
               </div>

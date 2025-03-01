@@ -15,6 +15,7 @@ export default () => {
     })
     drawPrimitives(drawer, [
       {
+        _pcb_drawing_object_id: "circle_1",
         pcb_drawing_type: "circle",
         x: 100,
         y: 100,
@@ -22,6 +23,7 @@ export default () => {
         layer: "top",
       },
       {
+        _pcb_drawing_object_id: "rect_1",
         pcb_drawing_type: "rect",
         x: 100,
         y: 270,
@@ -30,6 +32,7 @@ export default () => {
         layer: "top",
       },
       {
+        _pcb_drawing_object_id: "text_1",
         pcb_drawing_type: "text",
         x: 50,
         y: 210,
@@ -38,6 +41,7 @@ export default () => {
         layer: "top",
       },
       {
+        _pcb_drawing_object_id: "line_1",
         pcb_drawing_type: "line",
         x1: 0,
         y1: 500,
@@ -47,6 +51,7 @@ export default () => {
         layer: "top",
       },
       {
+        _pcb_drawing_object_id: "line_2",
         pcb_drawing_type: "line",
         x1: 0,
         y1: 400,

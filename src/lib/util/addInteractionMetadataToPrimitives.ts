@@ -23,7 +23,7 @@ export function addInteractionMetadataToPrimitives({
       primitive._element &&
       (("pcb_trace_id" in primitive._element &&
         primitiveIdsInMousedOverNet.includes(
-          primitive._element.pcb_trace_id,
+          primitive._element.pcb_trace_id!,
         )) ||
         ("pcb_port_id" in primitive._element &&
           primitiveIdsInMousedOverNet.includes(

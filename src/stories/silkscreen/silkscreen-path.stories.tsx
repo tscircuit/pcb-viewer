@@ -11,8 +11,7 @@ export const SilkscreenPath: React.FC = () => {
           footprint={
             <footprint>
               <silkscreenpath
-                pcbX={0}
-                pcbY={0}
+                layer="top"
                 route={[
                   { x: 0, y: 0 },
                   { x: 1, y: 1 },
