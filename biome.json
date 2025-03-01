@@ -34,9 +34,13 @@
       "a11y": {
         "useKeyWithClickEvents": "off"
       },
+      "complexity": {
+        "noForEach": "off"
+      },
       "style": {
         "noNonNullAssertion": "off",
         "useNumberNamespace": "off",
+        "noUselessElse": "off",
         "useFilenamingConvention": {
           "level": "error",
           "options": {

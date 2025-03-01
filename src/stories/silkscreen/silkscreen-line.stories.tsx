@@ -12,15 +12,7 @@ export const SilkscreenLine: React.FC = () => {
         name="R1"
         footprint={
           <footprint>
-            <silkscreenline
-              pcbX={0}
-              pcbY={0}
-              x1={0}
-              y1={0}
-              x2={1}
-              y2={1}
-              strokeWidth={"0.1mm"}
-            />
+            <silkscreenline x1={0} y1={0} x2={1} y2={1} strokeWidth={"0.1mm"} />
           </footprint>
         }
       />

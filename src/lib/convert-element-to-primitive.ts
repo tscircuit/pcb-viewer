@@ -290,14 +290,14 @@ export const convertElementToPrimitives = (
           },
         ]
       } else if (element.shape === "rect") {
-        const { x, y, width, height } = element
+        const { center, width, height } = element
 
         return [
           {
             _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
             pcb_drawing_type: "rect",
-            x,
-            y,
+            x: center.x,
+            y: center.y,
             w: width,
             h: height,
             layer: "top",
@@ -308,6 +308,7 @@ export const convertElementToPrimitives = (
           },
         ]
       }
+      break
     }
     case "pcb_trace": {
       const primitives: Primitive[] = []
@@ -323,13 +324,15 @@ export const convertElementToPrimitives = (
         // Use getExpandedStroke to generate the polygon points
         const expandedStroke = getExpandedStroke(strokeInput, 0.5) // Use 0.5 as default width
 
+        const layer = (element.route[0] as any).layer
+
         // Generate a single polygon primitive from the expanded stroke
         primitives.push({
           _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
           _element: element,
           pcb_drawing_type: "polygon",
           points: expandedStroke,
-          layer: element.route[0].layer, // same layer for all points
+          layer, // same layer for all points
         })
 
         // Add circles for vias
@@ -341,9 +344,8 @@ export const convertElementToPrimitives = (
               pcb_drawing_type: "circle",
               x: r.x,
               y: r.y,
-              radius: r.outer_diameter / 2,
-              fill: true,
-              layer: element.route.layer,
+              r: (r as any).outer_diameter / 2,
+              layer: (r as any).from_layer,
             })
           }
         })
@@ -464,16 +466,22 @@ export const convertElementToPrimitives = (
       ]
     }
 
+    // @ts-ignore
     case "pcb_silkscreen_pill": {
       return [
         {
           _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "pill",
+          // @ts-ignore
           x: element.center.x,
+          // @ts-ignore
           y: element.center.y,
+          // @ts-ignore
           w: element.width,
+          // @ts-ignore
           h: element.height,
           layer:
+            // @ts-ignore
             element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
         },
       ]

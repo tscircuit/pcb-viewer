@@ -26,7 +26,7 @@ export interface CanvasElementsRendererProps {
   height?: number
   grid?: GridConfig
   allowEditing: boolean
-  focusOnHover: boolean
+  focusOnHover?: boolean
   cancelPanDrag: () => void
   onCreateEditEvent: (event: EditEvent) => void
   onModifyEditEvent: (event: Partial<EditEvent>) => void
