@@ -24,7 +24,7 @@ export const AutoroutingAnimations: React.FC = () => {
         }}
       >
         {Array.from({ length: 30 }).map((_, i) => (
-          <Fragment key={`fragment-${i}`}>
+          <Fragment key={i.toString()}>
             <capacitor
               capacitance="1000pF"
               footprint="0402"

@@ -17,6 +17,21 @@ interface Props {
   height?: number
 }
 
+const orderedLayers = [
+  "bottom_silkscreen",
+  "bottom",
+  "top",
+  "top_silkscreen",
+  "inner1",
+  "inner2",
+  "inner3",
+  "inner4",
+  "inner5",
+  "inner6",
+  "drill",
+  "other",
+]
+
 export const CanvasPrimitiveRenderer = ({
   primitives,
   transform,
@@ -57,18 +72,19 @@ export const CanvasPrimitiveRenderer = ({
         transform={transform!}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
-      {all_layers
+      {orderedLayers
         .map((l) => l.replace(/-/g, ""))
-        .concat(["drill", "other"])
         .map((layer, i) => (
           <canvas
             key={layer}
+            className={`pcb-layer-${layer}`}
             ref={(el) => {
               canvasRefs.current ??= {}
               canvasRefs.current[layer] = el!
             }}
             style={{
               position: "absolute",
+              zIndex: i,
               left: 0,
               top: 0,
               pointerEvents: "none",
