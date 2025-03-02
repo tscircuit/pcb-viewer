@@ -41,7 +41,7 @@ export const SilkscreenPill: React.FC = () => {
         },
         {
           type: "pcb_silkscreen_pill",
-          layer: "top",
+          layer: "bottom",
           pcb_component_id: "pcb_generic_component_0",
           pcb_silkscreen_pill_id: "pcb_silkscreen_pill_0",
           width: 1,

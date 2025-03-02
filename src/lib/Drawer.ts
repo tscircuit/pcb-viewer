@@ -60,13 +60,15 @@ export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
 
 export const DEFAULT_DRAW_ORDER = [
   "top",
+  "top_silkscreen",
+  "bottom_silkscreen",
+  "bottom",
   "inner1",
   "inner2",
   "inner3",
   "inner4",
   "inner5",
   "inner6",
-  "bottom",
 ] as const
 
 export const FILL_TYPES = {
@@ -346,7 +348,17 @@ export class Drawer {
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
-    const opaqueLayers = new Set([foregroundLayer, "drill", "other", "board"])
+    const opaqueLayers = new Set([
+      foregroundLayer,
+      "drill",
+      "other",
+      "board",
+      foregroundLayer === "top"
+        ? "top_silkscreen"
+        : foregroundLayer === "bottom"
+          ? "bottom_silkscreen"
+          : "",
+    ])
     const order = [
       "drill",
       "board",
@@ -356,7 +368,14 @@ export class Drawer {
     order.forEach((layer, i) => {
       const canvas = canvasLayerMap[layer]
       if (!canvas) return
-      canvas.style.zIndex = `${zIndexMap.topLayer - i}`
+      if (
+        (layer === "bottom_silkscreen" && foregroundLayer === "bottom") ||
+        (layer === "top_silkscreen" && foregroundLayer === "top")
+      ) {
+        canvas.style.zIndex = `${zIndexMap.topLayer}` // zIndexMap.topLayer
+      } else {
+        canvas.style.zIndex = `${zIndexMap.topLayer - i}`
+      }
       canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
     })
   }
