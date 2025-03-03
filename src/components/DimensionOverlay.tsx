@@ -34,7 +34,6 @@ export const DimensionOverlay = ({
         setDEnd({ x: mousePosRef.current.x, y: mousePosRef.current.y })
         setDimensionToolVisible((visible: boolean) => !visible)
         setDimensionToolStretching(true)
-        e.preventDefault()
       }
       if (e.key === "Escape") {
         setDimensionToolVisible(false)
