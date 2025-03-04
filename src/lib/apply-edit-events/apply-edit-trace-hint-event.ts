@@ -1,6 +1,6 @@
 import { AnyCircuitElement } from "circuit-json"
-import { EditTraceHintEvent } from "lib/edit-events"
 import { su } from "@tscircuit/soup-util"
+import { EditTraceHintEvent } from "@tscircuit/props"
 
 export const applyTraceHintEditEvent = (
   soup: AnyCircuitElement[],
