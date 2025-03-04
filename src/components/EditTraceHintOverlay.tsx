@@ -6,7 +6,6 @@ import type {
 } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import { useGlobalStore } from "global-store"
-import { type EditTraceHintEvent } from "lib/edit-events"
 import { Fragment, useEffect, useRef, useState } from "react"
 import {
   type Matrix,
@@ -17,6 +16,7 @@ import {
 import { HotkeyActionMenu } from "./HotkeyActionMenu"
 import { useToast } from "lib/toast"
 import { zIndexMap } from "lib/util/z-index-map"
+import { EditTraceHintEvent } from "@tscircuit/props"
 
 interface Props {
   transform?: Matrix

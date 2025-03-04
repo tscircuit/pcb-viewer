@@ -2,7 +2,6 @@ import React from "react"
 import { CanvasElementsRenderer } from "../components/CanvasElementsRenderer"
 import { compose, scale, translate } from "transformation-matrix"
 import { useMouseMatrixTransform } from "use-mouse-matrix-transform"
-import { EditComponentLocationEvent } from "lib/edit-events"
 
 const defaultTransform = compose(translate(100, 100), scale(40, 40))
 

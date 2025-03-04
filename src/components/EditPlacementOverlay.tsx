@@ -88,15 +88,29 @@ export const EditPlacementOverlay = ({
               dragEnd: rwMousePoint,
               edit_event_id,
             })
-
+            // interface EditPcbComponentLocationEvent extends BaseManualEditEvent {
+            //     edit_event_type: "edit_pcb_component_location";
+            //     /** @deprecated */
+            //     pcb_edit_event_type: "edit_component_location";
+            //     pcb_component_id: string;
+            //     original_center: {
+            //         x: number;
+            //         y: number;
+            //     };
+            //     new_center: {
+            //         x: number;
+            //         y: number;
+            //     };
+            // }
             onCreateEditEvent({
-              edit_event_id,
+              edit_event_type: "edit_pcb_component_location",
               pcb_edit_event_type: "edit_component_location",
               pcb_component_id: e.pcb_component_id,
               original_center: e.center,
               new_center: e.center,
-              in_progress: true,
+              edit_event_id,
               created_at: Date.now(),
+              in_progress: true,
             })
 
             setIsMovingComponent(true)
