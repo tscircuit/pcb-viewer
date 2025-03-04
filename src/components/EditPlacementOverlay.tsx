@@ -88,20 +88,6 @@ export const EditPlacementOverlay = ({
               dragEnd: rwMousePoint,
               edit_event_id,
             })
-            // interface EditPcbComponentLocationEvent extends BaseManualEditEvent {
-            //     edit_event_type: "edit_pcb_component_location";
-            //     /** @deprecated */
-            //     pcb_edit_event_type: "edit_component_location";
-            //     pcb_component_id: string;
-            //     original_center: {
-            //         x: number;
-            //         y: number;
-            //     };
-            //     new_center: {
-            //         x: number;
-            //         y: number;
-            //     };
-            // }
             onCreateEditEvent({
               edit_event_type: "edit_pcb_component_location",
               pcb_edit_event_type: "edit_component_location",
