@@ -88,15 +88,16 @@ export const EditPlacementOverlay = ({
               dragEnd: rwMousePoint,
               edit_event_id,
             })
+
             onCreateEditEvent({
+              edit_event_id,
               edit_event_type: "edit_pcb_component_location",
               pcb_edit_event_type: "edit_component_location",
               pcb_component_id: e.pcb_component_id,
               original_center: e.center,
               new_center: e.center,
-              edit_event_id,
-              created_at: Date.now(),
               in_progress: true,
+              created_at: Date.now(),
             })
 
             setIsMovingComponent(true)
