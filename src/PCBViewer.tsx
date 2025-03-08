@@ -6,7 +6,7 @@ import type { StateProps } from "global-store"
 import { applyEditEvents } from "lib/apply-edit-events"
 import type { EditEvent } from "lib/edit-events"
 import { ToastContainer } from "lib/toast"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
@@ -66,6 +66,14 @@ export const PCBViewer = ({
     onSetTransform: setTransformInternal,
     enabled: isInteractionEnabled,
   })
+
+  const gestureMode = useRef<"none" | "drag" | "pinch">("none")
+  const lastTouch = useRef<{ x: number; y: number } | null>(null)
+  const pinchData = useRef<{
+    initialDistance: number
+    initialMidpoint: { x: number; y: number }
+    initialTransform: any
+  } | null>(null)
 
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
@@ -183,8 +191,81 @@ export const PCBViewer = ({
     onEditEventsChanged?.(newEditEvents)
   }
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      gestureMode.current = "drag"
+      const touch = e.touches[0]
+      lastTouch.current = { x: touch.clientX, y: touch.clientY }
+    } else if (e.touches.length === 2) {
+      gestureMode.current = "pinch"
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      const dx = touch2.clientX - touch1.clientX
+      const dy = touch2.clientY - touch1.clientY
+      const distance = Math.hypot(dx, dy)
+      const midpoint = {
+        x: (touch1.clientX + touch2.clientX) / 2,
+        y: (touch1.clientY + touch2.clientY) / 2,
+      }
+      pinchData.current = {
+        initialDistance: distance,
+        initialMidpoint: midpoint,
+        initialTransform: transform,
+      }
+    }
+    e.preventDefault()
+  }
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (gestureMode.current === "drag" && e.touches.length === 1 && lastTouch.current) {
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - lastTouch.current.x
+      const deltaY = touch.clientY - lastTouch.current.y
+
+      const newTransform = {
+        ...transform,
+        e: transform.e + deltaX,
+        f: transform.f + deltaY,
+      }
+      setTransform(newTransform)
+      lastTouch.current = { x: touch.clientX, y: touch.clientY }
+    } else if (gestureMode.current === "pinch" && e.touches.length === 2 && pinchData.current) {
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      const dx = touch2.clientX - touch1.clientX
+      const dy = touch2.clientY - touch1.clientY
+      const newDistance = Math.hypot(dx, dy)
+
+      const { initialDistance, initialMidpoint, initialTransform } = pinchData.current
+      const scaleFactor = newDistance / initialDistance
+
+      const newTransform = compose(
+        translate(initialMidpoint.x, initialMidpoint.y),
+        scale(scaleFactor, scaleFactor),
+        translate(-initialMidpoint.x, -initialMidpoint.y),
+        initialTransform,
+      )
+      setTransform(newTransform)
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 0) {
+      gestureMode.current = "none"
+      lastTouch.current = null
+      pinchData.current = null
+    }
+    e.preventDefault()
+  }
+
   return (
-    <div ref={transformRef as any} style={{ position: "relative" }}>
+    <div
+      ref={transformRef as any}
+      style={{ position: "relative" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div ref={ref as any}>
         <ContextProviders initialState={initialState}>
           <CanvasElementsRenderer
