@@ -1,6 +1,3 @@
-import {
-  EditPcbComponentLocationEvent,
-  EditTraceHintEvent,
-} from "@tscircuit/props"
+import { ManualEditEvent } from "@tscircuit/props"
 
-export type EditEvent = EditPcbComponentLocationEvent | EditTraceHintEvent
+export type EditEvent = ManualEditEvent
