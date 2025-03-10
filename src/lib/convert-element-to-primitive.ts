@@ -1,4 +1,4 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
@@ -359,6 +359,10 @@ export const convertElementToPrimitives = (
       let prevX: number | null = null
       let prevY: number | null = null
 
+      const sourceTrace = allElements.find(
+        (e) => e.type === "source_trace" && e.source_trace_id === element.source_trace_id,
+      ) as SourceTrace
+
       for (const route of element.route) {
         if (route.route_type === "wire") {
           if (prevX !== null && prevY !== null) {
@@ -370,7 +374,7 @@ export const convertElementToPrimitives = (
               y1: prevY,
               x2: route.x,
               y2: route.y,
-              width: route.width,
+              width: route.width ?? sourceTrace?.min_trace_thickness,
               squareCap: false,
               layer: route.layer,
             })
