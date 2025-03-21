@@ -140,17 +140,15 @@ export const PCBViewer = ({
   }
 
   useEffect(() => {
-    if (
-      !disableAutoFocus &&
-      refDimensions &&
-      refDimensions.width !== 0 &&
-      (children || soup) &&
-      (!clickToInteractEnabled || isInteractionEnabled)
-    ) {
-      resetTransform(false) // No animation for initial/component updates
-    }
+    if (disableAutoFocus) return
+    if (!refDimensions) return
+    if (!(children || soup || circuitJson)) return
+    if (clickToInteractEnabled && !isInteractionEnabled) return
+
+    resetTransform(false) // No animation for initial/component updates
   }, [
     children,
+    circuitJson,
     refDimensions,
     clickToInteractEnabled,
     isInteractionEnabled,
