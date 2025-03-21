@@ -141,7 +141,7 @@ export const PCBViewer = ({
 
   useEffect(() => {
     if (disableAutoFocus) return
-    if (!refDimensions) return
+    if (!refDimensions?.width) return
     if (!(children || soup || circuitJson)) return
     if (clickToInteractEnabled && !isInteractionEnabled) return
 
