@@ -26,7 +26,7 @@
     "@storybook/nextjs": "^8.0.6",
     "@storybook/react": "^8.0.6",
     "@swc/core": "^1.4.12",
-    "@tscircuit/core": "0.0.355",
+    "@tscircuit/core": "0.0.356",
     "@tscircuit/eagle-xml-converter": "^1.0.0",
     "@tscircuit/props": "^0.0.163",
     "@tscircuit/soup-util": "^0.0.41",
