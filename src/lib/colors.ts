@@ -20,7 +20,7 @@ export default {
     b_fab: "rgb(88, 93, 132)",
     b_mask: "rgba(2, 255, 238, 0.400)",
     b_paste: "rgb(0, 194, 194)",
-    b_silks: "rgb(94, 153, 230)",
+    b_silks: "rgb(242, 237, 161)",
     background: "rgb(0, 16, 35)",
     cmts_user: "rgb(89, 148, 220)",
     copper: {
