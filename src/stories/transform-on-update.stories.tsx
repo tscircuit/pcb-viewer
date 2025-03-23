@@ -50,7 +50,7 @@ const PCBViewerTransformTest = () => {
       
       <div style={{ height: "500px", border: "1px solid #ddd" }}>
         <PCBViewer 
-          circuitJson={circuit}
+          soup={circuit}
           height={500}
         />
       </div>
