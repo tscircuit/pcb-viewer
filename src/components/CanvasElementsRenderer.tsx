@@ -1,22 +1,21 @@
-import React, { useCallback, useState } from "react"
-import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import { pcb_port, type AnyCircuitElement } from "circuit-json"
-import { useMemo } from "react"
-import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
-import type { Matrix } from "transformation-matrix"
-import type { GridConfig, Primitive } from "lib/types"
-import { MouseElementTracker } from "./MouseElementTracker"
-import { DimensionOverlay } from "./DimensionOverlay"
-import { ToolbarOverlay } from "./ToolbarOverlay"
-import { ErrorOverlay } from "./ErrorOverlay"
-import { EditPlacementOverlay } from "./EditPlacementOverlay"
-import type { EditEvent } from "lib/edit-events"
-import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
-import { RatsNestOverlay } from "./RatsNestOverlay"
+import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
-import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
-import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import type { GraphicsObject } from "graphics-debug"
+import type { EditEvent } from "lib/edit-events"
+import type { GridConfig, Primitive } from "lib/types"
+import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import type { Matrix } from "transformation-matrix"
+import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
+import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
+import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
+import { DimensionOverlay } from "./DimensionOverlay"
+import { EditPlacementOverlay } from "./EditPlacementOverlay"
+import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
+import { ErrorOverlay } from "./ErrorOverlay"
+import { MouseElementTracker } from "./MouseElementTracker"
+import { RatsNestOverlay } from "./RatsNestOverlay"
+import { ToolbarOverlay } from "./ToolbarOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
@@ -80,6 +79,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     },
     [primitives],
   )
+
+  useEffect(() => {
+    const newPrimitives = addInteractionMetadataToPrimitives({
+      primitivesWithoutInteractionMetadata,
+      drawingObjectIdsWithMouseOver: new Set(),
+      primitiveIdsInMousedOverNet: [],
+    })
+
+    setPrimitives(newPrimitives)
+  }, [props.elements, primitivesWithoutInteractionMetadata])
 
   return (
     <MouseElementTracker
