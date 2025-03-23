@@ -3,15 +3,15 @@ import { findBoundsAndCenter } from "@tscircuit/soup-util"
 import type { AnyCircuitElement } from "circuit-json"
 import { ContextProviders } from "components/ContextProviders"
 import type { StateProps } from "global-store"
+import type { GraphicsObject } from "graphics-debug"
 import { applyEditEvents } from "lib/apply-edit-events"
 import type { EditEvent } from "lib/edit-events"
 import { ToastContainer } from "lib/toast"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
-import type { GraphicsObject } from "graphics-debug"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -70,7 +70,10 @@ export const PCBViewer = ({
   let [editEvents, setEditEvents] = useState<EditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
-  const resetTransform = (shouldAnimate: boolean = false) => {
+  const initialRenderCompleted = useRef(false)
+  const circuitJsonKey = `${circuitJson?.length || 0}_${Math.random()}`
+
+  const resetTransform = (shouldAnimate = false) => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
     const { center, width, height } = elements.some((e) =>
@@ -145,7 +148,10 @@ export const PCBViewer = ({
     if (!(children || soup || circuitJson)) return
     if (clickToInteractEnabled && !isInteractionEnabled) return
 
-    resetTransform(false) // No animation for initial/component updates
+    if (!initialRenderCompleted.current) {
+      resetTransform(false)
+      initialRenderCompleted.current = true
+    }
   }, [
     children,
     circuitJson,
@@ -155,13 +161,13 @@ export const PCBViewer = ({
     disableAutoFocus,
   ])
 
-  const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
-    () =>
+  const pcbElmsPreEdit = useMemo(() => {
+    return (
       circuitJson?.filter(
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
-      ) ?? [],
-    [circuitJson],
-  )
+      ) ?? []
+    )
+  }, [circuitJsonKey])
 
   const elements = useMemo(() => {
     return applyEditEvents(pcbElmsPreEdit, editEvents)

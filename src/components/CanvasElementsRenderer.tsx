@@ -1,22 +1,21 @@
-import React, { useCallback, useState } from "react"
-import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
-import { pcb_port, type AnyCircuitElement } from "circuit-json"
-import { useMemo } from "react"
-import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
-import type { Matrix } from "transformation-matrix"
-import type { GridConfig, Primitive } from "lib/types"
-import { MouseElementTracker } from "./MouseElementTracker"
-import { DimensionOverlay } from "./DimensionOverlay"
-import { ToolbarOverlay } from "./ToolbarOverlay"
-import { ErrorOverlay } from "./ErrorOverlay"
-import { EditPlacementOverlay } from "./EditPlacementOverlay"
-import type { EditEvent } from "lib/edit-events"
-import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
-import { RatsNestOverlay } from "./RatsNestOverlay"
+import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
-import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
-import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import type { GraphicsObject } from "graphics-debug"
+import type { EditEvent } from "lib/edit-events"
+import type { GridConfig, Primitive } from "lib/types"
+import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
+import { useCallback, useMemo, useState } from "react"
+import type { Matrix } from "transformation-matrix"
+import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
+import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
+import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
+import { DimensionOverlay } from "./DimensionOverlay"
+import { EditPlacementOverlay } from "./EditPlacementOverlay"
+import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
+import { ErrorOverlay } from "./ErrorOverlay"
+import { MouseElementTracker } from "./MouseElementTracker"
+import { RatsNestOverlay } from "./RatsNestOverlay"
+import { ToolbarOverlay } from "./ToolbarOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
@@ -45,41 +44,45 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       return [primitivesWithoutInteractionMetadata, connectivityMap]
     }, [props.elements])
 
-  const [primitives, setPrimitives] = useState<Primitive[]>(
-    primitivesWithoutInteractionMetadata,
-  )
+  const [hoverState, setHoverState] = useState({
+    drawingObjectIdsWithMouseOver: new Set<string>(),
+    primitiveIdsInMousedOverNet: [] as string[]
+  });
 
-  const onMouseOverPrimitives = useCallback(
-    (primitivesHoveredOver: Primitive[]) => {
-      const primitiveIdsInMousedOverNet: string[] = []
-      for (const primitive of primitivesHoveredOver) {
-        if (primitive._element) {
-          const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
-            "pcb_port_id" in primitive._element
-              ? primitive._element?.pcb_port_id!
-              : "pcb_trace_id" in primitive._element
-                ? primitive._element?.pcb_trace_id!
-                : "",
-          )
-          primitiveIdsInMousedOverNet.push(
-            ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
-          )
-        }
+  const primitives = useMemo(() => {
+    return addInteractionMetadataToPrimitives({
+      primitivesWithoutInteractionMetadata,
+      drawingObjectIdsWithMouseOver: hoverState.drawingObjectIdsWithMouseOver,
+      primitiveIdsInMousedOverNet: hoverState.primitiveIdsInMousedOverNet,
+    });
+  }, [primitivesWithoutInteractionMetadata, hoverState]);
+
+  const onMouseOverPrimitives = useCallback((primitivesHoveredOver: Primitive[]) => {
+    const primitiveIdsInMousedOverNet: string[] = []
+    for (const primitive of primitivesHoveredOver) {
+      if (primitive._element) {
+        const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
+          "pcb_port_id" in primitive._element
+            ? primitive._element?.pcb_port_id!
+            : "pcb_trace_id" in primitive._element
+              ? primitive._element?.pcb_trace_id!
+              : "",
+        )
+        primitiveIdsInMousedOverNet.push(
+          ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
+        )
       }
+    }
 
-      const drawingObjectIdsWithMouseOver = new Set(
-        primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
-      )
-      const newPrimitives = addInteractionMetadataToPrimitives({
-        primitivesWithoutInteractionMetadata,
-        drawingObjectIdsWithMouseOver,
-        primitiveIdsInMousedOverNet,
-      })
+    const drawingObjectIdsWithMouseOver = new Set(
+      primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
+    )
 
-      setPrimitives(newPrimitives)
-    },
-    [primitives],
-  )
+    setHoverState({
+      drawingObjectIdsWithMouseOver,
+      primitiveIdsInMousedOverNet
+    });
+  }, [connectivityMap]);
 
   return (
     <MouseElementTracker
