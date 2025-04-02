@@ -5,7 +5,7 @@ import { PCBViewer } from "../../PCBViewer"
 export const SilkscreenPill: React.FC = () => {
   return (
     <PCBViewer
-      soup={[
+      circuitJson={[
         {
           type: "source_component",
           source_component_id: "generic_0",

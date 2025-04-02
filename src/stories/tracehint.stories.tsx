@@ -5,7 +5,7 @@ export const TraceHintExample: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
-        soup={[
+        circuitJson={[
           {
             type: "source_component",
             source_component_id: "simple_resistor_0",

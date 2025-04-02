@@ -16,7 +16,6 @@ import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
 type Props = {
-  children?: any
   circuitJson?: AnyCircuitElement[]
   height?: number
   allowEditing?: boolean
@@ -29,7 +28,6 @@ type Props = {
 }
 
 export const PCBViewer = ({
-  children,
   circuitJson,
   debugGraphics,
   height = 600,
@@ -40,13 +38,6 @@ export const PCBViewer = ({
   focusOnHover = false,
   clickToInteractEnabled = false,
 }: Props) => {
-  const {
-    circuitJson: circuitJsonFromChildren,
-    error: errorFromChildren,
-    isLoading,
-  } = useRenderedCircuit(children) as any
-  circuitJson ??= circuitJsonFromChildren ?? []
-
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
@@ -97,15 +88,14 @@ export const PCBViewer = ({
 
   useEffect(() => {
     if (!refDimensions?.width) return
-    const cj = children || circuitJson
-    if (!cj) return
-    if (cj.length === 0) return
+    if (!circuitJson) return
+    if (circuitJson.length === 0) return
 
     if (!initialRenderCompleted.current) {
       resetTransform()
       initialRenderCompleted.current = true
     }
-  }, [children, circuitJson, refDimensions])
+  }, [circuitJson, refDimensions])
 
   const pcbElmsPreEdit = useMemo(() => {
     return (

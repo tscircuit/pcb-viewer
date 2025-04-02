@@ -117,7 +117,7 @@ export const TraceErrorCircuit2: React.FC = () => {
 export const TraceErrorCircuit4 = () => (
   <div style={{ backgroundColor: "black" }}>
     <PCBViewer
-      soup={[
+      circuitJson={[
         {
           type: "source_component",
           source_component_id: "generic_0",

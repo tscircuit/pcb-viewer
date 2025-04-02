@@ -6,7 +6,7 @@ export const KeepoutRectExample: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
-        soup={[
+        circuitJson={[
           {
             type: "source_port",
             source_port_id: "source_port_0",
@@ -380,7 +380,7 @@ export const KeepoutCircleExample: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
-        soup={[
+        circuitJson={[
           {
             type: "source_port",
             source_port_id: "source_port_0",
