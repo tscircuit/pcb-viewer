@@ -68,7 +68,7 @@ export const DebugGraphics: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} debugGraphics={debugGraphics} />
+      <PCBViewer circuitJson={soup as any} debugGraphics={debugGraphics} />
     </div>
   )
 }

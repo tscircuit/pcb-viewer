@@ -15,7 +15,7 @@ export const SimpleResistorSMD: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }
@@ -46,7 +46,7 @@ export const SimpleResistorThruHole: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }
@@ -72,7 +72,7 @@ export const SimpleResistorsOffCenter: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }

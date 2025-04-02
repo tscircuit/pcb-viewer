@@ -32,7 +32,7 @@ export const TraceErrorCircuit1: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }
@@ -58,7 +58,7 @@ export const TraceErrorCircuit2: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }
@@ -108,7 +108,7 @@ export const TraceErrorCircuit2: React.FC = () => {
 
 //   return (
 //     <div style={{ backgroundColor: "black" }}>
-//       <PCBViewer soup={soup} />
+//       <PCBViewer circuitJson={soup as any} />
 //     </div>
 //   );
 // };

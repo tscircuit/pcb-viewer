@@ -6,7 +6,7 @@ import soup from "./nulltracehint-soup.json"
 export const NullTraceHint: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }
