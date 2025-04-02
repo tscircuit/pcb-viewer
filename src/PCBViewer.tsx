@@ -73,7 +73,7 @@ export const PCBViewer = ({
   const initialRenderCompleted = useRef(false)
   const circuitJsonKey = `${circuitJson?.length || 0}`
 
-  const resetTransform = (shouldAnimate = false) => {
+  const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
     const { center, width, height } = elements.some((e) =>
@@ -96,70 +96,19 @@ export const PCBViewer = ({
       translate(-center.x, -center.y),
     )
 
-    if (!shouldAnimate) {
-      setTransform(targetTransform)
-      return
-    }
-
-    const startTransform = { ...transform }
-    const startTime = Date.now()
-    const duration = 1000
-
-    const animateTransform = () => {
-      const elapsed = Date.now() - startTime
-      const progress = Math.min(elapsed / duration, 1)
-
-      const easeProgress = 1 - Math.pow(1 - progress, 3)
-
-      const newTransform = {
-        a:
-          startTransform.a +
-          (targetTransform.a - startTransform.a) * easeProgress,
-        b:
-          startTransform.b +
-          (targetTransform.b - startTransform.b) * easeProgress,
-        c:
-          startTransform.c +
-          (targetTransform.c - startTransform.c) * easeProgress,
-        d:
-          startTransform.d +
-          (targetTransform.d - startTransform.d) * easeProgress,
-        e:
-          startTransform.e +
-          (targetTransform.e - startTransform.e) * easeProgress,
-        f:
-          startTransform.f +
-          (targetTransform.f - startTransform.f) * easeProgress,
-      }
-
-      setTransform(newTransform)
-
-      if (progress < 1) {
-        requestAnimationFrame(animateTransform)
-      }
-    }
-
-    requestAnimationFrame(animateTransform)
+    setTransform(targetTransform)
+    return
   }
 
   useEffect(() => {
-    if (disableAutoFocus) return
     if (!refDimensions?.width) return
     if (!(children || soup || circuitJson)) return
-    if (clickToInteractEnabled && !isInteractionEnabled) return
 
     if (!initialRenderCompleted.current) {
-      resetTransform(false)
+      resetTransform()
       initialRenderCompleted.current = true
     }
-  }, [
-    children,
-    circuitJson,
-    refDimensions,
-    clickToInteractEnabled,
-    isInteractionEnabled,
-    disableAutoFocus,
-  ])
+  }, [children, circuitJson, refDimensions])
 
   const pcbElmsPreEdit = useMemo(() => {
     return (
@@ -220,7 +169,7 @@ export const PCBViewer = ({
         <div
           onClick={() => {
             setIsInteractionEnabled(true)
-            resetTransform(true) // Animate when clicking to interact
+            resetTransform()
           }}
           style={{
             position: "absolute",
