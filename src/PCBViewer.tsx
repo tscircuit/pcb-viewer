@@ -1,4 +1,3 @@
-import { useRenderedCircuit } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/soup-util"
 import type { AnyCircuitElement } from "circuit-json"
 import { ContextProviders } from "components/ContextProviders"
