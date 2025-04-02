@@ -99,3 +99,27 @@ export type GridConfig = {
     bottom: number
   }
 }
+
+
+export interface StateProps {
+  scale: number;
+  translateX: number;
+  translateY: number;
+  [key: string]: any; 
+}
+
+export interface PCBViewerProps {
+  children?: React.ReactNode;
+  circuitJson?: any;
+  height?: number;
+  allowEditing?: boolean;
+  editEvents?: any[];
+  onEditEventsChanged?: (events: any[]) => void;
+  initialState?: Partial<StateProps>;
+}
+
+export interface MobileViewerProps extends PCBViewerProps {
+  enableTouchGestures?: boolean;
+  maxScale?: number;
+  minScale?: number;
+}
