@@ -97,7 +97,7 @@ export const PCBViewer = ({
 
   useEffect(() => {
     if (!refDimensions?.width) return
-    const cj = children || soup || circuitJson
+    const cj = children || circuitJson
     if (!cj) return
     if (cj.length === 0) return
 
