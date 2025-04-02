@@ -18,7 +18,6 @@ const defaultTransform = compose(translate(400, 300), scale(40, -40))
 type Props = {
   children?: any
   circuitJson?: AnyCircuitElement[]
-  soup?: any // @deprecated Use circuitJson instead
   height?: number
   allowEditing?: boolean
   editEvents?: EditEvent[]
@@ -32,7 +31,6 @@ type Props = {
 
 export const PCBViewer = ({
   children,
-  soup,
   circuitJson,
   debugGraphics,
   height = 600,
@@ -44,7 +42,6 @@ export const PCBViewer = ({
   clickToInteractEnabled = false,
   disableAutoFocus = false,
 }: Props) => {
-  circuitJson ??= soup
   const {
     circuitJson: circuitJsonFromChildren,
     error: errorFromChildren,
@@ -102,7 +99,9 @@ export const PCBViewer = ({
 
   useEffect(() => {
     if (!refDimensions?.width) return
-    if (!(children || soup || circuitJson)) return
+    const cj = children || soup || circuitJson
+    if (!cj) return
+    if (cj.length === 0) return
 
     if (!initialRenderCompleted.current) {
       resetTransform()
