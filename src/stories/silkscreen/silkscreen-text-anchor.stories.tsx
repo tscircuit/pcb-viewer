@@ -54,7 +54,7 @@ export const SilkscreenTextAnchors: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }

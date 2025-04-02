@@ -7,7 +7,7 @@ export const RotatedRectExample: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
-        soup={
+        circuitJson={
           [
             {
               type: "pcb_smtpad",

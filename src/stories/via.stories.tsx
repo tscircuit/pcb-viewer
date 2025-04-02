@@ -23,7 +23,7 @@ export const ViaExample: React.FC = () => {
   const soup = circuit.getCircuitJson()
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup as any} />
     </div>
   )
 }

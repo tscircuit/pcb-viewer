@@ -1,4 +1,3 @@
-import { useRenderedCircuit } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/soup-util"
 import type { AnyCircuitElement } from "circuit-json"
 import { ContextProviders } from "components/ContextProviders"
@@ -16,9 +15,7 @@ import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
 type Props = {
-  children?: any
   circuitJson?: AnyCircuitElement[]
-  soup?: any // @deprecated Use circuitJson instead
   height?: number
   allowEditing?: boolean
   editEvents?: EditEvent[]
@@ -26,13 +23,10 @@ type Props = {
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
-  disableAutoFocus?: boolean
   debugGraphics?: GraphicsObject | null
 }
 
 export const PCBViewer = ({
-  children,
-  soup,
   circuitJson,
   debugGraphics,
   height = 600,
@@ -42,16 +36,7 @@ export const PCBViewer = ({
   onEditEventsChanged,
   focusOnHover = false,
   clickToInteractEnabled = false,
-  disableAutoFocus = false,
 }: Props) => {
-  circuitJson ??= soup
-  const {
-    circuitJson: circuitJsonFromChildren,
-    error: errorFromChildren,
-    isLoading,
-  } = useRenderedCircuit(children) as any
-  circuitJson ??= circuitJsonFromChildren ?? []
-
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
@@ -73,7 +58,7 @@ export const PCBViewer = ({
   const initialRenderCompleted = useRef(false)
   const circuitJsonKey = `${circuitJson?.length || 0}`
 
-  const resetTransform = (shouldAnimate = false) => {
+  const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
     const { center, width, height } = elements.some((e) =>
@@ -96,70 +81,20 @@ export const PCBViewer = ({
       translate(-center.x, -center.y),
     )
 
-    if (!shouldAnimate) {
-      setTransform(targetTransform)
-      return
-    }
-
-    const startTransform = { ...transform }
-    const startTime = Date.now()
-    const duration = 1000
-
-    const animateTransform = () => {
-      const elapsed = Date.now() - startTime
-      const progress = Math.min(elapsed / duration, 1)
-
-      const easeProgress = 1 - Math.pow(1 - progress, 3)
-
-      const newTransform = {
-        a:
-          startTransform.a +
-          (targetTransform.a - startTransform.a) * easeProgress,
-        b:
-          startTransform.b +
-          (targetTransform.b - startTransform.b) * easeProgress,
-        c:
-          startTransform.c +
-          (targetTransform.c - startTransform.c) * easeProgress,
-        d:
-          startTransform.d +
-          (targetTransform.d - startTransform.d) * easeProgress,
-        e:
-          startTransform.e +
-          (targetTransform.e - startTransform.e) * easeProgress,
-        f:
-          startTransform.f +
-          (targetTransform.f - startTransform.f) * easeProgress,
-      }
-
-      setTransform(newTransform)
-
-      if (progress < 1) {
-        requestAnimationFrame(animateTransform)
-      }
-    }
-
-    requestAnimationFrame(animateTransform)
+    setTransform(targetTransform)
+    return
   }
 
   useEffect(() => {
-    if (disableAutoFocus) return
     if (!refDimensions?.width) return
-    if (!(children || soup || circuitJson)) return
-    if (clickToInteractEnabled && !isInteractionEnabled) return
+    if (!circuitJson) return
+    if (circuitJson.length === 0) return
 
     if (!initialRenderCompleted.current) {
-      resetTransform(false)
+      resetTransform()
       initialRenderCompleted.current = true
     }
-  }, [
-    children,
-    circuitJson,
-    refDimensions,
-    clickToInteractEnabled,
-    isInteractionEnabled,
-    disableAutoFocus,
-  ])
+  }, [circuitJson, refDimensions])
 
   const pcbElmsPreEdit = useMemo(() => {
     return (
@@ -220,7 +155,7 @@ export const PCBViewer = ({
         <div
           onClick={() => {
             setIsInteractionEnabled(true)
-            resetTransform(true) // Animate when clicking to interact
+            resetTransform()
           }}
           style={{
             position: "absolute",

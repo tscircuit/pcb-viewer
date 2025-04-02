@@ -49,7 +49,7 @@ const HoverBehaviorDemo: React.FC<{ focusOnHover?: boolean }> = ({
   return (
     <div style={{ height: "200vh", padding: "100px 0" }}>
       <div style={{ backgroundColor: "black", margin: "300px 0" }}>
-        <PCBViewer soup={soup} focusOnHover={focusOnHover} />
+        <PCBViewer circuitJson={soup as any} focusOnHover={focusOnHover} />
       </div>
     </div>
   )
