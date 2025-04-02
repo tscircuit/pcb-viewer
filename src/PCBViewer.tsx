@@ -25,7 +25,6 @@ type Props = {
   onEditEventsChanged?: (editEvents: EditEvent[]) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
-  disableAutoFocus?: boolean
   debugGraphics?: GraphicsObject | null
 }
 
@@ -40,7 +39,6 @@ export const PCBViewer = ({
   onEditEventsChanged,
   focusOnHover = false,
   clickToInteractEnabled = false,
-  disableAutoFocus = false,
 }: Props) => {
   const {
     circuitJson: circuitJsonFromChildren,
