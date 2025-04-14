@@ -1,23 +1,24 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
 import { useGlobalStore } from "global-store"
-import { EditEvent } from "lib/edit-events"
 import { useEffect, useRef, useState } from "react"
-import { Matrix, applyToPoint, identity, inverse } from "transformation-matrix"
+import type { Matrix } from "transformation-matrix"
+import { applyToPoint, identity, inverse } from "transformation-matrix"
+import type { ManualEditEvent } from "@tscircuit/props"
 
 interface Props {
   transform?: Matrix
   children: any
   soup: AnyCircuitElement[]
   disabled?: boolean
-  cancelPanDrag: Function
-  onCreateEditEvent: (event: EditEvent) => void
-  onModifyEditEvent: (event: Partial<EditEvent>) => void
+  cancelPanDrag: () => void
+  onCreateEditEvent: (event: ManualEditEvent) => void
+  onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
 }
 
 const isInsideOf = (
   pcb_component: PcbComponent,
   point: { x: number; y: number },
-  padding: number = 0,
+  padding = 0,
 ) => {
   const halfWidth = pcb_component.width / 2
   const halfHeight = pcb_component.height / 2
@@ -69,7 +70,7 @@ export const EditPlacementOverlay = ({
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
-        if (isNaN(x) || isNaN(y)) return
+        if (Number.isNaN(x) || Number.isNaN(y)) return
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
 
         let foundActiveComponent = false
@@ -118,7 +119,7 @@ export const EditPlacementOverlay = ({
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
-        if (isNaN(x) || isNaN(y)) return
+        if (Number.isNaN(x) || Number.isNaN(y)) return
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
         setDragState({
           ...dragState,
