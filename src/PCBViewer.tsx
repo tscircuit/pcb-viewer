@@ -1,16 +1,16 @@
+import { applyEditEvents } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/soup-util"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "components/ContextProviders"
 import type { StateProps } from "global-store"
 import type { GraphicsObject } from "graphics-debug"
-import { applyEditEvents } from "lib/apply-edit-events"
-import type { EditEvent } from "lib/edit-events"
 import { ToastContainer } from "lib/toast"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
+import type { ManualEditEvent } from "@tscircuit/props"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -18,9 +18,9 @@ type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
   allowEditing?: boolean
-  editEvents?: EditEvent[]
+  editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
-  onEditEventsChanged?: (editEvents: EditEvent[]) => void
+  onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
@@ -52,7 +52,7 @@ export const PCBViewer = ({
     enabled: isInteractionEnabled,
   })
 
-  let [editEvents, setEditEvents] = useState<EditEvent[]>([])
+  let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
   const initialRenderCompleted = useRef(false)
@@ -105,17 +105,20 @@ export const PCBViewer = ({
   }, [circuitJsonKey])
 
   const elements = useMemo(() => {
-    return applyEditEvents(pcbElmsPreEdit, editEvents)
+    return applyEditEvents({
+      circuitJson: pcbElmsPreEdit,
+      editEvents,
+    })
   }, [pcbElmsPreEdit, editEvents])
 
-  const onCreateEditEvent = (event: EditEvent) => {
+  const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
     onEditEventsChanged?.([...editEvents, event])
   }
-  const onModifyEditEvent = (modifiedEvent: Partial<EditEvent>) => {
-    const newEditEvents: EditEvent[] = editEvents.map((e) =>
+  const onModifyEditEvent = (modifiedEvent: Partial<ManualEditEvent>) => {
+    const newEditEvents: ManualEditEvent[] = editEvents.map((e) =>
       e.edit_event_id === modifiedEvent.edit_event_id
-        ? ({ ...e, ...modifiedEvent } as EditEvent)
+        ? ({ ...e, ...modifiedEvent } as ManualEditEvent)
         : e,
     )
     setEditEvents(newEditEvents)
@@ -145,7 +148,7 @@ export const PCBViewer = ({
                 bottom: 0,
               },
             }}
-            elements={elements}
+            elements={elements as SourceTrace[]}
             debugGraphics={debugGraphics}
           />
           <ToastContainer />
