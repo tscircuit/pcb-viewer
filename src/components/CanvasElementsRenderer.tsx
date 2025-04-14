@@ -1,7 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
-import type { EditEvent } from "lib/edit-events"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 import { useCallback, useMemo, useState } from "react"
@@ -16,6 +15,7 @@ import { ErrorOverlay } from "./ErrorOverlay"
 import { MouseElementTracker } from "./MouseElementTracker"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
+import type { ManualEditEvent } from "@tscircuit/props"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
@@ -27,8 +27,8 @@ export interface CanvasElementsRendererProps {
   allowEditing: boolean
   focusOnHover?: boolean
   cancelPanDrag: () => void
-  onCreateEditEvent: (event: EditEvent) => void
-  onModifyEditEvent: (event: Partial<EditEvent>) => void
+  onCreateEditEvent: (event: ManualEditEvent) => void
+  onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
