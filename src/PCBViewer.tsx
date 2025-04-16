@@ -56,7 +56,7 @@ export const PCBViewer = ({
   editEvents = editEventsProp ?? editEvents
 
   const initialRenderCompleted = useRef(false)
-  const circuitJsonKey = `${circuitJson?.length || 0}`
+  const circuitJsonKey = `${circuitJson?.length || 0}_${(circuitJson as any)?.editCount || 0}`
 
   const resetTransform = () => {
     const elmBounds =
