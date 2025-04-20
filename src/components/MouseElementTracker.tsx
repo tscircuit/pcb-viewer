@@ -7,7 +7,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 
-const detectPrimitives = (
+const getPrimitivesUnderPoint = (
   primitives: Primitive[],
   rwPoint: { x: number; y: number },
   transform: Matrix,
@@ -126,7 +126,11 @@ export const MouseElementTracker = ({
   ) => {
     setMousePos({ x, y })
     const rwPoint = applyToPoint(inverse(transform), { x, y })
-    const newMousedPrimitives = detectPrimitives(primitives, rwPoint, transform)
+    const newMousedPrimitives = getPrimitivesUnderPoint(
+      primitives,
+      rwPoint,
+      transform,
+    )
 
     if (
       ifSetsMatchExactly(
