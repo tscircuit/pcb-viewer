@@ -130,6 +130,59 @@ export const MouseElementTracker = ({
           onMouseHoverOverPrimitives(newMousedPrimitives)
         }
       }}
+      onTouchStart={(e) => {
+        if (transform) {
+          const touch = e.touches[0]
+          const rect = e.currentTarget.getBoundingClientRect()
+          const x = touch.clientX - rect.left
+          const y = touch.clientY - rect.top
+          setMousePos({ x, y })
+          const rwPoint = applyToPoint(inverse(transform), { x, y })
+          const newMousedPrimitives: Primitive[] = []
+          for (const primitive of primitives) {
+            if (!primitive._element) continue
+            if ("x1" in primitive && primitive._element?.type === "pcb_trace") {
+              const distance = pointToSegmentDistance(
+                { x: rwPoint.x, y: rwPoint.y },
+                { x: primitive.x1, y: primitive.y1 },
+                { x: primitive.x2, y: primitive.y2 },
+              )
+
+              const lineWidth = primitive.width || 0.5
+              const detectionThreshold =
+                Math.max(lineWidth * 25, 2) / transform!.a
+
+              if (distance < detectionThreshold) {
+                newMousedPrimitives.push(primitive)
+              }
+              continue
+            }
+            if (!("x" in primitive && "y" in primitive)) continue
+
+            let w = 0
+            let h = 0
+
+            if ("w" in primitive && "h" in primitive) {
+              w = primitive.w
+              h = primitive.h
+            } else if ("r" in primitive) {
+              w = (primitive as any).r * 2
+              h = (primitive as any).r * 2
+            } else {
+              continue
+            }
+
+            if (
+              Math.abs((primitive as any).x - rwPoint.x) < w / 2 &&
+              Math.abs((primitive as any).y - rwPoint.y) < h / 2
+            ) {
+              newMousedPrimitives.push(primitive)
+            }
+          }
+          setMousedPrimitives(newMousedPrimitives)
+          onMouseHoverOverPrimitives(newMousedPrimitives)
+        }
+      }}
     >
       {children}
       <ElementOverlayBox
