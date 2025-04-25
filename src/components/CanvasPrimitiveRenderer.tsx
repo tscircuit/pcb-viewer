@@ -18,6 +18,7 @@ interface Props {
 }
 
 const orderedLayers = [
+  "board",
   "bottom_silkscreen",
   "bottom",
   "top",
