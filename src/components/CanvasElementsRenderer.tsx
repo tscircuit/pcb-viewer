@@ -46,43 +46,46 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   const [hoverState, setHoverState] = useState({
     drawingObjectIdsWithMouseOver: new Set<string>(),
-    primitiveIdsInMousedOverNet: [] as string[]
-  });
+    primitiveIdsInMousedOverNet: [] as string[],
+  })
 
   const primitives = useMemo(() => {
     return addInteractionMetadataToPrimitives({
       primitivesWithoutInteractionMetadata,
       drawingObjectIdsWithMouseOver: hoverState.drawingObjectIdsWithMouseOver,
       primitiveIdsInMousedOverNet: hoverState.primitiveIdsInMousedOverNet,
-    });
-  }, [primitivesWithoutInteractionMetadata, hoverState]);
+    })
+  }, [primitivesWithoutInteractionMetadata, hoverState])
 
-  const onMouseOverPrimitives = useCallback((primitivesHoveredOver: Primitive[]) => {
-    const primitiveIdsInMousedOverNet: string[] = []
-    for (const primitive of primitivesHoveredOver) {
-      if (primitive._element) {
-        const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
-          "pcb_port_id" in primitive._element
-            ? primitive._element?.pcb_port_id!
-            : "pcb_trace_id" in primitive._element
-              ? primitive._element?.pcb_trace_id!
-              : "",
-        )
-        primitiveIdsInMousedOverNet.push(
-          ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
-        )
+  const onMouseOverPrimitives = useCallback(
+    (primitivesHoveredOver: Primitive[]) => {
+      const primitiveIdsInMousedOverNet: string[] = []
+      for (const primitive of primitivesHoveredOver) {
+        if (primitive._element) {
+          const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
+            "pcb_port_id" in primitive._element
+              ? primitive._element?.pcb_port_id!
+              : "pcb_trace_id" in primitive._element
+                ? primitive._element?.pcb_trace_id!
+                : "",
+          )
+          primitiveIdsInMousedOverNet.push(
+            ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
+          )
+        }
       }
-    }
 
-    const drawingObjectIdsWithMouseOver = new Set(
-      primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
-    )
+      const drawingObjectIdsWithMouseOver = new Set(
+        primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
+      )
 
-    setHoverState({
-      drawingObjectIdsWithMouseOver,
-      primitiveIdsInMousedOverNet
-    });
-  }, [connectivityMap]);
+      setHoverState({
+        drawingObjectIdsWithMouseOver,
+        primitiveIdsInMousedOverNet,
+      })
+    },
+    [connectivityMap],
+  )
 
   return (
     <MouseElementTracker

@@ -122,12 +122,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     is_showing_rats_nest,
     is_showing_multiple_traces_length,
     is_showing_autorouting,
+    is_showing_DRC_errors,
   ] = useGlobalStore((s) => [
     s.in_move_footprint_mode,
     s.in_draw_trace_mode,
     s.is_showing_rats_nest,
     s.is_showing_multiple_traces_length,
     s.is_showing_autorouting,
+    s.is_showing_DRC_errors,
   ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
@@ -137,6 +139,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const setIsShowingAutorouting = useGlobalStore(
     (s) => s.setIsShowingAutorouting,
   )
+  const setIsShowingDRCErrors = useGlobalStore((s) => s.setIsShowingDRCErrors)
 
   useHotKey("1", () => selectLayer("top"))
   useHotKey("2", () => selectLayer("bottom"))
@@ -329,6 +332,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={is_showing_autorouting}
                   onClick={() => {
                     setIsShowingAutorouting(!is_showing_autorouting)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show DRC Errors"
+                  checked={is_showing_DRC_errors}
+                  onClick={() => {
+                    setIsShowingDRCErrors(!is_showing_DRC_errors)
                   }}
                 />
               </div>
