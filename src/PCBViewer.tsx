@@ -106,7 +106,7 @@ export const PCBViewer = ({
 
   const elements = useMemo(() => {
     return applyEditEvents({
-      circuitJson: pcbElmsPreEdit,
+      circuitJson: pcbElmsPreEdit as any,
       editEvents,
     })
   }, [pcbElmsPreEdit, editEvents])

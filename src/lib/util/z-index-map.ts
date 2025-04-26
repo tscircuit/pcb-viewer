@@ -5,5 +5,6 @@ export const zIndexMap = {
   errorOverlay: 30,
   ratsNestOverlay: 20,
   toolbarOverlay: 20,
+  warnings: 20,
   topLayer: 10, // each layer after this is 1 less than the previous
 }
