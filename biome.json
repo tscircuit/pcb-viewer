@@ -8,7 +8,13 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": ["cosmos-export", "dist", "package.json", "*.circuit.json"]
+    "ignore": [
+      "cosmos-export",
+      "dist",
+      "package.json",
+      "*.circuit.json",
+      ".codesandbox"
+    ]
   },
   "javascript": {
     "formatter": {

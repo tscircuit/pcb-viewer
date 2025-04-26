@@ -8,6 +8,7 @@ import type { Matrix } from "transformation-matrix"
 import { convertElementToPrimitives } from "../lib/convert-element-to-primitive"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
+import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
@@ -46,43 +47,46 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   const [hoverState, setHoverState] = useState({
     drawingObjectIdsWithMouseOver: new Set<string>(),
-    primitiveIdsInMousedOverNet: [] as string[]
-  });
+    primitiveIdsInMousedOverNet: [] as string[],
+  })
 
   const primitives = useMemo(() => {
     return addInteractionMetadataToPrimitives({
       primitivesWithoutInteractionMetadata,
       drawingObjectIdsWithMouseOver: hoverState.drawingObjectIdsWithMouseOver,
       primitiveIdsInMousedOverNet: hoverState.primitiveIdsInMousedOverNet,
-    });
-  }, [primitivesWithoutInteractionMetadata, hoverState]);
+    })
+  }, [primitivesWithoutInteractionMetadata, hoverState])
 
-  const onMouseOverPrimitives = useCallback((primitivesHoveredOver: Primitive[]) => {
-    const primitiveIdsInMousedOverNet: string[] = []
-    for (const primitive of primitivesHoveredOver) {
-      if (primitive._element) {
-        const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
-          "pcb_port_id" in primitive._element
-            ? primitive._element?.pcb_port_id!
-            : "pcb_trace_id" in primitive._element
-              ? primitive._element?.pcb_trace_id!
-              : "",
-        )
-        primitiveIdsInMousedOverNet.push(
-          ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
-        )
+  const onMouseOverPrimitives = useCallback(
+    (primitivesHoveredOver: Primitive[]) => {
+      const primitiveIdsInMousedOverNet: string[] = []
+      for (const primitive of primitivesHoveredOver) {
+        if (primitive._element) {
+          const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
+            "pcb_port_id" in primitive._element
+              ? primitive._element?.pcb_port_id!
+              : "pcb_trace_id" in primitive._element
+                ? primitive._element?.pcb_trace_id!
+                : "",
+          )
+          primitiveIdsInMousedOverNet.push(
+            ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
+          )
+        }
       }
-    }
 
-    const drawingObjectIdsWithMouseOver = new Set(
-      primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
-    )
+      const drawingObjectIdsWithMouseOver = new Set(
+        primitivesHoveredOver.map((p) => p._pcb_drawing_object_id),
+      )
 
-    setHoverState({
-      drawingObjectIdsWithMouseOver,
-      primitiveIdsInMousedOverNet
-    });
-  }, [connectivityMap]);
+      setHoverState({
+        drawingObjectIdsWithMouseOver,
+        primitiveIdsInMousedOverNet,
+      })
+    },
+    [connectivityMap],
+  )
 
   return (
     <MouseElementTracker
@@ -118,13 +122,18 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                     transform={transform}
                     debugGraphics={props.debugGraphics}
                   >
-                    <CanvasPrimitiveRenderer
+                    <WarningGraphicsOverlay
                       transform={transform}
-                      primitives={primitives}
-                      width={props.width}
-                      height={props.height}
-                      grid={props.grid}
-                    />
+                      elements={elements}
+                    >
+                      <CanvasPrimitiveRenderer
+                        transform={transform}
+                        primitives={primitives}
+                        width={props.width}
+                        height={props.height}
+                        grid={props.grid}
+                      />
+                    </WarningGraphicsOverlay>
                   </DebugGraphicsOverlay>
                 </RatsNestOverlay>
               </ErrorOverlay>
