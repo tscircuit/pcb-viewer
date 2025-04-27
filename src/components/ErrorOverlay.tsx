@@ -106,7 +106,7 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const isShowingDRCErrors = useGlobalStore(
-    (state) => state.is_showing_DRC_errors,
+    (state) => state.is_showing_drc_errors,
   )
 
   return (
