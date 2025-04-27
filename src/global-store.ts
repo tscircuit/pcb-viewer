@@ -19,7 +19,7 @@ export interface State {
   is_moving_component: boolean
   is_drawing_trace: boolean
   is_showing_autorouting: boolean
-  is_showing_DRC_errors: boolean
+  is_showing_drc_errors: boolean
 
   is_showing_multiple_traces_length: boolean
   is_showing_rats_nest: boolean
@@ -32,7 +32,7 @@ export interface State {
   setIsMouseOverContainer: (is_focused: boolean) => void
   setIsShowingAutorouting: (is_showing: boolean) => void
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
-  setIsShowingDRCErrors: (is_showing: boolean) => void
+  setIsShowingDrcErrors: (is_showing: boolean) => void
 }
 
 export type StateProps = {
@@ -58,7 +58,7 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
         is_showing_multiple_traces_length: false,
         is_showing_rats_nest: false,
         is_showing_autorouting: true,
-        is_showing_DRC_errors: true,
+        is_showing_drc_errors: true,
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
@@ -82,8 +82,8 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
           set({ is_showing_multiple_traces_length: is_showing }),
         setIsShowingAutorouting: (is_showing) =>
           set({ is_showing_autorouting: is_showing }),
-        setIsShowingDRCErrors: (is_showing) =>
-          set({ is_showing_DRC_errors: is_showing }),
+        setIsShowingDrcErrors: (is_showing) =>
+          set({ is_showing_drc_errors: is_showing }),
       }) as const,
   )
 
