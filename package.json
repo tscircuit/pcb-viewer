@@ -51,7 +51,7 @@
   "dependencies": {
     "@emotion/css": "^11.11.2",
     "@tscircuit/core": "^0.0.381",
-    "@tscircuit/math-utils": "^0.0.16",
+    "@tscircuit/math-utils": "^0.0.18",
     "circuit-json-to-connectivity-map": "^0.0.20",
     "circuit-to-svg": "^0.0.36",
     "color": "^4.2.3",
