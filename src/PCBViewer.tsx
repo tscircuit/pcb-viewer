@@ -5,7 +5,7 @@ import { ContextProviders } from "components/ContextProviders"
 import type { StateProps } from "global-store"
 import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
@@ -125,6 +125,29 @@ export const PCBViewer = ({
     onEditEventsChanged?.(newEditEvents)
   }
 
+  const touchStartTimeRef = useRef<number | null>(null)
+
+  const handleClickToInteract = useCallback(() => {
+    setIsInteractionEnabled(true)
+    resetTransform()
+  }, [resetTransform])
+
+  const handleTouchStart = useCallback(() => {
+    touchStartTimeRef.current = Date.now()
+  }, [])
+
+  const handleTouchEnd = useCallback(() => {
+    const duration = Date.now() - (touchStartTimeRef.current ?? 0)
+    if (duration > 300) {
+      setIsInteractionEnabled(true)
+      resetTransform()
+    }
+    touchStartTimeRef.current = null
+  }, [resetTransform])
+
+  const isTouchDevice =
+    typeof window !== "undefined" && "ontouchstart" in window
+
   return (
     <div ref={transformRef as any} style={{ position: "relative" }}>
       <div ref={ref as any}>
@@ -154,16 +177,12 @@ export const PCBViewer = ({
           <ToastContainer />
         </ContextProviders>
       </div>
+
       {clickToInteractEnabled && !isInteractionEnabled && (
         <div
-          onClick={() => {
-            setIsInteractionEnabled(true)
-            resetTransform()
-          }}
-          onTouchStart={() => {
-            setIsInteractionEnabled(true)
-            resetTransform()
-          }}
+          onClick={handleClickToInteract}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           style={{
             position: "absolute",
             inset: 0,
@@ -184,7 +203,7 @@ export const PCBViewer = ({
               pointerEvents: "none",
             }}
           >
-            Click to Interact
+            {isTouchDevice ? "Touch to Interact" : "Click to Interact"}
           </div>
         </div>
       )}
