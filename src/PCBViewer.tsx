@@ -205,9 +205,11 @@ export const PCBViewer = ({
               pointerEvents: "none",
             }}
           >
-            {typeof window !== "undefined" && window.innerWidth < 768
-              ? "Touch to Interact"
-              : "Click to Interact"}
+            {typeof window !== "undefined" && 
+              (('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0))
+            ? "Touch to Interact"
+            : "Click to Interact"}
           </div>
         </div>
       )}
