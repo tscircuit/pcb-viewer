@@ -160,6 +160,10 @@ export const PCBViewer = ({
             setIsInteractionEnabled(true)
             resetTransform()
           }}
+          onTouchStart={() => {
+            setIsInteractionEnabled(true)
+            resetTransform()
+          }}
           style={{
             position: "absolute",
             inset: 0,
