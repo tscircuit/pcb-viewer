@@ -56,6 +56,7 @@ export const PCBViewer = ({
   editEvents = editEventsProp ?? editEvents
 
   const initialRenderCompleted = useRef(false)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const circuitJsonKey = `${circuitJson?.length || 0}_${(circuitJson as any)?.editCount || 0}`
 
   const resetTransform = () => {
@@ -162,38 +163,26 @@ export const PCBViewer = ({
           }}
           onTouchStart={(e) => {
             const touch = e.touches[0]
-            e.currentTarget.setAttribute(
-              "data-touch-start-x",
-              touch.clientX.toString(),
-            )
-            e.currentTarget.setAttribute(
-              "data-touch-start-y",
-              touch.clientY.toString(),
-            )
-            e.currentTarget.setAttribute("data-touch-moved", "false")
-          }}
-          onTouchMove={(e) => {
-            const touch = e.touches[0]
-            const startX = parseFloat(
-              e.currentTarget.getAttribute("data-touch-start-x") || "0",
-            )
-            const startY = parseFloat(
-              e.currentTarget.getAttribute("data-touch-start-y") || "0",
-            )
-
-            const deltaX = Math.abs(touch.clientX - startX)
-            const deltaY = Math.abs(touch.clientY - startY)
-
-            if (deltaX > 10 || deltaY > 10) {
-              e.currentTarget.setAttribute("data-touch-moved", "true")
+            touchStartRef.current = {
+              x: touch.clientX,
+              y: touch.clientY,
             }
           }}
           onTouchEnd={(e) => {
-            if (e.currentTarget.getAttribute("data-touch-moved") === "false") {
+            const touch = e.changedTouches[0]
+            const start = touchStartRef.current
+            if (!start) return
+
+            const deltaX = Math.abs(touch.clientX - start.x)
+            const deltaY = Math.abs(touch.clientY - start.y)
+
+            if (deltaX < 10 && deltaY < 10) {
               e.preventDefault()
               setIsInteractionEnabled(true)
               resetTransform()
             }
+
+            touchStartRef.current = null
           }}
           style={{
             position: "absolute",
