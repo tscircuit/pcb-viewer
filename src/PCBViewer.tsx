@@ -160,6 +160,41 @@ export const PCBViewer = ({
             setIsInteractionEnabled(true)
             resetTransform()
           }}
+          onTouchStart={(e) => {
+            const touch = e.touches[0]
+            e.currentTarget.setAttribute(
+              "data-touch-start-x",
+              touch.clientX.toString(),
+            )
+            e.currentTarget.setAttribute(
+              "data-touch-start-y",
+              touch.clientY.toString(),
+            )
+            e.currentTarget.setAttribute("data-touch-moved", "false")
+          }}
+          onTouchMove={(e) => {
+            const touch = e.touches[0]
+            const startX = parseFloat(
+              e.currentTarget.getAttribute("data-touch-start-x") || "0",
+            )
+            const startY = parseFloat(
+              e.currentTarget.getAttribute("data-touch-start-y") || "0",
+            )
+
+            const deltaX = Math.abs(touch.clientX - startX)
+            const deltaY = Math.abs(touch.clientY - startY)
+
+            if (deltaX > 10 || deltaY > 10) {
+              e.currentTarget.setAttribute("data-touch-moved", "true")
+            }
+          }}
+          onTouchEnd={(e) => {
+            if (e.currentTarget.getAttribute("data-touch-moved") === "false") {
+              e.preventDefault()
+              setIsInteractionEnabled(true)
+              resetTransform()
+            }
+          }}
           style={{
             position: "absolute",
             inset: 0,
@@ -168,6 +203,7 @@ export const PCBViewer = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            touchAction: "pan-x pan-y",
           }}
         >
           <div
@@ -180,7 +216,9 @@ export const PCBViewer = ({
               pointerEvents: "none",
             }}
           >
-            Click to Interact
+            {typeof window !== "undefined" && window.innerWidth < 768
+              ? "Touch to Interact"
+              : "Click to Interact"}
           </div>
         </div>
       )}
