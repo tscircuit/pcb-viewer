@@ -192,7 +192,7 @@ export const PCBViewer = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            touchAction: "pan-x pan-y",
+            touchAction: "pan-x pan-y pinch-zoom",
           }}
         >
           <div
