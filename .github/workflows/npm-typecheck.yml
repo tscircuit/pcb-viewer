@@ -14,13 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun i
 
       - name: Run format check
-        run: npx tsc --noEmit
+        run: bun x tsc --noEmit
