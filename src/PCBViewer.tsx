@@ -56,6 +56,7 @@ export const PCBViewer = ({
   editEvents = editEventsProp ?? editEvents
 
   const initialRenderCompleted = useRef(false)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const circuitJsonKey = `${circuitJson?.length || 0}_${(circuitJson as any)?.editCount || 0}`
 
   const resetTransform = () => {
@@ -160,6 +161,29 @@ export const PCBViewer = ({
             setIsInteractionEnabled(true)
             resetTransform()
           }}
+          onTouchStart={(e) => {
+            const touch = e.touches[0]
+            touchStartRef.current = {
+              x: touch.clientX,
+              y: touch.clientY,
+            }
+          }}
+          onTouchEnd={(e) => {
+            const touch = e.changedTouches[0]
+            const start = touchStartRef.current
+            if (!start) return
+
+            const deltaX = Math.abs(touch.clientX - start.x)
+            const deltaY = Math.abs(touch.clientY - start.y)
+
+            if (deltaX < 10 && deltaY < 10) {
+              e.preventDefault()
+              setIsInteractionEnabled(true)
+              resetTransform()
+            }
+
+            touchStartRef.current = null
+          }}
           style={{
             position: "absolute",
             inset: 0,
@@ -168,6 +192,7 @@ export const PCBViewer = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            touchAction: "pan-x pan-y pinch-zoom",
           }}
         >
           <div
@@ -180,7 +205,11 @@ export const PCBViewer = ({
               pointerEvents: "none",
             }}
           >
-            Click to Interact
+            {typeof window !== "undefined" && 
+              (('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0))
+            ? "Touch to Interact"
+            : "Click to Interact"}
           </div>
         </div>
       )}
