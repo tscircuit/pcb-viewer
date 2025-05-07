@@ -11,6 +11,7 @@ import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { ManualEditEvent } from "@tscircuit/props"
+import { zIndexMap } from "lib/util/z-index-map"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -188,7 +189,7 @@ export const PCBViewer = ({
             position: "absolute",
             inset: 0,
             cursor: "pointer",
-            zIndex: 10,
+            zIndex: zIndexMap.clickToInteractOverlay,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -205,11 +206,10 @@ export const PCBViewer = ({
               pointerEvents: "none",
             }}
           >
-            {typeof window !== "undefined" && 
-              (('ontouchstart' in window) || 
-               (navigator.maxTouchPoints > 0))
-            ? "Touch to Interact"
-            : "Click to Interact"}
+            {typeof window !== "undefined" &&
+            ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+              ? "Touch to Interact"
+              : "Click to Interact"}
           </div>
         </div>
       )}
