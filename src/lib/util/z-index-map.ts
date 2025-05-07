@@ -7,4 +7,5 @@ export const zIndexMap = {
   toolbarOverlay: 20,
   warnings: 20,
   topLayer: 10, // each layer after this is 1 less than the previous
+  clickToInteractOverlay: 100,
 }
