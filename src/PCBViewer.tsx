@@ -188,7 +188,7 @@ export const PCBViewer = ({
             position: "absolute",
             inset: 0,
             cursor: "pointer",
-            zIndex: 10,
+            zIndex: 999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
