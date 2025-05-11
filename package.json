@@ -52,7 +52,7 @@
     "@emotion/css": "^11.11.2",
     "@tscircuit/core": "^0.0.395",
     "@tscircuit/math-utils": "^0.0.18",
-    "circuit-json-to-connectivity-map": "^0.0.21",
+    "circuit-json-to-connectivity-map": "^0.0.22",
     "circuit-to-svg": "^0.0.36",
     "color": "^4.2.3",
     "graphics-debug": "^0.0.24",
