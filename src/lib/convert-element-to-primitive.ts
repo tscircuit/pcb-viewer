@@ -573,7 +573,7 @@ export const convertElementToPrimitives = (
     case "pcb_fabrication_note_text": {
       return [
         {
-          _pcb_drawing_object_id: `text_${globalPcbDrawingObjectCount++}`,
+          _pcb_drawing_object_id: getNewPcbDrawingObjectId("text"),
           pcb_drawing_type: "text",
           x: element.anchor_position.x,
           y: element.anchor_position.y,
@@ -587,8 +587,62 @@ export const convertElementToPrimitives = (
         },
       ]
     }
+    case "pcb_cutout": {
+      const cutoutElement = element as any
+      switch (cutoutElement.shape) {
+        case "rect": {
+          return [
+            {
+              _pcb_drawing_object_id:
+                getNewPcbDrawingObjectId("pcb_cutout_rect"),
+              pcb_drawing_type: "rect",
+              x: cutoutElement.center.x,
+              y: cutoutElement.center.y,
+              w: cutoutElement.width,
+              h: cutoutElement.height,
+              layer: "drill",
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+            },
+          ]
+        }
+        case "circle": {
+          return [
+            {
+              _pcb_drawing_object_id:
+                getNewPcbDrawingObjectId("pcb_cutout_circle"),
+              pcb_drawing_type: "circle",
+              x: cutoutElement.center.x,
+              y: cutoutElement.center.y,
+              r: cutoutElement.radius,
+              layer: "drill",
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+            },
+          ]
+        }
+        case "polygon": {
+          return [
+            {
+              _pcb_drawing_object_id:
+                getNewPcbDrawingObjectId("pcb_cutout_polygon"),
+              pcb_drawing_type: "polygon",
+              points: cutoutElement.points,
+              layer: "drill",
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+            },
+          ]
+        }
+        default:
+          console.warn(`Unsupported pcb_cutout shape: ${cutoutElement.shape}`)
+          return []
+      }
+    }
   }
 
-  // console.warn(`Unsupported element type: ${element.type}`)
   return []
 }
