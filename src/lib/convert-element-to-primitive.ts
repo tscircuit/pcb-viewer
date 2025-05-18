@@ -644,5 +644,6 @@ export const convertElementToPrimitives = (
     }
   }
 
+  // console.warn(`Unsupported element type: ${element.type}`)
   return []
 }
