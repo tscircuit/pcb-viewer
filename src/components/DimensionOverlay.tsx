@@ -44,6 +44,7 @@ export const DimensionOverlay = ({
     const addKeyListener = () => {
       if (container) {
         window.addEventListener("keydown", down)
+        container.focus({ preventScroll: true })
       }
     }
 
