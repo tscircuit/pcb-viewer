@@ -33,15 +33,10 @@ const isInsideOf = (
 }
 
 const findComponentsInSameGroup = (
-  activePcbComponentId: string | null,
+  pcbComponent: PcbComponent | null,
   circuitJson: AnyCircuitElement[],
 ): PcbComponent[] => {
-  // Find all components that share the same parent group
-  const pcbComponent = circuitJson.find(
-    (e) => e.type === "pcb_component" && e.pcb_component_id === activePcbComponentId,
-  ) as PcbComponent
   if (!pcbComponent) return []
-
   const groupComponents = circuitJson.filter(
     (e) =>
       e.type === "pcb_component" && e.pcb_group_id === pcbComponent.pcb_group_id,
@@ -76,14 +71,15 @@ export const EditPlacementOverlay = ({
   
   const [componentsInSameGroup, setComponentsInSameGroup] = useState<PcbComponent[]>([])
   const [parentGroupBoundingBox, setParentGroupBoundingBox] = useState<ReturnType<typeof getGroupBoundingBox>>(null)
-
+  const pcbComponent = soup.find(e => e.type === "pcb_component" && e.pcb_component_id === activePcbComponentId) as PcbComponent
+  
   useEffect(() => {
-    const groupComponents = findComponentsInSameGroup(activePcbComponentId, soup)
+    const groupComponents = findComponentsInSameGroup(pcbComponent, soup)
     setComponentsInSameGroup(groupComponents)
 
     const boundingBox = getGroupBoundingBox(groupComponents, transform, 1)
     setParentGroupBoundingBox(boundingBox)
-  }, [activePcbComponentId, soup])
+  }, [pcbComponent])
 
   const disabled = disabledProp || !in_move_footprint_mode
 
