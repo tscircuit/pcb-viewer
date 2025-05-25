@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
+import { getGroupBoundingBox } from "lib/util/get-group-bounding-box"
 
 interface Props {
   transform?: Matrix
@@ -31,6 +32,24 @@ const isInsideOf = (
   return point.x > left && point.x < right && point.y > top && point.y < bottom
 }
 
+const findComponentsInSameGroup = (
+  activePcbComponentId: string | null,
+  circuitJson: AnyCircuitElement[],
+): PcbComponent[] => {
+  // Find all components that share the same parent group
+  const pcbComponent = circuitJson.find(
+    (e) => e.type === "pcb_component" && e.pcb_component_id === activePcbComponentId,
+  ) as PcbComponent
+  if (!pcbComponent) return []
+
+  const groupComponents = circuitJson.filter(
+    (e) =>
+      e.type === "pcb_component" && e.pcb_group_id === pcbComponent.pcb_group_id,
+  ) as PcbComponent[]
+
+  return groupComponents
+}
+
 export const EditPlacementOverlay = ({
   children,
   disabled: disabledProp,
@@ -52,9 +71,19 @@ export const EditPlacementOverlay = ({
     edit_event_id: string
   } | null>(null)
   const isPcbComponentActive = activePcbComponentId !== null
-  const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
+  
+  const [componentsInSameGroup, setComponentsInSameGroup] = useState<PcbComponent[]>([])
+  const [parentGroupBoundingBox, setParentGroupBoundingBox] = useState<ReturnType<typeof getGroupBoundingBox>>(null)
+
+  useEffect(() => {
+    const groupComponents = findComponentsInSameGroup(activePcbComponentId, soup)
+    setComponentsInSameGroup(groupComponents)
+
+    const boundingBox = getGroupBoundingBox(groupComponents, transform, 1)
+    setParentGroupBoundingBox(boundingBox)
+  }, [activePcbComponentId, soup])
 
   const disabled = disabledProp || !in_move_footprint_mode
 
@@ -161,24 +190,40 @@ export const EditPlacementOverlay = ({
             const projectedCenter = applyToPoint(transform, e.center)
 
             return (
-              <div
-                key={e.pcb_component_id}
-                style={{
-                  position: "absolute",
-                  pointerEvents: "none",
-                  // b/c of transform, this is actually center not left/top
-                  left: projectedCenter.x,
-                  top: projectedCenter.y,
-                  width: e.width * transform.a + 20,
-                  height: e.height * transform.a + 20,
-                  transform: "translate(-50%, -50%)",
-                  background:
-                    isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
-                      ? "rgba(255, 0, 0, 0.2)"
-                      : "",
-                }}
-              />
+              <>
+                <div
+                  key={e.pcb_component_id}
+                  style={{
+                    position: "absolute",
+                    pointerEvents: "none",
+                    left: projectedCenter.x,
+                    top: projectedCenter.y,
+                    width: e.width * transform.a + 20,
+                    height: e.height * transform.a + 20,
+                    transform: "translate(-50%, -50%)",
+                    background:
+                      isPcbComponentActive &&
+                      activePcbComponentId === e.pcb_component_id
+                        ? "rgba(255, 0, 0, 0.2)"
+                        : "",
+                  }}
+                />
+                {parentGroupBoundingBox && isPcbComponentActive && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: parentGroupBoundingBox.x,
+                      top: parentGroupBoundingBox.y,
+                      width: parentGroupBoundingBox.width,
+                      height: parentGroupBoundingBox.height,
+                      transform: "translate(-50%, -50%)",
+                      border: "2px solid rgba(246, 255, 0, 0.82)",
+                      borderStyle: "dotted",
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+              </>
             )
           })}
     </div>
