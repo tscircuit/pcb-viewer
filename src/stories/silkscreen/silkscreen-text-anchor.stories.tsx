@@ -1,67 +1,128 @@
-import type { Meta } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react"
 import { Circuit } from "@tscircuit/core"
 import type React from "react"
 import { PCBViewer } from "../../PCBViewer"
 
-export const SilkscreenTextAnchors: React.FC = () => {
-  const circuit = new Circuit()
+const boardProps = { width: "12mm", height: "12mm", thickness: 1.2 }
+const textProps = { pcbX: 0, pcbY: 0, fontSize: 1 }
 
-  circuit.add(
-    <board width="10mm" height="10mm">
-      <silkscreentext
-        text="45 degrees BR"
-        pcbX={2}
-        fontSize={0.25}
-        pcbRotation={45}
-        layer="top"
-        anchorAlignment="bottom_right"
-      />
-      <silkscreentext
-        text="45 degrees C"
-        fontSize={0.25}
-        pcbRotation={50}
-        layer="top"
-        anchorAlignment="center"
-      />
-      <silkscreentext
-        text="45 degrees TR"
-        pcbX={4}
-        fontSize={0.25}
-        pcbRotation={45}
-        layer="top"
-        anchorAlignment="top_right"
-      />
-      <silkscreentext
-        text="L45 degrees TL"
-        pcbX={-4}
-        fontSize={0.25}
-        pcbRotation={45}
-        layer="top"
-        anchorAlignment="top_left"
-      />
-      <silkscreentext
-        text="L45 degree BL"
-        pcbX={-2}
-        fontSize={0.25}
-        pcbRotation={45}
-        layer="top"
-        anchorAlignment="bottom_left"
-      />
-    </board>,
-  )
+const commonWrapper = (StoryComponent: React.FC) => (
+  <div style={{ backgroundColor: "black", padding: "20px" }}>
+    <StoryComponent />
+  </div>
+)
 
-  const soup = circuit.getCircuitJson()
-
-  return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
-    </div>
-  )
-}
-
-const meta: Meta<typeof SilkscreenTextAnchors> = {
-  title: "Silkscreen",
-  component: SilkscreenTextAnchors,
+const meta: Meta = {
+  title: "Silkscreen/Text Anchors",
+  decorators: [(Story) => commonWrapper(Story)],
 }
 
 export default meta
+
+export const TopLeftBottomRight: React.FC = () => {
+  const circuit = new Circuit()
+  circuit.add(
+    <board {...boardProps}>
+      <silkscreentext
+        {...textProps}
+        text="top_left"
+        anchorAlignment="top_left"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="bottom_right"
+        anchorAlignment="bottom_right"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="center"
+        anchorAlignment="center"
+        layer="bottom"
+      />
+    </board>,
+  )
+  return <PCBViewer circuitJson={circuit.getCircuitJson() as any} />
+}
+
+export const TopRightBottomLeft: React.FC = () => {
+  const circuit = new Circuit()
+  circuit.add(
+    <board {...boardProps}>
+      <silkscreentext
+        {...textProps}
+        text="top_right"
+        anchorAlignment="top_right"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="bottom_left"
+        anchorAlignment="bottom_left"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="center"
+        anchorAlignment="center"
+        layer="bottom"
+      />
+    </board>,
+  )
+  return <PCBViewer circuitJson={circuit.getCircuitJson() as any} />
+}
+
+export const CenterRightCenterLeft: React.FC = () => {
+  const circuit = new Circuit()
+  circuit.add(
+    <board {...boardProps}>
+      <silkscreentext
+        {...textProps}
+        text="center_right"
+        anchorAlignment="center_right"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="center_left"
+        anchorAlignment="center_left"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="center"
+        anchorAlignment="center"
+        layer="bottom"
+      />
+    </board>,
+  )
+  return <PCBViewer circuitJson={circuit.getCircuitJson() as any} />
+}
+
+export const BottomCenterTopCenter: React.FC = () => {
+  const circuit = new Circuit()
+  circuit.add(
+    <board {...boardProps}>
+      <silkscreentext
+        {...textProps}
+        text="bottom_center"
+        anchorAlignment="bottom_center"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="top_center"
+        anchorAlignment="top_center"
+        layer="top"
+      />
+      <silkscreentext
+        {...textProps}
+        text="center"
+        anchorAlignment="center"
+        layer="bottom"
+      />
+    </board>,
+  )
+  return <PCBViewer circuitJson={circuit.getCircuitJson() as any} />
+}

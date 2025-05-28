@@ -42,23 +42,56 @@ export const drawLine = (drawer: Drawer, line: Line) => {
 export const drawText = (drawer: Drawer, text: Text) => {
   drawer.equip({
     fontSize: text.size,
-    color: text.layer,
+    color: getColor(text),
+    layer: text.layer,
   })
 
   // Alignment offset calculation
   let alignOffset = { x: 0, y: 0 }
   const textWidth = getTextWidth(text)
   const textHeight = text.size
-  if (text.align === "top_left") {
-    alignOffset.y = -textHeight
-  } else if (text.align === "bottom_right") {
-    alignOffset.x = -textWidth
-  } else if (text.align === "top_right") {
-    alignOffset.x = -textWidth
-    alignOffset.y = -textHeight
-  } else if (text.align === "center") {
-    alignOffset.x = -textWidth / 2
-    alignOffset.y = -textHeight / 2
+
+  switch (text.align) {
+    case "top_left":
+      alignOffset.x = 0
+      alignOffset.y = -textHeight
+      break
+    case "top_center":
+      alignOffset.x = -textWidth / 2
+      alignOffset.y = -textHeight
+      break
+    case "top_right":
+      alignOffset.x = -textWidth
+      alignOffset.y = -textHeight
+      break
+    case "center_left":
+      alignOffset.x = 0
+      alignOffset.y = -textHeight / 2
+      break
+    case "center":
+      alignOffset.x = -textWidth / 2
+      alignOffset.y = -textHeight / 2
+      break
+    case "center_right":
+      alignOffset.x = -textWidth
+      alignOffset.y = -textHeight / 2
+      break
+    case "bottom_left":
+      alignOffset.x = 0
+      alignOffset.y = 0
+      break
+    case "bottom_center":
+      alignOffset.x = -textWidth / 2
+      alignOffset.y = 0
+      break
+    case "bottom_right":
+      alignOffset.x = -textWidth
+      alignOffset.y = 0
+      break
+    default: // Default to bottom_left if align is not specified or invalid
+      alignOffset.x = 0
+      alignOffset.y = 0
+      break
   }
 
   // Non-gerber compatible
