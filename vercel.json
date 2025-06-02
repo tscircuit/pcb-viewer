@@ -1,3 +1,19 @@
 {
-  "buildCommand": "npm run build-storybook"
+  "buildCommand": "npm run cosmos-export",
+  "outputdirectory": "cosmos-export",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "cosmos-export"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
