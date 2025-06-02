@@ -1,18 +1,9 @@
 {
   "buildCommand": "npm run cosmos-export",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "cosmos-export"
-      }
-    }
-  ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/cosmos-export/index.html"
     }
   ]
 }
