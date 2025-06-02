@@ -5,12 +5,6 @@ import { PCBViewer } from "../../PCBViewer"
 const boardProps = { width: "12mm", height: "12mm", thickness: 1.2 }
 const textProps = { pcbX: 0, pcbY: 0, fontSize: 1 }
 
-const commonWrapper = (StoryComponent: React.FC) => (
-  <div style={{ backgroundColor: "black", padding: "20px" }}>
-    <StoryComponent />
-  </div>
-)
-
 export const TopLeftBottomRight: React.FC = () => {
   const circuit = new Circuit()
   circuit.add(
@@ -119,4 +113,9 @@ export const BottomCenterTopCenter: React.FC = () => {
   return <PCBViewer circuitJson={circuit.getCircuitJson() as any} />
 }
 
-export default TopLeftBottomRight
+export default {
+  TopLeftBottomRight,
+  TopRightBottomLeft,
+  CenterRightCenterLeft,
+  BottomCenterTopCenter,
+}

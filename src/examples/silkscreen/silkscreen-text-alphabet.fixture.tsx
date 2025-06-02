@@ -120,4 +120,7 @@ export const SilkscreenTextFontSize = () => {
   )
 }
 
-export default SilkscreenTextAlphabet
+export default {
+  SilkscreenTextAlphabet,
+  SilkscreenTextFontSize,
+}

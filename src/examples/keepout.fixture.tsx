@@ -752,4 +752,7 @@ export const KeepoutCircleExample = () => {
   )
 }
 
-export default KeepoutRectExample
+export default {
+  KeepoutRectExample,
+  KeepoutCircleExample,
+}

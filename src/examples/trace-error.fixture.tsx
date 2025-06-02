@@ -202,4 +202,8 @@ export const TraceErrorCircuit4 = () => (
   </div>
 )
 
-export default TraceErrorCircuit1
+export default {
+  TraceErrorCircuit1,
+  TraceErrorCircuit2,
+  TraceErrorCircuit4,
+}

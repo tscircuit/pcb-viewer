@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { PCBViewer } from "../PCBViewer"
+import { PCBViewer } from "../../PCBViewer"
 
 // Create a test component that maintains PCBViewer instance while updating circuit
 const PCBViewerTransformTest = () => {
@@ -110,9 +110,4 @@ const PCBViewerTransformTest = () => {
   )
 }
 
-export default {
-  title: "Tests/PCBViewer Transform",
-  component: PCBViewerTransformTest,
-}
-
-export const TransformTest = () => <PCBViewerTransformTest />
+export default PCBViewerTransformTest

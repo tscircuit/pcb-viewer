@@ -22,10 +22,4 @@ export const SilkscreenCircle: React.FC = () => {
     </div>
   )
 }
-
-const meta: Meta<typeof SilkscreenCircle> = {
-  title: "Silkscreen",
-  component: SilkscreenCircle,
-}
-
-export default meta
+export default SilkscreenCircle

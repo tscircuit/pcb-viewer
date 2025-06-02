@@ -1,5 +1,5 @@
 import { Circuit } from "@tscircuit/core"
-import { PCBViewer } from "../PCBViewer"
+import { PCBViewer } from "../../PCBViewer"
 
 const ClickToEnableInteractionDemo: React.FC = () => {
   const circuit = new Circuit()

@@ -76,4 +76,8 @@ export const SimpleResistorsOffCenter: React.FC = () => {
   )
 }
 
-export default SimpleResistorSMD
+export default {
+  SimpleResistorSMD,
+  SimpleResistorThruHole,
+  SimpleResistorsOffCenter,
+}

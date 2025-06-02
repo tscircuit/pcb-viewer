@@ -126,4 +126,9 @@ export const DisabledAutoFocus = () => {
   )
 }
 
-export default BasicRectangleBoard
+export default {
+  BasicRectangleBoard,
+  TriangleBoard,
+  OctagonBoard,
+  AtariBoard,
+}
