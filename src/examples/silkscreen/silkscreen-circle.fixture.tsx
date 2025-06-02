@@ -1,4 +1,3 @@
-import type { Meta } from "@storybook/react"
 import { Circuit } from "@tscircuit/core"
 import type React from "react"
 import { PCBViewer } from "../../PCBViewer"
