@@ -1,6 +1,5 @@
 {
   "buildCommand": "npm run cosmos-export",
-  "outputdirectory": "cosmos-export",
   "builds": [
     {
       "src": "package.json",
