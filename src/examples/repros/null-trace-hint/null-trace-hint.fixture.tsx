@@ -11,4 +11,3 @@ export const NullTraceHint: React.FC = () => {
 }
 
 export default NullTraceHint
-

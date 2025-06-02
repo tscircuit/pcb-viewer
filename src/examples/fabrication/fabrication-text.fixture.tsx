@@ -28,5 +28,4 @@ export const FabricationNoteText: React.FC = () => {
   )
 }
 
-
 export default FabricationNoteText

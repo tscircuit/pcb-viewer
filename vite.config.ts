@@ -11,14 +11,13 @@ export default defineConfig({
     port: 3000,
   },
   define: {
-    "global": {},
+    global: {},
   },
   resolve: {
     alias: {
       lib: resolve(__dirname, "src/lib"),
       hooks: resolve(__dirname, "src/hooks"),
       pages: resolve(__dirname, "src/pages"),
-      
     },
   },
 })

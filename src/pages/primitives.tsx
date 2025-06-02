@@ -1,4 +1,4 @@
-import { drawGrid } from /draw-grid"
+import { drawGrid } from "lib/draw-grid"
 import React, { useEffect, useRef } from "react"
 import { drawPrimitives } from "lib/draw-primitives"
 import { Drawer } from "lib/Drawer"

@@ -1,4 +1,4 @@
-import React from "react" 
+import React from "react"
 import { PCBViewer } from "../PCBViewer"
 import { Circuit } from "@tscircuit/core"
 import { MacroKeypad } from "./story-components/MacroKeypad"

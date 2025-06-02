@@ -1,4 +1,4 @@
-import React from "react" 
+import React from "react"
 import { PCBViewer } from "../../../PCBViewer"
 import soup from "./soup.json"
 
@@ -11,4 +11,3 @@ export const PortHintsNotShowing: React.FC = () => {
 }
 
 export default PortHintsNotShowing
-
