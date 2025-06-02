@@ -4,7 +4,7 @@ import type { AnyCircuitElement, PcbPort, PcbTraceError } from "circuit-json"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useRef } from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
-import { useGlobalStore } from "global-store" // adjust the import path as needed
+import { useGlobalStore } from "../global-store" // adjust the import path as needed
 
 interface Props {
   transform?: Matrix

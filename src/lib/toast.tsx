@@ -1,4 +1,4 @@
-import { useGlobalStore } from "global-store"
+import { useGlobalStore } from "../global-store"
 import { useEffect } from "react"
 import {
   toast as ogToast,

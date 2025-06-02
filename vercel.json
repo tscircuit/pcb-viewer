@@ -1,3 +1,9 @@
 {
-  "buildCommand": "npm run build-storybook"
+  "buildCommand": "npm run cosmos-export",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/cosmos-export/index.html"
+    }
+  ]
 }

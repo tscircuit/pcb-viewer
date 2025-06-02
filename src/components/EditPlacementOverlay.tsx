@@ -1,5 +1,5 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
-import { useGlobalStore } from "global-store"
+import { useGlobalStore } from "../global-store"
 import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
