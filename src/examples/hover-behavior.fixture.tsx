@@ -55,35 +55,16 @@ const HoverBehaviorDemo: React.FC<{ focusOnHover?: boolean }> = ({
 }
 
 // Story with hover focus disabled (default behavior)
-export const HoverDisabled: Story = {
-  args: {
-    focusOnHover: false,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Hover focus is disabled by default. Hovering over the PCB viewer will not cause the page to scroll or adjust focus position.",
-      },
-    },
-  },
+export const HoverDisabled = () => {
+  return <HoverBehaviorDemo focusOnHover={false} />
 }
 
 // Story with hover focus enabled
-export const HoverEnabled: Story = {
-  args: {
-    focusOnHover: true,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Hover focus is enabled. Hovering over the PCB viewer will cause it to receive focus and may adjust the scroll position.",
-      },
-    },
-  },
+export const HoverEnabled = () => {
+  return <HoverBehaviorDemo focusOnHover={true} />
 }
 
-export default HoverBehaviorDemo
-
-type Story = StoryObj<typeof HoverBehaviorDemo>
+export default {
+  HoverDisabled,
+  HoverEnabled,
+}

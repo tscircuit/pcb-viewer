@@ -1,5 +1,3 @@
-import { Circuit } from "@tscircuit/core"
-import { usePCBViewer } from "../hooks/use-pcb-viewer"
 import { PCBViewer } from "../PCBViewer"
 
 export const TraceHintExample = () => {
