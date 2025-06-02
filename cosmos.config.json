@@ -1,0 +1,9 @@
+{
+    "$schema": "http://json.schemastore.org/cosmos-config",
+    "plugins": ["react-cosmos-plugin-vite"],
+    "fixtureFileSuffix": "stories",
+    "fixturesDir": "src/examples",
+    "vite": {
+        "configPath": "./vite.config.ts"
+    }
+}

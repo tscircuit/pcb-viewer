@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react"
 import attinyEagle from "../assets/attiny-eagle"
-import { drawEagle } from "../lib/draw-eagle"
-import { Drawer } from "../lib/Drawer"
+import { drawEagle } from "lib/draw-eagle"
+import { Drawer } from "lib/Drawer"
 
 export default () => {
   const ref = useRef<any>()

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { HighlightedPrimitive } from "./MouseElementTracker"
 import colors from "lib/colors"
-import { useGlobalStore } from "global-store"
+import { useGlobalStore } from "../global-store"
 import { zIndexMap } from "lib/util/z-index-map"
 import { AnyCircuitElement } from "circuit-json"
 import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"

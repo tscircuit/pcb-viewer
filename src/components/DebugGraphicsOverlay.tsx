@@ -3,7 +3,7 @@ import type { Matrix } from "transformation-matrix"
 import { drawGraphicsToCanvas } from "graphics-debug"
 import { useEffect, useRef } from "react"
 import { useMeasure } from "react-use"
-import { useGlobalStore } from "global-store"
+import { useGlobalStore } from "../global-store"
 
 interface Props {
   transform?: Matrix

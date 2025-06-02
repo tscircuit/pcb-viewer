@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { useGlobalStore } from "global-store"
+import { useGlobalStore } from "../global-store"
 
 export const useHotKey = (key: string, onUse: () => void) => {
   const isMouseOverContainer = useGlobalStore(

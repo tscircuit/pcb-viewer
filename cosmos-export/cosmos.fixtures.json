@@ -1,0 +1,908 @@
+{
+  "rendererUrl": "renderer.html",
+  "fixtures": [
+    {
+      "filePath": "src/examples/DRC-errors-highlight.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "DRC-errors-highlight"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2FDRC-errors-highlight.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/autorouting-animations.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "autorouting-animations"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fautorouting-animations.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/board.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "board"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fboard.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/canvas-elements-renderer.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "canvas-elements-renderer"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fcanvas-elements-renderer.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/click-to-enable-zoom.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "click-to-enable-zoom"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fclick-to-enable-zoom.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/connected-resistors.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "connected-resistors"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fconnected-resistors.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/coordinate-flip.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "coordinate-flip"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fcoordinate-flip.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/debugGraphics.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "debugGraphics"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2FdebugGraphics.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/error-in-circuit-should-display.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "error-in-circuit-should-display"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ferror-in-circuit-should-display.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/fabrication/fabrication-path.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "fabrication",
+        "fabrication-path"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ffabrication%2Ffabrication-path.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/fabrication/fabrication-text.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "fabrication",
+        "fabrication-text"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ffabrication%2Ffabrication-text.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/hole.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "hole"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fhole.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/hover-behavior.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "hover-behavior"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fhover-behavior.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/initial-centering.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "initial-centering"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Finitial-centering.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/keepout.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "keepout"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fkeepout.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/keyboard.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "keyboard"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fkeyboard.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/manual-edit-conflicts-highlight.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "manual-edit-conflicts-highlight"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fmanual-edit-conflicts-highlight.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/multi-layer-circuit.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "multi-layer-circuit"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fmulti-layer-circuit.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/plated_hole_pill_shape.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "plated_hole_pill_shape"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fplated_hole_pill_shape.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/contribution-board-performance-test/contribution-board.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "contribution-board-performance-test",
+        "contribution-board"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Fcontribution-board-performance-test%2Fcontribution-board.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/contribution-board-performance-test/useHS91L02W2C01.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "contribution-board-performance-test",
+        "useHS91L02W2C01"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Fcontribution-board-performance-test%2FuseHS91L02W2C01.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/contribution-board-performance-test/usePICO.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "contribution-board-performance-test",
+        "usePICO"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Fcontribution-board-performance-test%2FusePICO.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/contribution-board-performance-test/useWS2812B_2020.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "contribution-board-performance-test",
+        "useWS2812B_2020"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Fcontribution-board-performance-test%2FuseWS2812B_2020.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/null-trace-hint copy/null-trace-hint.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "null-trace-hint copy",
+        "null-trace-hint"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Fnull-trace-hint+copy%2Fnull-trace-hint.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/null-trace-hint/null-trace-hint.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "null-trace-hint",
+        "null-trace-hint"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Fnull-trace-hint%2Fnull-trace-hint.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/port-hints-not-showing/port-hints-not-showing.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "port-hints-not-showing",
+        "port-hints-not-showing"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Fport-hints-not-showing%2Fport-hints-not-showing.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/repros/repro4-large-led-matrix/repro4-large-led-matrix.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "repros",
+        "repro4-large-led-matrix",
+        "repro4-large-led-matrix"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frepros%2Frepro4-large-led-matrix%2Frepro4-large-led-matrix.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/rotated-rec.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "rotated-rec"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Frotated-rec.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-circle.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-circle"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-circle.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-layer.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-layer"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-layer.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-line.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-line"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-line.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-oval.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-oval"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-oval.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-path.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-path"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-path.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-pill.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-pill"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-pill.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-rect.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-rect"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-rect.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-text.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-text"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-text.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-text-alphabet.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-text-alphabet"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-text-alphabet.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-text-anchor.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-text-anchor"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-text-anchor.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/silkscreen/silkscreen-text-rotation.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "silkscreen",
+        "silkscreen-text-rotation"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsilkscreen%2Fsilkscreen-text-rotation.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/simple/pcb-cutouts.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "simple",
+        "pcb-cutouts"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsimple%2Fpcb-cutouts.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/simple-resistor.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "simple-resistor"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsimple-resistor.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/simple/rotated_rect_smtpad.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "simple",
+        "rotated_rect_smtpad"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fsimple%2Frotated_rect_smtpad.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/story-components/MacroKeypad.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "story-components",
+        "MacroKeypad"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fstory-components%2FMacroKeypad.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/trace-and-net.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "trace-and-net"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ftrace-and-net.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/trace-error.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "trace-error"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ftrace-error.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/tracehint.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "tracehint"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ftracehint.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/traces-length-tooltip.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "traces-length-tooltip"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ftraces-length-tooltip.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/transform-on-update.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "transform-on-update"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Ftransform-on-update.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/examples/via.stories.tsx",
+      "cleanPath": [
+        "src",
+        "examples",
+        "via"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2Fvia.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/DRC-errors-highlight.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "DRC-errors-highlight"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2FDRC-errors-highlight.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/autorouting-animations.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "autorouting-animations"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fautorouting-animations.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/board.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "board"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fboard.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/canvas-elements-renderer.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "canvas-elements-renderer"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fcanvas-elements-renderer.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/click-to-enable-zoom.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "click-to-enable-zoom"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fclick-to-enable-zoom.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/connected-resistors.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "connected-resistors"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fconnected-resistors.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/coordinate-flip.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "coordinate-flip"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fcoordinate-flip.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/debugGraphics.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "debugGraphics"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2FdebugGraphics.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/error-in-circuit-should-display.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "error-in-circuit-should-display"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ferror-in-circuit-should-display.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/fabrication/fabrication-path.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "fabrication",
+        "fabrication-path"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ffabrication%2Ffabrication-path.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/fabrication/fabrication-text.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "fabrication",
+        "fabrication-text"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ffabrication%2Ffabrication-text.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/hole.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "hole"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fhole.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/hover-behavior.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "hover-behavior"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fhover-behavior.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/initial-centering.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "initial-centering"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Finitial-centering.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/keepout.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "keepout"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fkeepout.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/keyboard.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "keyboard"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fkeyboard.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/manual-edit-conflicts-highlight.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "manual-edit-conflicts-highlight"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fmanual-edit-conflicts-highlight.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/multi-layer-circuit.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "multi-layer-circuit"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fmulti-layer-circuit.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/plated_hole_pill_shape.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "plated_hole_pill_shape"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fplated_hole_pill_shape.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/repros/contribution-board-performance-test/contribution-board.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "repros",
+        "contribution-board-performance-test",
+        "contribution-board"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Frepros%2Fcontribution-board-performance-test%2Fcontribution-board.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/repros/null-trace-hint copy/null-trace-hint.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "repros",
+        "null-trace-hint copy",
+        "null-trace-hint"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Frepros%2Fnull-trace-hint+copy%2Fnull-trace-hint.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/repros/null-trace-hint/null-trace-hint.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "repros",
+        "null-trace-hint",
+        "null-trace-hint"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Frepros%2Fnull-trace-hint%2Fnull-trace-hint.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/repros/port-hints-not-showing/port-hints-not-showing.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "repros",
+        "port-hints-not-showing",
+        "port-hints-not-showing"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Frepros%2Fport-hints-not-showing%2Fport-hints-not-showing.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/repros/repro4-large-led-matrix/repro4-large-led-matrix.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "repros",
+        "repro4-large-led-matrix",
+        "repro4-large-led-matrix"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Frepros%2Frepro4-large-led-matrix%2Frepro4-large-led-matrix.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/rotated-rec.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "rotated-rec"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Frotated-rec.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-circle.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-circle"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-circle.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-layer.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-layer"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-layer.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-line.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-line"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-line.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-oval.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-oval"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-oval.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-path.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-path"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-path.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-pill.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-pill"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-pill.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-rect.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-rect"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-rect.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-text.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-text"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-text.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-text-alphabet.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-text-alphabet"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-text-alphabet.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-text-anchor.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-text-anchor"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-text-anchor.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/silkscreen/silkscreen-text-rotation.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "silkscreen",
+        "silkscreen-text-rotation"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsilkscreen%2Fsilkscreen-text-rotation.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/simple/pcb-cutouts.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "simple",
+        "pcb-cutouts"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsimple%2Fpcb-cutouts.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/simple-resistor.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "simple-resistor"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsimple-resistor.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/simple/rotated_rect_smtpad.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "simple",
+        "rotated_rect_smtpad"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fsimple%2Frotated_rect_smtpad.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/trace-and-net.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "trace-and-net"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ftrace-and-net.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/trace-error.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "trace-error"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ftrace-error.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/tracehint.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "tracehint"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ftracehint.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/traces-length-tooltip.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "traces-length-tooltip"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ftraces-length-tooltip.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/transform-on-update.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "transform-on-update"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Ftransform-on-update.stories.tsx%22%7D&locked=true"
+    },
+    {
+      "filePath": "src/stories/via.stories.tsx",
+      "cleanPath": [
+        "src",
+        "stories",
+        "via"
+      ],
+      "rendererUrl": "renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fstories%2Fvia.stories.tsx%22%7D&locked=true"
+    }
+  ]
+}

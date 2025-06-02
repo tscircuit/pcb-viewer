@@ -5,7 +5,7 @@ import type {
   PcbPlatedHole,
 } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
-import { useGlobalStore } from "global-store"
+import { useGlobalStore } from "../global-store"
 import { Fragment, useEffect, useRef, useState } from "react"
 import {
   type Matrix,
