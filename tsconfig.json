@@ -16,6 +16,6 @@
     "baseUrl": "./src",
     "jsx": "react-jsx"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "tets.js"],
   "exclude": ["node_modules"]
 }
