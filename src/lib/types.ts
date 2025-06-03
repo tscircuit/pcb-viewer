@@ -57,6 +57,10 @@ export interface Rect extends PCBDrawingObject {
   roundness?: number
   align?: AlignString
   mesh_fill?: boolean
+  stroke_width?: number
+  is_filled?: boolean
+  has_stroke?: boolean
+  is_stroke_dashed?: boolean
 }
 
 export interface Circle extends PCBDrawingObject {
