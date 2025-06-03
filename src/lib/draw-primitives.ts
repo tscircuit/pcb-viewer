@@ -131,8 +131,19 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
   drawer.equip({
     color: getColor(rect),
     layer: rect.layer,
+    size: rect.stroke_width,
   })
-  drawer.rect(rect.x, rect.y, rect.w, rect.h, rect.mesh_fill)
+  drawer.rect({
+    x: rect.x,
+    y: rect.y,
+    w: rect.w,
+    h: rect.h,
+    mesh_fill: rect.mesh_fill,
+    is_filled: rect.is_filled,
+    has_stroke: rect.has_stroke,
+    is_stroke_dashed: rect.is_stroke_dashed,
+    stroke_width: rect.stroke_width,
+  })
 }
 
 export const drawRotatedRect = (

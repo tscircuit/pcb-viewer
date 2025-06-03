@@ -171,11 +171,34 @@ export class Drawer {
     drawLines(((angle + 90) * Math.PI) / 180)
   }
 
-  rect(x: number, y: number, w: number, h: number, mesh_fill?: boolean) {
+  rect({
+    x,
+    y,
+    w,
+    h,
+    mesh_fill,
+    is_filled = true,
+    has_stroke,
+    is_stroke_dashed,
+    stroke_width,
+  }: {
+    x: number
+    y: number
+    w: number
+    h: number
+    mesh_fill?: boolean
+    is_filled?: boolean
+    has_stroke?: boolean
+    is_stroke_dashed?: boolean
+    stroke_width?: number
+  }) {
     const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
     const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
     this.applyAperture()
     const ctx = this.getLayerCtx()
+
+    const shouldDrawStroke =
+      has_stroke === undefined ? is_filled === false : has_stroke
 
     if (mesh_fill) {
       ctx.save()
@@ -191,7 +214,38 @@ export class Drawer {
       // Draw the outline
       ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
     } else {
-      ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      if (is_filled !== false) {
+        ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      }
+
+      if (shouldDrawStroke) {
+        const originalLineWidth = ctx.lineWidth
+        if (stroke_width !== undefined) {
+          ctx.lineWidth = scaleOnly(this.transform, stroke_width)
+        }
+        if (is_stroke_dashed) {
+          let dashPattern: number[] = []
+
+          const scale = Math.abs(this.transform.a)
+          if (scale > 0) {
+            const SEGMENT_LENGTH = 0.1
+            const dash = SEGMENT_LENGTH * scale
+            const gap = dash * 1.3
+
+            if (dash > 0.5) {
+              dashPattern = [dash, gap]
+            }
+          }
+          ctx.setLineDash(dashPattern)
+        }
+        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        if (is_stroke_dashed) {
+          ctx.setLineDash([]) // Reset dash pattern
+        }
+        if (stroke_width !== undefined) {
+          ctx.lineWidth = originalLineWidth
+        }
+      }
     }
   }
 
