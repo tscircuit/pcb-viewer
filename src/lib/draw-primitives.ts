@@ -133,17 +133,17 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
     layer: rect.layer,
     size: rect.stroke_width,
   })
-  drawer.rect(
-    rect.x,
-    rect.y,
-    rect.w,
-    rect.h,
-    rect.mesh_fill,
-    rect.is_filled,
-    rect.has_stroke,
-    rect.is_stroke_dashed,
-    rect.stroke_width,
-  )
+  drawer.rect({
+    x: rect.x,
+    y: rect.y,
+    w: rect.w,
+    h: rect.h,
+    mesh_fill: rect.mesh_fill,
+    is_filled: rect.is_filled,
+    has_stroke: rect.has_stroke,
+    is_stroke_dashed: rect.is_stroke_dashed,
+    stroke_width: rect.stroke_width,
+  })
 }
 
 export const drawRotatedRect = (

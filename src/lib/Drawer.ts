@@ -171,17 +171,27 @@ export class Drawer {
     drawLines(((angle + 90) * Math.PI) / 180)
   }
 
-  rect(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    mesh_fill?: boolean,
-    is_filled: boolean = true,
-    has_stroke?: boolean,
-    is_stroke_dashed?: boolean,
-    stroke_width?: number,
-  ) {
+  rect({
+    x,
+    y,
+    w,
+    h,
+    mesh_fill,
+    is_filled = true,
+    has_stroke,
+    is_stroke_dashed,
+    stroke_width,
+  }: {
+    x: number
+    y: number
+    w: number
+    h: number
+    mesh_fill?: boolean
+    is_filled?: boolean
+    has_stroke?: boolean
+    is_stroke_dashed?: boolean
+    stroke_width?: number
+  }) {
     const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
     const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
     this.applyAperture()
