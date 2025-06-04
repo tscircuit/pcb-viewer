@@ -43,15 +43,19 @@ const isInsideOfSmtpad = (
     // Not implemented
     return false
   }
-  const halfWidth = elm.width / 2
-  const halfHeight = elm.height / 2
+  if (elm.shape === "rect" || elm.shape === "rotated_rect") {
+    const halfWidth = elm.width / 2
+    const halfHeight = elm.height / 2
 
-  const left = elm.x - halfWidth - padding
-  const right = elm.x + halfWidth + padding
-  const top = elm.y - halfHeight - padding
-  const bottom = elm.y + halfHeight + padding
+    const left = elm.x - halfWidth - padding
+    const right = elm.x + halfWidth + padding
+    const top = elm.y - halfHeight - padding
+    const bottom = elm.y + halfHeight + padding
 
-  return point.x > left && point.x < right && point.y > top && point.y < bottom
+    return (
+      point.x > left && point.x < right && point.y > top && point.y < bottom
+    )
+  }
 }
 
 const isInsideOfPlatedHole = (
@@ -185,21 +189,32 @@ export const EditTraceHintOverlay = ({
               }
               setSelectedElement(e)
               setShouldCreateAsVia(false)
-              setDragState({
-                dragStart: rwMousePoint,
-                originalCenter: { x: e.x, y: e.y },
-                dragEnd: rwMousePoint,
-                editEvent: {
-                  pcb_edit_event_type: "edit_trace_hint",
-                  pcb_port_id: e.pcb_port_id!,
-                  pcb_trace_hint_id: Math.random().toString(),
-                  route: [],
-                  created_at: Date.now(),
-                  edit_event_id: Math.random().toString(),
-                  in_progress: true,
-                },
-                shouldDrawRouteHint: false,
-              })
+
+              if (e.type === "pcb_smtpad") {
+                if (
+                  e.shape === "rotated_rect" ||
+                  e.shape === "rect" ||
+                  e.shape === "circle"
+                ) {
+                  setDragState({
+                    dragStart: rwMousePoint,
+                    originalCenter: { x: e.x, y: e.y },
+                    dragEnd: rwMousePoint,
+                    editEvent: {
+                      pcb_edit_event_type: "edit_trace_hint",
+                      pcb_port_id: e.pcb_port_id!,
+                      pcb_trace_hint_id: Math.random().toString(),
+                      route: [],
+                      created_at: Date.now(),
+                      edit_event_id: Math.random().toString(),
+                      in_progress: true,
+                    },
+                    shouldDrawRouteHint: false,
+                  })
+                } else {
+                  console.warn(`Unsupported shape "${e.shape}" for pcb_smtpad`)
+                }
+              }
 
               cancelPanDrag()
               break
