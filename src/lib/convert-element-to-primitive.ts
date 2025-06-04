@@ -156,6 +156,21 @@ export const convertElementToPrimitives = (
             _source_port,
           },
         ]
+      } else if (element.shape === "polygon") {
+        const { points, layer } = element
+
+        return [
+          {
+            _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "polygon",
+            points,
+            layer: layer || "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          },
+        ]
       }
       return []
     }
