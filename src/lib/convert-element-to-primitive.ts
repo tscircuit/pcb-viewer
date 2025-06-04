@@ -499,6 +499,11 @@ export const convertElementToPrimitives = (
           h: element.height,
           layer:
             element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
+          stroke_width: element.stroke_width,
+          is_filled: element.is_filled,
+          has_stroke: element.has_stroke,
+          is_stroke_dashed: element.is_stroke_dashed,
+          _element: element,
         },
       ]
     }

@@ -26,7 +26,12 @@ export const drawEagle = (drawer: Drawer, eagle: EagleJSON) => {
     drawer.equip({
       color: layerMap[smd.layer].name,
     })
-    drawer.rect(smd.x - smd.dx / 2, smd.y - smd.dy / 2, smd.dx, smd.dy)
+    drawer.rect({
+      x: smd.x - smd.dx / 2,
+      y: smd.y - smd.dy / 2,
+      w: smd.dx,
+      h: smd.dy,
+    })
   }
   for (const wire of pkg.wire || []) {
     drawer.equip({
