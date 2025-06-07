@@ -87,6 +87,30 @@ export const PCBViewer = ({
     return
   }
 
+  const undoLastEdit = () => {
+    if (editEvents.length === 0) return
+    
+    const newEditEvents = editEvents.slice(0, -1)
+    if (!editEventsProp) {
+      setEditEvents(newEditEvents)
+    }
+    onEditEventsChanged?.(newEditEvents)
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'z' && allowEditing) {
+        event.preventDefault()
+        undoLastEdit()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [editEvents, allowEditing, editEventsProp, onEditEventsChanged])
+
   useEffect(() => {
     if (!refDimensions?.width) return
     if (!circuitJson) return
