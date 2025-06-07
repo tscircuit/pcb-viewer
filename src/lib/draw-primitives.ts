@@ -111,6 +111,17 @@ export const drawText = (drawer: Drawer, text: Text) => {
     x: text.x + alignOffset.x,
     y: text.y + alignOffset.y,
   })
+
+  // If on the bottom silkscreen layer, mirror the text horizontally
+  // around its anchor point text.x
+  if (text.layer === "bottom_silkscreen") {
+    text_lines = text_lines.map((line) => ({
+      ...line,
+      x1: 2 * text.x - line.x1,
+      x2: 2 * text.x - line.x2,
+    }))
+  }
+
   // Apply rotation if needed
   if (text.ccw_rotation) {
     const rotateTextParams = {
