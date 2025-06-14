@@ -165,6 +165,18 @@ export const TraceErrorCircuit4 = () => (
             height: 1,
           },
           {
+            type: "pcb_smtpad",
+            layer: "top" as const,
+            shape: "polygon",
+            points: [
+              { x: -4.1, y: 5.6 },
+              { x: -3.8, y: 4.4 },
+              { x: -6.2, y: 4.4 },
+              { x: -5.9, y: 5.6 },
+            ],
+            pcb_smtpad_id: "test_polygon_pad_1",
+          },
+          {
             type: "pcb_port",
             pcb_port_id: "pcb_port_0",
             source_port_id: "source_port_0",
