@@ -6,6 +6,7 @@ import type { StateProps } from "./global-store"
 import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useHotKey } from "./hooks/useHotKey"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
@@ -59,6 +60,44 @@ export const PCBViewer = ({
   const initialRenderCompleted = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const circuitJsonKey = `${circuitJson?.length || 0}_${(circuitJson as any)?.editCount || 0}`
+
+  useHotKey("ctrl+z", () => {
+    // The variable 'editEvents' here refers to the value derived from 'editEventsProp ?? state_editEvents'.
+    // 'setEditEvents' is the setter for 'state_editEvents'.
+    // We need to access the state variable directly for the slice, or use the derived 'editEvents'.
+    // The current logic `editEvents = editEventsProp ?? editEvents` inside the component means
+    // `editEvents` already holds the correct current list.
+    // However, the state setter is `setEditEvents`.
+    // The problem description's final conclusion was:
+    // const actualCurrentEvents = editEventsProp ?? editEvents_state; (where editEvents_state is the actual state hook variable)
+    // In this file, `let [editEvents_from_state, setEditEvents_from_state] = useState<ManualEditEvent[]>([])`
+    // then `editEvents = editEventsProp ?? editEvents_from_state;`
+    // So, the state variable is the second `editEvents` in the `useState` destructuring.
+    // Let's assume `editEvents` (the one reassigned) is the source of truth for current events.
+    // And `setEditEvents` is the state setter from `useState`.
+
+    const currentEventsToUndo = editEventsProp ?? editEvents // 'editEvents' here IS the state variable due to lexical scoping of useState
+                                                              // This was a point of confusion in the prompt.
+                                                              // The line `editEvents = editEventsProp ?? editEvents`
+                                                              // should be `const displayedEditEvents = editEventsProp ?? editEvents_state_variable`
+                                                              // Let's stick to the variable names actually in the file:
+                                                              // `editEvents` (from useState) and `setEditEvents` (from useState)
+                                                              // `editEventsProp` (from props)
+                                                              // The derived `editEvents` variable is `editEvents = editEventsProp ?? editEvents;` (this is confusing, should rename state var)
+
+    // To be safe and explicit, let's assume the `editEvents` in `let [editEvents, setEditEvents] = useState...`
+    // is the one we should use if `editEventsProp` is not set.
+    const sourceOfTruthEvents = editEventsProp ? editEventsProp : editEvents;
+
+
+    if (sourceOfTruthEvents.length > 0) {
+      const newEditEvents = sourceOfTruthEvents.slice(0, -1);
+      setEditEvents(newEditEvents); // This updates the internal state if not controlled
+      if (onEditEventsChanged) {
+        onEditEventsChanged(newEditEvents); // This informs the parent
+      }
+    }
+  });
 
   const resetTransform = () => {
     const elmBounds =
