@@ -45,7 +45,8 @@
     "zod": "^3.23.5"
   },
   "peerDependencies": {
-    "react": "*"
+    "react": "*",
+    "tscircuit": "*"
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
