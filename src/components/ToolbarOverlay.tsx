@@ -113,6 +113,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
+  const [measureToolArmed, setMeasureToolArmed] = useState(false)
   const [selectedLayer, selectLayer] = useGlobalStore(
     (s) => [s.selected_layer, s.selectLayer] as const,
   )
@@ -140,6 +141,17 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     (s) => s.setIsShowingAutorouting,
   )
   const setIsShowingDrcErrors = useGlobalStore((s) => s.setIsShowingDrcErrors)
+
+  useEffect(() => {
+    const arm = () => setMeasureToolArmed(true)
+    const disarm = () => setMeasureToolArmed(false)
+    window.addEventListener("arm-dimension-tool", arm)
+    window.addEventListener("disarm-dimension-tool", disarm)
+    return () => {
+      window.removeEventListener("arm-dimension-tool", arm)
+      window.removeEventListener("disarm-dimension-tool", disarm)
+    }
+  }, [])
 
   useHotKey("1", () => selectLayer("top"))
   useHotKey("2", () => selectLayer("bottom"))
@@ -289,6 +301,16 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             {is_showing_rats_nest ? "✖ " : ""}
             Rats Nest
           </div>
+        </ToolbarButton>
+
+        <ToolbarButton
+          style={measureToolArmed ? { backgroundColor: "#444" } : {}}
+          onClick={() => {
+            setMeasureToolArmed(true)
+            window.dispatchEvent(new Event("arm-dimension-tool"))
+          }}
+        >
+          <div>📏</div>
         </ToolbarButton>
 
         <ToolbarButton
