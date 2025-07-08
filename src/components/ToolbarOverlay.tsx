@@ -292,6 +292,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         </ToolbarButton>
 
         <ToolbarButton
+          style={{}}
+          onClick={() => {
+            window.dispatchEvent(new Event("arm-dimension-tool"))
+          }}
+        >
+          <div>📏</div>
+        </ToolbarButton>
+
+        <ToolbarButton
           onClick={() => {
             setViewMenuOpen(!isViewMenuOpen)
           }}

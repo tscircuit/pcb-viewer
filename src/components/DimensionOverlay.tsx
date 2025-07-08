@@ -17,6 +17,7 @@ export const DimensionOverlay = ({
   if (!transform) transform = identity()
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
+  const [measureToolArmed, setMeasureToolArmed] = useState(false)
   // Start of dimension tool line in real-world coordinates (not screen)
   const [dStart, setDStart] = useState({ x: 0, y: 0 })
   // End of dimension tool line in real-world coordinates (not screen)
@@ -41,6 +42,10 @@ export const DimensionOverlay = ({
       }
     }
 
+    const armMeasure = () => {
+      setMeasureToolArmed(true)
+    }
+
     const addKeyListener = () => {
       if (container) {
         window.addEventListener("keydown", down)
@@ -52,6 +57,7 @@ export const DimensionOverlay = ({
         window.removeEventListener("keydown", down)
       }
     }
+    window.addEventListener("arm-dimension-tool", armMeasure)
 
     if (container) {
       container.addEventListener("focus", addKeyListener)
@@ -60,6 +66,7 @@ export const DimensionOverlay = ({
       container.addEventListener("mouseleave", removeKeyListener)
     }
     return () => {
+      window.removeEventListener("arm-dimension-tool", armMeasure)
       if (container) {
         container.removeEventListener("focus", addKeyListener)
         container.removeEventListener("blur", removeKeyListener)
@@ -113,8 +120,19 @@ export const DimensionOverlay = ({
           setDEnd({ x: rwPoint.x, y: rwPoint.y })
         }
       }}
-      onMouseDown={() => {
-        if (dimensionToolStretching) {
+      onMouseDown={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        const rwPoint = applyToPoint(inverse(transform!), { x, y })
+
+        if (measureToolArmed && !dimensionToolVisible) {
+          setDStart({ x: rwPoint.x, y: rwPoint.y })
+          setDEnd({ x: rwPoint.x, y: rwPoint.y })
+          setDimensionToolVisible(true)
+          setDimensionToolStretching(true)
+          setMeasureToolArmed(false)
+        } else if (dimensionToolStretching) {
           setDimensionToolStretching(false)
         } else if (dimensionToolVisible) {
           setDimensionToolVisible(false)
