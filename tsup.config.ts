@@ -10,4 +10,5 @@ export default defineConfig({
   loader: {
     ".ts": "tsx",
   },
+  external: ["react", "react-dom", "react-reconciler", "react-reconciler-18"],
 })
