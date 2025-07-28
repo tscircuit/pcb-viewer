@@ -38,14 +38,6 @@ export const getTextForHighlightedPrimitive = (
     case "pcb_plated_hole": {
       let s = ""
 
-      if (
-        _parent_source_component &&
-        "name" in _parent_source_component &&
-        _parent_source_component.name
-      ) {
-        s += `.${_parent_source_component.name} > `
-      }
-
       const port_hints = Array.from(
         new Set(
           (element.port_hints ?? []).concat(
@@ -53,12 +45,22 @@ export const getTextForHighlightedPrimitive = (
           ),
         ),
       )
+        .filter((ph) => !/^[0-9]+$/.test(ph))
         // reverse alphabetical order
         .sort((a, b) => b.localeCompare(a))
 
-      s += port_hints
-        .map((ph: string) => (ph.match(/^[0-9]+$/) ? `port.${ph}` : `.${ph}`))
-        .join(", ")
+      if (
+        _parent_source_component &&
+        "name" in _parent_source_component &&
+        _parent_source_component.name
+      ) {
+        s += `.${_parent_source_component.name}`
+        if (port_hints.length > 0) s += " > "
+      }
+
+      if (port_hints.length > 0) {
+        s += port_hints.map((ph: string) => `.${ph}`).join(", ")
+      }
 
       return s
     }
