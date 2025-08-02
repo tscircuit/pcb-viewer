@@ -15,6 +15,7 @@ import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { MouseElementTracker } from "./MouseElementTracker"
 import { RatsNestOverlay } from "./RatsNestOverlay"
+import { PcbGroupOverlay } from "./PcbGroupOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import type { ManualEditEvent } from "@tscircuit/props"
 
@@ -118,23 +119,25 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>
                 <RatsNestOverlay transform={transform} soup={elements}>
-                  <DebugGraphicsOverlay
-                    transform={transform}
-                    debugGraphics={props.debugGraphics}
-                  >
-                    <WarningGraphicsOverlay
+                  <PcbGroupOverlay transform={transform} elements={elements}>
+                    <DebugGraphicsOverlay
                       transform={transform}
-                      elements={elements}
+                      debugGraphics={props.debugGraphics}
                     >
-                      <CanvasPrimitiveRenderer
+                      <WarningGraphicsOverlay
                         transform={transform}
-                        primitives={primitives}
-                        width={props.width}
-                        height={props.height}
-                        grid={props.grid}
-                      />
-                    </WarningGraphicsOverlay>
-                  </DebugGraphicsOverlay>
+                        elements={elements}
+                      >
+                        <CanvasPrimitiveRenderer
+                          transform={transform}
+                          primitives={primitives}
+                          width={props.width}
+                          height={props.height}
+                          grid={props.grid}
+                        />
+                      </WarningGraphicsOverlay>
+                    </DebugGraphicsOverlay>
+                  </PcbGroupOverlay>
                 </RatsNestOverlay>
               </ErrorOverlay>
             </ToolbarOverlay>
