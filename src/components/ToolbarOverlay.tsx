@@ -124,6 +124,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     is_showing_multiple_traces_length,
     is_showing_autorouting,
     is_showing_drc_errors,
+    is_showing_pcb_groups,
   ] = useGlobalStore((s) => [
     s.in_move_footprint_mode,
     s.in_draw_trace_mode,
@@ -131,6 +132,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     s.is_showing_multiple_traces_length,
     s.is_showing_autorouting,
     s.is_showing_drc_errors,
+    s.is_showing_pcb_groups,
   ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
@@ -141,6 +143,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     (s) => s.setIsShowingAutorouting,
   )
   const setIsShowingDrcErrors = useGlobalStore((s) => s.setIsShowingDrcErrors)
+  const setIsShowingPcbGroups = useGlobalStore(
+    (s) => s.setIsShowingPcbGroups,
+  )
 
   useEffect(() => {
     const arm = () => setMeasureToolArmed(true)
@@ -361,6 +366,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={is_showing_drc_errors}
                   onClick={() => {
                     setIsShowingDrcErrors(!is_showing_drc_errors)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="View PCB Groups"
+                  checked={is_showing_pcb_groups}
+                  onClick={() => {
+                    setIsShowingPcbGroups(!is_showing_pcb_groups)
                   }}
                 />
               </div>
