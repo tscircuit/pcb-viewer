@@ -4,6 +4,7 @@ export const zIndexMap = {
   editTraceHintOverlay: 30,
   errorOverlay: 30,
   ratsNestOverlay: 20,
+  pcbGroupOverlay: 15,
   toolbarOverlay: 60,
   warnings: 20,
   topLayer: 10, // each layer after this is 1 less than the previous

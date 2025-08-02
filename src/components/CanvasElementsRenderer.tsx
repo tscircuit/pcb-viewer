@@ -15,6 +15,7 @@ import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { MouseElementTracker } from "./MouseElementTracker"
 import { RatsNestOverlay } from "./RatsNestOverlay"
+import { PcbGroupOverlay } from "./PcbGroupOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import type { ManualEditEvent } from "@tscircuit/props"
 
@@ -118,10 +119,11 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>
                 <RatsNestOverlay transform={transform} soup={elements}>
-                  <DebugGraphicsOverlay
-                    transform={transform}
-                    debugGraphics={props.debugGraphics}
-                  >
+                  <PcbGroupOverlay transform={transform} soup={elements}>
+                    <DebugGraphicsOverlay
+                      transform={transform}
+                      debugGraphics={props.debugGraphics}
+                    >
                     <WarningGraphicsOverlay
                       transform={transform}
                       elements={elements}
@@ -134,7 +136,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                         grid={props.grid}
                       />
                     </WarningGraphicsOverlay>
-                  </DebugGraphicsOverlay>
+                    </DebugGraphicsOverlay>
+                  </PcbGroupOverlay>
                 </RatsNestOverlay>
               </ErrorOverlay>
             </ToolbarOverlay>
