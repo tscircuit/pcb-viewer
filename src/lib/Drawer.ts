@@ -286,6 +286,29 @@ export class Drawer {
     ctx.restore()
   }
 
+  rotatedPill(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    ccw_rotation: Rotation,
+  ) {
+    const ctx = this.getLayerCtx()
+    this.applyAperture()
+
+    ctx.save()
+
+    const [centerX, centerY] = applyToPoint(this.transform, [x, y])
+    ctx.translate(centerX, centerY)
+    const cw_rotation = 360 - ccw_rotation
+    if (ccw_rotation) ctx.rotate((cw_rotation * Math.PI) / 180)
+    ctx.translate(-centerX, -centerY)
+
+    this.pill(x, y, w, h)
+
+    ctx.restore()
+  }
+
   circle(x: number, y: number, r: number, mesh_fill?: boolean) {
     const r$ = scaleOnly(this.transform, r)
     const [x$, y$] = applyToPoint(this.transform, [x, y])

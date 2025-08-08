@@ -61,6 +61,7 @@ export interface Rect extends PCBDrawingObject {
   is_filled?: boolean
   has_stroke?: boolean
   is_stroke_dashed?: boolean
+  ccw_rotation?: number
 }
 
 export interface Circle extends PCBDrawingObject {
@@ -85,6 +86,7 @@ export interface Pill extends PCBDrawingObject {
   y: number
   w: number
   h: number
+  ccw_rotation?: number
 }
 
 export interface Polygon extends PCBDrawingObject {
