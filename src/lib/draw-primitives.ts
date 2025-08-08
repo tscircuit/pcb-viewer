@@ -157,16 +157,21 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
   })
 }
 
-export const drawRotatedRect = (
-  drawer: Drawer,
-  rect: Rect & { ccw_rotation: Rotation },
-) => {
+export const drawRotatedRect = (drawer: Drawer, rect: Rect) => {
   drawer.equip({
     color: getColor(rect),
     layer: rect.layer,
   })
 
-  drawer.rotatedRect(rect.x, rect.y, rect.w, rect.h, rect.ccw_rotation)
+  drawer.rotatedRect(rect.x, rect.y, rect.w, rect.h, rect.ccw_rotation!)
+}
+
+export const drawRotatedPill = (drawer: Drawer, pill: Pill) => {
+  drawer.equip({
+    color: getColor(pill),
+    layer: pill.layer,
+  })
+  drawer.rotatedPill(pill.x, pill.y, pill.w, pill.h, pill.ccw_rotation!)
 }
 
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
@@ -208,14 +213,8 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
     case "text":
       return drawText(drawer, primitive)
     case "rect":
-      // @ts-ignore
-      if (primitive._element?.shape === "rotated_rect") {
-        return drawRotatedRect(drawer, {
-          ...primitive,
-          // @ts-ignore
-          ccw_rotation: primitive._element.ccw_rotation,
-          mesh_fill: primitive.mesh_fill,
-        })
+      if (primitive.ccw_rotation) {
+        return drawRotatedRect(drawer, primitive)
       }
       return drawRect(drawer, primitive)
     case "circle":
@@ -223,6 +222,9 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
     case "oval":
       return drawOval(drawer, primitive)
     case "pill":
+      if (primitive.ccw_rotation) {
+        return drawRotatedPill(drawer, primitive)
+      }
       return drawPill(drawer, primitive)
     case "polygon":
       return drawPolygon(drawer, primitive)

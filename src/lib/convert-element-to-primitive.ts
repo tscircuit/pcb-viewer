@@ -138,6 +138,7 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             _source_port,
+            ccw_rotation: (element as any).ccw_rotation,
           },
         ]
       } else if (element.shape === "circle") {
@@ -331,6 +332,45 @@ export const convertElementToPrimitives = (
             w: hole_width,
             h: hole_height,
             layer: "drill", // Pill-shaped hole in drill layer
+          },
+        ]
+      } else if (element.shape === "rotated_pill_hole_with_rect_pad") {
+        const {
+          x,
+          y,
+          hole_width,
+          hole_height,
+          hole_ccw_rotation,
+          rect_pad_width,
+          rect_pad_height,
+          rect_ccw_rotation,
+        } = element as any // Use as any to access new properties
+
+        return [
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "top", // Rectangular pad on top layer
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: rect_ccw_rotation,
+          },
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill", // Pill-shaped hole in drill layer
+            ccw_rotation: hole_ccw_rotation,
           },
         ]
       } else {
