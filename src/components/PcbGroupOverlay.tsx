@@ -196,7 +196,7 @@ export const PcbGroupOverlay = ({
 
       const baseFontSize = Math.max(8, Math.min(12, 10 * Math.abs(transform.a)))
       const fontSizeReduction =
-        depthLevel == 1 || depthLevel == 1 ? 0 : depthLevel * 0.11
+        depthLevel == 0 || depthLevel == 1 ? 0 : depthLevel * 0.11
       const fontSize = baseFontSize * (1 - fontSizeReduction)
       const labelPadding = 4
 
