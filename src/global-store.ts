@@ -23,6 +23,7 @@ export interface State {
 
   is_showing_multiple_traces_length: boolean
   is_showing_rats_nest: boolean
+  is_showing_pcb_groups: boolean
 
   selectLayer: (layer: LayerRef) => void
   setEditMode: (mode: "off" | "move_footprint" | "draw_trace") => void
@@ -33,6 +34,7 @@ export interface State {
   setIsShowingAutorouting: (is_showing: boolean) => void
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
   setIsShowingDrcErrors: (is_showing: boolean) => void
+  setIsShowingPcbGroups: (is_showing: boolean) => void
 }
 
 export type StateProps = {
@@ -57,6 +59,7 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
 
         is_showing_multiple_traces_length: false,
         is_showing_rats_nest: false,
+        is_showing_pcb_groups: true,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
         ...initialState,
@@ -84,6 +87,8 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
           set({ is_showing_autorouting: is_showing }),
         setIsShowingDrcErrors: (is_showing) =>
           set({ is_showing_drc_errors: is_showing }),
+        setIsShowingPcbGroups: (is_showing) =>
+          set({ is_showing_pcb_groups: is_showing }),
       }) as const,
   )
 
