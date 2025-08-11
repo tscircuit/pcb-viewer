@@ -7,6 +7,8 @@ import { useGlobalStore } from "../global-store"
 import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
 import { zIndexMap } from "lib/util/z-index-map"
+import { useIsSmallScreen } from "hooks/useIsSmallScreen"
+
 interface Props {
   children?: any
   elements?: AnyCircuitElement[]
@@ -50,20 +52,37 @@ export const LayerButton = ({
   )
 }
 
-export const ToolbarButton = ({ children, ...props }: any) => (
+export const ToolbarButton = ({
+  children,
+  isSmallScreen,
+  onClick,
+  ...props
+}: any) => (
   <div
     {...props}
+    onClick={onClick}
+    onTouchEnd={(e: any) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (onClick) {
+        onClick(e)
+      }
+    }}
     style={{
       backgroundColor: "#1F1F1F",
       border: "1px solid #666",
-      margin: 4,
+      margin: 0,
       padding: 4,
-      paddingLeft: 6,
-      paddingRight: 6,
+      paddingLeft: isSmallScreen ? 8 : 6,
+      paddingRight: isSmallScreen ? 8 : 6,
       borderRadius: 2,
-      alignSelf: "start",
       color: "#eee",
       cursor: "pointer",
+      fontSize: 12,
+      height: "fit-content",
+      touchAction: "manipulation",
+      userSelect: "none",
+      whiteSpace: "nowrap",
       ...props.style,
     }}
   >
@@ -99,6 +118,11 @@ const CheckboxMenuItem = ({
         e.stopPropagation()
         onClick()
       }}
+      onTouchEnd={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick()
+      }}
     >
       <input type="checkbox" checked={checked} onChange={() => {}} readOnly />
       <span style={{ color: "#eee" }}>{label}</span>
@@ -107,6 +131,7 @@ const CheckboxMenuItem = ({
 }
 
 export const ToolbarOverlay = ({ children, elements }: Props) => {
+  const isSmallScreen = useIsSmallScreen()
   const [isMouseOverContainer, setIsMouseOverContainer] = useGlobalStore(
     (s) => [s.is_mouse_over_container, s.setIsMouseOverContainer],
   ) as [boolean, (isFocused: boolean) => void]
@@ -169,13 +194,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     elements?.filter((e) => e.type.includes("error")).length ?? 0
   return (
     <div
-      style={{ position: "relative" }}
+      style={{ position: "relative", zIndex: "999 !important" }}
       onMouseEnter={() => {
         setIsMouseOverContainer(true)
       }}
       onMouseLeave={(e) => {
         setIsMouseOverContainer(false)
         setLayerMenuOpen(false)
+        setViewMenuOpen(false)
       }}
     >
       {children}
@@ -196,23 +222,30 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         @tscircuit/pcb-viewer@{packageJson.version}
       </div>
       <div
+        data-toolbar-overlay
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         style={{
           position: "absolute",
-          opacity: isMouseOverContainer ? 1 : 0,
+          opacity: isSmallScreen ? 1 : isMouseOverContainer ? 1 : 0,
           top: 16,
           left: 16,
+          right: isSmallScreen ? 16 : "auto",
           transition: isMouseOverContainer
             ? "opacity 100ms linear"
-            : "opacity 1s linear",
+            : "opacity 300ms linear",
           zIndex: zIndexMap.toolbarOverlay,
           color: "red",
           display: "flex",
+          flexWrap: "wrap",
+          gap: 4,
           fontSize: 12,
-          height: 100,
           fontFamily: "sans-serif",
         }}
       >
         <ToolbarButton
+          isSmallScreen={isSmallScreen}
           onClick={() => {
             setLayerMenuOpen(!isLayerMenuOpen)
           }}
@@ -252,6 +285,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           )}
         </ToolbarButton>
         <ToolbarButton
+          isSmallScreen={isSmallScreen}
           style={errorCount > 0 ? { color: "red" } : {}}
           onClick={() => setErrorsOpen(!isErrorsOpen)}
           onMouseLeave={() => setErrorsOpen(false)}
@@ -273,6 +307,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           )}
         </ToolbarButton>
         <ToolbarButton
+          isSmallScreen={isSmallScreen}
           style={{}}
           onClick={() => {
             setEditMode(in_draw_trace_mode ? "off" : "draw_trace")
@@ -284,6 +319,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           </div>
         </ToolbarButton>
         <ToolbarButton
+          isSmallScreen={isSmallScreen}
           style={{}}
           onClick={() => {
             setEditMode(in_move_footprint_mode ? "off" : "move_footprint")
@@ -295,6 +331,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           </div>
         </ToolbarButton>
         <ToolbarButton
+          isSmallScreen={isSmallScreen}
           style={{}}
           onClick={() => {
             setIsShowingRatsNest(!is_showing_rats_nest)
@@ -307,6 +344,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         </ToolbarButton>
 
         <ToolbarButton
+          isSmallScreen={isSmallScreen}
           style={measureToolArmed ? { backgroundColor: "#444" } : {}}
           onClick={() => {
             setMeasureToolArmed(true)
@@ -317,6 +355,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         </ToolbarButton>
 
         <ToolbarButton
+          isSmallScreen={isSmallScreen}
           onClick={() => {
             setViewMenuOpen(!isViewMenuOpen)
           }}
@@ -329,7 +368,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                 gap: "4px",
               }}
             >
-              View{" "}
+              View
               <span
                 style={{
                   fontSize: "8px",
