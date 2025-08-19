@@ -12,6 +12,7 @@ import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
+import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -58,7 +59,10 @@ export const PCBViewer = ({
 
   const initialRenderCompleted = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
-  const circuitJsonKey = `${circuitJson?.length || 0}_${(circuitJson as any)?.editCount || 0}`
+  const circuitJsonKey = useMemo(
+    () => calculateCircuitJsonKey(circuitJson),
+    [circuitJson],
+  )
 
   const resetTransform = () => {
     const elmBounds =
