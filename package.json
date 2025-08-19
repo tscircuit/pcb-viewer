@@ -12,8 +12,7 @@
     "format": "biome format . --write",
     "format:check": "biome format .",
     "cosmos": "cosmos",
-    "cosmos-export": "cosmos-export",
-    "test": "vitest run"
+    "cosmos-export": "cosmos-export"
   },
   "files": [
     "dist"
@@ -43,7 +42,6 @@
     "type-fest": "^3.0.0",
     "typescript": "^5.4.4",
     "use-mouse-matrix-transform": "^1.3.4",
-    "vitest": "^3.2.4",
     "zod": "^3.23.5"
   },
   "peerDependencies": {
