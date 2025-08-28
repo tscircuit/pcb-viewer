@@ -61,7 +61,7 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
         is_showing_rats_nest: false,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
-        is_showing_pcb_groups: false,
+        is_showing_pcb_groups: true,
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
