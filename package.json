@@ -1,14 +1,13 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.11.201",
+  "version": "1.11.204",
   "main": "dist/index.js",
   "type": "module",
   "repository": "tscircuit/pcb-viewer",
   "license": "MIT",
   "scripts": {
     "start": "cosmos",
-    "build": "tsup ./src/index.tsx --platform browser --dts --sourcemap --format esm --outDir dist",
-    "test": "bun test",
+    "build": "tsup ./src/index.tsx --platform browser --external @tscircuit/core --dts --sourcemap --format esm --outDir dist",
     "yalc": "npm run build && yalc push",
     "format": "biome format . --write",
     "format:check": "biome format .",

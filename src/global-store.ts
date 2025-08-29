@@ -6,6 +6,11 @@ import {
 import { StoreContext } from "./components/ContextProviders"
 import type { LayerRef } from "circuit-json"
 import { useContext } from "react"
+import {
+  getStoredBoolean,
+  setStoredBoolean,
+  STORAGE_KEYS,
+} from "./hooks/useLocalStorage"
 
 export interface State {
   selected_layer: LayerRef
@@ -61,7 +66,10 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
         is_showing_rats_nest: false,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
-        is_showing_pcb_groups: false,
+        is_showing_pcb_groups: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_PCB_GROUPS,
+          true,
+        ),
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
@@ -87,8 +95,10 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
           set({ is_showing_autorouting: is_showing }),
         setIsShowingDrcErrors: (is_showing) =>
           set({ is_showing_drc_errors: is_showing }),
-        setIsShowingPcbGroups: (is_showing) =>
-          set({ is_showing_pcb_groups: is_showing }),
+        setIsShowingPcbGroups: (is_showing) => {
+          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, is_showing)
+          set({ is_showing_pcb_groups: is_showing })
+        },
       }) as const,
   )
 
