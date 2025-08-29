@@ -58,6 +58,5 @@
     "react-toastify": "^10.0.5",
     "transformation-matrix": "^2.13.0",
     "zustand": "^4.5.2"
-  },
-  "private": true
+  }
 }
