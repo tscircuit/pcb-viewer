@@ -33,7 +33,7 @@ describe("calculateCircuitJsonKey", () => {
           schematic_component_id: "sch1",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toBe("0")
     })
@@ -57,7 +57,7 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toMatch(/^1_[a-z0-9]+$/)
     })
@@ -78,10 +78,10 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toMatch(/^1_[a-z0-9]+$/)
-      
+
       // Should be consistent across multiple calls
       const result2 = calculateCircuitJsonKey(circuitJson)
       expect(result).toBe(result2)
@@ -99,7 +99,7 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toMatch(/^1_[a-z0-9]+$/)
     })
@@ -131,10 +131,10 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toMatch(/^2_[a-z0-9]+$/)
-      
+
       // Should be consistent across multiple calls
       const result2 = calculateCircuitJsonKey(circuitJson)
       expect(result).toBe(result2)
@@ -169,10 +169,10 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const singleResult = calculateCircuitJsonKey(singleElement)
       const multipleResult = calculateCircuitJsonKey(multipleElements)
-      
+
       expect(singleResult).toMatch(/^1_/)
       expect(multipleResult).toMatch(/^2_/)
       expect(singleResult).not.toBe(multipleResult)
@@ -207,10 +207,10 @@ describe("calculateCircuitJsonKey", () => {
 
       const circuitJson1 = [element1, element2]
       const circuitJson2 = [element2, element1]
-      
+
       const result1 = calculateCircuitJsonKey(circuitJson1)
       const result2 = calculateCircuitJsonKey(circuitJson2)
-      
+
       expect(result1).toBe(result2)
     })
   })
@@ -243,7 +243,7 @@ describe("calculateCircuitJsonKey", () => {
 
       const result1 = calculateCircuitJsonKey([element1])
       const result2 = calculateCircuitJsonKey([element2])
-      
+
       // Different IDs should produce different keys even with same bounds
       expect(result1).not.toBe(result2)
     })
@@ -262,7 +262,7 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toMatch(/^1_[a-z0-9]+$/)
     })
@@ -295,10 +295,10 @@ describe("calculateCircuitJsonKey", () => {
 
       const circuitJson1 = createCircuitJson()
       const circuitJson2 = createCircuitJson()
-      
+
       const result1 = calculateCircuitJsonKey(circuitJson1)
       const result2 = calculateCircuitJsonKey(circuitJson2)
-      
+
       expect(result1).toBe(result2)
     })
   })
@@ -337,7 +337,7 @@ describe("calculateCircuitJsonKey", () => {
           layers: ["top", "bottom"],
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toMatch(/^3_[a-z0-9]+$/)
     })
@@ -356,7 +356,7 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(result).toMatch(/^1_[a-z0-9]+$/)
     })
@@ -375,7 +375,7 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       expect(typeof result).toBe("string")
     })
@@ -396,10 +396,10 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result = calculateCircuitJsonKey(circuitJson)
       const parts = result.split("_")
-      
+
       expect(parts).toHaveLength(2)
       expect(parseInt(parts[0])).toBeGreaterThan(0)
       expect(parts[1]).toMatch(/^[a-z0-9]+$/)
@@ -433,16 +433,16 @@ describe("calculateCircuitJsonKey", () => {
           layer: "top",
         } as any,
       ]
-      
+
       const result1 = calculateCircuitJsonKey(circuitJson1)
       const result2 = calculateCircuitJsonKey(circuitJson2)
-      
+
       expect(result1).not.toBe(result2)
-      
+
       // Both should have same count but different hash
       const [count1, hash1] = result1.split("_")
       const [count2, hash2] = result2.split("_")
-      
+
       expect(count1).toBe(count2)
       expect(hash1).not.toBe(hash2)
     })
