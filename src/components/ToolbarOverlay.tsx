@@ -310,20 +310,19 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
             }}
           >
-            {elements
-              ?.filter((e): e is PcbTraceError => e.type.includes("error"))
-              .map((e, i) => (
+            {(() => {
+              const errorElements =
+                elements?.filter((el): el is PcbTraceError =>
+                  el.type.includes("error"),
+                ) || []
+              const errorCount = errorElements.length
+
+              return errorElements.map((e, i) => (
                 <div
                   key={i}
                   style={{
                     borderBottom:
-                      i <
-                      elements.filter((el): el is PcbTraceError =>
-                        el.type.includes("error"),
-                      ).length -
-                        1
-                        ? "1px solid #444"
-                        : "none",
+                      i < errorCount - 1 ? "1px solid #444" : "none",
                   }}
                 >
                   <div
@@ -395,6 +394,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         whiteSpace: "nowrap",
                         flexShrink: 0,
                         color: "#ff6b6b",
+                        display: isSmallScreen ? "none" : "block",
                       }}
                     >
                       {e.error_type}
@@ -448,7 +448,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+            })()}
           </div>
         )}
         <ToolbarButton
