@@ -1,6 +1,6 @@
 import React from "react"
 import { PCBViewer } from "../PCBViewer"
-import timer555 from "../assets/555-timer"
+import timer555 from "./assets/timer-555"
 
 export const LongLineErrorExample: React.FC = () => {
   return (
