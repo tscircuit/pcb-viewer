@@ -286,26 +286,157 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         </ToolbarButton>
         <ToolbarButton
           isSmallScreen={isSmallScreen}
-          style={errorCount > 0 ? { color: "red" } : {}}
+          style={{
+            position: "relative",
+            ...(errorCount > 0 ? { color: "red" } : {}),
+          }}
           onClick={() => setErrorsOpen(!isErrorsOpen)}
-          onMouseLeave={() => setErrorsOpen(false)}
         >
           <div>{errorCount} errors</div>
-          {isErrorsOpen && (
-            <div
-              style={{ display: "grid", gridTemplateColumns: "100px 300px" }}
-            >
-              {elements
-                ?.filter((e): e is PcbTraceError => e.type.includes("error"))
-                .map((e, i) => (
-                  <Fragment key={i}>
-                    <div>{e.error_type}</div>
-                    <div>{e.message}</div>
-                  </Fragment>
-                ))}
-            </div>
-          )}
         </ToolbarButton>
+        {isErrorsOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              backgroundColor: "#2a2a2a",
+              border: "1px solid #666",
+              borderRadius: 4,
+              marginTop: 4,
+              zIndex: 1000,
+              minWidth: isSmallScreen ? "280px" : "400px",
+              maxWidth: isSmallScreen ? "90vw" : "600px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            {elements
+              ?.filter((e): e is PcbTraceError => e.type.includes("error"))
+              .map((e, i) => (
+                <div
+                  key={i}
+                  style={{
+                    borderBottom:
+                      i <
+                      elements.filter((el): el is PcbTraceError =>
+                        el.type.includes("error"),
+                      ).length -
+                        1
+                        ? "1px solid #444"
+                        : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 16px",
+                      cursor: "pointer",
+                      backgroundColor: "#2a2a2a",
+                      transition: "background-color 0.2s ease",
+                      touchAction: "manipulation",
+                      userSelect: "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#333"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#2a2a2a"
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation()
+                      e.currentTarget.style.backgroundColor = "#333"
+                    }}
+                    onTouchEnd={(e) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                      e.currentTarget.style.backgroundColor = "#2a2a2a"
+
+                      const errorElement = document.querySelector(
+                        `[data-error-id="${i}"]`,
+                      ) as HTMLElement
+                      const arrow = document.querySelector(
+                        `[data-arrow-id="${i}"]`,
+                      ) as HTMLElement
+                      if (errorElement && arrow) {
+                        const isVisible = errorElement.style.display !== "none"
+                        errorElement.style.display = isVisible
+                          ? "none"
+                          : "block"
+                        arrow.style.transform = isVisible
+                          ? "rotate(90deg)"
+                          : "rotate(0deg)"
+                      }
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const errorElement = document.querySelector(
+                        `[data-error-id="${i}"]`,
+                      ) as HTMLElement
+                      const arrow = document.querySelector(
+                        `[data-arrow-id="${i}"]`,
+                      ) as HTMLElement
+                      if (errorElement && arrow) {
+                        const isVisible = errorElement.style.display !== "none"
+                        errorElement.style.display = isVisible
+                          ? "none"
+                          : "block"
+                        arrow.style.transform = isVisible
+                          ? "rotate(90deg)"
+                          : "rotate(0deg)"
+                      }
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: isSmallScreen ? "12px" : "13px",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {e.error_type}
+                    </div>
+                    <div
+                      data-arrow-id={i}
+                      style={{
+                        color: "#888",
+                        fontSize: "16px",
+                        transform: "rotate(90deg)",
+                        transition: "transform 0.2s ease",
+                        flexShrink: 0,
+                      }}
+                    >
+                      ›
+                    </div>
+                  </div>
+                  <div
+                    data-error-id={i}
+                    style={{
+                      display: "none",
+                      padding: "12px 16px",
+                      backgroundColor: "#1a1a1a",
+                      borderTop: "1px solid #444",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: isSmallScreen ? "11px" : "12px",
+                        color: "#ccc",
+                        lineHeight: 1.5,
+                        wordWrap: "break-word",
+                        overflowWrap: "break-word",
+                        hyphens: "auto",
+                      }}
+                    >
+                      {e.message}
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
