@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react"
 import { Drawer } from "lib/Drawer"
 
 export default () => {
-  const ref = useRef<any>()
+  const ref = useRef<any>(null)
   let [width, height] = [500, 500]
   useEffect(() => {
     const drawer = new Drawer(ref.current)
