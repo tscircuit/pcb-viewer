@@ -381,6 +381,37 @@ describe("calculateCircuitJsonKey", () => {
     })
   })
 
+  describe("pcb_trace route updates", () => {
+    it("should change key when pcb_trace route length changes", () => {
+      const baseTrace = {
+        type: "pcb_trace",
+        pcb_trace_id: "trace1",
+        route: [
+          { x: 0, y: 0, width: 0.1 },
+          { x: 1, y: 1, width: 0.1 },
+        ],
+        layer: "top",
+      } as any
+
+      const circuitJson1: AnyCircuitElement[] = [baseTrace]
+      const circuitJson2: AnyCircuitElement[] = [
+        {
+          ...baseTrace,
+          route: [
+            { x: 0, y: 0, width: 0.1 },
+            { x: 0.5, y: 0.5, width: 0.1 },
+            { x: 1, y: 1, width: 0.1 },
+          ],
+        } as any,
+      ]
+
+      const result1 = calculateCircuitJsonKey(circuitJson1)
+      const result2 = calculateCircuitJsonKey(circuitJson2)
+
+      expect(result1).not.toBe(result2)
+    })
+  })
+
   describe("key format validation", () => {
     it("should always return string in format 'count_hash'", () => {
       const circuitJson: AnyCircuitElement[] = [

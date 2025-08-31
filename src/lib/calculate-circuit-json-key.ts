@@ -1,5 +1,5 @@
 import { getBoundsOfPcbElements, getElementId } from "@tscircuit/soup-util"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 
 const formatToFixed4 = (value: number): string =>
   Number.isFinite(value) ? value.toFixed(4) : "NaN"
@@ -36,8 +36,13 @@ export const calculateCircuitJsonKey = (
       formatToFixed4(bounds.maxX),
       formatToFixed4(bounds.maxY),
     ].join(",")
+    let signature = `${id}:${boundsStr}`
+    if (element.type === "pcb_trace") {
+      const routeLength = ((element as PcbTrace).route ?? []).length
+      signature += `:${routeLength}`
+    }
 
-    elementSignatures.push(`${id}:${boundsStr}`)
+    elementSignatures.push(signature)
   }
 
   if (elementSignatures.length === 0) {
