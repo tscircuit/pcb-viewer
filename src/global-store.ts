@@ -68,7 +68,7 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
         is_showing_drc_errors: true,
         is_showing_pcb_groups: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_PCB_GROUPS,
-          true,
+          false,
         ),
         ...initialState,
 
