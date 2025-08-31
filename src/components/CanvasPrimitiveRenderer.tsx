@@ -40,7 +40,7 @@ export const CanvasPrimitiveRenderer = ({
   width = 500,
   height = 500,
 }: Props) => {
-  const canvasRefs = useRef<Record<string, HTMLCanvasElement>>()
+  const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
 
   useEffect(() => {
