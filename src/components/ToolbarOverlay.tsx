@@ -394,9 +394,23 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         fontSize: isSmallScreen ? "12px" : "13px",
                         whiteSpace: "nowrap",
                         flexShrink: 0,
+                        color: "#ff6b6b",
                       }}
                     >
                       {e.error_type}
+                    </div>
+                    <div
+                      style={{
+                        flex: 1,
+                        fontSize: isSmallScreen ? "12px" : "13px",
+                        color: "#ddd",
+                        lineHeight: 1.4,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {e.message}
                     </div>
                     <div
                       data-arrow-id={i}
