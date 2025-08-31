@@ -36,8 +36,15 @@ export const calculateCircuitJsonKey = (
       formatToFixed4(bounds.maxX),
       formatToFixed4(bounds.maxY),
     ].join(",")
+    let signature = `${id}:${boundsStr}`
+    if (element.type === "pcb_trace") {
+      const routeLength = Array.isArray((element as any).route)
+        ? (element as any).route.length
+        : 0
+      signature += `:${routeLength}`
+    }
 
-    elementSignatures.push(`${id}:${boundsStr}`)
+    elementSignatures.push(signature)
   }
 
   if (elementSignatures.length === 0) {
