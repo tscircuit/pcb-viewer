@@ -46,7 +46,10 @@ export type StateProps = {
   [key in keyof State]: State[key] extends boolean ? boolean : never
 }
 
-export const createStore = (initialState: Partial<StateProps> = {}) =>
+export const createStore = (
+  initialState: Partial<StateProps> = {},
+  disablePcbGroups = false,
+) =>
   createZustandStore<State>(
     (set) =>
       ({
@@ -66,10 +69,9 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
         is_showing_rats_nest: false,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
-        is_showing_pcb_groups: getStoredBoolean(
-          STORAGE_KEYS.IS_SHOWING_PCB_GROUPS,
-          false,
-        ),
+        is_showing_pcb_groups: disablePcbGroups
+          ? false
+          : getStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, true),
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
@@ -96,6 +98,7 @@ export const createStore = (initialState: Partial<StateProps> = {}) =>
         setIsShowingDrcErrors: (is_showing) =>
           set({ is_showing_drc_errors: is_showing }),
         setIsShowingPcbGroups: (is_showing) => {
+          if (disablePcbGroups) return
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, is_showing)
           set({ is_showing_pcb_groups: is_showing })
         },
