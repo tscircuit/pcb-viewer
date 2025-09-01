@@ -1,6 +1,6 @@
 import { PCBViewer } from "../PCBViewer"
 
-const circuitJson = [
+export const circuitJson = [
   {
     type: "source_project_metadata",
     source_project_metadata_id: "source_project_metadata_0",

@@ -26,6 +26,7 @@ type Props = {
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
+  disablePcbGroups?: boolean
 }
 
 export const PCBViewer = ({
@@ -38,6 +39,7 @@ export const PCBViewer = ({
   onEditEventsChanged,
   focusOnHover = false,
   clickToInteractEnabled = false,
+  disablePcbGroups = false,
 }: Props) => {
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
@@ -131,10 +133,21 @@ export const PCBViewer = ({
     onEditEventsChanged?.(newEditEvents)
   }
 
+  const mergedInitialState = useMemo(
+    () => ({
+      ...initialState,
+      ...(disablePcbGroups && { is_showing_pcb_groups: false }),
+    }),
+    [initialState, disablePcbGroups],
+  )
+
   return (
     <div ref={transformRef as any} style={{ position: "relative" }}>
       <div ref={ref as any}>
-        <ContextProviders initialState={initialState}>
+        <ContextProviders
+          initialState={mergedInitialState}
+          disablePcbGroups={disablePcbGroups}
+        >
           <CanvasElementsRenderer
             key={refDimensions.width}
             transform={transform}
