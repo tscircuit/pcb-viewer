@@ -696,21 +696,6 @@ export const convertElementToPrimitives = (
             },
           ]
         }
-        case "circle": {
-          return [
-            {
-              _pcb_drawing_object_id: getNewPcbDrawingObjectId(
-                "pcb_copper_pour_circle",
-              ),
-              pcb_drawing_type: "circle",
-              x: pour.center.x,
-              y: pour.center.y,
-              r: pour.radius,
-              layer: pour.layer,
-              _element: element,
-            },
-          ]
-        }
         case "polygon": {
           return [
             {
