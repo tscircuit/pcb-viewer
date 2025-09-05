@@ -150,6 +150,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     is_showing_autorouting,
     is_showing_drc_errors,
     is_showing_pcb_groups,
+    in_edit_board_mode,
   ] = useGlobalStore((s) => [
     s.in_move_footprint_mode,
     s.in_draw_trace_mode,
@@ -158,6 +159,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     s.is_showing_autorouting,
     s.is_showing_drc_errors,
     s.is_showing_pcb_groups,
+    s.in_edit_board_mode,
   ])
   const setEditMode = useGlobalStore((s) => s.setEditMode)
   const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
@@ -476,6 +478,21 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             Move Components
           </div>
         </ToolbarButton>
+
+        {/* NEW: Edit Board toggle */}
+        <ToolbarButton
+          isSmallScreen={isSmallScreen}
+          style={{}}
+          onClick={() => {
+            setEditMode(in_edit_board_mode ? "off" : "edit_board")
+          }}
+        >
+          <div>
+            {in_edit_board_mode ? "✖ " : ""}
+            Edit Board
+          </div>
+        </ToolbarButton>
+
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
