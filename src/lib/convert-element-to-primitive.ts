@@ -676,6 +676,57 @@ export const convertElementToPrimitives = (
         },
       ]
     }
+    case "pcb_copper_pour": {
+      const pour = element as any
+      switch (pour.shape) {
+        case "rect": {
+          return [
+            {
+              _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+                "pcb_copper_pour_rect",
+              ),
+              pcb_drawing_type: "rect",
+              x: pour.center.x,
+              y: pour.center.y,
+              w: pour.width,
+              h: pour.height,
+              layer: pour.layer,
+              _element: element,
+              ccw_rotation: pour.rotation,
+            },
+          ]
+        }
+        case "circle": {
+          return [
+            {
+              _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+                "pcb_copper_pour_circle",
+              ),
+              pcb_drawing_type: "circle",
+              x: pour.center.x,
+              y: pour.center.y,
+              r: pour.radius,
+              layer: pour.layer,
+              _element: element,
+            },
+          ]
+        }
+        case "polygon": {
+          return [
+            {
+              _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+                "pcb_copper_pour_polygon",
+              ),
+              pcb_drawing_type: "polygon",
+              points: pour.points,
+              layer: pour.layer,
+              _element: element,
+            },
+          ]
+        }
+      }
+      return []
+    }
 
     case "pcb_fabrication_note_text": {
       return [
