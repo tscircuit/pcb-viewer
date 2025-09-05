@@ -35,6 +35,7 @@ interface PcbManualEditConflictWarning extends BaseCircuitElement {
   pcb_component_id: string
   subcircuit_id: string
   source_component_id: string
+  warning_type: "pcb_manual_edit_conflict_warning"
 }
 
 interface Props {
