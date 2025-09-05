@@ -39,7 +39,7 @@ const isInsideOfSmtpad = (
   point: { x: number; y: number },
   padding = 0,
 ) => {
-  if (elm.shape === "circle") {
+  if (elm.shape === "circle" || elm.shape === "polygon") {
     // Not implemented
     return false
   }
@@ -87,6 +87,7 @@ const isInsideOfPlatedHole = (
       point.x > left && point.x < right && point.y > top && point.y < bottom
     )
   }
+  return false
 }
 
 /**
@@ -183,11 +184,18 @@ export const EditTraceHintOverlay = ({
                 toast.error(`pcb_port_id is null on the selected "${e.type}"`)
                 return
               }
+              const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)
+              if (!pcb_port) {
+                toast.error(
+                  `Could not find associated pcb_port for "${e.pcb_port_id}"`,
+                )
+                return
+              }
               setSelectedElement(e)
               setShouldCreateAsVia(false)
               setDragState({
                 dragStart: rwMousePoint,
-                originalCenter: { x: e.x, y: e.y },
+                originalCenter: { x: pcb_port.x, y: pcb_port.y },
                 dragEnd: rwMousePoint,
                 editEvent: {
                   pcb_edit_event_type: "edit_trace_hint",
