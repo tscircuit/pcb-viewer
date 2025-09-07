@@ -162,6 +162,16 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
     [elements],
   )
 
+  const componentErrors = useMemo(
+    () =>
+      elements?.filter(
+        (el): el is any =>
+          el.type === "pcb_trace_error" &&
+          el.message?.includes("Multiple components found with name"),
+      ) || [],
+    [elements],
+  )
+
   const portsMap = useMemo(() => {
     const map = new Map<string, PcbPort>()
     elements?.forEach((el) => {
@@ -352,6 +362,135 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
         }
 
         return null
+      })}
+      {componentErrors.map((el: any, index) => {
+        const componentName =
+          el.component_name || el.message?.match(/name "([^"]+)"/)?.[1]
+        if (!componentName) return null
+
+        const components =
+          elements?.filter(
+            (comp) =>
+              (comp.type === "source_component" &&
+                comp.name === componentName) ||
+              (comp.type === "pcb_component" &&
+                elements?.find(
+                  (src) =>
+                    src.type === "source_component" &&
+                    src.source_component_id === comp.source_component_id &&
+                    src.name === componentName,
+                )),
+          ) || []
+
+        const errorId =
+          el.pcb_trace_error_id ||
+          `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
+        const isHighlighted = hoveredErrorId === errorId
+
+        return components.map((comp, compIndex) => {
+          if (!isHighlighted) return null
+
+          let center = { x: 0, y: 0 }
+
+          if (comp.type === "pcb_component") {
+            center = comp.center || { x: 0, y: 0 }
+          } else if (comp.type === "source_component") {
+            const pcbComp = elements?.find(
+              (pc) =>
+                pc.type === "pcb_component" &&
+                pc.source_component_id === comp.source_component_id,
+            )
+            if (pcbComp && pcbComp.type === "pcb_component")
+              center = pcbComp.center || { x: 0, y: 0 }
+          }
+
+          const screenCenter = applyToPoint(transform, center)
+          if (isNaN(screenCenter.x) || isNaN(screenCenter.y)) return null
+
+          const popupPosition = getPopupPosition(screenCenter, containerRef)
+
+          return (
+            <Fragment key={`${errorId}_${compIndex}`}>
+              <svg
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  pointerEvents: "none",
+                  mixBlendMode: "difference",
+                  zIndex: zIndexMap.errorOverlay,
+                }}
+                width="100%"
+                height="100%"
+              >
+                <circle
+                  cx={screenCenter.x}
+                  cy={screenCenter.y}
+                  r={20}
+                  fill="none"
+                  stroke="#ff4444"
+                  strokeWidth={3}
+                  strokeDasharray="4,4"
+                />
+                <rect
+                  x={screenCenter.x - 7}
+                  y={screenCenter.y - 7}
+                  width={14}
+                  height={14}
+                  transform={`rotate(45 ${screenCenter.x} ${screenCenter.y})`}
+                  fill="#ff4444"
+                />
+              </svg>
+              <div
+                style={{
+                  position: "absolute",
+                  zIndex: 200,
+                  left: popupPosition.left,
+                  top: popupPosition.top,
+                  color: "#ff4444",
+                  textAlign: "center",
+                  fontFamily: "sans-serif",
+                  fontSize: 12,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  transform: popupPosition.transform,
+                }}
+                onMouseEnter={(e) => {
+                  const msg = e.currentTarget.querySelector(
+                    ".error-message",
+                  ) as HTMLElement
+                  if (msg) msg.style.opacity = "1"
+                }}
+                onMouseLeave={(e) => {
+                  const msg = e.currentTarget.querySelector(
+                    ".error-message",
+                  ) as HTMLElement
+                  if (msg) msg.style.opacity = "0"
+                }}
+              >
+                <div
+                  className={`error-message ${errorMessageStyles}`}
+                  style={{
+                    opacity: 1,
+                    border: "1px solid #ff4444",
+                  }}
+                >
+                  {el.message}
+                </div>
+                <div
+                  className={errorMarkerStyles}
+                  style={{
+                    width: 14,
+                    height: 14,
+                    backgroundColor: "#ff4444",
+                  }}
+                />
+              </div>
+            </Fragment>
+          )
+        })
       })}
     </div>
   )
