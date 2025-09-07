@@ -145,7 +145,7 @@ const CheckboxMenuItem = ({
   )
 }
 
-export const ToolbarOverlay = React.memo(({ children, elements }: Props) => {
+export const ToolbarOverlay = (({ children, elements }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
   // Combine related global store selectors to reduce re-renders
