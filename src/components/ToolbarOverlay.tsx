@@ -327,7 +327,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               const errorCount = errorElements.length
 
               return errorElements.map((e, i) => {
-                // Create a unique error ID for this error
                 const errorId =
                   e.pcb_trace_error_id ||
                   `error_${i}_${e.error_type}_${e.message?.slice(0, 20)}`

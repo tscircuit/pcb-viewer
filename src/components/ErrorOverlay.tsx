@@ -387,9 +387,9 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
           `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
         const isHighlighted = hoveredErrorId === errorId
 
-        return components.map((comp, compIndex) => {
-          if (!isHighlighted) return null
+        if (!isHighlighted) return null
 
+        return components.map((comp, compIndex) => {
           let center = { x: 0, y: 0 }
 
           if (comp.type === "pcb_component") {
