@@ -5,6 +5,7 @@ import { zIndexMap } from "lib/util/z-index-map"
 import { useRef, Fragment } from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import { useGlobalStore } from "../global-store" // adjust the import path as needed
+import { getPopupPosition } from "lib/util/getPopupPosition"
 
 interface Props {
   transform?: Matrix
@@ -127,52 +128,6 @@ const RouteSVG = ({
   </svg>
 )
 
-// Helper function to calculate optimal popup position
-const getPopupPosition = (
-  errorCenter: { x: number; y: number },
-  containerRef: React.RefObject<HTMLDivElement | null>,
-) => {
-  const container = containerRef.current
-  if (!container)
-    return {
-      transform: "translate(-50%, -100%)",
-      left: errorCenter.x,
-      top: errorCenter.y,
-    }
-
-  const containerRect = container.getBoundingClientRect()
-  const popupWidth = 200 // width of error message
-  const popupHeight = 60 // approximate height of error message
-  const margin = 10 // margin from edges
-
-  let transformX = "-50%" // default center
-  let transformY = "-100%" // default above
-  let left = errorCenter.x
-  let top = errorCenter.y
-
-  // Check if popup would go off the left edge
-  if (errorCenter.x - popupWidth / 2 < margin) {
-    transformX = "0%"
-    left = margin
-  }
-
-  // Check if popup would go off the right edge
-  if (errorCenter.x + popupWidth / 2 > containerRect.width - margin) {
-    transformX = "-100%"
-    left = containerRect.width - margin
-  }
-
-  // Check if popup would go off the top edge
-  if (errorCenter.y - popupHeight < margin) {
-    transformY = "20px" // show below the error marker
-  }
-
-  return {
-    transform: `translate(${transformX}, ${transformY})`,
-    left,
-    top,
-  }
-}
 
 export const ErrorOverlay = ({ children, transform, elements }: Props) => {
   if (!transform) transform = identity()
