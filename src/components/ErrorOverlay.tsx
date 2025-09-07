@@ -160,7 +160,7 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
             `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
           const isHighlighted = hoveredErrorId === errorId
 
-          // port-based errors show when DRC errors enabled OR when highlighted (hovered in toolbar)
+          // port-based errors
           if (port1 && port2) {
             const screenPort1 = applyToPoint(transform, {
               x: port1.x,
