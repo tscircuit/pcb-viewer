@@ -374,6 +374,16 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
           const screenCenter = applyToPoint(transform, center)
           if (isNaN(screenCenter.x) || isNaN(screenCenter.y)) return null
 
+          // Calculate scale-responsive radius
+          const scale = Math.abs(transform.a) // Get scale from transform matrix
+          const baseRadius = 0.5 // Base radius in world units (mm)
+          const minRadius = 8 // Minimum radius in pixels
+          const maxRadius = 30 // Maximum radius in pixels
+          const scaledRadius = Math.max(
+            minRadius,
+            Math.min(maxRadius, baseRadius * scale),
+          )
+
           const popupPosition = getPopupPosition(screenCenter, containerRef)
 
           return (
@@ -392,17 +402,21 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
               >
                 {isHighlighted ? (
                   <polygon
-                    points={`${screenCenter.x},${screenCenter.y - 25} ${screenCenter.x + 20},${screenCenter.y} ${screenCenter.x},${screenCenter.y + 25} ${screenCenter.x - 20},${screenCenter.y}`}
+                    points={`${screenCenter.x},${screenCenter.y - scaledRadius * 1.25} ${screenCenter.x + scaledRadius},${screenCenter.y} ${screenCenter.x},${screenCenter.y + scaledRadius * 1.25} ${screenCenter.x - scaledRadius},${screenCenter.y}`}
                     fill="#ff4444"
                   />
                 ) : (
                   <circle
                     cx={screenCenter.x}
                     cy={screenCenter.y}
-                    r={20}
+                    r={scaledRadius}
                     fill="none"
-                    stroke={"red"}
-                    strokeWidth={isHighlighted ? 6 : 4}
+                    stroke={isHighlighted ? "#ff4444" : "red"}
+                    strokeWidth={
+                      isHighlighted
+                        ? Math.max(2, scaledRadius * 0.15)
+                        : Math.max(1, scaledRadius * 0.1)
+                    }
                     opacity={1}
                   />
                 )}
@@ -411,10 +425,10 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
               <div
                 style={{
                   position: "absolute",
-                  left: screenCenter.x - 30,
-                  top: screenCenter.y - 30,
-                  width: 60,
-                  height: 60,
+                  left: screenCenter.x - (scaledRadius + 10),
+                  top: screenCenter.y - (scaledRadius + 10),
+                  width: (scaledRadius + 10) * 2,
+                  height: (scaledRadius + 10) * 2,
                   zIndex: zIndexMap.errorOverlay + 5,
                   cursor: "pointer",
                   borderRadius: "50%",

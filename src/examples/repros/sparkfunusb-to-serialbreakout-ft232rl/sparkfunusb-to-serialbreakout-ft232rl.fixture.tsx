@@ -12,7 +12,7 @@ export const Circuit: React.FC = () => {
         circuitJson={circuitJson as any}
         height={height}
         initialState={{
-          is_showing_drc_errors: false,
+          is_showing_drc_errors: true,
         }}
       />
     </div>
