@@ -54,7 +54,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     primitiveIdsInMousedOverNet: [] as string[],
   })
 
-  // Get error-related element IDs when an error is hovered
+
   const errorRelatedIds = useMemo(() => {
     if (!hoveredErrorId) return []
 
@@ -73,12 +73,10 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
     const relatedIds: string[] = []
 
-    // Add trace IDs
     if (hoveredError.pcb_trace_id) {
       relatedIds.push(hoveredError.pcb_trace_id)
     }
 
-    // Add port IDs
     if (hoveredError.pcb_port_ids) {
       relatedIds.push(...hoveredError.pcb_port_ids)
     }
@@ -87,7 +85,6 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   }, [hoveredErrorId, elements])
 
   const primitives = useMemo(() => {
-    // Combine regular hover state with error-related IDs
     const combinedPrimitiveIds = [
       ...hoverState.primitiveIdsInMousedOverNet,
       ...errorRelatedIds,
