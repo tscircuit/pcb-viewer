@@ -4,7 +4,7 @@ import type { AnyCircuitElement, PcbPort, PcbTraceError } from "circuit-json"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useRef, Fragment, useMemo } from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
-import { useGlobalStore } from "../global-store" // adjust the import path as needed
+import { useGlobalStore } from "../global-store"
 import { getPopupPosition } from "lib/util/getPopupPosition"
 
 interface Props {
@@ -128,7 +128,6 @@ const RouteSVG = ({
   </svg>
 )
 
-// Pre-computed styles to avoid recreation on every render
 const errorMessageStyles = css`
   opacity: 0;
   pointer-events: none;
@@ -155,7 +154,6 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
   )
   const hoveredErrorId = useGlobalStore((state) => state.hovered_error_id)
 
-  // Memoize filtered errors to avoid recalculation
   const traceErrors = useMemo(
     () =>
       elements?.filter(
@@ -164,7 +162,6 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
     [elements],
   )
 
-  // Memoize ports lookup for better performance
   const portsMap = useMemo(() => {
     const map = new Map<string, PcbPort>()
     elements?.forEach((el) => {
@@ -190,7 +187,6 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
           ? su(elements).pcb_trace.get(pcb_trace_id)
           : undefined
 
-        // Create consistent error ID matching the one in ToolbarOverlay
         const errorId =
           el.pcb_trace_error_id ||
           `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
