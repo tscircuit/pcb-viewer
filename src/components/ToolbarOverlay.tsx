@@ -169,6 +169,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   )
   const setIsShowingDrcErrors = useGlobalStore((s) => s.setIsShowingDrcErrors)
   const setIsShowingPcbGroups = useGlobalStore((s) => s.setIsShowingPcbGroups)
+  const setHoveredErrorId = useGlobalStore((s) => s.setHoveredErrorId)
 
   useEffect(() => {
     const arm = () => setMeasureToolArmed(true)
@@ -202,6 +203,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         setIsMouseOverContainer(false)
         setLayerMenuOpen(false)
         setViewMenuOpen(false)
+        setErrorsOpen(false)
+        setHoveredErrorId(null)
       }}
     >
       {children}
@@ -290,7 +293,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             position: "relative",
             ...(errorCount > 0 ? { color: "red" } : {}),
           }}
-          onClick={() => setErrorsOpen(!isErrorsOpen)}
+          onClick={() => {
+            const newErrorsOpen = !isErrorsOpen
+            setErrorsOpen(newErrorsOpen)
+            if (!newErrorsOpen) {
+              setHoveredErrorId(null)
+            }
+          }}
         >
           <div>{errorCount} errors</div>
         </ToolbarButton>
@@ -317,138 +326,151 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                 ) || []
               const errorCount = errorElements.length
 
-              return errorElements.map((e, i) => (
-                <div
-                  key={i}
-                  style={{
-                    borderBottom:
-                      i < errorCount - 1 ? "1px solid #444" : "none",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 16px",
-                      cursor: "pointer",
-                      backgroundColor: "#2a2a2a",
-                      transition: "background-color 0.2s ease",
-                      touchAction: "manipulation",
-                      userSelect: "none",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "#333"
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "#2a2a2a"
-                    }}
-                    onTouchStart={(e) => {
-                      e.stopPropagation()
-                      e.currentTarget.style.backgroundColor = "#333"
-                    }}
-                    onTouchEnd={(e) => {
-                      e.stopPropagation()
-                      e.preventDefault()
-                      e.currentTarget.style.backgroundColor = "#2a2a2a"
+              return errorElements.map((e, i) => {
+                // Create a unique error ID for this error
+                const errorId =
+                  e.pcb_trace_error_id ||
+                  `error_${i}_${e.error_type}_${e.message?.slice(0, 20)}`
 
-                      const errorElement = document.querySelector(
-                        `[data-error-id="${i}"]`,
-                      ) as HTMLElement
-                      const arrow = document.querySelector(
-                        `[data-arrow-id="${i}"]`,
-                      ) as HTMLElement
-                      if (errorElement && arrow) {
-                        const isVisible = errorElement.style.display !== "none"
-                        errorElement.style.display = isVisible
-                          ? "none"
-                          : "block"
-                        arrow.style.transform = isVisible
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)"
-                      }
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      const errorElement = document.querySelector(
-                        `[data-error-id="${i}"]`,
-                      ) as HTMLElement
-                      const arrow = document.querySelector(
-                        `[data-arrow-id="${i}"]`,
-                      ) as HTMLElement
-                      if (errorElement && arrow) {
-                        const isVisible = errorElement.style.display !== "none"
-                        errorElement.style.display = isVisible
-                          ? "none"
-                          : "block"
-                        arrow.style.transform = isVisible
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)"
-                      }
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: isSmallScreen ? "12px" : "13px",
-                        whiteSpace: "nowrap",
-                        flexShrink: 0,
-                        color: "#ff6b6b",
-                        display: isSmallScreen ? "none" : "block",
-                      }}
-                    >
-                      {e.error_type}
-                    </div>
-                    <div
-                      style={{
-                        flex: 1,
-                        fontSize: isSmallScreen ? "12px" : "13px",
-                        color: "#ddd",
-                        lineHeight: 1.4,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {e.message}
-                    </div>
-                    <div
-                      data-arrow-id={i}
-                      style={{
-                        color: "#888",
-                        fontSize: "16px",
-                        transform: "rotate(90deg)",
-                        transition: "transform 0.2s ease",
-                        flexShrink: 0,
-                      }}
-                    >
-                      ›
-                    </div>
-                  </div>
+                return (
                   <div
-                    data-error-id={i}
+                    key={i}
                     style={{
-                      display: "none",
-                      padding: "12px 16px",
-                      backgroundColor: "#1a1a1a",
-                      borderTop: "1px solid #444",
+                      borderBottom:
+                        i < errorCount - 1 ? "1px solid #444" : "none",
                     }}
                   >
                     <div
                       style={{
-                        fontSize: isSmallScreen ? "11px" : "12px",
-                        color: "#ccc",
-                        lineHeight: 1.5,
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        hyphens: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "12px 16px",
+                        cursor: "pointer",
+                        backgroundColor: "#2a2a2a",
+                        transition: "background-color 0.2s ease",
+                        touchAction: "manipulation",
+                        userSelect: "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#333"
+                        setHoveredErrorId(errorId)
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#2a2a2a"
+                        setHoveredErrorId(null)
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation()
+                        e.currentTarget.style.backgroundColor = "#333"
+                        setHoveredErrorId(errorId)
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                        e.currentTarget.style.backgroundColor = "#2a2a2a"
+                        setHoveredErrorId(null)
+
+                        const errorElement = document.querySelector(
+                          `[data-error-id="${i}"]`,
+                        ) as HTMLElement
+                        const arrow = document.querySelector(
+                          `[data-arrow-id="${i}"]`,
+                        ) as HTMLElement
+                        if (errorElement && arrow) {
+                          const isVisible =
+                            errorElement.style.display !== "none"
+                          errorElement.style.display = isVisible
+                            ? "none"
+                            : "block"
+                          arrow.style.transform = isVisible
+                            ? "rotate(90deg)"
+                            : "rotate(0deg)"
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const errorElement = document.querySelector(
+                          `[data-error-id="${i}"]`,
+                        ) as HTMLElement
+                        const arrow = document.querySelector(
+                          `[data-arrow-id="${i}"]`,
+                        ) as HTMLElement
+                        if (errorElement && arrow) {
+                          const isVisible =
+                            errorElement.style.display !== "none"
+                          errorElement.style.display = isVisible
+                            ? "none"
+                            : "block"
+                          arrow.style.transform = isVisible
+                            ? "rotate(90deg)"
+                            : "rotate(0deg)"
+                        }
                       }}
                     >
-                      {e.message}
+                      <div
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: isSmallScreen ? "12px" : "13px",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                          color: "#ff6b6b",
+                          display: isSmallScreen ? "none" : "block",
+                        }}
+                      >
+                        {e.error_type}
+                      </div>
+                      <div
+                        style={{
+                          flex: 1,
+                          fontSize: isSmallScreen ? "12px" : "13px",
+                          color: "#ddd",
+                          lineHeight: 1.4,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {e.message}
+                      </div>
+                      <div
+                        data-arrow-id={i}
+                        style={{
+                          color: "#888",
+                          fontSize: "16px",
+                          transform: "rotate(90deg)",
+                          transition: "transform 0.2s ease",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ›
+                      </div>
+                    </div>
+                    <div
+                      data-error-id={i}
+                      style={{
+                        display: "none",
+                        padding: "12px 16px",
+                        backgroundColor: "#1a1a1a",
+                        borderTop: "1px solid #444",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: isSmallScreen ? "11px" : "12px",
+                          color: "#ccc",
+                          lineHeight: 1.5,
+                          wordWrap: "break-word",
+                          overflowWrap: "break-word",
+                          hyphens: "auto",
+                        }}
+                      >
+                        {e.message}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                )
+              })
             })()}
           </div>
         )}

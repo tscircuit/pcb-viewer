@@ -2,7 +2,7 @@ import { css } from "@emotion/css"
 import { su } from "@tscircuit/soup-util"
 import type { AnyCircuitElement, PcbPort, PcbTraceError } from "circuit-json"
 import { zIndexMap } from "lib/util/z-index-map"
-import { useRef } from "react"
+import { useRef, Fragment } from "react"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import { useGlobalStore } from "../global-store" // adjust the import path as needed
 
@@ -17,6 +17,7 @@ const ErrorSVG = ({
   screenPort2,
   errorCenter,
   canLineBeDrawn,
+  isHighlighted = false,
 }: any) => (
   <svg
     style={{
@@ -37,27 +38,38 @@ const ErrorSVG = ({
           y1={screenPort1.y}
           x2={errorCenter.x}
           y2={errorCenter.y}
-          strokeWidth={1.5}
+          strokeWidth={isHighlighted ? 3 : 1.5}
           strokeDasharray="2,2"
-          stroke="red"
+          stroke={isHighlighted ? "#ff4444" : "red"}
         />
         <line
           x1={errorCenter.x}
           y1={errorCenter.y}
           x2={screenPort2.x}
           y2={screenPort2.y}
-          strokeWidth={1.5}
+          strokeWidth={isHighlighted ? 3 : 1.5}
           strokeDasharray="2,2"
-          stroke="red"
+          stroke={isHighlighted ? "#ff4444" : "red"}
         />
         <rect
-          x={errorCenter.x - 5}
-          y={errorCenter.y - 5}
-          width={10}
-          height={10}
+          x={errorCenter.x - (isHighlighted ? 7 : 5)}
+          y={errorCenter.y - (isHighlighted ? 7 : 5)}
+          width={isHighlighted ? 14 : 10}
+          height={isHighlighted ? 14 : 10}
           transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
-          fill="red"
+          fill={isHighlighted ? "#ff4444" : "red"}
         />
+        {isHighlighted && (
+          <circle
+            cx={errorCenter.x}
+            cy={errorCenter.y}
+            r={15}
+            fill="none"
+            stroke="#ff4444"
+            strokeWidth={2}
+            opacity={0.6}
+          />
+        )}
       </>
     )}
   </svg>
@@ -66,9 +78,11 @@ const ErrorSVG = ({
 const RouteSVG = ({
   points,
   errorCenter,
+  isHighlighted = false,
 }: {
   points: { x: number; y: number }[]
   errorCenter: { x: number; y: number }
+  isHighlighted?: boolean
 }) => (
   <svg
     style={{
@@ -86,21 +100,79 @@ const RouteSVG = ({
       <polyline
         points={points.map((pt) => `${pt.x},${pt.y}`).join(" ")}
         fill="none"
-        stroke="red"
-        strokeWidth={1.5}
+        stroke={isHighlighted ? "#ff4444" : "red"}
+        strokeWidth={isHighlighted ? 3 : 1.5}
         strokeDasharray="2,2"
       />
     )}
     <rect
-      x={errorCenter.x - 5}
-      y={errorCenter.y - 5}
-      width={10}
-      height={10}
+      x={errorCenter.x - (isHighlighted ? 7 : 5)}
+      y={errorCenter.y - (isHighlighted ? 7 : 5)}
+      width={isHighlighted ? 14 : 10}
+      height={isHighlighted ? 14 : 10}
       transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
-      fill="red"
+      fill={isHighlighted ? "#ff4444" : "red"}
     />
+    {isHighlighted && (
+      <circle
+        cx={errorCenter.x}
+        cy={errorCenter.y}
+        r={15}
+        fill="none"
+        stroke="#ff4444"
+        strokeWidth={2}
+        opacity={0.6}
+      />
+    )}
   </svg>
 )
+
+// Helper function to calculate optimal popup position
+const getPopupPosition = (
+  errorCenter: { x: number; y: number },
+  containerRef: React.RefObject<HTMLDivElement | null>,
+) => {
+  const container = containerRef.current
+  if (!container)
+    return {
+      transform: "translate(-50%, -100%)",
+      left: errorCenter.x,
+      top: errorCenter.y,
+    }
+
+  const containerRect = container.getBoundingClientRect()
+  const popupWidth = 200 // width of error message
+  const popupHeight = 60 // approximate height of error message
+  const margin = 10 // margin from edges
+
+  let transformX = "-50%" // default center
+  let transformY = "-100%" // default above
+  let left = errorCenter.x
+  let top = errorCenter.y
+
+  // Check if popup would go off the left edge
+  if (errorCenter.x - popupWidth / 2 < margin) {
+    transformX = "0%"
+    left = margin
+  }
+
+  // Check if popup would go off the right edge
+  if (errorCenter.x + popupWidth / 2 > containerRect.width - margin) {
+    transformX = "-100%"
+    left = containerRect.width - margin
+  }
+
+  // Check if popup would go off the top edge
+  if (errorCenter.y - popupHeight < margin) {
+    transformY = "20px" // show below the error marker
+  }
+
+  return {
+    transform: `translate(${transformX}, ${transformY})`,
+    left,
+    top,
+  }
+}
 
 export const ErrorOverlay = ({ children, transform, elements }: Props) => {
   if (!transform) transform = identity()
@@ -108,13 +180,14 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
   const isShowingDRCErrors = useGlobalStore(
     (state) => state.is_showing_drc_errors,
   )
+  const hoveredErrorId = useGlobalStore((state) => state.hovered_error_id)
 
   return (
     <div style={{ position: "relative" }} ref={containerRef}>
       {children}
       {elements
         ?.filter((el): el is PcbTraceError => el.type === "pcb_trace_error")
-        .map((el: PcbTraceError) => {
+        .map((el: PcbTraceError, index) => {
           const { pcb_port_ids, pcb_trace_id } = el
           const port1 = elements.find(
             (el): el is PcbPort =>
@@ -126,7 +199,13 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
           )
           const trace = su(elements).pcb_trace.get(pcb_trace_id)
 
-          // port-based errors always show
+          // Create consistent error ID matching the one in ToolbarOverlay
+          const errorId =
+            el.pcb_trace_error_id ||
+            `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
+          const isHighlighted = hoveredErrorId === errorId
+
+          // port-based errors show when DRC errors enabled OR when highlighted (hovered in toolbar)
           if (port1 && port2) {
             const screenPort1 = applyToPoint(transform, {
               x: port1.x,
@@ -153,35 +232,44 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
               return null
             }
 
+            const popupPosition = getPopupPosition(errorCenter, containerRef)
+
             return (
-              <>
+              <Fragment key={errorId}>
                 <ErrorSVG
                   screenPort1={screenPort1}
                   screenPort2={screenPort2}
                   errorCenter={errorCenter}
                   canLineBeDrawn={canLineBeDrawn}
+                  isHighlighted={isHighlighted}
                 />
                 <div
                   className={css`
                   position: absolute;
-                  z-index: 100;
-                  left: ${errorCenter.x}px;
-                  top: ${errorCenter.y}px;
-                  color: red;
+                  z-index: ${isHighlighted ? 200 : 100};
+                  left: ${popupPosition.left}px;
+                  top: ${popupPosition.top}px;
+                  color: ${isHighlighted ? "#ff4444" : "red"};
                   text-align: center;
                   font-family: sans-serif;
                   font-size: 12px;
-                  display: flex;
+                  display: ${isShowingDRCErrors || isHighlighted ? "flex" : "none"};
                   flex-direction: column;
                   align-items: center;
                   cursor: pointer;
-                  transform: translate(-50%, -100%);
+                  transform: ${popupPosition.transform};
 
                   & .error-message {
-                    opacity: 0;
+                    opacity: ${isHighlighted ? 1 : 0};
                     pointer-events: none;
-
+                    background-color: rgba(0, 0, 0, 0.9);
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    border: 1px solid ${isHighlighted ? "#ff4444" : "red"};
                     width: 200px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+                    word-wrap: break-word;
+                    line-height: 1.4;
                     transition: opacity 0.2s;
                     margin-bottom: 10px;
                   }
@@ -195,18 +283,18 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
                   <div className="error-message">{el.message}</div>
                   <div
                     className={css`
-                    width: 10px;
-                    height: 10px;
+                    width: ${isHighlighted ? 14 : 10}px;
+                    height: ${isHighlighted ? 14 : 10}px;
                     transform: translate(0, 5px) rotate(45deg);
-                    background-color: red;
+                    background-color: ${isHighlighted ? "#ff4444" : "red"};
                   `}
                   />
                 </div>
-              </>
+              </Fragment>
             )
           }
           // fallback: only show if global DRC errors enabled and route exists
-          if (trace?.route && isShowingDRCErrors) {
+          if (trace?.route && (isShowingDRCErrors || isHighlighted)) {
             const screenPoints = trace.route.map((pt) =>
               applyToPoint(transform!, { x: pt.x, y: pt.y }),
             )
@@ -214,16 +302,22 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
               return null
             const mid = Math.floor(screenPoints.length / 2)
             const errorCenter = screenPoints[mid]
+            const popupPosition = getPopupPosition(errorCenter, containerRef)
+
             return (
-              <>
-                <RouteSVG points={screenPoints} errorCenter={errorCenter} />
+              <Fragment key={errorId}>
+                <RouteSVG
+                  points={screenPoints}
+                  errorCenter={errorCenter}
+                  isHighlighted={isHighlighted}
+                />
                 <div
                   className={css`
                     position: absolute;
-                    z-index: ${zIndexMap.errorOverlay + 1};
-                    left: ${errorCenter.x}px;
-                    top: ${errorCenter.y}px;
-                    color: red;
+                    z-index: ${isHighlighted ? zIndexMap.errorOverlay + 10 : zIndexMap.errorOverlay + 1};
+                    left: ${popupPosition.left}px;
+                    top: ${popupPosition.top}px;
+                    color: ${isHighlighted ? "#ff4444" : "red"};
                     text-align: center;
                     font-family: sans-serif;
                     font-size: 12px;
@@ -231,23 +325,36 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
                     flex-direction: column;
                     align-items: center;
                     cursor: pointer;
-                    transform: translate(-50%, -100%);
+                    transform: ${popupPosition.transform};
 
-                    & .error-message { opacity: 0; pointer-events: none; width: 200px; transition: opacity 0.2s; margin-bottom: 10px; }
+                    & .error-message { 
+                      opacity: ${isHighlighted ? 1 : 0}; 
+                      pointer-events: none; 
+                      background-color: rgba(0, 0, 0, 0.9);
+                      padding: 8px 12px;
+                      border-radius: 4px;
+                      border: 1px solid ${isHighlighted ? "#ff4444" : "red"};
+                      width: 200px; 
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+                      word-wrap: break-word;
+                      line-height: 1.4;
+                      transition: opacity 0.2s; 
+                      margin-bottom: 10px; 
+                    }
                     &:hover .error-message { opacity: 1; display: flex; }
                   `}
                 >
                   <div className="error-message">{el.message}</div>
                   <div
                     className={css`
-                      width: 10px;
-                      height: 10px;
+                      width: ${isHighlighted ? 14 : 10}px;
+                      height: ${isHighlighted ? 14 : 10}px;
                       transform: translate(0, 5px) rotate(45deg);
-                      background-color: red;
+                      background-color: ${isHighlighted ? "#ff4444" : "red"};
                     `}
                   />
                 </div>
-              </>
+              </Fragment>
             )
           }
 

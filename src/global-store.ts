@@ -30,6 +30,8 @@ export interface State {
   is_showing_rats_nest: boolean
   is_showing_pcb_groups: boolean
 
+  hovered_error_id: string | null
+
   selectLayer: (layer: LayerRef) => void
   setEditMode: (mode: "off" | "move_footprint" | "draw_trace") => void
   setIsMovingComponent: (is_moving: boolean) => void
@@ -40,6 +42,7 @@ export interface State {
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
   setIsShowingDrcErrors: (is_showing: boolean) => void
   setIsShowingPcbGroups: (is_showing: boolean) => void
+  setHoveredErrorId: (errorId: string | null) => void
 }
 
 export type StateProps = {
@@ -72,6 +75,8 @@ export const createStore = (
         is_showing_pcb_groups: disablePcbGroups
           ? false
           : getStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, true),
+
+        hovered_error_id: null,
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
@@ -102,6 +107,7 @@ export const createStore = (
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, is_showing)
           set({ is_showing_pcb_groups: is_showing })
         },
+        setHoveredErrorId: (errorId) => set({ hovered_error_id: errorId }),
       }) as const,
   )
 
