@@ -54,7 +54,6 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     primitiveIdsInMousedOverNet: [] as string[],
   })
 
-
   const errorRelatedIds = useMemo(() => {
     if (!hoveredErrorId) return []
 
