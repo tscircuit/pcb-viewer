@@ -2,7 +2,6 @@ import React, {
   Fragment,
   useEffect,
   useState,
-  useMemo,
   useCallback,
   useRef,
 } from "react"
@@ -145,10 +144,9 @@ const CheckboxMenuItem = ({
   )
 }
 
-export const ToolbarOverlay = (({ children, elements }: Props) => {
+export const ToolbarOverlay = ({ children, elements }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
-  // Combine related global store selectors to reduce re-renders
   const {
     isMouseOverContainer,
     setIsMouseOverContainer,
@@ -193,7 +191,6 @@ export const ToolbarOverlay = (({ children, elements }: Props) => {
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
 
-  // Use refs for error elements to avoid DOM queries
   const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
   const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
 
@@ -208,20 +205,16 @@ export const ToolbarOverlay = (({ children, elements }: Props) => {
     }
   }, [])
 
-  // Memoize hotkey callbacks to prevent re-registration
-  const hotKeyCallbacks = useMemo(
-    () => ({
-      "1": () => selectLayer("top"),
-      "2": () => selectLayer("bottom"),
-      "3": () => selectLayer("inner1"),
-      "4": () => selectLayer("inner2"),
-      "5": () => selectLayer("inner3"),
-      "6": () => selectLayer("inner4"),
-      "7": () => selectLayer("inner5"),
-      "8": () => selectLayer("inner6"),
-    }),
-    [selectLayer],
-  )
+  const hotKeyCallbacks = {
+    "1": () => selectLayer("top"),
+    "2": () => selectLayer("bottom"),
+    "3": () => selectLayer("inner1"),
+    "4": () => selectLayer("inner2"),
+    "5": () => selectLayer("inner3"),
+    "6": () => selectLayer("inner4"),
+    "7": () => selectLayer("inner5"),
+    "8": () => selectLayer("inner6"),
+  }
 
   useHotKey("1", hotKeyCallbacks["1"])
   useHotKey("2", hotKeyCallbacks["2"])
@@ -232,28 +225,15 @@ export const ToolbarOverlay = (({ children, elements }: Props) => {
   useHotKey("7", hotKeyCallbacks["7"])
   useHotKey("8", hotKeyCallbacks["8"])
 
-  // Memoize error count calculation
-  const errorCount = useMemo(
-    () => elements?.filter((e) => e.type.includes("error")).length ?? 0,
-    [elements],
-  )
+  const errorCount =
+    elements?.filter((e) => e.type.includes("error")).length ?? 0
 
-  // Memoize error elements to avoid recalculation
-  const errorElements = useMemo(
-    () =>
-      elements?.filter((el): el is PcbTraceError =>
-        el.type.includes("error"),
-      ) || [],
-    [elements],
-  )
+  const errorElements =
+    elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
+    []
 
-  // Memoize processed layers to avoid recalculation
-  const processedLayers = useMemo(
-    () => all_layers.map((l) => l.replace(/-/g, "")),
-    [],
-  )
+  const processedLayers = all_layers.map((l) => l.replace(/-/g, ""))
 
-  // Memoize event handlers
   const handleMouseEnter = useCallback(() => {
     setIsMouseOverContainer(true)
   }, [setIsMouseOverContainer])
@@ -431,20 +411,20 @@ export const ToolbarOverlay = (({ children, elements }: Props) => {
                       touchAction: "manipulation",
                       userSelect: "none",
                     }}
-                    onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
+                    onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = "#333"
                       setHoveredErrorId(errorId)
                     }}
-                    onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
+                    onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = "#2a2a2a"
                       setHoveredErrorId(null)
                     }}
-                    onTouchStart={(e: React.TouchEvent<HTMLDivElement>) => {
+                    onTouchStart={(e) => {
                       e.stopPropagation()
                       e.currentTarget.style.backgroundColor = "#333"
                       setHoveredErrorId(errorId)
                     }}
-                    onTouchEnd={(e: React.TouchEvent<HTMLDivElement>) => {
+                    onTouchEnd={(e) => {
                       e.stopPropagation()
                       e.preventDefault()
                       e.currentTarget.style.backgroundColor = "#2a2a2a"
@@ -462,7 +442,7 @@ export const ToolbarOverlay = (({ children, elements }: Props) => {
                           : "rotate(0deg)"
                       }
                     }}
-                    onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                    onClick={(e) => {
                       e.stopPropagation()
                       const errorElement = errorElementsRef.current.get(i)
                       const arrow = arrowElementsRef.current.get(i)
@@ -652,4 +632,4 @@ export const ToolbarOverlay = (({ children, elements }: Props) => {
       </div>
     </div>
   )
-})
+}
