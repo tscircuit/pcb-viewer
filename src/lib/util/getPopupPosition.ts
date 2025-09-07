@@ -19,15 +19,16 @@ export const getPopupPosition = (
   let left = errorCenter.x
   let top = errorCenter.y
 
-  if (errorCenter.x + horizontalOffset + popupWidth < containerRect.width - margin) {
+  if (
+    errorCenter.x + horizontalOffset + popupWidth <
+    containerRect.width - margin
+  ) {
     left = errorCenter.x + horizontalOffset
     transformX = "0%"
-  }
-  else if (errorCenter.x - horizontalOffset - popupWidth > margin) {
+  } else if (errorCenter.x - horizontalOffset - popupWidth > margin) {
     left = errorCenter.x - horizontalOffset
     transformX = "-100%"
-  }
-  else {
+  } else {
     left = errorCenter.x
     transformX = "-50%"
   }

@@ -52,24 +52,17 @@ const ErrorSVG = ({
           strokeDasharray="2,2"
           stroke={isHighlighted ? "#ff4444" : "red"}
         />
-        <rect
-          x={errorCenter.x - (isHighlighted ? 7 : 5)}
-          y={errorCenter.y - (isHighlighted ? 7 : 5)}
-          width={isHighlighted ? 14 : 10}
-          height={isHighlighted ? 14 : 10}
-          transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
-          fill={isHighlighted ? "#ff4444" : "red"}
-        />
-        {isHighlighted && (
-          <circle
-            cx={errorCenter.x}
-            cy={errorCenter.y}
-            r={15}
-            fill="none"
-            stroke="#ff4444"
-            strokeWidth={2}
-            opacity={0.6}
+        {isHighlighted ? (
+          <rect
+            x={errorCenter.x - 7}
+            y={errorCenter.y - 7}
+            width={14}
+            height={14}
+            transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
+            fill="#ff4444"
           />
+        ) : (
+          <circle cx={errorCenter.x} cy={errorCenter.y} r={5} fill="red" />
         )}
       </>
     )}
@@ -106,24 +99,17 @@ const RouteSVG = ({
         strokeDasharray="2,2"
       />
     )}
-    <rect
-      x={errorCenter.x - (isHighlighted ? 7 : 5)}
-      y={errorCenter.y - (isHighlighted ? 7 : 5)}
-      width={isHighlighted ? 14 : 10}
-      height={isHighlighted ? 14 : 10}
-      transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
-      fill={isHighlighted ? "#ff4444" : "red"}
-    />
-    {isHighlighted && (
-      <circle
-        cx={errorCenter.x}
-        cy={errorCenter.y}
-        r={15}
-        fill="none"
-        stroke="#ff4444"
-        strokeWidth={2}
-        opacity={0.6}
+    {isHighlighted ? (
+      <rect
+        x={errorCenter.x - 7}
+        y={errorCenter.y - 7}
+        width={14}
+        height={14}
+        transform={`rotate(45 ${errorCenter.x} ${errorCenter.y})`}
+        fill="#ff4444"
       />
+    ) : (
+      <circle cx={errorCenter.x} cy={errorCenter.y} r={5} fill="red" />
     )}
   </svg>
 )
@@ -131,19 +117,16 @@ const RouteSVG = ({
 const errorMessageStyles = css`
   opacity: 0;
   pointer-events: none;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.8);
   padding: 8px 12px;
   border-radius: 4px;
   width: 200px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   word-wrap: break-word;
   line-height: 1.4;
   transition: opacity 0.2s;
   margin-bottom: 10px;
-`
-
-const errorMarkerStyles = css`
-  transform: translate(0, 5px) rotate(45deg);
+  color: red;
 `
 
 export const ErrorOverlay = ({ children, transform, elements }: Props) => {
@@ -279,14 +262,6 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
                 >
                   {el.message}
                 </div>
-                <div
-                  className={errorMarkerStyles}
-                  style={{
-                    width: isHighlighted ? 14 : 10,
-                    height: isHighlighted ? 14 : 10,
-                    backgroundColor: isHighlighted ? "#ff4444" : "red",
-                  }}
-                />
               </div>
             </Fragment>
           )
@@ -348,14 +323,6 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
                 >
                   {el.message}
                 </div>
-                <div
-                  className={errorMarkerStyles}
-                  style={{
-                    width: isHighlighted ? 14 : 10,
-                    height: isHighlighted ? 14 : 10,
-                    backgroundColor: isHighlighted ? "#ff4444" : "red",
-                  }}
-                />
               </div>
             </Fragment>
           )
@@ -387,7 +354,7 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
           `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
         const isHighlighted = hoveredErrorId === errorId
 
-        if (!isHighlighted) return null
+        if (!isHighlighted && !isShowingDRCErrors) return null
 
         return components.map((comp, compIndex) => {
           let center = { x: 0, y: 0 }
@@ -423,70 +390,87 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
                 width="100%"
                 height="100%"
               >
-                <circle
-                  cx={screenCenter.x}
-                  cy={screenCenter.y}
-                  r={20}
-                  fill="none"
-                  stroke="#ff4444"
-                  strokeWidth={3}
-                  strokeDasharray="4,4"
-                />
-                <rect
-                  x={screenCenter.x - 7}
-                  y={screenCenter.y - 7}
-                  width={14}
-                  height={14}
-                  transform={`rotate(45 ${screenCenter.x} ${screenCenter.y})`}
-                  fill="#ff4444"
-                />
+                {isHighlighted ? (
+                  <polygon
+                    points={`${screenCenter.x},${screenCenter.y - 25} ${screenCenter.x + 20},${screenCenter.y} ${screenCenter.x},${screenCenter.y + 25} ${screenCenter.x - 20},${screenCenter.y}`}
+                    fill="#ff4444"
+                  />
+                ) : (
+                  <circle
+                    cx={screenCenter.x}
+                    cy={screenCenter.y}
+                    r={20}
+                    fill="none"
+                    stroke={"red"}
+                    strokeWidth={isHighlighted ? 6 : 4}
+                    opacity={1}
+                  />
+                )}
               </svg>
+              {/* Invisible hover area around the circle */}
               <div
                 style={{
                   position: "absolute",
-                  zIndex: 200,
+                  left: screenCenter.x - 30,
+                  top: screenCenter.y - 30,
+                  width: 60,
+                  height: 60,
+                  zIndex: zIndexMap.errorOverlay + 5,
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                }}
+                onMouseEnter={(e) => {
+                  const popup = e.currentTarget
+                    .nextElementSibling as HTMLElement
+                  if (popup) {
+                    const msg = popup.querySelector(
+                      ".error-message",
+                    ) as HTMLElement
+                    if (msg) msg.style.opacity = "1"
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isHighlighted) {
+                    const popup = e.currentTarget
+                      .nextElementSibling as HTMLElement
+                    if (popup) {
+                      const msg = popup.querySelector(
+                        ".error-message",
+                      ) as HTMLElement
+                      if (msg) msg.style.opacity = "0"
+                    }
+                  }
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  zIndex: isHighlighted
+                    ? zIndexMap.errorOverlay + 20
+                    : zIndexMap.errorOverlay + 10,
                   left: popupPosition.left,
                   top: popupPosition.top,
-                  color: "#ff4444",
+                  color: isHighlighted ? "#ff4444" : "red",
                   textAlign: "center",
                   fontFamily: "sans-serif",
                   fontSize: 12,
-                  display: "flex",
+                  display:
+                    isShowingDRCErrors || isHighlighted ? "flex" : "none",
                   flexDirection: "column",
                   alignItems: "center",
-                  cursor: "pointer",
+                  pointerEvents: "none",
                   transform: popupPosition.transform,
-                }}
-                onMouseEnter={(e) => {
-                  const msg = e.currentTarget.querySelector(
-                    ".error-message",
-                  ) as HTMLElement
-                  if (msg) msg.style.opacity = "1"
-                }}
-                onMouseLeave={(e) => {
-                  const msg = e.currentTarget.querySelector(
-                    ".error-message",
-                  ) as HTMLElement
-                  if (msg) msg.style.opacity = "0"
                 }}
               >
                 <div
                   className={`error-message ${errorMessageStyles}`}
                   style={{
-                    opacity: 1,
-                    border: "1px solid #ff4444",
+                    opacity: isHighlighted ? 1 : 0,
+                    border: `1px solid ${isHighlighted ? "#ff4444" : "red"}`,
                   }}
                 >
                   {el.message}
                 </div>
-                <div
-                  className={errorMarkerStyles}
-                  style={{
-                    width: 14,
-                    height: 14,
-                    backgroundColor: "#ff4444",
-                  }}
-                />
               </div>
             </Fragment>
           )
