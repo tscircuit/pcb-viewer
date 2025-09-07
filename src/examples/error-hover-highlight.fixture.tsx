@@ -71,11 +71,12 @@ export const ErrorHoverHighlight: React.FC = () => {
       pcb_trace_error_id: "error_1",
       message:
         "DRC violation: Trace width too narrow for high-frequency signals",
-      error_type: "drc_error",
+      error_type: "pcb_trace_error",
       center: { x: 2, y: 2 },
       pcb_port_ids: ["pcb_port_0", "pcb_port_1"],
       pcb_trace_id: "pcb_trace_0",
       pcb_component_ids: ["pcb_generic_component_0"],
+      source_trace_id: "source_trace_0",
     } as PcbTraceError,
     // Error near edge (to test popup positioning)
     {
@@ -83,11 +84,12 @@ export const ErrorHoverHighlight: React.FC = () => {
       pcb_trace_error_id: "error_2",
       message:
         "Via collision detected at component boundary - this is a longer error message to test text wrapping and positioning",
-      error_type: "via_collision",
+      error_type: "pcb_trace_error",
       center: { x: 0.5, y: 0.5 },
       pcb_port_ids: ["pcb_port_0"],
       pcb_trace_id: "pcb_trace_0",
       pcb_component_ids: ["pcb_generic_component_0"],
+      source_trace_id: "source_trace_0",
     } as PcbTraceError,
   ]
 
@@ -118,7 +120,7 @@ export const ErrorHoverHighlight: React.FC = () => {
         circuitJson={circuitJson as any}
         height={400}
         initialState={{
-          is_showing_drc_errors: true, // Enable DRC errors to test both hover behaviors
+          is_showing_drc_errors: false,
         }}
       />
     </div>

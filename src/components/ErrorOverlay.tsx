@@ -288,7 +288,7 @@ export const ErrorOverlay = ({ children, transform, elements }: Props) => {
         // fallback: only show if global DRC errors enabled and route exists
         if (trace?.route && (isShowingDRCErrors || isHighlighted)) {
           const screenPoints = trace.route.map((pt) =>
-            applyToPoint(transform!, { x: pt.x, y: pt.y }),
+            applyToPoint(transform, { x: pt.x, y: pt.y }),
           )
           if (screenPoints.some((pt) => isNaN(pt.x) || isNaN(pt.y))) return null
           const mid = Math.floor(screenPoints.length / 2)
