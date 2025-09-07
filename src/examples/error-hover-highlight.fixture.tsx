@@ -3,7 +3,6 @@ import { PCBViewer } from "../PCBViewer"
 import type { PcbTraceError } from "circuit-json"
 
 export const ErrorHoverHighlight: React.FC = () => {
-  // Test circuit with errors positioned to test popup positioning
   const circuitJson = [
     {
       type: "source_component",
@@ -65,7 +64,6 @@ export const ErrorHoverHighlight: React.FC = () => {
         { x: 4, y: 4, end_pcb_port_id: "pcb_port_1" },
       ],
     },
-    // Error near center
     {
       type: "pcb_trace_error",
       pcb_trace_error_id: "error_1",
@@ -78,7 +76,6 @@ export const ErrorHoverHighlight: React.FC = () => {
       pcb_component_ids: ["pcb_generic_component_0"],
       source_trace_id: "source_trace_0",
     } as PcbTraceError,
-    // Error near edge (to test popup positioning)
     {
       type: "pcb_trace_error",
       pcb_trace_error_id: "error_2",
