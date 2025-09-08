@@ -236,6 +236,40 @@ export const ErrorOverlay = ({
               <div
                 style={{
                   position: "absolute",
+                  left: errorCenter.x - 15,
+                  top: errorCenter.y - 15,
+                  width: 30,
+                  height: 30,
+                  zIndex: zIndexMap.errorOverlay + 5,
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                }}
+                onMouseEnter={(e) => {
+                  const popup = e.currentTarget
+                    .nextElementSibling as HTMLElement
+                  if (popup) {
+                    const msg = popup.querySelector(
+                      ".error-message",
+                    ) as HTMLElement
+                    if (msg) msg.style.opacity = "1"
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isHighlighted) {
+                    const popup = e.currentTarget
+                      .nextElementSibling as HTMLElement
+                    if (popup) {
+                      const msg = popup.querySelector(
+                        ".error-message",
+                      ) as HTMLElement
+                      if (msg) msg.style.opacity = "0"
+                    }
+                  }
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
                   zIndex: isHighlighted ? 200 : 100,
                   left: popupPosition.left,
                   top: popupPosition.top,
@@ -247,20 +281,8 @@ export const ErrorOverlay = ({
                     isShowingDRCErrors || isHighlighted ? "flex" : "none",
                   flexDirection: "column",
                   alignItems: "center",
-                  cursor: "pointer",
+                  pointerEvents: "none",
                   transform: popupPosition.transform,
-                }}
-                onMouseEnter={(e) => {
-                  const msg = e.currentTarget.querySelector(
-                    ".error-message",
-                  ) as HTMLElement
-                  if (msg) msg.style.opacity = "1"
-                }}
-                onMouseLeave={(e) => {
-                  const msg = e.currentTarget.querySelector(
-                    ".error-message",
-                  ) as HTMLElement
-                  if (msg && !isHighlighted) msg.style.opacity = "0"
                 }}
               >
                 <div
@@ -295,6 +317,40 @@ export const ErrorOverlay = ({
               <div
                 style={{
                   position: "absolute",
+                  left: errorCenter.x - 15,
+                  top: errorCenter.y - 15,
+                  width: 30,
+                  height: 30,
+                  zIndex: zIndexMap.errorOverlay + 5,
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                }}
+                onMouseEnter={(e) => {
+                  const popup = e.currentTarget
+                    .nextElementSibling as HTMLElement
+                  if (popup) {
+                    const msg = popup.querySelector(
+                      ".error-message",
+                    ) as HTMLElement
+                    if (msg) msg.style.opacity = "1"
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isHighlighted) {
+                    const popup = e.currentTarget
+                      .nextElementSibling as HTMLElement
+                    if (popup) {
+                      const msg = popup.querySelector(
+                        ".error-message",
+                      ) as HTMLElement
+                      if (msg) msg.style.opacity = "0"
+                    }
+                  }
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
                   zIndex: isHighlighted
                     ? zIndexMap.errorOverlay + 10
                     : zIndexMap.errorOverlay + 1,
@@ -307,20 +363,8 @@ export const ErrorOverlay = ({
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  cursor: "pointer",
+                  pointerEvents: "none",
                   transform: popupPosition.transform,
-                }}
-                onMouseEnter={(e) => {
-                  const msg = e.currentTarget.querySelector(
-                    ".error-message",
-                  ) as HTMLElement
-                  if (msg) msg.style.opacity = "1"
-                }}
-                onMouseLeave={(e) => {
-                  const msg = e.currentTarget.querySelector(
-                    ".error-message",
-                  ) as HTMLElement
-                  if (msg && !isHighlighted) msg.style.opacity = "0"
                 }}
               >
                 <div
