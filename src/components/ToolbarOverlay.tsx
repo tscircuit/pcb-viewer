@@ -1,4 +1,10 @@
-import { Fragment, useEffect, useState } from "react"
+import React, {
+  Fragment,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
@@ -10,19 +16,31 @@ import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 
 interface Props {
-  children?: any
+  children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
 
-export const LayerButton = ({
-  name,
-  selected,
-  onClick,
-}: {
+interface LayerButtonProps {
   name: string
   selected?: boolean
-  onClick: (e: any) => any
-}) => {
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void
+}
+
+interface ToolbarButtonProps {
+  children: React.ReactNode
+  isSmallScreen: boolean
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  style?: React.CSSProperties
+  onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void
+}
+
+interface CheckboxMenuItemProps {
+  label: string
+  checked: boolean
+  onClick: () => void
+}
+
+export const LayerButton = ({ name, selected, onClick }: LayerButtonProps) => {
   return (
     <div
       className={css`
@@ -57,15 +75,15 @@ export const ToolbarButton = ({
   isSmallScreen,
   onClick,
   ...props
-}: any) => (
+}: ToolbarButtonProps) => (
   <div
     {...props}
     onClick={onClick}
-    onTouchEnd={(e: any) => {
+    onTouchEnd={(e: React.TouchEvent<HTMLDivElement>) => {
       e.preventDefault()
       e.stopPropagation()
       if (onClick) {
-        onClick(e)
+        onClick(e as any)
       }
     }}
     style={{
@@ -93,11 +111,7 @@ const CheckboxMenuItem = ({
   label,
   checked,
   onClick,
-}: {
-  label: string
-  checked: boolean
-  onClick: () => void
-}) => {
+}: CheckboxMenuItemProps) => {
   return (
     <div
       className={css`
@@ -114,11 +128,11 @@ const CheckboxMenuItem = ({
           background-color: rgba(255, 255, 255, 0.1);
         }
       `}
-      onClick={(e) => {
+      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation()
         onClick()
       }}
-      onTouchEnd={(e) => {
+      onTouchEnd={(e: React.TouchEvent<HTMLDivElement>) => {
         e.preventDefault()
         e.stopPropagation()
         onClick()
@@ -132,43 +146,53 @@ const CheckboxMenuItem = ({
 
 export const ToolbarOverlay = ({ children, elements }: Props) => {
   const isSmallScreen = useIsSmallScreen()
-  const [isMouseOverContainer, setIsMouseOverContainer] = useGlobalStore(
-    (s) => [s.is_mouse_over_container, s.setIsMouseOverContainer],
-  ) as [boolean, (isFocused: boolean) => void]
+
+  const {
+    isMouseOverContainer,
+    setIsMouseOverContainer,
+    selectedLayer,
+    selectLayer,
+    editModes,
+    viewSettings,
+    setEditMode,
+    setIsShowingRatsNest,
+    setIsShowingMultipleTracesLength,
+    setIsShowingAutorouting,
+    setIsShowingDrcErrors,
+    setIsShowingPcbGroups,
+    setHoveredErrorId,
+  } = useGlobalStore((s) => ({
+    isMouseOverContainer: s.is_mouse_over_container,
+    setIsMouseOverContainer: s.setIsMouseOverContainer,
+    selectedLayer: s.selected_layer,
+    selectLayer: s.selectLayer,
+    editModes: {
+      in_move_footprint_mode: s.in_move_footprint_mode,
+      in_draw_trace_mode: s.in_draw_trace_mode,
+    },
+    viewSettings: {
+      is_showing_rats_nest: s.is_showing_rats_nest,
+      is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
+      is_showing_autorouting: s.is_showing_autorouting,
+      is_showing_drc_errors: s.is_showing_drc_errors,
+      is_showing_pcb_groups: s.is_showing_pcb_groups,
+    },
+    setEditMode: s.setEditMode,
+    setIsShowingRatsNest: s.setIsShowingRatsNest,
+    setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
+    setIsShowingAutorouting: s.setIsShowingAutorouting,
+    setIsShowingDrcErrors: s.setIsShowingDrcErrors,
+    setIsShowingPcbGroups: s.setIsShowingPcbGroups,
+    setHoveredErrorId: s.setHoveredErrorId,
+  }))
+
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
-  const [selectedLayer, selectLayer] = useGlobalStore(
-    (s) => [s.selected_layer, s.selectLayer] as const,
-  )
-  const [
-    in_move_footprint_mode,
-    in_draw_trace_mode,
-    is_showing_rats_nest,
-    is_showing_multiple_traces_length,
-    is_showing_autorouting,
-    is_showing_drc_errors,
-    is_showing_pcb_groups,
-  ] = useGlobalStore((s) => [
-    s.in_move_footprint_mode,
-    s.in_draw_trace_mode,
-    s.is_showing_rats_nest,
-    s.is_showing_multiple_traces_length,
-    s.is_showing_autorouting,
-    s.is_showing_drc_errors,
-    s.is_showing_pcb_groups,
-  ])
-  const setEditMode = useGlobalStore((s) => s.setEditMode)
-  const setIsShowingRatsNest = useGlobalStore((s) => s.setIsShowingRatsNest)
-  const setIsShowingMultipleTracesLength = useGlobalStore(
-    (s) => s.setIsShowingMultipleTracesLength,
-  )
-  const setIsShowingAutorouting = useGlobalStore(
-    (s) => s.setIsShowingAutorouting,
-  )
-  const setIsShowingDrcErrors = useGlobalStore((s) => s.setIsShowingDrcErrors)
-  const setIsShowingPcbGroups = useGlobalStore((s) => s.setIsShowingPcbGroups)
+
+  const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
+  const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
 
   useEffect(() => {
     const arm = () => setMeasureToolArmed(true)
@@ -181,28 +205,84 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     }
   }, [])
 
-  useHotKey("1", () => selectLayer("top"))
-  useHotKey("2", () => selectLayer("bottom"))
-  useHotKey("3", () => selectLayer("inner1"))
-  useHotKey("4", () => selectLayer("inner2"))
-  useHotKey("5", () => selectLayer("inner3"))
-  useHotKey("6", () => selectLayer("inner4"))
-  useHotKey("7", () => selectLayer("inner5"))
-  useHotKey("8", () => selectLayer("inner6"))
+  const hotKeyCallbacks = {
+    "1": () => selectLayer("top"),
+    "2": () => selectLayer("bottom"),
+    "3": () => selectLayer("inner1"),
+    "4": () => selectLayer("inner2"),
+    "5": () => selectLayer("inner3"),
+    "6": () => selectLayer("inner4"),
+    "7": () => selectLayer("inner5"),
+    "8": () => selectLayer("inner6"),
+  }
+
+  useHotKey("1", hotKeyCallbacks["1"])
+  useHotKey("2", hotKeyCallbacks["2"])
+  useHotKey("3", hotKeyCallbacks["3"])
+  useHotKey("4", hotKeyCallbacks["4"])
+  useHotKey("5", hotKeyCallbacks["5"])
+  useHotKey("6", hotKeyCallbacks["6"])
+  useHotKey("7", hotKeyCallbacks["7"])
+  useHotKey("8", hotKeyCallbacks["8"])
 
   const errorCount =
     elements?.filter((e) => e.type.includes("error")).length ?? 0
+
+  const errorElements =
+    elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
+    []
+
+  const processedLayers = all_layers.map((l) => l.replace(/-/g, ""))
+
+  const handleMouseEnter = useCallback(() => {
+    setIsMouseOverContainer(true)
+  }, [setIsMouseOverContainer])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsMouseOverContainer(false)
+    setLayerMenuOpen(false)
+    setViewMenuOpen(false)
+    setErrorsOpen(false)
+    setHoveredErrorId(null)
+  }, [setIsMouseOverContainer, setHoveredErrorId])
+
+  const handleLayerMenuToggle = useCallback(() => {
+    setLayerMenuOpen(!isLayerMenuOpen)
+  }, [isLayerMenuOpen])
+
+  const handleErrorsToggle = useCallback(() => {
+    const newErrorsOpen = !isErrorsOpen
+    setErrorsOpen(newErrorsOpen)
+    if (!newErrorsOpen) {
+      setHoveredErrorId(null)
+    }
+  }, [isErrorsOpen, setHoveredErrorId])
+
+  const handleEditTraceToggle = useCallback(() => {
+    setEditMode(editModes.in_draw_trace_mode ? "off" : "draw_trace")
+  }, [editModes.in_draw_trace_mode, setEditMode])
+
+  const handleMoveComponentToggle = useCallback(() => {
+    setEditMode(editModes.in_move_footprint_mode ? "off" : "move_footprint")
+  }, [editModes.in_move_footprint_mode, setEditMode])
+
+  const handleRatsNestToggle = useCallback(() => {
+    setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
+  }, [viewSettings.is_showing_rats_nest, setIsShowingRatsNest])
+
+  const handleMeasureToolClick = useCallback(() => {
+    setMeasureToolArmed(true)
+    window.dispatchEvent(new Event("arm-dimension-tool"))
+  }, [])
+
+  const handleViewMenuToggle = useCallback(() => {
+    setViewMenuOpen(!isViewMenuOpen)
+  }, [isViewMenuOpen])
   return (
     <div
       style={{ position: "relative", zIndex: "999 !important" }}
-      onMouseEnter={() => {
-        setIsMouseOverContainer(true)
-      }}
-      onMouseLeave={(e) => {
-        setIsMouseOverContainer(false)
-        setLayerMenuOpen(false)
-        setViewMenuOpen(false)
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
       <div
@@ -246,9 +326,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       >
         <ToolbarButton
           isSmallScreen={isSmallScreen}
-          onClick={() => {
-            setLayerMenuOpen(!isLayerMenuOpen)
-          }}
+          onClick={handleLayerMenuToggle}
           onMouseLeave={() => {
             if (isLayerMenuOpen) {
               setLayerMenuOpen(false)
@@ -269,18 +347,16 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           </div>
           {isLayerMenuOpen && (
             <div style={{ marginTop: 4, minWidth: 120 }}>
-              {all_layers
-                .map((l) => l.replace(/-/g, "")) // TODO remove when inner-1 becomes inner1
-                .map((layer) => (
-                  <LayerButton
-                    key={layer}
-                    name={layer}
-                    selected={layer === selectedLayer}
-                    onClick={() => {
-                      selectLayer(layer.replace(/-/, "") as LayerRef)
-                    }}
-                  />
-                ))}
+              {processedLayers.map((layer) => (
+                <LayerButton
+                  key={layer}
+                  name={layer}
+                  selected={layer === selectedLayer}
+                  onClick={() => {
+                    selectLayer(layer.replace(/-/, "") as LayerRef)
+                  }}
+                />
+              ))}
             </div>
           )}
         </ToolbarButton>
@@ -290,7 +366,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             position: "relative",
             ...(errorCount > 0 ? { color: "red" } : {}),
           }}
-          onClick={() => setErrorsOpen(!isErrorsOpen)}
+          onClick={handleErrorsToggle}
         >
           <div>{errorCount} errors</div>
         </ToolbarButton>
@@ -310,19 +386,17 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
             }}
           >
-            {(() => {
-              const errorElements =
-                elements?.filter((el): el is PcbTraceError =>
-                  el.type.includes("error"),
-                ) || []
-              const errorCount = errorElements.length
+            {errorElements.map((e, i) => {
+              const errorId =
+                e.pcb_trace_error_id ||
+                `error_${i}_${e.error_type}_${e.message?.slice(0, 20)}`
 
-              return errorElements.map((e, i) => (
+              return (
                 <div
                   key={i}
                   style={{
                     borderBottom:
-                      i < errorCount - 1 ? "1px solid #444" : "none",
+                      i < errorElements.length - 1 ? "1px solid #444" : "none",
                   }}
                 >
                   <div
@@ -339,25 +413,25 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = "#333"
+                      setHoveredErrorId(errorId)
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = "#2a2a2a"
+                      setHoveredErrorId(null)
                     }}
                     onTouchStart={(e) => {
                       e.stopPropagation()
                       e.currentTarget.style.backgroundColor = "#333"
+                      setHoveredErrorId(errorId)
                     }}
                     onTouchEnd={(e) => {
                       e.stopPropagation()
                       e.preventDefault()
                       e.currentTarget.style.backgroundColor = "#2a2a2a"
+                      setHoveredErrorId(null)
 
-                      const errorElement = document.querySelector(
-                        `[data-error-id="${i}"]`,
-                      ) as HTMLElement
-                      const arrow = document.querySelector(
-                        `[data-arrow-id="${i}"]`,
-                      ) as HTMLElement
+                      const errorElement = errorElementsRef.current.get(i)
+                      const arrow = arrowElementsRef.current.get(i)
                       if (errorElement && arrow) {
                         const isVisible = errorElement.style.display !== "none"
                         errorElement.style.display = isVisible
@@ -370,12 +444,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     }}
                     onClick={(e) => {
                       e.stopPropagation()
-                      const errorElement = document.querySelector(
-                        `[data-error-id="${i}"]`,
-                      ) as HTMLElement
-                      const arrow = document.querySelector(
-                        `[data-arrow-id="${i}"]`,
-                      ) as HTMLElement
+                      const errorElement = errorElementsRef.current.get(i)
+                      const arrow = arrowElementsRef.current.get(i)
                       if (errorElement && arrow) {
                         const isVisible = errorElement.style.display !== "none"
                         errorElement.style.display = isVisible
@@ -413,6 +483,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                       {e.message}
                     </div>
                     <div
+                      ref={(el) => {
+                        if (el) arrowElementsRef.current.set(i, el)
+                      }}
                       data-arrow-id={i}
                       style={{
                         color: "#888",
@@ -426,6 +499,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     </div>
                   </div>
                   <div
+                    ref={(el) => {
+                      if (el) errorElementsRef.current.set(i, el)
+                    }}
                     data-error-id={i}
                     style={{
                       display: "none",
@@ -448,43 +524,37 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     </div>
                   </div>
                 </div>
-              ))
-            })()}
+              )
+            })}
           </div>
         )}
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
-          onClick={() => {
-            setEditMode(in_draw_trace_mode ? "off" : "draw_trace")
-          }}
+          onClick={handleEditTraceToggle}
         >
           <div>
-            {in_draw_trace_mode ? "✖ " : ""}
+            {editModes.in_draw_trace_mode ? "✖ " : ""}
             Edit Traces
           </div>
         </ToolbarButton>
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
-          onClick={() => {
-            setEditMode(in_move_footprint_mode ? "off" : "move_footprint")
-          }}
+          onClick={handleMoveComponentToggle}
         >
           <div>
-            {in_move_footprint_mode ? "✖ " : ""}
+            {editModes.in_move_footprint_mode ? "✖ " : ""}
             Move Components
           </div>
         </ToolbarButton>
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
-          onClick={() => {
-            setIsShowingRatsNest(!is_showing_rats_nest)
-          }}
+          onClick={handleRatsNestToggle}
         >
           <div>
-            {is_showing_rats_nest ? "✖ " : ""}
+            {viewSettings.is_showing_rats_nest ? "✖ " : ""}
             Rats Nest
           </div>
         </ToolbarButton>
@@ -492,19 +562,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={measureToolArmed ? { backgroundColor: "#444" } : {}}
-          onClick={() => {
-            setMeasureToolArmed(true)
-            window.dispatchEvent(new Event("arm-dimension-tool"))
-          }}
+          onClick={handleMeasureToolClick}
         >
           <div>📏</div>
         </ToolbarButton>
 
         <ToolbarButton
           isSmallScreen={isSmallScreen}
-          onClick={() => {
-            setViewMenuOpen(!isViewMenuOpen)
-          }}
+          onClick={handleViewMenuToggle}
         >
           <div>
             <div
@@ -530,32 +595,34 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               <div style={{ marginTop: 4, minWidth: 120 }}>
                 <CheckboxMenuItem
                   label="Show All Trace Lengths"
-                  checked={is_showing_multiple_traces_length}
+                  checked={viewSettings.is_showing_multiple_traces_length}
                   onClick={() => {
                     setIsShowingMultipleTracesLength(
-                      !is_showing_multiple_traces_length,
+                      !viewSettings.is_showing_multiple_traces_length,
                     )
                   }}
                 />
                 <CheckboxMenuItem
                   label="Show Autorouting Animation"
-                  checked={is_showing_autorouting}
+                  checked={viewSettings.is_showing_autorouting}
                   onClick={() => {
-                    setIsShowingAutorouting(!is_showing_autorouting)
+                    setIsShowingAutorouting(
+                      !viewSettings.is_showing_autorouting,
+                    )
                   }}
                 />
                 <CheckboxMenuItem
                   label="Show DRC Errors"
-                  checked={is_showing_drc_errors}
+                  checked={viewSettings.is_showing_drc_errors}
                   onClick={() => {
-                    setIsShowingDrcErrors(!is_showing_drc_errors)
+                    setIsShowingDrcErrors(!viewSettings.is_showing_drc_errors)
                   }}
                 />
                 <CheckboxMenuItem
                   label="Show PCB Groups"
-                  checked={is_showing_pcb_groups}
+                  checked={viewSettings.is_showing_pcb_groups}
                   onClick={() => {
-                    setIsShowingPcbGroups(!is_showing_pcb_groups)
+                    setIsShowingPcbGroups(!viewSettings.is_showing_pcb_groups)
                   }}
                 />
               </div>
