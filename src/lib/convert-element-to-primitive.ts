@@ -274,6 +274,8 @@ export const convertElementToPrimitives = (
         ]
       } else if (element.shape === "circular_hole_with_rect_pad") {
         const { x, y, hole_diameter, rect_pad_width, rect_pad_height } = element
+        const hole_offset_x = (element as any).hole_offset_x ?? 0
+        const hole_offset_y = (element as any).hole_offset_y ?? 0
 
         return [
           {
@@ -293,8 +295,8 @@ export const convertElementToPrimitives = (
             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
             _element: element,
             pcb_drawing_type: "circle",
-            x,
-            y,
+            x: x + hole_offset_x,
+            y: y + hole_offset_y,
             r: hole_diameter / 2,
             layer: "drill", // Circular hole in drill layer
           },
