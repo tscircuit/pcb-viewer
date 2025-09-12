@@ -133,6 +133,7 @@ export const convertElementToPrimitives = (
             y,
             w: width,
             h: height,
+            rect_border_radius: (element as any).rect_border_radius,
             layer: layer || "top",
             _element: element,
             _parent_pcb_component,
@@ -285,6 +286,7 @@ export const convertElementToPrimitives = (
             y,
             w: rect_pad_width,
             h: rect_pad_height,
+            rect_border_radius: (element as any).rect_border_radius,
             layer: "top", // Rectangular pad on top layer
             _element: element,
             _parent_pcb_component,
@@ -319,6 +321,7 @@ export const convertElementToPrimitives = (
             y,
             w: rect_pad_width,
             h: rect_pad_height,
+            rect_border_radius: (element as any).rect_border_radius,
             layer: "top", // Rectangular pad on top layer
             _element: element,
             _parent_pcb_component,
@@ -356,6 +359,7 @@ export const convertElementToPrimitives = (
             y,
             w: rect_pad_width,
             h: rect_pad_height,
+            rect_border_radius: (element as any).rect_border_radius,
             layer: "top", // Rectangular pad on top layer
             _element: element,
             _parent_pcb_component,

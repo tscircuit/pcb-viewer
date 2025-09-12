@@ -54,6 +54,7 @@ export interface Rect extends PCBDrawingObject {
   y: number
   w: number
   h: number
+  rect_border_radius?: number
   roundness?: number
   align?: AlignString
   mesh_fill?: boolean
