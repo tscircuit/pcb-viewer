@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from "react"
+import React, {
+  Fragment,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
@@ -361,32 +367,29 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             </div>
           )}
         </ToolbarButton>
-        <div style={{ position: "relative" }}>
-          <ToolbarButton
-            isSmallScreen={isSmallScreen}
-            style={{
-              ...(errorCount > 0 ? { color: "red" } : {}),
-            }}
-            onClick={handleErrorsToggle}
-          >
-            <div>{errorCount} errors</div>
-          </ToolbarButton>
-        </div>
-        {isErrorsOpen && errorElements.length > 0 && (
+        <ToolbarButton
+          isSmallScreen={isSmallScreen}
+          style={{
+            position: "relative",
+            ...(errorCount > 0 ? { color: "red" } : {}),
+          }}
+          onClick={handleErrorsToggle}
+        >
+          <div>{errorCount} errors</div>
+        </ToolbarButton>
+        {isErrorsOpen && errorCount > 0 && (
           <div
             style={{
               position: "absolute",
-              top: "calc(100% + 8px)",
+              top: "100%",
               left: 0,
-              right: isSmallScreen ? 0 : "auto",
               backgroundColor: "#2a2a2a",
               border: "1px solid #666",
               borderRadius: 4,
-              zIndex: 1001,
-              minWidth: isSmallScreen ? "auto" : "400px",
-              maxWidth: isSmallScreen ? "100%" : "600px",
-              maxHeight: "300px",
-              overflowY: "auto",
+              marginTop: 4,
+              zIndex: 1000,
+              minWidth: isSmallScreen ? "280px" : "400px",
+              maxWidth: isSmallScreen ? "90vw" : "600px",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
             }}
           >
@@ -574,7 +577,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           onClick={handleViewMenuToggle}
-          style={{ position: "relative" }}
         >
           <div>
             <div
@@ -597,20 +599,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               </span>
             </div>
             {isViewMenuOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  right: 0,
-                  marginTop: 4,
-                  minWidth: 180,
-                  backgroundColor: "#2a2a2a",
-                  border: "1px solid #666",
-                  borderRadius: 4,
-                  zIndex: 1000,
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-                }}
-              >
+              <div style={{ marginTop: 4, minWidth: 120 }}>
                 <CheckboxMenuItem
                   label="Show All Trace Lengths"
                   checked={viewSettings.is_showing_multiple_traces_length}
