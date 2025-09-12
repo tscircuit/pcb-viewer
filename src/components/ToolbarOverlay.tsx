@@ -1,10 +1,4 @@
-import React, {
-  Fragment,
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-} from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
@@ -253,6 +247,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const handleErrorsToggle = useCallback(() => {
     const newErrorsOpen = !isErrorsOpen
     setErrorsOpen(newErrorsOpen)
+    if (newErrorsOpen) {
+      setViewMenuOpen(false)
+    }
     if (!newErrorsOpen) {
       setHoveredErrorId(null)
     }
@@ -276,7 +273,11 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   }, [])
 
   const handleViewMenuToggle = useCallback(() => {
-    setViewMenuOpen(!isViewMenuOpen)
+    const newViewMenuOpen = !isViewMenuOpen
+    setViewMenuOpen(newViewMenuOpen)
+    if (newViewMenuOpen) {
+      setErrorsOpen(false)
+    }
   }, [isViewMenuOpen])
   return (
     <div
@@ -360,29 +361,32 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             </div>
           )}
         </ToolbarButton>
-        <ToolbarButton
-          isSmallScreen={isSmallScreen}
-          style={{
-            position: "relative",
-            ...(errorCount > 0 ? { color: "red" } : {}),
-          }}
-          onClick={handleErrorsToggle}
-        >
-          <div>{errorCount} errors</div>
-        </ToolbarButton>
-        {isErrorsOpen && (
+        <div style={{ position: "relative" }}>
+          <ToolbarButton
+            isSmallScreen={isSmallScreen}
+            style={{
+              ...(errorCount > 0 ? { color: "red" } : {}),
+            }}
+            onClick={handleErrorsToggle}
+          >
+            <div>{errorCount} errors</div>
+          </ToolbarButton>
+        </div>
+        {isErrorsOpen && errorElements.length > 0 && (
           <div
             style={{
               position: "absolute",
-              top: "100%",
+              top: "calc(100% + 8px)",
               left: 0,
+              right: isSmallScreen ? 0 : "auto",
               backgroundColor: "#2a2a2a",
               border: "1px solid #666",
               borderRadius: 4,
-              marginTop: 4,
-              zIndex: 1000,
-              minWidth: isSmallScreen ? "280px" : "400px",
-              maxWidth: isSmallScreen ? "90vw" : "600px",
+              zIndex: 1001,
+              minWidth: isSmallScreen ? "auto" : "400px",
+              maxWidth: isSmallScreen ? "100%" : "600px",
+              maxHeight: "300px",
+              overflowY: "auto",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
             }}
           >
@@ -570,6 +574,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           onClick={handleViewMenuToggle}
+          style={{ position: "relative" }}
         >
           <div>
             <div
@@ -592,7 +597,20 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               </span>
             </div>
             {isViewMenuOpen && (
-              <div style={{ marginTop: 4, minWidth: 120 }}>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  marginTop: 4,
+                  minWidth: 180,
+                  backgroundColor: "#2a2a2a",
+                  border: "1px solid #666",
+                  borderRadius: 4,
+                  zIndex: 1000,
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                }}
+              >
                 <CheckboxMenuItem
                   label="Show All Trace Lengths"
                   checked={viewSettings.is_showing_multiple_traces_length}
