@@ -253,6 +253,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const handleErrorsToggle = useCallback(() => {
     const newErrorsOpen = !isErrorsOpen
     setErrorsOpen(newErrorsOpen)
+    if (newErrorsOpen) {
+      setViewMenuOpen(false)
+    }
     if (!newErrorsOpen) {
       setHoveredErrorId(null)
     }
@@ -276,7 +279,11 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   }, [])
 
   const handleViewMenuToggle = useCallback(() => {
-    setViewMenuOpen(!isViewMenuOpen)
+    const newViewMenuOpen = !isViewMenuOpen
+    setViewMenuOpen(newViewMenuOpen)
+    if (newViewMenuOpen) {
+      setErrorsOpen(false)
+    }
   }, [isViewMenuOpen])
   return (
     <div
@@ -370,7 +377,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         >
           <div>{errorCount} errors</div>
         </ToolbarButton>
-        {isErrorsOpen && (
+        {isErrorsOpen && errorCount > 0 && (
           <div
             style={{
               position: "absolute",
