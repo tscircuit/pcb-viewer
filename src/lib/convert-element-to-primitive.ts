@@ -124,6 +124,7 @@ export const convertElementToPrimitives = (
     case "pcb_smtpad": {
       if (element.shape === "rect" || element.shape === "rotated_rect") {
         const { shape, x, y, width, height, layer } = element
+        const rect_border_radius = (element as any).rect_border_radius
 
         return [
           {
@@ -139,6 +140,7 @@ export const convertElementToPrimitives = (
             _parent_source_component,
             _source_port,
             ccw_rotation: (element as any).ccw_rotation,
+            roundness: rect_border_radius,
           },
         ]
       } else if (element.shape === "circle") {
@@ -274,6 +276,7 @@ export const convertElementToPrimitives = (
         ]
       } else if (element.shape === "circular_hole_with_rect_pad") {
         const { x, y, hole_diameter, rect_pad_width, rect_pad_height } = element
+        const rect_border_radius = (element as any).rect_border_radius
         const hole_offset_x = (element as any).hole_offset_x ?? 0
         const hole_offset_y = (element as any).hole_offset_y ?? 0
 
@@ -290,6 +293,7 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             _source_port,
+            roundness: rect_border_radius,
           },
           {
             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
@@ -310,6 +314,7 @@ export const convertElementToPrimitives = (
           rect_pad_width,
           rect_pad_height,
         } = element
+        const rect_border_radius = (element as any).rect_border_radius
 
         return [
           {
@@ -324,6 +329,7 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             _source_port,
+            roundness: rect_border_radius,
           },
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
@@ -347,6 +353,7 @@ export const convertElementToPrimitives = (
           rect_pad_height,
           rect_ccw_rotation,
         } = element as any // Use as any to access new properties
+        const rect_border_radius = (element as any).rect_border_radius
 
         return [
           {
@@ -362,6 +369,7 @@ export const convertElementToPrimitives = (
             _parent_source_component,
             _source_port,
             ccw_rotation: rect_ccw_rotation,
+            roundness: rect_border_radius,
           },
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
