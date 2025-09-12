@@ -81,7 +81,9 @@ describe("rect border radius rendering", () => {
       } as any,
     ]
 
-    const primitives = circuit.flatMap((e) => convertElementToPrimitives(e, circuit))
+    const primitives = circuit.flatMap((e) =>
+      convertElementToPrimitives(e, circuit),
+    )
     expect(primitives).toMatchSnapshot()
   })
 })
