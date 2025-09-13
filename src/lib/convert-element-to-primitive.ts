@@ -313,8 +313,8 @@ export const convertElementToPrimitives = (
           hole_height,
           rect_pad_width,
           rect_pad_height,
+          rect_border_radius,
         } = element
-        const rect_border_radius = element.rect_border_radius
 
         return [
           {
