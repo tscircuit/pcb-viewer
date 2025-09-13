@@ -123,8 +123,8 @@ export const convertElementToPrimitives = (
     }
     case "pcb_smtpad": {
       if (element.shape === "rect" || element.shape === "rotated_rect") {
-        const { shape, x, y, width, height, layer } = element
-        const rect_border_radius = element.rect_border_radius
+        const { shape, x, y, width, height, layer, rect_border_radius } =
+          element
 
         return [
           {
@@ -275,8 +275,14 @@ export const convertElementToPrimitives = (
           },
         ]
       } else if (element.shape === "circular_hole_with_rect_pad") {
-        const { x, y, hole_diameter, rect_pad_width, rect_pad_height } = element
-        const rect_border_radius = element.rect_border_radius
+        const {
+          x,
+          y,
+          hole_diameter,
+          rect_pad_width,
+          rect_pad_height,
+          rect_border_radius,
+        } = element
         const hole_offset_x = (element as any).hole_offset_x ?? 0
         const hole_offset_y = (element as any).hole_offset_y ?? 0
 
@@ -352,8 +358,8 @@ export const convertElementToPrimitives = (
           rect_pad_width,
           rect_pad_height,
           rect_ccw_rotation,
+          rect_border_radius,
         } = element as any // Use as any to access new properties
-        const rect_border_radius = element.rect_border_radius
 
         return [
           {
