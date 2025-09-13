@@ -207,8 +207,8 @@ export class Drawer {
     if (mesh_fill) {
       ctx.save()
       ctx.beginPath()
-      if (radius$ > 0 && (ctx as any).roundRect) {
-        ;(ctx as any).roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+      if (radius$ > 0 && ctx.roundRect) {
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
       } else {
         ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
       }
@@ -220,18 +220,18 @@ export class Drawer {
       ctx.restore()
 
       // Draw the outline
-      if (radius$ > 0 && (ctx as any).roundRect) {
+      if (radius$ > 0 && ctx.roundRect) {
         ctx.beginPath()
-        ;(ctx as any).roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
         ctx.stroke()
       } else {
         ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
       }
     } else {
       if (is_filled !== false) {
-        if (radius$ > 0 && (ctx as any).roundRect) {
+        if (radius$ > 0 && ctx.roundRect) {
           ctx.beginPath()
-          ;(ctx as any).roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
           ctx.fill()
         } else {
           ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
@@ -258,9 +258,9 @@ export class Drawer {
           }
           ctx.setLineDash(dashPattern)
         }
-        if (radius$ > 0 && (ctx as any).roundRect) {
+        if (radius$ > 0 && ctx.roundRect) {
           ctx.beginPath()
-          ;(ctx as any).roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
           ctx.stroke()
         } else {
           ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
@@ -301,8 +301,8 @@ export class Drawer {
 
     if (mesh_fill) {
       ctx.beginPath()
-      if (radius$ > 0 && (ctx as any).roundRect) {
-        ;(ctx as any).roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+      if (radius$ > 0 && ctx.roundRect) {
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
       } else {
         ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
       }
@@ -310,17 +310,17 @@ export class Drawer {
 
       this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15)
 
-      if (radius$ > 0 && (ctx as any).roundRect) {
+      if (radius$ > 0 && ctx.roundRect) {
         ctx.beginPath()
-        ;(ctx as any).roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
         ctx.stroke()
       } else {
         ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
       }
     } else {
-      if (radius$ > 0 && (ctx as any).roundRect) {
+      if (radius$ > 0 && ctx.roundRect) {
         ctx.beginPath()
-        ;(ctx as any).roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
         ctx.fill()
       } else {
         ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
