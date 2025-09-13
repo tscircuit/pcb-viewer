@@ -181,6 +181,7 @@ export class Drawer {
     has_stroke,
     is_stroke_dashed,
     stroke_width,
+    roundness,
   }: {
     x: number
     y: number
@@ -191,11 +192,14 @@ export class Drawer {
     has_stroke?: boolean
     is_stroke_dashed?: boolean
     stroke_width?: number
+    roundness?: number
   }) {
     const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
     const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
     this.applyAperture()
     const ctx = this.getLayerCtx()
+
+    const radius$ = roundness ? scaleOnly(this.transform, roundness) : 0
 
     const shouldDrawStroke =
       has_stroke === undefined ? is_filled === false : has_stroke
@@ -203,7 +207,11 @@ export class Drawer {
     if (mesh_fill) {
       ctx.save()
       ctx.beginPath()
-      ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      if (radius$ > 0 && ctx.roundRect) {
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+      } else {
+        ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      }
       ctx.clip()
 
       // Draw the mesh pattern
@@ -212,10 +220,22 @@ export class Drawer {
       ctx.restore()
 
       // Draw the outline
-      ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      if (radius$ > 0 && ctx.roundRect) {
+        ctx.beginPath()
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.stroke()
+      } else {
+        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      }
     } else {
       if (is_filled !== false) {
-        ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        if (radius$ > 0 && ctx.roundRect) {
+          ctx.beginPath()
+          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+          ctx.fill()
+        } else {
+          ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        }
       }
 
       if (shouldDrawStroke) {
@@ -238,7 +258,13 @@ export class Drawer {
           }
           ctx.setLineDash(dashPattern)
         }
-        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        if (radius$ > 0 && ctx.roundRect) {
+          ctx.beginPath()
+          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+          ctx.stroke()
+        } else {
+          ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        }
         if (is_stroke_dashed) {
           ctx.setLineDash([]) // Reset dash pattern
         }
@@ -255,6 +281,7 @@ export class Drawer {
     w: number,
     h: number,
     ccw_rotation: Rotation,
+    roundness?: number,
     mesh_fill?: boolean,
   ) {
     const ctx = this.getLayerCtx()
@@ -262,6 +289,7 @@ export class Drawer {
 
     const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
     const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
+    const radius$ = roundness ? scaleOnly(this.transform, roundness) : 0
 
     ctx.save()
 
@@ -273,14 +301,30 @@ export class Drawer {
 
     if (mesh_fill) {
       ctx.beginPath()
-      ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      if (radius$ > 0 && ctx.roundRect) {
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+      } else {
+        ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      }
       ctx.clip()
 
       this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15)
 
-      ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      if (radius$ > 0 && ctx.roundRect) {
+        ctx.beginPath()
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.stroke()
+      } else {
+        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      }
     } else {
-      ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      if (radius$ > 0 && ctx.roundRect) {
+        ctx.beginPath()
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.fill()
+      } else {
+        ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+      }
     }
 
     ctx.restore()
