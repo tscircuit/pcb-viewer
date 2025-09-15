@@ -22,8 +22,6 @@ export const PcbPlatedHolePillShapeRotation: React.FC = () => {
 
   const circuitJson = circuit.getCircuitJson()
 
-  console.log(JSON.stringify(circuitJson, null, 2))
-
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer circuitJson={circuitJson as any} />
