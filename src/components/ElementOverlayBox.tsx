@@ -3,7 +3,7 @@ import { HighlightedPrimitive } from "./MouseElementTracker"
 import colors from "lib/colors"
 import { useGlobalStore } from "../global-store"
 import { zIndexMap } from "lib/util/z-index-map"
-import { AnyCircuitElement } from "circuit-json"
+import { AnyCircuitElement, PcbSmtPadRotatedPill } from "circuit-json"
 import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
 import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
 
@@ -123,7 +123,7 @@ export const HighlightedPrimitiveBoxWithText = ({
     "ccw_rotation" in primitive
   ) {
     // Handle rotation for pill shapes
-    rotation = (primitive as any).ccw_rotation ?? 0
+    rotation = (primitiveElement as PcbSmtPadRotatedPill).ccw_rotation ?? 0
   }
   // In HighlightedPrimitiveBoxWithText component
   if (primitiveElement.type === "pcb_trace") {
