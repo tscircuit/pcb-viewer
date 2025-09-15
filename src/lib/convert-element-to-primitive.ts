@@ -1,4 +1,4 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbSmtPadRotatedPill } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
@@ -171,6 +171,24 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             _source_port,
+          },
+        ]
+      } else if (element.shape === "pill" || element.shape === "rotated_pill") {
+        const { x, y, width, height, layer } = element
+        return [
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: width,
+            h: height,
+            layer: layer || "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
           },
         ]
       }
