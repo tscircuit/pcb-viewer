@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react"
-import { HighlightedPrimitive } from "./MouseElementTracker"
-import colors from "lib/colors"
+import type { HighlightedPrimitive } from "./MouseElementTracker"
 import { useGlobalStore } from "../global-store"
 import { zIndexMap } from "lib/util/z-index-map"
-import { AnyCircuitElement, PcbSmtPadRotatedPill } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbPlatedHoleOval,
+  PcbSmtPadRotatedPill,
+} from "circuit-json"
 import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
 import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
 
@@ -93,7 +96,7 @@ export const HighlightedPrimitiveBoxWithText = ({
     }, 100)
   }, [])
 
-  let [x, y, w, h] = [
+  const [x, y, w, h] = [
     primitive.screen_x,
     primitive.screen_y,
     primitive.screen_w,
@@ -122,8 +125,14 @@ export const HighlightedPrimitiveBoxWithText = ({
       primitiveElement?.shape === "rotated_pill") &&
     "ccw_rotation" in primitive
   ) {
-    // Handle rotation for pill shapes
     rotation = (primitiveElement as PcbSmtPadRotatedPill).ccw_rotation ?? 0
+  } else if (
+    primitiveElement.type === "pcb_plated_hole" &&
+    (primitiveElement?.shape === "pill" ||
+      primitiveElement?.shape === "oval") &&
+    "ccw_rotation" in primitive
+  ) {
+    rotation = (primitiveElement as PcbPlatedHoleOval).ccw_rotation ?? 0
   }
   // In HighlightedPrimitiveBoxWithText component
   if (primitiveElement.type === "pcb_trace") {
