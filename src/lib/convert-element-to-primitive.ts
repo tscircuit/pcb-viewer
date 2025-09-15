@@ -294,6 +294,7 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             _source_port,
+            ccw_rotation: element.ccw_rotation,
           },
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
@@ -304,6 +305,7 @@ export const convertElementToPrimitives = (
             w: hole_width,
             h: hole_height,
             layer: "drill",
+            ccw_rotation: element.ccw_rotation,
           },
         ]
       } else if (element.shape === "circular_hole_with_rect_pad") {
