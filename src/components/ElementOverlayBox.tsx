@@ -115,7 +115,15 @@ export const HighlightedPrimitiveBoxWithText = ({
     primitiveElement.type === "pcb_smtpad" &&
     primitiveElement?.shape === "rotated_rect"
   ) {
-    rotation = primitiveElement?.ccw_rotation
+    rotation = primitiveElement?.ccw_rotation ?? 0
+  } else if (
+    primitiveElement.type === "pcb_smtpad" &&
+    (primitiveElement?.shape === "pill" ||
+      primitiveElement?.shape === "rotated_pill") &&
+    "ccw_rotation" in primitive
+  ) {
+    // Handle rotation for pill shapes
+    rotation = (primitive as any).ccw_rotation ?? 0
   }
   // In HighlightedPrimitiveBoxWithText component
   if (primitiveElement.type === "pcb_trace") {
