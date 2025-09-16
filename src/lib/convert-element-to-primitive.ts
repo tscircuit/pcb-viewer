@@ -728,33 +728,50 @@ export const convertElementToPrimitives = (
     }
     case "pcb_copper_pour": {
       const pour = element as any
+
       switch (pour.shape) {
         case "rect": {
+          const { center, width, height, layer, rotation } = pour
           return [
             {
               _pcb_drawing_object_id: getNewPcbDrawingObjectId(
                 "pcb_copper_pour_rect",
               ),
               pcb_drawing_type: "rect",
-              x: pour.center.x,
-              y: pour.center.y,
-              w: pour.width,
-              h: pour.height,
-              layer: pour.layer,
+              x: center.x,
+              y: center.y,
+              w: width,
+              h: height,
+              layer: layer,
               _element: element,
-              ccw_rotation: pour.rotation,
+              ccw_rotation: rotation,
             },
           ]
         }
         case "polygon": {
+          const { points, layer } = pour
           return [
             {
               _pcb_drawing_object_id: getNewPcbDrawingObjectId(
                 "pcb_copper_pour_polygon",
               ),
               pcb_drawing_type: "polygon",
-              points: pour.points,
-              layer: pour.layer,
+              points: points,
+              layer: layer,
+              _element: element,
+            },
+          ]
+        }
+        case "brep": {
+          const { brep_shape, layer } = pour
+          return [
+            {
+              _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+                "pcb_copper_pour_brep",
+              ),
+              pcb_drawing_type: "polygon_with_arcs",
+              brep_shape: brep_shape,
+              layer: layer,
               _element: element,
             },
           ]
