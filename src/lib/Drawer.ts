@@ -10,6 +10,7 @@ import colors from "./colors"
 import { scaleOnly } from "./util/scale-only"
 import { zIndexMap } from "./util/z-index-map"
 import { Rotation } from "circuit-json"
+import { BRepShape, Ring } from "lib/types"
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -436,7 +437,7 @@ export class Drawer {
       ctx.lineTo(transformedPoints[i][0], transformedPoints[i][1])
     }
     ctx.closePath()
-    ctx.fill()
+    ctx.fill("evenodd")
 
     // Draw the outline
     const lineWidth = scaleOnly(this.transform, this.aperture.size)
@@ -514,7 +515,9 @@ export class Drawer {
     if (!color) color = "undefined"
     ctx.lineWidth = scaleOnly(transform, size)
     ctx.lineCap = "round"
+
     if (mode === "add") {
+      ctx.globalCompositeOperation = "source-over"
       let colorString =
         color?.[0] === "#" || color?.startsWith("rgb")
           ? color
@@ -566,5 +569,93 @@ export class Drawer {
       ctx.fillRect(x$ - size$ / 2, y$ - size$ / 2, size$, size$)
 
     this.lastPoint = { x, y }
+  }
+
+  polygonWithArcs(brep: BRepShape) {
+    const ctx = this.getLayerCtx()
+
+    const processRing = (ring: Ring) => {
+      if (ring.vertices.length === 0) return
+      const startPoint = ring.vertices[0]
+      const t_start_point = applyToPoint(this.transform, [
+        startPoint.x,
+        startPoint.y,
+      ])
+      ctx.moveTo(t_start_point[0], t_start_point[1])
+
+      for (let i = 0; i < ring.vertices.length; i++) {
+        const p1 = ring.vertices[i]
+        const p2 = ring.vertices[(i + 1) % ring.vertices.length]
+
+        if (p1.bulge && p1.bulge !== 0) {
+          const bulge = p1.bulge
+
+          const dx = p2.x - p1.x
+          const dy = p2.y - p1.y
+          const chord = Math.sqrt(dx * dx + dy * dy)
+
+          if (chord < 1e-9) {
+            const t_p2 = applyToPoint(this.transform, [p2.x, p2.y])
+            ctx.lineTo(t_p2[0], t_p2[1])
+            continue
+          }
+
+          const angle = 4 * Math.atan(bulge)
+          const radius = Math.abs(chord / (2 * Math.sin(angle / 2)))
+
+          const mx = (p1.x + p2.x) / 2
+          const my = (p1.y + p2.y) / 2
+
+          const norm_dx = dx / chord
+          const norm_dy = dy / chord
+
+          const perp_vx = -norm_dy
+          const perp_vy = norm_dx
+
+          const dist_to_center = Math.sqrt(
+            Math.max(0, radius * radius - (chord / 2) ** 2),
+          )
+
+          const cx = mx + dist_to_center * perp_vx * Math.sign(bulge)
+          const cy = my + dist_to_center * perp_vy * Math.sign(bulge)
+
+          const startAngle = Math.atan2(p1.y - cy, p1.x - cx)
+          let endAngle = Math.atan2(p2.y - cy, p2.x - cx)
+
+          if (bulge > 0 && endAngle < startAngle) {
+            endAngle += 2 * Math.PI
+          } else if (bulge < 0 && endAngle > startAngle) {
+            endAngle -= 2 * Math.PI
+          }
+
+          const t_center = applyToPoint(this.transform, [cx, cy])
+          const t_radius = scaleOnly(this.transform, radius)
+
+          ctx.arc(
+            t_center[0],
+            t_center[1],
+            t_radius,
+            -startAngle,
+            -endAngle,
+            bulge > 0,
+          )
+        } else {
+          const t_p2 = applyToPoint(this.transform, [p2.x, p2.y])
+          ctx.lineTo(t_p2[0], t_p2[1])
+        }
+      }
+      ctx.closePath()
+    }
+
+    ctx.beginPath()
+
+    processRing(brep.outer_ring)
+    if (brep.inner_rings) {
+      for (const inner_ring of brep.inner_rings) {
+        processRing(inner_ring)
+      }
+    }
+
+    ctx.fill("evenodd")
   }
 }

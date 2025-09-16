@@ -1,5 +1,25 @@
 import type { AnyCircuitElement } from "circuit-json"
 
+export interface PointWithBulge {
+  x: number
+  y: number
+  bulge?: number
+}
+
+export interface Ring {
+  vertices: PointWithBulge[]
+}
+
+export interface BRepShape {
+  outer_ring: Ring
+  inner_rings?: Ring[]
+}
+
+export interface PolygonWithArcs extends PCBDrawingObject {
+  pcb_drawing_type: "polygon_with_arcs"
+  brep_shape: BRepShape
+}
+
 export type AlignString =
   | "top_left"
   | "top_center"
@@ -94,7 +114,15 @@ export interface Polygon extends PCBDrawingObject {
   points: { x: number; y: number }[]
 }
 
-export type Primitive = Line | Text | Rect | Circle | Oval | Pill | Polygon
+export type Primitive =
+  | Line
+  | Text
+  | Rect
+  | Circle
+  | Oval
+  | Pill
+  | Polygon
+  | PolygonWithArcs
 
 export type GridConfig = {
   spacing: number

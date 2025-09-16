@@ -8,6 +8,7 @@ import type {
   Oval,
   Pill,
   Polygon,
+  PolygonWithArcs,
   Primitive,
   Rect,
   Text,
@@ -215,17 +216,26 @@ export const drawPolygon = (drawer: Drawer, polygon: Polygon) => {
   drawer.polygon(polygon.points)
 }
 
+export const drawPolygonWithArcs = (drawer: Drawer, p: PolygonWithArcs) => {
+  drawer.equip({
+    color: getColor(p),
+    layer: p.layer,
+  })
+  drawer.polygonWithArcs(p.brep_shape)
+}
+
 export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
   switch (primitive.pcb_drawing_type) {
     case "line":
       return drawLine(drawer, primitive)
     case "text":
       return drawText(drawer, primitive)
-    case "rect":
+    case "rect": {
       if (primitive.ccw_rotation) {
         return drawRotatedRect(drawer, primitive)
       }
       return drawRect(drawer, primitive)
+    }
     case "circle":
       return drawCircle(drawer, primitive)
     case "oval":
@@ -237,6 +247,8 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
       return drawPill(drawer, primitive)
     case "polygon":
       return drawPolygon(drawer, primitive)
+    case "polygon_with_arcs":
+      return drawPolygonWithArcs(drawer, primitive)
   }
 }
 
