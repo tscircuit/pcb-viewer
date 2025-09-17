@@ -16,6 +16,9 @@ import type {
 import color from "color"
 
 function getColor(primitive: Primitive): string {
+  if ((primitive as any).color) {
+    return (primitive as any).color as string
+  }
   if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
     return color(
       LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR],
