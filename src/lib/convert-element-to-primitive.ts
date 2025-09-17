@@ -1,6 +1,7 @@
 import type { AnyCircuitElement, PcbSmtPadRotatedPill } from "circuit-json"
 import { su } from "@tscircuit/soup-util"
 import type { Primitive } from "./types"
+import colors from "./colors"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 
 type MetaData = {
@@ -481,6 +482,11 @@ export const convertElementToPrimitives = (
         const expandedStroke = getExpandedStroke(strokeInput, 0.5) // Use 0.5 as default width
 
         const layer = (element.route[0] as any).layer
+        const elementColor = (element as any).color as string | undefined
+        const colorPoint = (element.route as any[]).find((r) => r && r.color)
+        const traceColor = elementColor
+          ? elementColor
+          : (colorPoint ? (colorPoint as any).color : undefined)
 
         // Generate a single polygon primitive from the expanded stroke
         primitives.push({
@@ -489,6 +495,7 @@ export const convertElementToPrimitives = (
           pcb_drawing_type: "polygon",
           points: expandedStroke,
           layer, // same layer for all points
+          ...(traceColor ? { color: traceColor } : {}),
         })
 
         // Add circles for vias
@@ -502,6 +509,7 @@ export const convertElementToPrimitives = (
               y: r.y,
               r: (r as any).outer_diameter / 2,
               layer: (r as any).from_layer,
+              ...(traceColor ? { color: traceColor } : {}),
             })
           }
         })
@@ -511,6 +519,7 @@ export const convertElementToPrimitives = (
       let prevX: number | null = null
       let prevY: number | null = null
 
+      const elementColor = (element as any).color as string | undefined
       for (const route of element.route) {
         if (route.route_type === "wire") {
           if (prevX !== null && prevY !== null) {
@@ -525,12 +534,43 @@ export const convertElementToPrimitives = (
               width: route.width,
               squareCap: false,
               layer: route.layer,
+              ...(route as any).color
+                ? { color: (route as any).color }
+                : elementColor
+                  ? { color: elementColor }
+                  : {},
             })
           }
 
           prevX = route.x
           prevY = route.y
         }
+      }
+
+      return primitives
+    }
+    case "schematic_trace": {
+      const primitives: Primitive[] = []
+      const elementAny = element as any
+      const defaultColor = colors.schematic.wire
+      const fallbackColor = elementAny.color || defaultColor
+      const width = 0.1
+
+      for (const edge of elementAny.edges ?? []) {
+        const colorForEdge = edge.color || fallbackColor
+        primitives.push({
+          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+          pcb_drawing_type: "line",
+          x1: edge.from.x,
+          y1: edge.from.y,
+          x2: edge.to.x,
+          y2: edge.to.y,
+          width,
+          squareCap: false,
+          layer: "other",
+          color: colorForEdge,
+          _element: element,
+        })
       }
 
       return primitives
