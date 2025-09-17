@@ -489,6 +489,7 @@ export const convertElementToPrimitives = (
           pcb_drawing_type: "polygon",
           points: expandedStroke,
           layer, // same layer for all points
+          color: element.color, // Use explicit color if provided
         })
 
         // Add circles for vias
@@ -525,6 +526,7 @@ export const convertElementToPrimitives = (
               width: route.width,
               squareCap: false,
               layer: route.layer,
+              color: element.color, // Use explicit color if provided
             })
           }
 
@@ -851,6 +853,28 @@ export const convertElementToPrimitives = (
           console.warn(`Unsupported pcb_cutout shape: ${cutoutElement.shape}`)
           return []
       }
+    }
+    case "schematic_trace": {
+      const primitives: Primitive[] = []
+      
+      // Convert schematic trace edges to line primitives
+      for (const edge of element.edges) {
+        primitives.push({
+          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+          _element: element,
+          pcb_drawing_type: "line",
+          x1: edge.x1,
+          y1: edge.y1,
+          x2: edge.x2,
+          y2: edge.y2,
+          width: edge.width || 0.1, // Default width for schematic traces
+          squareCap: false,
+          layer: "schematic", // Use a schematic layer
+          color: element.color, // Use explicit color if provided
+        })
+      }
+      
+      return primitives
     }
   }
 

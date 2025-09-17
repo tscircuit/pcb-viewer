@@ -31,6 +31,9 @@ export const LAYER_NAME_TO_COLOR = {
   other: "#eee",
   // TODO more builtin html colors
 
+  // Schematic layer
+  schematic: colors.schematic.wire,
+
   // Common eagle names
   top: colors.board.copper.f,
   inner1: colors.board.copper.in1,
