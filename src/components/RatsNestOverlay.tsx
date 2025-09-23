@@ -1,6 +1,6 @@
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import type { AnyCircuitElement } from "circuit-json"
-import { su } from "@tscircuit/soup-util"
+import { su } from "@tscircuit/circuit-json-util"
 import { useGlobalStore } from "../global-store"
 import { zIndexMap } from "lib/util/z-index-map"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"

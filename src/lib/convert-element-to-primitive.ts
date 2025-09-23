@@ -1,5 +1,5 @@
 import type { AnyCircuitElement, PcbSmtPadRotatedPill } from "circuit-json"
-import { su } from "@tscircuit/soup-util"
+import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 

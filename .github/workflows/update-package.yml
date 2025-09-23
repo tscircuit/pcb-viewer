@@ -1,0 +1,46 @@
+# =============================================================================
+# Do not change anything in this file.
+# This workflow automatically updates @tscircuit packages when triggered by
+# the source repository's trigger-dependent-repo-update.yml workflow.
+# =============================================================================
+
+name: Update @tscircuit Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_names:
+        description: 'Package names to update (comma-separated, e.g., @tscircuit/core,@tscircuit/props)'
+        required: true
+        type: string
+        default: '<PACKAGE_NAMES>'
+
+env:
+  PACKAGE_NAMES: ${{ inputs.package_names }}
+
+jobs:
+  update-package:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+      - uses: oven-sh/setup-bun@v2
+      - name: Update packages
+        run: |
+          IFS=',' read -ra PACKAGES <<< "${{ env.PACKAGE_NAMES }}"
+          for package in "${PACKAGES[@]}"; do
+            bun update --latest "$package"
+          done
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "chore: update packages ${{ env.PACKAGE_NAMES }}"
+          title: "chore: update packages ${{ env.PACKAGE_NAMES }}"
+          body: "Automated package update"
+          branch: update-packages-${{ github.run_number }}
+          base: main
+          token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          committer: tscircuitbot <githubbot@tscircuit.com>
+          author: tscircuitbot <githubbot@tscircuit.com>

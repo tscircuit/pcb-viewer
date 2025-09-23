@@ -4,7 +4,7 @@ import type {
   PcbTraceHint,
   PcbPlatedHole,
 } from "circuit-json"
-import { su } from "@tscircuit/soup-util"
+import { su } from "@tscircuit/circuit-json-util"
 import { useGlobalStore } from "../global-store"
 import { Fragment, useEffect, useRef, useState } from "react"
 import {
@@ -16,14 +16,14 @@ import {
 import { HotkeyActionMenu } from "./HotkeyActionMenu"
 import { useToast } from "lib/toast"
 import { zIndexMap } from "lib/util/z-index-map"
-import { EditTraceHintEvent } from "@tscircuit/props"
+import type { EditTraceHintEvent } from "@tscircuit/props"
 
 interface Props {
   transform?: Matrix
   children: any
   soup: AnyCircuitElement[]
   disabled?: boolean
-  cancelPanDrag: Function
+  cancelPanDrag: () => void
   onCreateEditEvent: (event: EditTraceHintEvent) => void
   onModifyEditEvent: (event: Partial<EditTraceHintEvent>) => void
 }

@@ -24,8 +24,9 @@
     "@semantic-release/npm": "^9.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@swc/core": "^1.4.12",
+    "@tscircuit/circuit-json-util": "^0.0.67",
     "@tscircuit/eagle-xml-converter": "^1.0.0",
-    "@tscircuit/soup-util": "^0.0.41",
+    "@types/bun": "latest",
     "@types/color": "^3.0.6",
     "@types/node": "18.7.23",
     "@types/react": "19",
@@ -41,8 +42,7 @@
     "type-fest": "^3.0.0",
     "typescript": "^5.4.4",
     "use-mouse-matrix-transform": "^1.3.4",
-    "zod": "^3.23.5",
-    "@types/bun": "latest"
+    "zod": "^3.23.5"
   },
   "peerDependencies": {
     "react": "*",
