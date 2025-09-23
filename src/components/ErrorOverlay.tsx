@@ -1,6 +1,6 @@
 import React, { useRef, Fragment } from "react"
 import { css } from "@emotion/css"
-import { su } from "@tscircuit/soup-util"
+import { su } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, PcbPort, PcbTraceError } from "circuit-json"
 import { zIndexMap } from "lib/util/z-index-map"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"

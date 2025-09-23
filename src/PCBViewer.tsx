@@ -1,5 +1,5 @@
 import { applyEditEvents } from "@tscircuit/core"
-import { findBoundsAndCenter } from "@tscircuit/soup-util"
+import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
 import type { StateProps } from "./global-store"
