@@ -24,7 +24,7 @@
     "@semantic-release/npm": "^9.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@swc/core": "^1.4.12",
-    "@tscircuit/circuit-json-util": "^0.0.70",
+    "@tscircuit/circuit-json-util": "^0.0.71",
     "@tscircuit/eagle-xml-converter": "^1.0.0",
     "@types/bun": "latest",
     "@types/color": "^3.0.6",
