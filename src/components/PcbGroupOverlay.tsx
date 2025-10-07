@@ -39,7 +39,12 @@ export const PcbGroupOverlay = ({
 }: Props) => {
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const is_showing_pcb_groups = useGlobalStore((s) => s.is_showing_pcb_groups)
+  const { is_showing_pcb_groups, pcb_group_view_mode } = useGlobalStore(
+    (s) => ({
+      is_showing_pcb_groups: s.is_showing_pcb_groups,
+      pcb_group_view_mode: s.pcb_group_view_mode,
+    }),
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -65,6 +70,18 @@ export const PcbGroupOverlay = ({
     const sourceGroups = elements.filter(
       (el): el is SourceGroup => el.type === "source_group",
     ) as SourceGroup[]
+
+    const sourceGroupById = new Map(
+      sourceGroups.map((group) => [group.source_group_id, group]),
+    )
+
+    const visiblePcbGroups = pcbGroups.filter((group) => {
+      if (pcb_group_view_mode === "all") return true
+      if (!group.source_group_id) return false
+      const sourceGroup = sourceGroupById.get(group.source_group_id)
+      if (!sourceGroup) return false
+      return sourceGroup.was_automatically_named !== true
+    })
 
     const sourceGroupHierarchy = new Map<string, string[]>()
     sourceGroups.forEach((group) => {
@@ -102,7 +119,7 @@ export const PcbGroupOverlay = ({
       return 1 + getGroupDepthLevel(groupWithParent.parent_source_group_id)
     }
 
-    pcbGroups.forEach((group, groupIndex) => {
+    visiblePcbGroups.forEach((group, groupIndex) => {
       let groupComponents = pcbComponents.filter(
         (comp) => comp.pcb_group_id === group.pcb_group_id,
       )
@@ -229,7 +246,14 @@ export const PcbGroupOverlay = ({
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelPadding, labelY - labelHeight / 2)
     })
-  }, [elements, transform, width, height, is_showing_pcb_groups])
+  }, [
+    elements,
+    transform,
+    width,
+    height,
+    is_showing_pcb_groups,
+    pcb_group_view_mode,
+  ])
 
   return (
     <div

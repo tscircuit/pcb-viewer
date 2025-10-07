@@ -1,4 +1,7 @@
-import { getBoundsOfPcbElements, getElementId } from "@tscircuit/circuit-json-util"
+import {
+  getBoundsOfPcbElements,
+  getElementId,
+} from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 
 const formatToFixed4 = (value: number): string =>
