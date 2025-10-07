@@ -2,6 +2,7 @@ import { useCallback } from "react"
 
 export const STORAGE_KEYS = {
   IS_SHOWING_PCB_GROUPS: "pcb_viewer_is_showing_pcb_groups",
+  PCB_GROUP_VIEW_MODE: "pcb_viewer_group_view_mode",
 } as const
 
 export const getStoredBoolean = (
@@ -18,6 +19,23 @@ export const getStoredBoolean = (
 }
 
 export const setStoredBoolean = (key: string, value: boolean): void => {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {}
+}
+
+export const getStoredString = (key: string, defaultValue: string): string => {
+  if (typeof window === "undefined") return defaultValue
+  try {
+    const stored = localStorage.getItem(key)
+    return stored !== null ? JSON.parse(stored) : defaultValue
+  } catch {
+    return defaultValue
+  }
+}
+
+export const setStoredString = (key: string, value: string): void => {
   if (typeof window === "undefined") return
   try {
     localStorage.setItem(key, JSON.stringify(value))

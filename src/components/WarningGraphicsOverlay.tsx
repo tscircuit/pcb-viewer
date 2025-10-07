@@ -26,6 +26,7 @@ interface PcbComponent extends BaseCircuitElement {
     | "inner4"
     | "inner5"
     | "inner6"
+  obstructs_within_bounds: boolean
 }
 
 interface PcbManualEditConflictWarning extends BaseCircuitElement {

@@ -8,7 +8,9 @@ import type { LayerRef } from "circuit-json"
 import { useContext } from "react"
 import {
   getStoredBoolean,
+  getStoredString,
   setStoredBoolean,
+  setStoredString,
   STORAGE_KEYS,
 } from "./hooks/useLocalStorage"
 
@@ -29,6 +31,7 @@ export interface State {
   is_showing_multiple_traces_length: boolean
   is_showing_rats_nest: boolean
   is_showing_pcb_groups: boolean
+  pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
 
@@ -42,12 +45,16 @@ export interface State {
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
   setIsShowingDrcErrors: (is_showing: boolean) => void
   setIsShowingPcbGroups: (is_showing: boolean) => void
+  setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
 }
 
 export type StateProps = {
   [key in keyof State]: State[key] extends boolean ? boolean : never
 }
+
+const DEFAULT_PCB_GROUP_VIEW_MODE: "all" | "named_only" =
+  process.env.NODE_ENV !== "production" ? "named_only" : "all"
 
 export const createStore = (
   initialState: Partial<StateProps> = {},
@@ -75,6 +82,12 @@ export const createStore = (
         is_showing_pcb_groups: disablePcbGroups
           ? false
           : getStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, true),
+        pcb_group_view_mode: disablePcbGroups
+          ? "all"
+          : (getStoredString(
+              STORAGE_KEYS.PCB_GROUP_VIEW_MODE,
+              DEFAULT_PCB_GROUP_VIEW_MODE,
+            ) as "all" | "named_only"),
 
         hovered_error_id: null,
         ...initialState,
@@ -106,6 +119,11 @@ export const createStore = (
           if (disablePcbGroups) return
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, is_showing)
           set({ is_showing_pcb_groups: is_showing })
+        },
+        setPcbGroupViewMode: (mode) => {
+          if (disablePcbGroups) return
+          setStoredString(STORAGE_KEYS.PCB_GROUP_VIEW_MODE, mode)
+          set({ pcb_group_view_mode: mode })
         },
         setHoveredErrorId: (errorId) => set({ hovered_error_id: errorId }),
       }) as const,

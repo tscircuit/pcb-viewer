@@ -40,6 +40,12 @@ interface CheckboxMenuItemProps {
   onClick: () => void
 }
 
+interface RadioMenuItemProps {
+  label: string
+  checked: boolean
+  onClick: () => void
+}
+
 export const LayerButton = ({ name, selected, onClick }: LayerButtonProps) => {
   return (
     <div
@@ -144,6 +150,39 @@ const CheckboxMenuItem = ({
   )
 }
 
+const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
+  return (
+    <div
+      className={css`
+        margin-top: 2px;
+        padding: 4px;
+        padding-left: 8px;
+        padding-right: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+      `}
+      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+        e.stopPropagation()
+        onClick()
+      }}
+      onTouchEnd={(e: React.TouchEvent<HTMLDivElement>) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick()
+      }}
+    >
+      <input type="radio" checked={checked} onChange={() => {}} readOnly />
+      <span style={{ color: "#eee" }}>{label}</span>
+    </div>
+  )
+}
+
 export const ToolbarOverlay = ({ children, elements }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
@@ -160,6 +199,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
     setIsShowingPcbGroups,
+    setPcbGroupViewMode,
     setHoveredErrorId,
   } = useGlobalStore((s) => ({
     isMouseOverContainer: s.is_mouse_over_container,
@@ -176,6 +216,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
+      pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setEditMode: s.setEditMode,
     setIsShowingRatsNest: s.setIsShowingRatsNest,
@@ -183,6 +224,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
+    setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
   }))
 
@@ -632,6 +674,26 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     setIsShowingPcbGroups(!viewSettings.is_showing_pcb_groups)
                   }}
                 />
+                {viewSettings.is_showing_pcb_groups && (
+                  <div style={{ marginLeft: 16 }}>
+                    <RadioMenuItem
+                      label="Show All Groups"
+                      checked={viewSettings.pcb_group_view_mode === "all"}
+                      onClick={() => {
+                        setPcbGroupViewMode("all")
+                      }}
+                    />
+                    <RadioMenuItem
+                      label="Show Named Groups"
+                      checked={
+                        viewSettings.pcb_group_view_mode === "named_only"
+                      }
+                      onClick={() => {
+                        setPcbGroupViewMode("named_only")
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
