@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   useRef,
+  useMemo,
 } from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
@@ -183,6 +184,33 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
   )
 }
 
+type PcbBoardElement = Extract<AnyCircuitElement, { type: "pcb_board" }> & {
+  layer_count?: number
+  num_layers?: number
+}
+
+const COPPER_LAYER_NAMES = [
+  "top",
+  "inner1",
+  "inner2",
+  "inner3",
+  "inner4",
+  "inner5",
+  "inner6",
+  "bottom",
+] as const
+
+const INNER_LAYER_NAMES = [
+  "inner1",
+  "inner2",
+  "inner3",
+  "inner4",
+  "inner5",
+  "inner6",
+] as const
+
+const COPPER_LAYER_SET = new Set<string>(COPPER_LAYER_NAMES)
+
 export const ToolbarOverlay = ({ children, elements }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
@@ -247,16 +275,100 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     }
   }, [])
 
-  const hotKeyCallbacks = {
-    "1": () => selectLayer("top"),
-    "2": () => selectLayer("bottom"),
-    "3": () => selectLayer("inner1"),
-    "4": () => selectLayer("inner2"),
-    "5": () => selectLayer("inner3"),
-    "6": () => selectLayer("inner4"),
-    "7": () => selectLayer("inner5"),
-    "8": () => selectLayer("inner6"),
-  }
+  const pcbBoard = useMemo(
+    () =>
+      elements?.find((el): el is PcbBoardElement => el.type === "pcb_board"),
+    [elements],
+  )
+
+  const normalizedAllLayers = useMemo(
+    () => all_layers.map((layer) => layer.replace(/-/g, "")),
+    [],
+  )
+
+  const layerCount = pcbBoard?.layer_count ?? pcbBoard?.num_layers
+
+  const availableCopperLayers = useMemo(() => {
+    if (layerCount == null) {
+      return COPPER_LAYER_NAMES.map((layer) => layer as LayerRef)
+    }
+
+    if (layerCount <= 1) {
+      return ["top"] as LayerRef[]
+    }
+
+    const innerLayerCount = Math.max(
+      0,
+      Math.min(layerCount - 2, INNER_LAYER_NAMES.length),
+    )
+    const innerLayers = INNER_LAYER_NAMES.slice(0, innerLayerCount).map(
+      (layer) => layer as LayerRef,
+    )
+
+    const copperLayers: LayerRef[] = ["top", ...innerLayers]
+
+    if (layerCount >= 2) {
+      copperLayers.push("bottom")
+    }
+
+    return copperLayers
+  }, [layerCount])
+
+  const availableCopperLayerSet = useMemo(
+    () => new Set(availableCopperLayers),
+    [availableCopperLayers],
+  )
+
+  const processedLayers = useMemo(() => {
+    return normalizedAllLayers.filter((layer) => {
+      if (COPPER_LAYER_SET.has(layer)) {
+        return availableCopperLayerSet.has(layer as LayerRef)
+      }
+
+      return true
+    })
+  }, [availableCopperLayerSet, normalizedAllLayers])
+
+  useEffect(() => {
+    if (
+      COPPER_LAYER_SET.has(selectedLayer) &&
+      !availableCopperLayerSet.has(selectedLayer)
+    ) {
+      const fallbackLayer = availableCopperLayers[0] ?? ("top" as LayerRef)
+
+      if (fallbackLayer) {
+        selectLayer(fallbackLayer)
+      }
+    }
+  }, [
+    availableCopperLayerSet,
+    availableCopperLayers,
+    selectLayer,
+    selectedLayer,
+  ])
+
+  const selectLayerIfAvailable = useCallback(
+    (layer: LayerRef) => {
+      if (!COPPER_LAYER_SET.has(layer) || availableCopperLayerSet.has(layer)) {
+        selectLayer(layer)
+      }
+    },
+    [availableCopperLayerSet, selectLayer],
+  )
+
+  const hotKeyCallbacks = useMemo(
+    () => ({
+      "1": () => selectLayerIfAvailable("top"),
+      "2": () => selectLayerIfAvailable("bottom"),
+      "3": () => selectLayerIfAvailable("inner1"),
+      "4": () => selectLayerIfAvailable("inner2"),
+      "5": () => selectLayerIfAvailable("inner3"),
+      "6": () => selectLayerIfAvailable("inner4"),
+      "7": () => selectLayerIfAvailable("inner5"),
+      "8": () => selectLayerIfAvailable("inner6"),
+    }),
+    [selectLayerIfAvailable],
+  )
 
   useHotKey("1", hotKeyCallbacks["1"])
   useHotKey("2", hotKeyCallbacks["2"])
@@ -273,8 +385,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const errorElements =
     elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
     []
-
-  const processedLayers = all_layers.map((l) => l.replace(/-/g, ""))
 
   const handleMouseEnter = useCallback(() => {
     setIsMouseOverContainer(true)
@@ -402,7 +512,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   name={layer}
                   selected={layer === selectedLayer}
                   onClick={() => {
-                    selectLayer(layer.replace(/-/, "") as LayerRef)
+                    selectLayerIfAvailable(layer.replace(/-/, "") as LayerRef)
                   }}
                 />
               ))}
