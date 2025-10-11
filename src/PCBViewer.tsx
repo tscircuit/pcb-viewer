@@ -13,6 +13,7 @@ import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
+import { useGlobalStore } from "./global-store"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -118,6 +119,15 @@ export const PCBViewer = ({
       editEvents,
     })
   }, [pcbElmsPreEdit, editEvents])
+
+  const { setLayerCount } = useGlobalStore()
+
+  useEffect(() => {
+    const pcbBoard = elements.find((elm) => elm.type === "pcb_board") as any
+    if (pcbBoard?.layer_count) {
+      setLayerCount(pcbBoard.layer_count)
+    }
+  }, [elements, setLayerCount])
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])

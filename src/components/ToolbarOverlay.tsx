@@ -1,12 +1,6 @@
-import React, {
-  Fragment,
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-} from "react"
+import React, { Fragment, useEffect, useMemo, useState, useRef } from "react"
 import { css } from "@emotion/css"
-import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
+import { type LayerRef, type PcbTraceError } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "../global-store"
@@ -14,6 +8,7 @@ import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
+import { getAvailableLayers } from "lib/layer-helpers"
 
 interface Props {
   children?: React.ReactNode
@@ -191,6 +186,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsMouseOverContainer,
     selectedLayer,
     selectLayer,
+    layerCount,
     editModes,
     viewSettings,
     setEditMode,
@@ -206,6 +202,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsMouseOverContainer: s.setIsMouseOverContainer,
     selectedLayer: s.selected_layer,
     selectLayer: s.selectLayer,
+    layerCount: s.layer_count,
     editModes: {
       in_move_footprint_mode: s.in_move_footprint_mode,
       in_draw_trace_mode: s.in_draw_trace_mode,
@@ -235,6 +232,11 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
   const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
   const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
+
+  const availableLayers = useMemo(
+    () => getAvailableLayers(layerCount),
+    [layerCount],
+  )
 
   useEffect(() => {
     const arm = () => setMeasureToolArmed(true)
@@ -274,25 +276,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
     []
 
-  const processedLayers = all_layers.map((l) => l.replace(/-/g, ""))
-
-  const handleMouseEnter = useCallback(() => {
-    setIsMouseOverContainer(true)
-  }, [setIsMouseOverContainer])
-
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     setIsMouseOverContainer(false)
     setLayerMenuOpen(false)
     setViewMenuOpen(false)
     setErrorsOpen(false)
     setHoveredErrorId(null)
-  }, [setIsMouseOverContainer, setHoveredErrorId])
+  }
 
-  const handleLayerMenuToggle = useCallback(() => {
-    setLayerMenuOpen(!isLayerMenuOpen)
-  }, [isLayerMenuOpen])
-
-  const handleErrorsToggle = useCallback(() => {
+  const handleErrorsToggle = () => {
     const newErrorsOpen = !isErrorsOpen
     setErrorsOpen(newErrorsOpen)
     if (newErrorsOpen) {
@@ -301,36 +293,19 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     if (!newErrorsOpen) {
       setHoveredErrorId(null)
     }
-  }, [isErrorsOpen, setHoveredErrorId])
+  }
 
-  const handleEditTraceToggle = useCallback(() => {
-    setEditMode(editModes.in_draw_trace_mode ? "off" : "draw_trace")
-  }, [editModes.in_draw_trace_mode, setEditMode])
-
-  const handleMoveComponentToggle = useCallback(() => {
-    setEditMode(editModes.in_move_footprint_mode ? "off" : "move_footprint")
-  }, [editModes.in_move_footprint_mode, setEditMode])
-
-  const handleRatsNestToggle = useCallback(() => {
-    setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
-  }, [viewSettings.is_showing_rats_nest, setIsShowingRatsNest])
-
-  const handleMeasureToolClick = useCallback(() => {
-    setMeasureToolArmed(true)
-    window.dispatchEvent(new Event("arm-dimension-tool"))
-  }, [])
-
-  const handleViewMenuToggle = useCallback(() => {
+  const handleViewMenuToggle = () => {
     const newViewMenuOpen = !isViewMenuOpen
     setViewMenuOpen(newViewMenuOpen)
     if (newViewMenuOpen) {
       setErrorsOpen(false)
     }
-  }, [isViewMenuOpen])
+  }
   return (
     <div
       style={{ position: "relative", zIndex: "999 !important" }}
-      onMouseEnter={handleMouseEnter}
+      onMouseEnter={() => setIsMouseOverContainer(true)}
       onMouseLeave={handleMouseLeave}
     >
       {children}
@@ -375,7 +350,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       >
         <ToolbarButton
           isSmallScreen={isSmallScreen}
-          onClick={handleLayerMenuToggle}
+          onClick={() => setLayerMenuOpen(!isLayerMenuOpen)}
           onMouseLeave={() => {
             if (isLayerMenuOpen) {
               setLayerMenuOpen(false)
@@ -396,13 +371,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           </div>
           {isLayerMenuOpen && (
             <div style={{ marginTop: 4, minWidth: 120 }}>
-              {processedLayers.map((layer) => (
+              {availableLayers.map((layer) => (
                 <LayerButton
                   key={layer}
                   name={layer}
                   selected={layer === selectedLayer}
                   onClick={() => {
-                    selectLayer(layer.replace(/-/, "") as LayerRef)
+                    selectLayer(layer.replace(/-/g, "") as LayerRef)
                   }}
                 />
               ))}
@@ -611,7 +586,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={measureToolArmed ? { backgroundColor: "#444" } : {}}
-          onClick={handleMeasureToolClick}
+          onClick={() => {
+            setMeasureToolArmed(true)
+            window.dispatchEvent(new Event("arm-dimension-tool"))
+          }}
         >
           <div>📏</div>
         </ToolbarButton>

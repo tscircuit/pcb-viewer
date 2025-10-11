@@ -16,6 +16,7 @@ import {
 
 export interface State {
   selected_layer: LayerRef
+  layer_count: number
 
   pcb_viewer_id: string
 
@@ -36,6 +37,7 @@ export interface State {
   hovered_error_id: string | null
 
   selectLayer: (layer: LayerRef) => void
+  setLayerCount: (layer_count: number) => void
   setEditMode: (mode: "off" | "move_footprint" | "draw_trace") => void
   setIsMovingComponent: (is_moving: boolean) => void
   setIsDrawingTrace: (is_drawing: boolean) => void
@@ -64,6 +66,7 @@ export const createStore = (
     (set) =>
       ({
         selected_layer: "top",
+        layer_count: 2,
 
         pcb_viewer_id: `pcb_viewer_${Math.random().toString().slice(2, 10)}`,
 
@@ -93,6 +96,7 @@ export const createStore = (
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
+        setLayerCount: (layer_count) => set({ layer_count }),
         setEditMode: (mode) =>
           set({
             in_edit_mode: mode !== "off",
