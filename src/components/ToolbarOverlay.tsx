@@ -247,15 +247,54 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     }
   }, [])
 
+  const errorCount =
+    elements?.filter((e) => e.type.includes("error")).length ?? 0
+
+  const errorElements =
+    elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
+    []
+
+  // Find the PCB board to get the number of layers
+  const pcbBoard = elements?.find((el) => el.type === "pcb_board") as any
+  const numLayers = pcbBoard?.num_layers || 2
+
+  // Filter layers based on PCB layer count
+  const availableLayers =
+    numLayers <= 2
+      ? ["top", "bottom"]
+      : [
+          "top",
+          ...Array.from({ length: numLayers - 2 }, (_, i) => `inner${i + 1}`),
+          "bottom",
+        ]
+
+  const processedLayers = availableLayers
+
   const hotKeyCallbacks = {
-    "1": () => selectLayer("top"),
-    "2": () => selectLayer("bottom"),
-    "3": () => selectLayer("inner1"),
-    "4": () => selectLayer("inner2"),
-    "5": () => selectLayer("inner3"),
-    "6": () => selectLayer("inner4"),
-    "7": () => selectLayer("inner5"),
-    "8": () => selectLayer("inner6"),
+    "1": availableLayers[0]
+      ? () => selectLayer(availableLayers[0] as LayerRef)
+      : () => {},
+    "2": availableLayers[1]
+      ? () => selectLayer(availableLayers[1] as LayerRef)
+      : () => {},
+    "3": availableLayers[2]
+      ? () => selectLayer(availableLayers[2] as LayerRef)
+      : () => {},
+    "4": availableLayers[3]
+      ? () => selectLayer(availableLayers[3] as LayerRef)
+      : () => {},
+    "5": availableLayers[4]
+      ? () => selectLayer(availableLayers[4] as LayerRef)
+      : () => {},
+    "6": availableLayers[5]
+      ? () => selectLayer(availableLayers[5] as LayerRef)
+      : () => {},
+    "7": availableLayers[6]
+      ? () => selectLayer(availableLayers[6] as LayerRef)
+      : () => {},
+    "8": availableLayers[7]
+      ? () => selectLayer(availableLayers[7] as LayerRef)
+      : () => {},
   }
 
   useHotKey("1", hotKeyCallbacks["1"])
@@ -266,15 +305,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   useHotKey("6", hotKeyCallbacks["6"])
   useHotKey("7", hotKeyCallbacks["7"])
   useHotKey("8", hotKeyCallbacks["8"])
-
-  const errorCount =
-    elements?.filter((e) => e.type.includes("error")).length ?? 0
-
-  const errorElements =
-    elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
-    []
-
-  const processedLayers = all_layers.map((l) => l.replace(/-/g, ""))
 
   const handleMouseEnter = useCallback(() => {
     setIsMouseOverContainer(true)
@@ -402,7 +432,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   name={layer}
                   selected={layer === selectedLayer}
                   onClick={() => {
-                    selectLayer(layer.replace(/-/, "") as LayerRef)
+                    selectLayer(layer as LayerRef)
                   }}
                 />
               ))}
