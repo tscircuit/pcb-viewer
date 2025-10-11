@@ -9,10 +9,9 @@ import { useHotKey } from "hooks/useHotKey"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import {
-  COPPER_LAYER_SET,
-  deriveAvailableCopperLayers,
-  ensureLayerIsAvailable,
-  filterLayersForBoard,
+  getAvailableCopperLayers,
+  isCopperLayer,
+  sanitizeLayerSelection,
 } from "lib/pcb-layer-utils"
 
 interface Props {
@@ -258,13 +257,17 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
   const layerCount = pcbBoard?.layer_count ?? pcbBoard?.num_layers
 
-  const availableCopperLayers = deriveAvailableCopperLayers(layerCount)
-  const processedLayers = filterLayersForBoard(
-    all_layers,
-    availableCopperLayers,
-  )
+  const availableCopperLayers = getAvailableCopperLayers(layerCount)
+  const processedLayers = all_layers.filter((layer) => {
+    if (!isCopperLayer(layer)) {
+      return true
+    }
 
-  const safeSelectedLayer = ensureLayerIsAvailable(
+    const normalized = layer.replace(/-/g, "") as LayerRef
+    return availableCopperLayers.includes(normalized)
+  })
+
+  const safeSelectedLayer = sanitizeLayerSelection(
     (selectedLayer as LayerRef) ?? ("top" as LayerRef),
     availableCopperLayers,
   )
@@ -276,7 +279,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   }, [safeSelectedLayer, selectLayer, selectedLayer])
 
   const selectLayerIfAvailable = (layer: LayerRef) => {
-    if (!COPPER_LAYER_SET.has(layer) || availableCopperLayers.includes(layer)) {
+    if (!isCopperLayer(layer) || availableCopperLayers.includes(layer)) {
       selectLayer(layer)
     }
   }
