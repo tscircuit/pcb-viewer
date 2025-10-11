@@ -58,17 +58,6 @@ export const FourLayerCircuit: React.FC = () => {
       layer: "bottom",
       shape: "rect",
     },
-    // Optional trace connecting them (will show on different layers)
-    {
-      type: "pcb_trace",
-      pcb_trace_id: "pcb_trace_connection",
-      route: [
-        { x: -9, y: 0, width: 0.2, layer: "top" },
-        { x: -3, y: 0, width: 0.2, layer: "inner1" },
-        { x: 3, y: 0, width: 0.2, layer: "inner2" },
-        { x: 9, y: 0, width: 0.2, layer: "bottom" },
-      ],
-    },
   ] as any
 
   return (

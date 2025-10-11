@@ -36,33 +36,6 @@ export const TwoLayerCircuit: React.FC = () => {
       layer: "bottom",
       shape: "rect",
     },
-    // Via connecting top to bottom
-    {
-      type: "pcb_via",
-      pcb_via_id: "pcb_via_0",
-      x: 0,
-      y: 0,
-      hole_diameter: 0.2,
-      outer_diameter: 0.4,
-      layers: ["top", "bottom"],
-    },
-    // Traces on each layer
-    {
-      type: "pcb_trace",
-      pcb_trace_id: "pcb_trace_top",
-      route: [
-        { x: -5, y: 0, width: 0.2, layer: "top" },
-        { x: 0, y: 0, width: 0.2, layer: "top" },
-      ],
-    },
-    {
-      type: "pcb_trace",
-      pcb_trace_id: "pcb_trace_bottom",
-      route: [
-        { x: 0, y: 0, width: 0.2, layer: "bottom" },
-        { x: 5, y: 0, width: 0.2, layer: "bottom" },
-      ],
-    },
   ] as any
 
   return (
