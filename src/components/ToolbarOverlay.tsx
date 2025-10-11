@@ -302,6 +302,26 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       setErrorsOpen(false)
     }
   }
+
+  const handleEditTraceToggle = () => {
+    if (editModes.in_draw_trace_mode) {
+      setEditMode("off")
+    } else {
+      setEditMode("draw_trace")
+    }
+  }
+
+  const handleMoveComponentToggle = () => {
+    if (editModes.in_move_footprint_mode) {
+      setEditMode("off")
+    } else {
+      setEditMode("move_footprint")
+    }
+  }
+
+  const handleRatsNestToggle = () => {
+    setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
+  }
   return (
     <div
       style={{ position: "relative", zIndex: "999 !important" }}
