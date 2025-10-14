@@ -66,6 +66,7 @@ export const convertTextToLines = (text: Text): Line[] => {
         width: strokeWidth,
         layer: text.layer,
         unit: text.unit,
+        color: text.color,
       })
     }
     current_x_origin_for_char_box += target_width_char + space_between_chars
