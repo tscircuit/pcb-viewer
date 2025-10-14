@@ -195,6 +195,15 @@ const createDimensionPrimitives = ({
     })
   }
 
+  const colorValue =
+    typeof element.color === "string" ? element.color.trim() : ""
+
+  if (colorValue) {
+    for (const primitive of primitives) {
+      primitive.color = colorValue
+    }
+  }
+
   return primitives
 }
 
