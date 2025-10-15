@@ -1028,7 +1028,6 @@ export const convertElementToPrimitives = (
 
     case "pcb_note_line": {
       const noteLineElement = element as PcbNoteLine
-      console.log(noteLineElement, "noteLineElement")
       return [
         {
           _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_line"),

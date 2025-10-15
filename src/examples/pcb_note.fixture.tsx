@@ -44,7 +44,6 @@ export const PcbNoteExample: React.FC = () => {
   const circuitJson = circuit.getCircuitJson()
 
   const pcb_note_line = circuitJson.find((e) => e.type === "pcb_note_line")
-  console.log(pcb_note_line)
 
   return (
     <div style={{ backgroundColor: "black" }}>
