@@ -54,6 +54,8 @@ export const LAYER_NAME_TO_COLOR = {
   top_fabrication: colors.board.f_fab,
   bottom_fabrication: colors.board.b_fab,
 
+  notes: colors.board.user_2,
+
   ...(colors.board as any),
 }
 
