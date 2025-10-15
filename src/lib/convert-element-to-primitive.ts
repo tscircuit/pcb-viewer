@@ -1,4 +1,12 @@
-import type { AnyCircuitElement, PcbSmtPadRotatedPill } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbNoteLine,
+  PcbNoteRect,
+  PcbNotePath,
+  PcbNoteText,
+  PcbNoteDimension,
+  PcbSmtPadRotatedPill,
+} from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
@@ -1019,7 +1027,7 @@ export const convertElementToPrimitives = (
     }
 
     case "pcb_note_line": {
-      const noteLineElement = element as any
+      const noteLineElement = element as PcbNoteLine
       return [
         {
           _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_line"),
@@ -1031,6 +1039,7 @@ export const convertElementToPrimitives = (
           width: noteLineElement.stroke_width ?? 0.1,
           squareCap: false,
           layer: "notes",
+          color: noteLineElement.color,
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
@@ -1039,7 +1048,7 @@ export const convertElementToPrimitives = (
     }
 
     case "pcb_note_rect": {
-      const noteRectElement = element as any
+      const noteRectElement = element as PcbNoteRect
       return [
         {
           _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_rect"),
@@ -1053,6 +1062,7 @@ export const convertElementToPrimitives = (
           is_filled: noteRectElement.is_filled,
           has_stroke: noteRectElement.has_stroke,
           is_stroke_dashed: noteRectElement.is_stroke_dashed,
+          color: noteRectElement.color,
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
@@ -1061,7 +1071,7 @@ export const convertElementToPrimitives = (
     }
 
     case "pcb_note_path": {
-      const notePathElement = element as any
+      const notePathElement = element as PcbNotePath
       const { route, stroke_width } = notePathElement
 
       return route
@@ -1078,6 +1088,7 @@ export const convertElementToPrimitives = (
             width: stroke_width ?? 0.1,
             squareCap: false,
             layer: "notes",
+            color: notePathElement.color,
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -1087,7 +1098,7 @@ export const convertElementToPrimitives = (
     }
 
     case "pcb_note_text": {
-      const noteTextElement = element as any
+      const noteTextElement = element as PcbNoteText
       return [
         {
           _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_text"),
@@ -1098,6 +1109,7 @@ export const convertElementToPrimitives = (
           align: noteTextElement.anchor_alignment ?? "center",
           text: noteTextElement.text,
           size: noteTextElement.font_size,
+          color: noteTextElement.color,
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
@@ -1106,7 +1118,7 @@ export const convertElementToPrimitives = (
     }
 
     case "pcb_note_dimension": {
-      const dimensionElement = element as any
+      const dimensionElement = element as PcbNoteDimension
       const { from, to, text, font_size, arrow_size } = dimensionElement
       const primitives: Primitive[] = []
 
@@ -1120,6 +1132,7 @@ export const convertElementToPrimitives = (
         y2: to.y,
         width: 0.05,
         squareCap: false,
+        color: dimensionElement.color,
         layer: "notes",
         _element: element,
         _parent_pcb_component,

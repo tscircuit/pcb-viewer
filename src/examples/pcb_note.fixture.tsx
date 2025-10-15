@@ -7,7 +7,7 @@ export const PcbNoteExample: React.FC = () => {
   circuit.add(
     <board width="30mm" height="30mm">
       {/* PcbNoteLine - Simple line */}
-      <pcbnoteline x1={-10} y1={10} x2={-5} y2={10} />
+      <pcbnoteline x1={-10} y1={10} x2={-5} y2={10} color="#00FF00" />
 
       {/* PcbNoteRect - Filled rectangle */}
       <pcbnoterect pcbX={10} pcbY={5} width={3} height={2} />
@@ -42,6 +42,8 @@ export const PcbNoteExample: React.FC = () => {
   )
 
   const circuitJson = circuit.getCircuitJson()
+
+  const pcb_note_line = circuitJson.find((e) => e.type === "pcb_note_line")
 
   return (
     <div style={{ backgroundColor: "black" }}>

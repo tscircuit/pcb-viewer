@@ -16,17 +16,17 @@ import type {
 import color from "color"
 
 function getColor(primitive: Primitive): string {
+  const explicitColor = (primitive as any).color
+
+  const baseColor =
+    explicitColor ??
+    LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR]
+
   if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
-    return color(
-      LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR],
-    )
-      .lighten(0.5)
-      .rgb()
-      .toString()
+    return color(baseColor).lighten(0.5).rgb().toString()
   }
-  return LAYER_NAME_TO_COLOR[
-    primitive.layer as keyof typeof LAYER_NAME_TO_COLOR
-  ]
+
+  return baseColor
 }
 
 export const drawLine = (drawer: Drawer, line: Line) => {
