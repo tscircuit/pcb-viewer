@@ -852,6 +852,229 @@ export const convertElementToPrimitives = (
           return []
       }
     }
+
+    case "pcb_note_line": {
+      const noteLineElement = element as any
+      return [
+        {
+          _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_line"),
+          pcb_drawing_type: "line",
+          x1: noteLineElement.x1,
+          y1: noteLineElement.y1,
+          x2: noteLineElement.x2,
+          y2: noteLineElement.y2,
+          width: noteLineElement.stroke_width ?? 0.1,
+          squareCap: false,
+          layer: "notes",
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+        },
+      ]
+    }
+
+    case "pcb_note_rect": {
+      const noteRectElement = element as any
+      return [
+        {
+          _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_rect"),
+          pcb_drawing_type: "rect",
+          x: noteRectElement.center.x,
+          y: noteRectElement.center.y,
+          w: noteRectElement.width,
+          h: noteRectElement.height,
+          layer: "notes",
+          stroke_width: noteRectElement.stroke_width,
+          is_filled: noteRectElement.is_filled,
+          has_stroke: noteRectElement.has_stroke,
+          is_stroke_dashed: noteRectElement.is_stroke_dashed,
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+        },
+      ]
+    }
+
+    case "pcb_note_path": {
+      const notePathElement = element as any
+      const { route, stroke_width } = notePathElement
+
+      return route
+        .slice(0, -1)
+        .map((point: any, index: number) => {
+          const nextPoint = route[index + 1]
+          return {
+            _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_path"),
+            pcb_drawing_type: "line",
+            x1: point.x,
+            y1: point.y,
+            x2: nextPoint.x,
+            y2: nextPoint.y,
+            width: stroke_width ?? 0.1,
+            squareCap: false,
+            layer: "notes",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+          } as Primitive & MetaData
+        })
+        .filter(Boolean)
+    }
+
+    case "pcb_note_text": {
+      const noteTextElement = element as any
+      return [
+        {
+          _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_text"),
+          pcb_drawing_type: "text",
+          x: noteTextElement.anchor_position.x,
+          y: noteTextElement.anchor_position.y,
+          layer: "notes",
+          align: noteTextElement.anchor_alignment ?? "center",
+          text: noteTextElement.text,
+          size: noteTextElement.font_size,
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+        },
+      ]
+    }
+
+    case "pcb_note_dimension": {
+      const dimensionElement = element as any
+      const { from, to, text, font_size, arrow_size } = dimensionElement
+      const primitives: Primitive[] = []
+
+      // Main line connecting from and to points
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_dimension"),
+        pcb_drawing_type: "line",
+        x1: from.x,
+        y1: from.y,
+        x2: to.x,
+        y2: to.y,
+        width: 0.05,
+        squareCap: false,
+        layer: "notes",
+        _element: element,
+        _parent_pcb_component,
+        _parent_source_component,
+      })
+
+      // Calculate arrow direction
+      const dx = to.x - from.x
+      const dy = to.y - from.y
+      const length = Math.sqrt(dx * dx + dy * dy)
+      const unitX = dx / length
+      const unitY = dy / length
+
+      // Arrow at 'from' point
+      const arrowAngle = Math.PI / 6 // 30 degrees
+      const arrow1X1 =
+        from.x +
+        arrow_size *
+          (unitX * Math.cos(arrowAngle) - unitY * Math.sin(arrowAngle))
+      const arrow1Y1 =
+        from.y +
+        arrow_size *
+          (unitX * Math.sin(arrowAngle) + unitY * Math.cos(arrowAngle))
+      const arrow1X2 =
+        from.x +
+        arrow_size *
+          (unitX * Math.cos(-arrowAngle) - unitY * Math.sin(-arrowAngle))
+      const arrow1Y2 =
+        from.y +
+        arrow_size *
+          (unitX * Math.sin(-arrowAngle) + unitY * Math.cos(-arrowAngle))
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_dimension"),
+        pcb_drawing_type: "line",
+        x1: from.x,
+        y1: from.y,
+        x2: arrow1X1,
+        y2: arrow1Y1,
+        width: 0.05,
+        squareCap: false,
+        layer: "notes",
+        _element: element,
+      })
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_dimension"),
+        pcb_drawing_type: "line",
+        x1: from.x,
+        y1: from.y,
+        x2: arrow1X2,
+        y2: arrow1Y2,
+        width: 0.05,
+        squareCap: false,
+        layer: "notes",
+        _element: element,
+      })
+
+      // Arrow at 'to' point (pointing in opposite direction)
+      const arrow2X1 =
+        to.x -
+        arrow_size *
+          (unitX * Math.cos(arrowAngle) - unitY * Math.sin(arrowAngle))
+      const arrow2Y1 =
+        to.y -
+        arrow_size *
+          (unitX * Math.sin(arrowAngle) + unitY * Math.cos(arrowAngle))
+      const arrow2X2 =
+        to.x -
+        arrow_size *
+          (unitX * Math.cos(-arrowAngle) - unitY * Math.sin(-arrowAngle))
+      const arrow2Y2 =
+        to.y -
+        arrow_size *
+          (unitX * Math.sin(-arrowAngle) + unitY * Math.cos(-arrowAngle))
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_dimension"),
+        pcb_drawing_type: "line",
+        x1: to.x,
+        y1: to.y,
+        x2: arrow2X1,
+        y2: arrow2Y1,
+        width: 0.05,
+        squareCap: false,
+        layer: "notes",
+        _element: element,
+      })
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_dimension"),
+        pcb_drawing_type: "line",
+        x1: to.x,
+        y1: to.y,
+        x2: arrow2X2,
+        y2: arrow2Y2,
+        width: 0.05,
+        squareCap: false,
+        layer: "notes",
+        _element: element,
+      })
+
+      // Text label in the middle if provided
+      if (text) {
+        primitives.push({
+          _pcb_drawing_object_id:
+            getNewPcbDrawingObjectId("pcb_note_dimension"),
+          pcb_drawing_type: "text",
+          x: (from.x + to.x) / 2,
+          y: (from.y + to.y) / 2,
+          layer: "notes",
+          align: "center",
+          text,
+          size: font_size,
+          _element: element,
+        })
+      }
+
+      return primitives
+    }
   }
 
   // console.warn(`Unsupported element type: ${element.type}`)

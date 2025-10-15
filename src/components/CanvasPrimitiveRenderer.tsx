@@ -30,6 +30,7 @@ const orderedLayers = [
   "inner5",
   "inner6",
   "drill",
+  "notes",
   "other",
 ]
 
