@@ -28,5 +28,4 @@ export const PlatedHoleRotatedPillWithRectPad: React.FC = () => {
     </div>
   )
 }
-
 export default PlatedHoleRotatedPillWithRectPad

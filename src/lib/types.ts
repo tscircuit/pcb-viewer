@@ -38,7 +38,6 @@ export interface PCBDrawingObject {
 
   layer: LayerRef
   unit?: string
-  color?: string
   _element?: AnyCircuitElement
   _parent_pcb_component?: AnyCircuitElement
   _parent_source_component?: AnyCircuitElement

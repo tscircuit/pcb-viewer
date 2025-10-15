@@ -15,37 +15,18 @@ import type {
 } from "./types"
 import color from "color"
 
-function getColorOverride(primitive: Primitive): string | undefined {
-  if (typeof primitive.color === "string" && primitive.color.trim()) {
-    return primitive.color
-  }
-
-  const elementColorCandidate = primitive._element as
-    | { color?: unknown }
-    | undefined
-  const elementColor =
-    elementColorCandidate && typeof elementColorCandidate.color === "string"
-      ? elementColorCandidate.color
-      : undefined
-
-  return elementColor && elementColor.trim() ? elementColor : undefined
-}
-
 function getColor(primitive: Primitive): string {
-  const override = getColorOverride(primitive)
-  const layerColor =
-    LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR]
-  const baseColor = override ?? layerColor ?? "white"
-
   if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
-    try {
-      return color(baseColor).lighten(0.5).rgb().toString()
-    } catch {
-      return baseColor
-    }
+    return color(
+      LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR],
+    )
+      .lighten(0.5)
+      .rgb()
+      .toString()
   }
-
-  return baseColor
+  return LAYER_NAME_TO_COLOR[
+    primitive.layer as keyof typeof LAYER_NAME_TO_COLOR
+  ]
 }
 
 export const drawLine = (drawer: Drawer, line: Line) => {
