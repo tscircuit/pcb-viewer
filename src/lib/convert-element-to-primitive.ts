@@ -783,10 +783,6 @@ export const convertElementToPrimitives = (
       const dimensionElement = element as any
       const { from, to, text, font_size, arrow_size } = dimensionElement
 
-      if (!from || !to || typeof from === "string" || typeof to === "string") {
-        return []
-      }
-
       const layer =
         element.layer === "bottom" ? "bottom_fabrication" : "top_fabrication"
 
