@@ -56,6 +56,7 @@ export interface Line extends PCBDrawingObject {
   squareCap?: boolean
   width: number
   zoomIndependent?: boolean
+  color?: string
 }
 
 export interface Text extends PCBDrawingObject {
@@ -66,6 +67,7 @@ export interface Text extends PCBDrawingObject {
   size: number
   align?: AlignString
   ccw_rotation?: number
+  color?: string
 }
 
 export interface Rect extends PCBDrawingObject {
@@ -82,6 +84,7 @@ export interface Rect extends PCBDrawingObject {
   has_stroke?: boolean
   is_stroke_dashed?: boolean
   ccw_rotation?: number
+  color?: string
 }
 
 export interface Circle extends PCBDrawingObject {
