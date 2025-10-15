@@ -779,7 +779,172 @@ export const convertElementToPrimitives = (
       }
       return []
     }
+    case "pcb_fabrication_note_dimension": {
+      const dimensionElement = element as any
+      const { from, to, text, font_size, arrow_size } = dimensionElement
 
+      const layer =
+        element.layer === "bottom" ? "bottom_fabrication" : "top_fabrication"
+
+      const primitives: Primitive[] = []
+      const arrowSize =
+        typeof arrow_size === "number" && !Number.isNaN(arrow_size)
+          ? arrow_size
+          : 1
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+          "pcb_fabrication_note_dimension",
+        ),
+        pcb_drawing_type: "line",
+        x1: from.x,
+        y1: from.y,
+        x2: to.x,
+        y2: to.y,
+        width: 0.05,
+        squareCap: false,
+        layer,
+        _element: element,
+        _parent_pcb_component,
+        _parent_source_component,
+        _source_port,
+      })
+
+      const dx = to.x - from.x
+      const dy = to.y - from.y
+      const length = Math.sqrt(dx * dx + dy * dy) || 1
+      const unitX = dx / length
+      const unitY = dy / length
+
+      const arrowAngle = Math.PI / 6
+
+      const arrow1X1 =
+        from.x +
+        arrowSize *
+          (unitX * Math.cos(arrowAngle) - unitY * Math.sin(arrowAngle))
+      const arrow1Y1 =
+        from.y +
+        arrowSize *
+          (unitX * Math.sin(arrowAngle) + unitY * Math.cos(arrowAngle))
+      const arrow1X2 =
+        from.x +
+        arrowSize *
+          (unitX * Math.cos(-arrowAngle) - unitY * Math.sin(-arrowAngle))
+      const arrow1Y2 =
+        from.y +
+        arrowSize *
+          (unitX * Math.sin(-arrowAngle) + unitY * Math.cos(-arrowAngle))
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+          "pcb_fabrication_note_dimension",
+        ),
+        pcb_drawing_type: "line",
+        x1: from.x,
+        y1: from.y,
+        x2: arrow1X1,
+        y2: arrow1Y1,
+        width: 0.05,
+        squareCap: false,
+        layer,
+        _element: element,
+        _parent_pcb_component,
+        _parent_source_component,
+        _source_port,
+      })
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+          "pcb_fabrication_note_dimension",
+        ),
+        pcb_drawing_type: "line",
+        x1: from.x,
+        y1: from.y,
+        x2: arrow1X2,
+        y2: arrow1Y2,
+        width: 0.05,
+        squareCap: false,
+        layer,
+        _element: element,
+        _parent_pcb_component,
+        _parent_source_component,
+        _source_port,
+      })
+
+      const arrow2X1 =
+        to.x -
+        arrowSize *
+          (unitX * Math.cos(arrowAngle) - unitY * Math.sin(arrowAngle))
+      const arrow2Y1 =
+        to.y -
+        arrowSize *
+          (unitX * Math.sin(arrowAngle) + unitY * Math.cos(arrowAngle))
+      const arrow2X2 =
+        to.x -
+        arrowSize *
+          (unitX * Math.cos(-arrowAngle) - unitY * Math.sin(-arrowAngle))
+      const arrow2Y2 =
+        to.y -
+        arrowSize *
+          (unitX * Math.sin(-arrowAngle) + unitY * Math.cos(-arrowAngle))
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+          "pcb_fabrication_note_dimension",
+        ),
+        pcb_drawing_type: "line",
+        x1: to.x,
+        y1: to.y,
+        x2: arrow2X1,
+        y2: arrow2Y1,
+        width: 0.05,
+        squareCap: false,
+        layer,
+        _element: element,
+        _parent_pcb_component,
+        _parent_source_component,
+        _source_port,
+      })
+
+      primitives.push({
+        _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+          "pcb_fabrication_note_dimension",
+        ),
+        pcb_drawing_type: "line",
+        x1: to.x,
+        y1: to.y,
+        x2: arrow2X2,
+        y2: arrow2Y2,
+        width: 0.05,
+        squareCap: false,
+        layer,
+        _element: element,
+        _parent_pcb_component,
+        _parent_source_component,
+        _source_port,
+      })
+
+      if (text) {
+        primitives.push({
+          _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+            "pcb_fabrication_note_dimension",
+          ),
+          pcb_drawing_type: "text",
+          x: (from.x + to.x) / 2,
+          y: (from.y + to.y) / 2,
+          layer,
+          align: "center",
+          text,
+          size: font_size,
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+          _source_port,
+        })
+      }
+
+      return primitives
+    }
     case "pcb_fabrication_note_text": {
       return [
         {
