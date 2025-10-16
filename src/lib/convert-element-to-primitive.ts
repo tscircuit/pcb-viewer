@@ -133,6 +133,8 @@ export const convertElementToPrimitives = (
       if (element.shape === "rect" || element.shape === "rotated_rect") {
         const { shape, x, y, width, height, layer, rect_border_radius } =
           element
+        const corner_radius =
+          (element as any).corner_radius ?? rect_border_radius ?? 0
 
         return [
           {
@@ -148,7 +150,7 @@ export const convertElementToPrimitives = (
             _parent_source_component,
             _source_port,
             ccw_rotation: (element as any).ccw_rotation,
-            roundness: rect_border_radius,
+            roundness: corner_radius,
           },
         ]
       } else if (element.shape === "circle") {
