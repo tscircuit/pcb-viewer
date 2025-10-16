@@ -245,6 +245,64 @@ export const PcbGroupOverlay = ({
       ctx.textAlign = "left"
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelPadding, labelY - labelHeight / 2)
+
+      // Draw anchor position if it exists
+      if (group.anchor_position) {
+        // Calculate where anchor intersects with the group boundary
+        const anchor = group.anchor_position
+        const groupLeft = minX
+        const groupRight = maxX
+        const groupTop = maxY
+        const groupBottom = minY
+
+        // Find the closest edge point to the anchor
+        let edgePoint = { x: anchor.x, y: anchor.y }
+
+        // Determine which edge the anchor is closest to
+        const distToLeft = Math.abs(anchor.x - groupLeft)
+        const distToRight = Math.abs(anchor.x - groupRight)
+        const distToTop = Math.abs(anchor.y - groupTop)
+        const distToBottom = Math.abs(anchor.y - groupBottom)
+
+        const minDist = Math.min(
+          distToLeft,
+          distToRight,
+          distToTop,
+          distToBottom,
+        )
+
+        // Position on the nearest edge
+        if (minDist === distToLeft) {
+          edgePoint = { x: groupLeft, y: anchor.y }
+        } else if (minDist === distToRight) {
+          edgePoint = { x: groupRight, y: anchor.y }
+        } else if (minDist === distToTop) {
+          edgePoint = { x: anchor.x, y: groupTop }
+        } else {
+          edgePoint = { x: anchor.x, y: groupBottom }
+        }
+
+        const anchorScreenPos = applyToPoint(transform, edgePoint)
+
+        // Draw a simple "+" symbol
+        ctx.strokeStyle = "white"
+        ctx.lineWidth = 1.5
+        ctx.setLineDash([])
+
+        const plusSize = Math.max(4, Math.min(8, 6 * Math.abs(transform.a)))
+
+        // Draw horizontal line of "+"
+        ctx.beginPath()
+        ctx.moveTo(anchorScreenPos.x - plusSize, anchorScreenPos.y)
+        ctx.lineTo(anchorScreenPos.x + plusSize, anchorScreenPos.y)
+        ctx.stroke()
+
+        // Draw vertical line of "+"
+        ctx.beginPath()
+        ctx.moveTo(anchorScreenPos.x, anchorScreenPos.y - plusSize)
+        ctx.lineTo(anchorScreenPos.x, anchorScreenPos.y + plusSize)
+        ctx.stroke()
+      }
     })
   }, [
     elements,

@@ -51,7 +51,7 @@
   "dependencies": {
     "@emotion/css": "^11.11.2",
     "@vitejs/plugin-react": "^5.0.2",
-    "circuit-json": "^0.0.279",
+    "circuit-json": "^0.0.280",
     "circuit-to-svg": "^0.0.240",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
