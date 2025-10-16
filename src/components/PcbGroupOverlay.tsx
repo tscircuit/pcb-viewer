@@ -245,6 +245,90 @@ export const PcbGroupOverlay = ({
       ctx.textAlign = "left"
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelPadding, labelY - labelHeight / 2)
+
+      // Draw anchor position if it exists
+      if (group.anchor_position) {
+        const anchorScreenPos = applyToPoint(transform, group.anchor_position)
+        const anchorRadius = Math.max(3, Math.min(8, 5 * Math.abs(transform.a)))
+
+        // Draw crosshair for anchor
+        ctx.strokeStyle = groupColor
+        ctx.lineWidth = 2
+        ctx.setLineDash([])
+
+        const crosshairSize = anchorRadius * 2
+
+        // Draw horizontal line
+        ctx.beginPath()
+        ctx.moveTo(anchorScreenPos.x - crosshairSize, anchorScreenPos.y)
+        ctx.lineTo(anchorScreenPos.x + crosshairSize, anchorScreenPos.y)
+        ctx.stroke()
+
+        // Draw vertical line
+        ctx.beginPath()
+        ctx.moveTo(anchorScreenPos.x, anchorScreenPos.y - crosshairSize)
+        ctx.lineTo(anchorScreenPos.x, anchorScreenPos.y + crosshairSize)
+        ctx.stroke()
+
+        // Draw circle at anchor point
+        ctx.fillStyle = groupColor
+        ctx.beginPath()
+        ctx.arc(
+          anchorScreenPos.x,
+          anchorScreenPos.y,
+          anchorRadius,
+          0,
+          Math.PI * 2,
+        )
+        ctx.fill()
+
+        // Draw outer ring
+        ctx.strokeStyle = groupColor
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.arc(
+          anchorScreenPos.x,
+          anchorScreenPos.y,
+          anchorRadius + 2,
+          0,
+          Math.PI * 2,
+        )
+        ctx.stroke()
+
+        // Draw anchor alignment label if specified
+        if (group.anchor_alignment) {
+          const alignmentFontSize = Math.max(
+            7,
+            Math.min(10, 8 * Math.abs(transform.a)),
+          )
+          ctx.font = `${alignmentFontSize}px sans-serif`
+          ctx.fillStyle = "rgba(0, 0, 0, 0.9)"
+          ctx.textAlign = "center"
+          ctx.textBaseline = "top"
+
+          const alignmentLabelY = anchorScreenPos.y + crosshairSize + 5
+          const alignmentText = group.anchor_alignment
+          const alignmentMetrics = ctx.measureText(alignmentText)
+          const alignmentLabelWidth = alignmentMetrics.width + 4
+          const alignmentLabelHeight = alignmentFontSize + 4
+
+          // Draw background for alignment label
+          ctx.fillStyle = "rgba(0, 0, 0, 0.8)"
+          ctx.beginPath()
+          ctx.roundRect(
+            anchorScreenPos.x - alignmentLabelWidth / 2,
+            alignmentLabelY,
+            alignmentLabelWidth,
+            alignmentLabelHeight,
+            2,
+          )
+          ctx.fill()
+
+          // Draw alignment text
+          ctx.fillStyle = groupColor
+          ctx.fillText(alignmentText, anchorScreenPos.x, alignmentLabelY + 2)
+        }
+      }
     })
   }, [
     elements,
