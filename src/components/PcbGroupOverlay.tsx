@@ -285,7 +285,7 @@ export const PcbGroupOverlay = ({
         const anchorScreenPos = applyToPoint(transform, edgePoint)
 
         // Draw a simple "+" symbol
-        ctx.strokeStyle = groupColor
+        ctx.strokeStyle = "white"
         ctx.lineWidth = 1.5
         ctx.setLineDash([])
 
