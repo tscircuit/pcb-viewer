@@ -39,7 +39,7 @@ export const getTextForHighlightedPrimitive = (
     }
     case "pcb_smtpad":
     case "pcb_plated_hole": {
-      let s = ""
+      const selectors: string[] = []
 
       const port_hints = Array.from(
         new Set(
@@ -49,23 +49,31 @@ export const getTextForHighlightedPrimitive = (
         ),
       )
         .filter((ph) => !/^[0-9]+$/.test(ph))
+        .filter((ph) => !ph.includes("unnamed_"))
         // reverse alphabetical order
         .sort((a, b) => b.localeCompare(a))
 
-      if (
+      const parentName =
         _parent_source_component &&
         "name" in _parent_source_component &&
-        _parent_source_component.name
-      ) {
-        s += `.${_parent_source_component.name}`
-        if (port_hints.length > 0) s += " > "
-      }
+        _parent_source_component.name &&
+        !_parent_source_component.name.includes("unnamed_")
+          ? _parent_source_component.name
+          : null
 
       if (port_hints.length > 0) {
-        s += port_hints.map((ph: string) => `.${ph}`).join(", ")
+        if (parentName) {
+          selectors.push(
+            ...port_hints.map((ph: string) => `${parentName}.${ph}`),
+          )
+        } else {
+          selectors.push(...port_hints)
+        }
+      } else if (parentName) {
+        selectors.push(parentName)
       }
 
-      return s
+      return selectors.join(", ")
     }
     default: {
       return ""
