@@ -1,0 +1,722 @@
+diff --git a/src/components/MouseElementTracker.tsx b/src/components/MouseElementTracker.tsx
+index 5b468355330019022b4f2b85aad96c6112cf980f..e2a98784ab67dbc2e9fd443d64ec237627b81410 100644
+--- a/src/components/MouseElementTracker.tsx
++++ b/src/components/MouseElementTracker.tsx
+@@ -1,134 +1,268 @@
+ import React, { useState, useMemo } from "react"
+ import type { Matrix } from "transformation-matrix"
+ import { applyToPoint, inverse } from "transformation-matrix"
+ import type { Primitive } from "lib/types"
+ import { ElementOverlayBox } from "./ElementOverlayBox"
+ import type { AnyCircuitElement } from "circuit-json"
++import { distance } from "circuit-json"
+ import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
+ import { pointToSegmentDistance } from "@tscircuit/math-utils"
+
++const getPolygonBoundingBox = (
++  points: ReadonlyArray<{ x: number; y: number }>,
++) => {
++  if (points.length === 0) return null
++
++  let minX = points[0]!.x
++  let minY = points[0]!.y
++  let maxX = points[0]!.x
++  let maxY = points[0]!.y
++
++  for (const point of points) {
++    if (point.x < minX) minX = point.x
++    if (point.y < minY) minY = point.y
++    if (point.x > maxX) maxX = point.x
++    if (point.y > maxY) maxY = point.y
++  }
++
++  return {
++    center: {
++      x: (minX + maxX) / 2,
++      y: (minY + maxY) / 2,
++    },
++    width: maxX - minX,
++    height: maxY - minY,
++  }
++}
++
++const isPointInsidePolygon = (
++  point: { x: number; y: number },
++  polygon: ReadonlyArray<{ x: number; y: number }>,
++) => {
++  if (polygon.length < 3) return false
++
++  let isInside = false
++  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
++    const xi = polygon[i]!.x
++    const yi = polygon[i]!.y
++    const xj = polygon[j]!.x
++    const yj = polygon[j]!.y
++
++    const intersects =
++      yi > point.y !== yj > point.y &&
++      point.x < ((xj - xi) * (point.y - yi)) / (yj - yi || Number.EPSILON) + xi
++
++    if (intersects) {
++      isInside = !isInside
++    }
++  }
++
++  return isInside
++}
++
+ const getPrimitivesUnderPoint = (
+   primitives: Primitive[],
+   rwPoint: { x: number; y: number },
+   transform: Matrix,
+ ): Primitive[] => {
+   const newMousedPrimitives: Primitive[] = []
+
+   for (const primitive of primitives) {
+     if (!primitive._element) continue
+
+     // Handle PCB traces
+     if ("x1" in primitive && primitive._element?.type === "pcb_trace") {
+       const distance = pointToSegmentDistance(
+         { x: rwPoint.x, y: rwPoint.y },
+         { x: primitive.x1, y: primitive.y1 },
+         { x: primitive.x2, y: primitive.y2 },
+       )
+
+       const lineWidth = primitive.width || 0.5
+       const detectionThreshold = Math.max(lineWidth * 25, 2) / transform!.a
+
+       if (distance < detectionThreshold) {
+         newMousedPrimitives.push(primitive)
+       }
+       continue
+     }
+
++    if (primitive.pcb_drawing_type === "polygon") {
++      const points = primitive.points.map((point) => ({
++        x: distance.parse(point.x).mm,
++        y: distance.parse(point.y).mm,
++      }))
++      const boundingBox = getPolygonBoundingBox(points)
++      if (!boundingBox) continue
++
++      if (
++        rwPoint.x < boundingBox.center.x - boundingBox.width / 2 ||
++        rwPoint.x > boundingBox.center.x + boundingBox.width / 2 ||
++        rwPoint.y < boundingBox.center.y - boundingBox.height / 2 ||
++        rwPoint.y > boundingBox.center.y + boundingBox.height / 2
++      ) {
++        continue
++      }
++
++      if (isPointInsidePolygon(rwPoint, points)) {
++        newMousedPrimitives.push(primitive)
++      }
++      continue
++    }
++
++    if (primitive.pcb_drawing_type === "polygon_with_arcs") {
++      const points = primitive.brep_shape.outer_ring.vertices.map((v) => ({
++        x: distance.parse(v.x).mm,
++        y: distance.parse(v.y).mm,
++      }))
++      const boundingBox = getPolygonBoundingBox(points)
++      if (!boundingBox) continue
++
++      if (
++        rwPoint.x < boundingBox.center.x - boundingBox.width / 2 ||
++        rwPoint.x > boundingBox.center.x + boundingBox.width / 2 ||
++        rwPoint.y < boundingBox.center.y - boundingBox.height / 2 ||
++        rwPoint.y > boundingBox.center.y + boundingBox.height / 2
++      ) {
++        continue
++      }
++
++      if (isPointInsidePolygon(rwPoint, points)) {
++        newMousedPrimitives.push(primitive)
++      }
++      continue
++    }
++
+     // Handle primitives with x, y coordinates
+     if (!("x" in primitive && "y" in primitive)) continue
+
+     let w = 0
+     let h = 0
+
+     if ("w" in primitive && "h" in primitive) {
+       w = primitive.w
+       h = primitive.h
+     } else if ("r" in primitive) {
+       w = (primitive as any).r * 2
+       h = (primitive as any).r * 2
+     } else {
+       continue
+     }
+
+     if (
+       Math.abs((primitive as any).x - rwPoint.x) < w / 2 &&
+       Math.abs((primitive as any).y - rwPoint.y) < h / 2
+     ) {
+       newMousedPrimitives.push(primitive)
+     }
+   }
+
+   return newMousedPrimitives
+ }
+
+ export const MouseElementTracker = ({
+   elements,
+   children,
+   transform,
+   primitives,
+   onMouseHoverOverPrimitives,
+ }: {
+   elements: AnyCircuitElement[]
+   children: any
+   transform?: Matrix
+   primitives: Primitive[]
+   onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void
+ }) => {
+   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
+   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+   const highlightedPrimitives = useMemo(() => {
+     const highlightedPrimitives: HighlightedPrimitive[] = []
+     for (const primitive of mousedPrimitives) {
+       if (primitive._element?.type === "pcb_via") continue
+       if (primitive._element?.type === "pcb_component") continue
+       if (primitive?.layer === "drill") continue
+-      const screenPos = applyToPoint(
+-        transform!,
+-        primitive as { x: number; y: number },
+-      )
+-      const w =
+-        "w" in primitive ? primitive.w : "r" in primitive ? primitive.r * 2 : 0
+-      const h =
+-        "h" in primitive ? primitive.h : "r" in primitive ? primitive.r * 2 : 0
++      let basePoint: { x: number; y: number } | null = null
++      let w = 0
++      let h = 0
++
++      if (primitive.pcb_drawing_type === "polygon") {
++        const boundingBox = getPolygonBoundingBox(primitive.points)
++        if (!boundingBox) continue
++        basePoint = boundingBox.center
++        w = boundingBox.width
++        h = boundingBox.height
++      } else if (primitive.pcb_drawing_type === "polygon_with_arcs") {
++        const points = primitive.brep_shape.outer_ring.vertices.map((v) => ({
++          x: v.x,
++          y: v.y,
++        }))
++        const boundingBox = getPolygonBoundingBox(points)
++        if (!boundingBox) continue
++        basePoint = boundingBox.center
++        w = boundingBox.width
++        h = boundingBox.height
++      } else if ("x" in primitive && "y" in primitive) {
++        basePoint = { x: primitive.x, y: primitive.y }
++        w =
++          "w" in primitive
++            ? primitive.w
++            : "r" in primitive
++              ? primitive.r * 2
++              : 0
++        h =
++          "h" in primitive
++            ? primitive.h
++            : "r" in primitive
++              ? primitive.r * 2
++              : 0
++      }
++
++      if (!basePoint) continue
++
++      const screenPos = applyToPoint(transform!, basePoint)
+       const screenSize = {
+         w: w * transform!.a,
+         h: h * transform!.a,
+       }
+
+       // FANCY: If 2+ highlighted primitives inhabit the same space, give
+       // them an incrementing same_space_index
+       const same_space_index = highlightedPrimitives.filter(
+         (hp) =>
+           screenPos.x === hp.screen_x &&
+           screenPos.y === hp.screen_y &&
+           screenSize.w === hp.screen_w &&
+           screenSize.h === hp.screen_h,
+       ).length
+
+       highlightedPrimitives.push({
+         ...(primitive as any),
++        x: basePoint.x,
++        y: basePoint.y,
++        w,
++        h,
+         screen_x: screenPos.x,
+         screen_y: screenPos.y,
+         screen_w: screenSize.w,
+         screen_h: screenSize.h,
+         same_space_index,
+       })
+     }
+
+     return highlightedPrimitives
+   }, [mousedPrimitives, transform])
+
+   const handleInteraction = (
+     x: number,
+     y: number,
+     transform: Matrix,
+     primitives: Primitive[],
+   ) => {
+     setMousePos({ x, y })
+     const rwPoint = applyToPoint(inverse(transform), { x, y })
+     const newMousedPrimitives = getPrimitivesUnderPoint(
+       primitives,
+       rwPoint,
+       transform,
+     )
+
+diff --git a/src/examples/repros/polygon-smtpad-hover.fixture.tsx b/src/examples/repros/polygon-smtpad-hover.fixture.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..2d312f7e95d099c5e99e1f1d66b7a6c71e89da96
+--- /dev/null
++++ b/src/examples/repros/polygon-smtpad-hover.fixture.tsx
+@@ -0,0 +1,146 @@
++import { useMemo, type CSSProperties } from "react"
++import { Circuit } from "@tscircuit/core"
++import { PCBViewer } from "../../PCBViewer"
++
++const description = `
++Reproduction fixture for a bug where hovering or zooming after interacting
++with a rectangular SMT pad caused neighbouring polygon pads to expand and
++prevented the polygon pad from being hover-highlighted.
++`
++
++const styles: CSSProperties = {
++  display: "flex",
++  flexDirection: "column",
++  gap: 16,
++  backgroundColor: "black",
++  padding: 16,
++}
++
++export const PolygonSmtPadHoverBug = () => {
++  const circuitJson = useMemo(() => {
++    const circuit = new Circuit()
++
++    circuit.add(
++      <board width="10mm" height="10mm">
++        <chip
++          name="U1"
++          footprint={
++            <footprint>
++              <smtpad
++                portHints={["pin2"]}
++                points={[
++                  { x: "-0.22597110000015164mm", y: "-0.4744973999999047mm" },
++                  { x: "-0.585965299999998mm", y: "-0.4744973999999047mm" },
++                  { x: "-0.585965299999998mm", y: "-0.17447259999994458mm" },
++                  { x: "-0.40595550000011826mm", y: "-0.17447259999994458mm" },
++                  { x: "-0.22597110000015164mm", y: "-0.354482399999938mm" },
++                ]}
++                shape="polygon"
++              />
++              <smtpad
++                portHints={["pin1"]}
++                points={[
++                  { x: "-0.2259202999999843mm", y: "0.47553880000009485mm" },
++                  { x: "-0.5859145000001718mm", y: "0.47553880000009485mm" },
++                  { x: "-0.5859145000001718mm", y: "0.17551400000002104mm" },
++                  { x: "-0.4059047000000646mm", y: "0.17551400000002104mm" },
++                  { x: "-0.2259202999999843mm", y: "0.3555237999999008mm" },
++                ]}
++                shape="polygon"
++              />
++              <smtpad
++                portHints={["pin4"]}
++                points={[
++                  { x: "0.22597110000003795mm", y: "0.47454819999995834mm" },
++                  { x: "0.585965299999998mm", y: "0.47454819999995834mm" },
++                  { x: "0.585965299999998mm", y: "0.17452339999999822mm" },
++                  { x: "0.4059555000000046mm", y: "0.17452339999999822mm" },
++                  { x: "0.22597110000003795mm", y: "0.35453319999999167mm" },
++                ]}
++                shape="polygon"
++              />
++              <smtpad
++                portHints={["pin3"]}
++                points={[
++                  { x: "0.22597110000003795mm", y: "-0.47553879999998117mm" },
++                  { x: "0.585965299999998mm", y: "-0.47553879999998117mm" },
++                  { x: "0.585965299999998mm", y: "-0.17551399999990736mm" },
++                  { x: "0.4059555000000046mm", y: "-0.17551399999990736mm" },
++                  { x: "0.22597110000003795mm", y: "-0.3555238000000145mm" },
++                ]}
++                shape="polygon"
++              />
++              <smtpad
++                portHints={["pin5"]}
++                pcbX="0.0020701000000826753mm"
++                pcbY="0.0005587999999079329mm"
++                width="0.48000919999999997mm"
++                height="0.48000919999999997mm"
++                shape="rect"
++              />
++              <silkscreenpath
++                route={[
++                  {
++                    x: -0.5080127000001085,
++                    y: 0.02136140000004616,
++                  },
++                  {
++                    x: -0.5080127000001085,
++                    y: -0.020320000000083382,
++                  },
++                ]}
++              />
++              <silkscreenpath
++                route={[
++                  {
++                    x: 0.507987299999968,
++                    y: 0.02037079999990965,
++                  },
++                  {
++                    x: 0.507987299999968,
++                    y: -0.02136140000004616,
++                  },
++                ]}
++              />
++              <silkscreenpath
++                route={[
++                  {
++                    x: 0.07392670000001544,
++                    y: 0.5000244000000293,
++                  },
++                  {
++                    x: -0.07390130000010231,
++                    y: 0.5000244000000293,
++                  },
++                ]}
++              />
++              <silkscreenpath
++                route={[
++                  {
++                    x: 0.07379969999999503,
++                    y: -0.4999735999999757,
++                  },
++                  {
++                    x: -0.07402830000000904,
++                    y: -0.4999735999999757,
++                  },
++                ]}
++              />
++            </footprint>
++          }
++        />
++      </board>,
++    )
++
++    return circuit.getCircuitJson()
++  }, [])
++
++  return (
++    <div style={styles}>
++      <p style={{ color: "white", maxWidth: 400 }}>{description}</p>
++      <PCBViewer circuitJson={circuitJson as any} />
++    </div>
++  )
++}
++
++export default PolygonSmtPadHoverBug
+diff --git a/src/lib/Drawer.ts b/src/lib/Drawer.ts
+index ae62686d6b2d52ca33ff83d6d6bc7530c33dd231..7788429c5dd55a13dd1af36ad01f125cc90cdc61 100644
+--- a/src/lib/Drawer.ts
++++ b/src/lib/Drawer.ts
+@@ -419,54 +419,59 @@ export class Drawer {
+     ctx.closePath()
+   }
+
+   polygon(points: { x: number; y: number }[]) {
+     if (points.length < 3) {
+       return
+     }
+
+     this.applyAperture()
+     const ctx = this.getLayerCtx()
+
+     // Transform all points
+     const transformedPoints = points.map((point) =>
+       applyToPoint(this.transform, [point.x, point.y]),
+     )
+
+     // Draw the filled polygon
+     ctx.beginPath()
+     ctx.moveTo(transformedPoints[0][0], transformedPoints[0][1])
+     for (let i = 1; i < transformedPoints.length; i++) {
+       ctx.lineTo(transformedPoints[i][0], transformedPoints[i][1])
+     }
+     ctx.closePath()
+     ctx.fill("evenodd")
+
+-    // Draw the outline
++    // Draw the outline only if we have a non-zero stroke width.
++    // Calling ctx.stroke() with a zero width will re-use the previous
++    // stroke width which can cause the polygon to suddenly expand when
++    // other primitives (like hovered rectangles) change the aperture size.
+     const lineWidth = scaleOnly(this.transform, this.aperture.size)
+-    ctx.lineWidth = lineWidth
+-    ctx.stroke()
++    if (lineWidth > 0) {
++      ctx.lineWidth = lineWidth
++      ctx.stroke()
++    }
+   }
+
+   /* NOTE: This is not gerber compatible */
+   debugText(text: string, x: number, y: number) {
+     const [x$, y$] = applyToPoint(this.transform, [x, y])
+     this.applyAperture()
+     const ctx = this.getLayerCtx()
+
+     ctx.font = `10px sans-serif`
+     ctx.fillText(text, x$, y$)
+   }
+
+   getLayerCtx() {
+     const ctx = this.ctxLayerMap[this.aperture.layer]
+     if (!ctx) {
+       throw new Error(`No context for layer "${this.aperture.layer}"`)
+     }
+     return ctx
+   }
+
+   /**
+    * Iterate over each canvas and set the z index based on the layer order, but
+    * always render the foreground layer on top.
+    *
+    * Also: Set the opacity of every non-foreground layer to 0.5
+diff --git a/src/lib/convert-element-to-primitive.ts b/src/lib/convert-element-to-primitive.ts
+index b16e8932868ce644d24f5c52fd14f1d83de512aa..238957aecef89b2a498b238a1e6440afba3e8586 100644
+--- a/src/lib/convert-element-to-primitive.ts
++++ b/src/lib/convert-element-to-primitive.ts
+@@ -1,49 +1,58 @@
+ import type {
+   AnyCircuitElement,
+   PcbNoteLine,
+   PcbNoteRect,
+   PcbNotePath,
+   PcbNoteText,
+   PcbNoteDimension,
+   PcbSmtPadRotatedPill,
+ } from "circuit-json"
+ import { su } from "@tscircuit/circuit-json-util"
+ import type { Primitive } from "./types"
+ import { type Point, getExpandedStroke } from "./util/expand-stroke"
++import { distance } from "circuit-json"
+
+ type MetaData = {
+   _parent_pcb_component?: any
+   _parent_source_component?: any
+   _source_port?: any
+ }
+
+ let globalPcbDrawingObjectCount = 0
+
+ export const getNewPcbDrawingObjectId = (prefix: string) =>
+   `${prefix}_${globalPcbDrawingObjectCount++}`
+
++const normalizePolygonPoints = (
++  points: { x: unknown; y: unknown }[] | undefined,
++) =>
++  (points ?? []).map((point) => ({
++    x: distance.parse(point?.x).mm,
++    y: distance.parse(point?.y).mm,
++  }))
++
+ export const convertElementToPrimitives = (
+   element: AnyCircuitElement,
+   allElements: AnyCircuitElement[],
+ ): (Primitive & MetaData)[] => {
+   const _parent_pcb_component =
+     "pcb_component_id" in element
+       ? allElements.find(
+           (elm) =>
+             elm.type === "pcb_component" &&
+             elm.pcb_component_id === element.pcb_component_id,
+         )
+       : undefined
+   const _parent_source_component =
+     _parent_pcb_component && "source_component_id" in _parent_pcb_component
+       ? allElements.find(
+           (elm) =>
+             elm.type === "source_component" &&
+             elm.source_component_id ===
+               _parent_pcb_component.source_component_id,
+         )
+       : undefined
+
+   const _source_port_id =
+     "source_port_id" in element
+       ? element.source_port_id
+@@ -153,51 +162,51 @@ export const convertElementToPrimitives = (
+             roundness: corner_radius,
+           },
+         ]
+       } else if (element.shape === "circle") {
+         const { x, y, radius, layer } = element
+         return [
+           {
+             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+             pcb_drawing_type: "circle",
+             x,
+             y,
+             r: radius,
+             layer: layer || "top",
+             _element: element,
+             _parent_pcb_component,
+             _parent_source_component,
+             _source_port,
+           },
+         ]
+       } else if (element.shape === "polygon") {
+         const { layer, points } = element
+         return [
+           {
+             _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+             pcb_drawing_type: "polygon",
+-            points,
++            points: normalizePolygonPoints(points as any),
+             layer: layer || "top",
+             _element: element,
+             _parent_pcb_component,
+             _parent_source_component,
+             _source_port,
+           },
+         ]
+       } else if (element.shape === "pill" || element.shape === "rotated_pill") {
+         const { x, y, width, height, layer } = element
+         return [
+           {
+             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+             pcb_drawing_type: "pill",
+             x,
+             y,
+             w: width,
+             h: height,
+             layer: layer || "top",
+             _element: element,
+             _parent_pcb_component,
+             _parent_source_component,
+             _source_port,
+             ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+           },
+         ]
+@@ -744,51 +753,51 @@ export const convertElementToPrimitives = (
+           const { center, width, height, layer, rotation } = pour
+           return [
+             {
+               _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+                 "pcb_copper_pour_rect",
+               ),
+               pcb_drawing_type: "rect",
+               x: center.x,
+               y: center.y,
+               w: width,
+               h: height,
+               layer: layer,
+               _element: element,
+               ccw_rotation: rotation,
+             },
+           ]
+         }
+         case "polygon": {
+           const { points, layer } = pour
+           return [
+             {
+               _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+                 "pcb_copper_pour_polygon",
+               ),
+               pcb_drawing_type: "polygon",
+-              points: points,
++              points: normalizePolygonPoints(points as any),
+               layer: layer,
+               _element: element,
+             },
+           ]
+         }
+         case "brep": {
+           const { brep_shape, layer } = pour
+           return [
+             {
+               _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+                 "pcb_copper_pour_brep",
+               ),
+               pcb_drawing_type: "polygon_with_arcs",
+               brep_shape: brep_shape,
+               layer: layer,
+               _element: element,
+             },
+           ]
+         }
+       }
+       return []
+     }
+     case "pcb_fabrication_note_dimension": {
+       const dimensionElement = element as any
+       const { from, to, text, font_size, arrow_size } = dimensionElement
+@@ -992,51 +1001,51 @@ export const convertElementToPrimitives = (
+             },
+           ]
+         }
+         case "circle": {
+           return [
+             {
+               _pcb_drawing_object_id:
+                 getNewPcbDrawingObjectId("pcb_cutout_circle"),
+               pcb_drawing_type: "circle",
+               x: cutoutElement.center.x,
+               y: cutoutElement.center.y,
+               r: cutoutElement.radius,
+               layer: "drill",
+               _element: element,
+               _parent_pcb_component,
+               _parent_source_component,
+             },
+           ]
+         }
+         case "polygon": {
+           return [
+             {
+               _pcb_drawing_object_id:
+                 getNewPcbDrawingObjectId("pcb_cutout_polygon"),
+               pcb_drawing_type: "polygon",
+-              points: cutoutElement.points,
++              points: normalizePolygonPoints(cutoutElement.points as any),
+               layer: "drill",
+               _element: element,
+               _parent_pcb_component,
+               _parent_source_component,
+             },
+           ]
+         }
+         default:
+           console.warn(`Unsupported pcb_cutout shape: ${cutoutElement.shape}`)
+           return []
+       }
+     }
+
+     case "pcb_note_line": {
+       const noteLineElement = element as PcbNoteLine
+       return [
+         {
+           _pcb_drawing_object_id: getNewPcbDrawingObjectId("pcb_note_line"),
+           pcb_drawing_type: "line",
+           x1: noteLineElement.x1,
+           y1: noteLineElement.y1,
+           x2: noteLineElement.x2,
+           y2: noteLineElement.y2,
+           width: noteLineElement.stroke_width ?? 0.1,
+           squareCap: false,

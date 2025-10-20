@@ -441,10 +441,15 @@ export class Drawer {
     ctx.closePath()
     ctx.fill("evenodd")
 
-    // Draw the outline
+    // Draw the outline only if we have a non-zero stroke width.
+    // Calling ctx.stroke() with a zero width will re-use the previous
+    // stroke width which can cause the polygon to suddenly expand when
+    // other primitives (like hovered rectangles) change the aperture size.
     const lineWidth = scaleOnly(this.transform, this.aperture.size)
-    ctx.lineWidth = lineWidth
-    ctx.stroke()
+    if (lineWidth > 0) {
+      ctx.lineWidth = lineWidth
+      ctx.stroke()
+    }
   }
 
   /* NOTE: This is not gerber compatible */

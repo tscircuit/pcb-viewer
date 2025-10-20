@@ -4,8 +4,61 @@ import { applyToPoint, inverse } from "transformation-matrix"
 import type { Primitive } from "lib/types"
 import { ElementOverlayBox } from "./ElementOverlayBox"
 import type { AnyCircuitElement } from "circuit-json"
+import { distance } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
+
+const getPolygonBoundingBox = (
+  points: ReadonlyArray<{ x: number; y: number }>,
+) => {
+  if (points.length === 0) return null
+
+  let minX = points[0]!.x
+  let minY = points[0]!.y
+  let maxX = points[0]!.x
+  let maxY = points[0]!.y
+
+  for (const point of points) {
+    if (point.x < minX) minX = point.x
+    if (point.y < minY) minY = point.y
+    if (point.x > maxX) maxX = point.x
+    if (point.y > maxY) maxY = point.y
+  }
+
+  return {
+    center: {
+      x: (minX + maxX) / 2,
+      y: (minY + maxY) / 2,
+    },
+    width: maxX - minX,
+    height: maxY - minY,
+  }
+}
+
+const isPointInsidePolygon = (
+  point: { x: number; y: number },
+  polygon: ReadonlyArray<{ x: number; y: number }>,
+) => {
+  if (polygon.length < 3) return false
+
+  let isInside = false
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i]!.x
+    const yi = polygon[i]!.y
+    const xj = polygon[j]!.x
+    const yj = polygon[j]!.y
+
+    const intersects =
+      yi > point.y !== yj > point.y &&
+      point.x < ((xj - xi) * (point.y - yi)) / (yj - yi || Number.EPSILON) + xi
+
+    if (intersects) {
+      isInside = !isInside
+    }
+  }
+
+  return isInside
+}
 
 const getPrimitivesUnderPoint = (
   primitives: Primitive[],
@@ -29,6 +82,52 @@ const getPrimitivesUnderPoint = (
       const detectionThreshold = Math.max(lineWidth * 25, 2) / transform!.a
 
       if (distance < detectionThreshold) {
+        newMousedPrimitives.push(primitive)
+      }
+      continue
+    }
+
+    if (primitive.pcb_drawing_type === "polygon") {
+      const points = primitive.points.map((point) => ({
+        x: distance.parse(point.x),
+        y: distance.parse(point.y),
+      }))
+      const boundingBox = getPolygonBoundingBox(points)
+      if (!boundingBox) continue
+
+      if (
+        rwPoint.x < boundingBox.center.x - boundingBox.width / 2 ||
+        rwPoint.x > boundingBox.center.x + boundingBox.width / 2 ||
+        rwPoint.y < boundingBox.center.y - boundingBox.height / 2 ||
+        rwPoint.y > boundingBox.center.y + boundingBox.height / 2
+      ) {
+        continue
+      }
+
+      if (isPointInsidePolygon(rwPoint, points)) {
+        newMousedPrimitives.push(primitive)
+      }
+      continue
+    }
+
+    if (primitive.pcb_drawing_type === "polygon_with_arcs") {
+      const points = primitive.brep_shape.outer_ring.vertices.map((v) => ({
+        x: distance.parse(v.x),
+        y: distance.parse(v.y),
+      }))
+      const boundingBox = getPolygonBoundingBox(points)
+      if (!boundingBox) continue
+
+      if (
+        rwPoint.x < boundingBox.center.x - boundingBox.width / 2 ||
+        rwPoint.x > boundingBox.center.x + boundingBox.width / 2 ||
+        rwPoint.y < boundingBox.center.y - boundingBox.height / 2 ||
+        rwPoint.y > boundingBox.center.y + boundingBox.height / 2
+      ) {
+        continue
+      }
+
+      if (isPointInsidePolygon(rwPoint, points)) {
         newMousedPrimitives.push(primitive)
       }
       continue
@@ -82,14 +181,45 @@ export const MouseElementTracker = ({
       if (primitive._element?.type === "pcb_via") continue
       if (primitive._element?.type === "pcb_component") continue
       if (primitive?.layer === "drill") continue
-      const screenPos = applyToPoint(
-        transform!,
-        primitive as { x: number; y: number },
-      )
-      const w =
-        "w" in primitive ? primitive.w : "r" in primitive ? primitive.r * 2 : 0
-      const h =
-        "h" in primitive ? primitive.h : "r" in primitive ? primitive.r * 2 : 0
+      let basePoint: { x: number; y: number } | null = null
+      let w = 0
+      let h = 0
+
+      if (primitive.pcb_drawing_type === "polygon") {
+        const boundingBox = getPolygonBoundingBox(primitive.points)
+        if (!boundingBox) continue
+        basePoint = boundingBox.center
+        w = boundingBox.width
+        h = boundingBox.height
+      } else if (primitive.pcb_drawing_type === "polygon_with_arcs") {
+        const points = primitive.brep_shape.outer_ring.vertices.map((v) => ({
+          x: v.x,
+          y: v.y,
+        }))
+        const boundingBox = getPolygonBoundingBox(points)
+        if (!boundingBox) continue
+        basePoint = boundingBox.center
+        w = boundingBox.width
+        h = boundingBox.height
+      } else if ("x" in primitive && "y" in primitive) {
+        basePoint = { x: primitive.x, y: primitive.y }
+        w =
+          "w" in primitive
+            ? primitive.w
+            : "r" in primitive
+              ? primitive.r * 2
+              : 0
+        h =
+          "h" in primitive
+            ? primitive.h
+            : "r" in primitive
+              ? primitive.r * 2
+              : 0
+      }
+
+      if (!basePoint) continue
+
+      const screenPos = applyToPoint(transform!, basePoint)
       const screenSize = {
         w: w * transform!.a,
         h: h * transform!.a,
@@ -107,6 +237,10 @@ export const MouseElementTracker = ({
 
       highlightedPrimitives.push({
         ...(primitive as any),
+        x: basePoint.x,
+        y: basePoint.y,
+        w,
+        h,
         screen_x: screenPos.x,
         screen_y: screenPos.y,
         screen_w: screenSize.w,
