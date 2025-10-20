@@ -23,12 +23,10 @@ let globalPcbDrawingObjectCount = 0
 export const getNewPcbDrawingObjectId = (prefix: string) =>
   `${prefix}_${globalPcbDrawingObjectCount++}`
 
-const normalizePolygonPoints = (
-  points: { x: unknown; y: unknown }[] | undefined,
-) =>
+const normalizePolygonPoints = (points: Point[] | undefined) =>
   (points ?? []).map((point) => ({
-    x: distance.parse(point?.x),
-    y: distance.parse(point?.y),
+    x: distance.parse(point.x),
+    y: distance.parse(point.y),
   }))
 
 export const convertElementToPrimitives = (
@@ -184,7 +182,7 @@ export const convertElementToPrimitives = (
           {
             _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
             pcb_drawing_type: "polygon",
-            points: normalizePolygonPoints(points as any),
+            points: normalizePolygonPoints(points),
             layer: layer || "top",
             _element: element,
             _parent_pcb_component,
@@ -775,7 +773,7 @@ export const convertElementToPrimitives = (
                 "pcb_copper_pour_polygon",
               ),
               pcb_drawing_type: "polygon",
-              points: normalizePolygonPoints(points as any),
+              points: normalizePolygonPoints(points),
               layer: layer,
               _element: element,
             },
