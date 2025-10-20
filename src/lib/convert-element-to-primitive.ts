@@ -10,6 +10,7 @@ import type {
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
+import { distance } from "circuit-json"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -21,6 +22,12 @@ let globalPcbDrawingObjectCount = 0
 
 export const getNewPcbDrawingObjectId = (prefix: string) =>
   `${prefix}_${globalPcbDrawingObjectCount++}`
+
+const normalizePolygonPoints = (points: Point[] | undefined) =>
+  (points ?? []).map((point) => ({
+    x: distance.parse(point.x),
+    y: distance.parse(point.y),
+  }))
 
 export const convertElementToPrimitives = (
   element: AnyCircuitElement,
@@ -175,7 +182,7 @@ export const convertElementToPrimitives = (
           {
             _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
             pcb_drawing_type: "polygon",
-            points,
+            points: normalizePolygonPoints(points),
             layer: layer || "top",
             _element: element,
             _parent_pcb_component,
@@ -766,7 +773,7 @@ export const convertElementToPrimitives = (
                 "pcb_copper_pour_polygon",
               ),
               pcb_drawing_type: "polygon",
-              points: points,
+              points: normalizePolygonPoints(points),
               layer: layer,
               _element: element,
             },
@@ -1014,7 +1021,7 @@ export const convertElementToPrimitives = (
               _pcb_drawing_object_id:
                 getNewPcbDrawingObjectId("pcb_cutout_polygon"),
               pcb_drawing_type: "polygon",
-              points: cutoutElement.points,
+              points: normalizePolygonPoints(cutoutElement.points as any),
               layer: "drill",
               _element: element,
               _parent_pcb_component,
