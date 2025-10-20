@@ -10,7 +10,7 @@ import type {
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
-import { distance } from "./distance"
+import { distance } from "@tscircuit/props"
 
 type MetaData = {
   _parent_pcb_component?: any
