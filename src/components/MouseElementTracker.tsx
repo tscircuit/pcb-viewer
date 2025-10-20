@@ -7,17 +7,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 
-type PolygonPoint = { x: number | string; y: number | string }
-
-const toNumericPoints = (
-  points: ReadonlyArray<PolygonPoint>,
-): { x: number; y: number }[] =>
-  points.map((point) => ({
-    x: typeof point.x === "string" ? parseFloat(point.x) : point.x,
-    y: typeof point.y === "string" ? parseFloat(point.y) : point.y,
-  }))
-
-const getNumericPolygonBoundingBox = (
+const getPolygonBoundingBox = (
   points: ReadonlyArray<{ x: number; y: number }>,
 ) => {
   if (points.length === 0) return null
@@ -44,11 +34,7 @@ const getNumericPolygonBoundingBox = (
   }
 }
 
-const getPolygonBoundingBox = (
-  points: ReadonlyArray<PolygonPoint>,
-) => getNumericPolygonBoundingBox(toNumericPoints(points))
-
-const isPointInsideNumericPolygon = (
+const isPointInsidePolygon = (
   point: { x: number; y: number },
   polygon: ReadonlyArray<{ x: number; y: number }>,
 ) => {
@@ -72,11 +58,6 @@ const isPointInsideNumericPolygon = (
 
   return isInside
 }
-
-const isPointInsidePolygon = (
-  point: { x: number; y: number },
-  polygon: ReadonlyArray<PolygonPoint>,
-) => isPointInsideNumericPolygon(point, toNumericPoints(polygon))
 
 const getPrimitivesUnderPoint = (
   primitives: Primitive[],
@@ -106,10 +87,8 @@ const getPrimitivesUnderPoint = (
     }
 
     if (primitive.pcb_drawing_type === "polygon") {
-      const numericPoints = toNumericPoints(
-        primitive.points as ReadonlyArray<PolygonPoint>,
-      )
-      const boundingBox = getNumericPolygonBoundingBox(numericPoints)
+      const points = primitive.points
+      const boundingBox = getPolygonBoundingBox(points)
       if (!boundingBox) continue
 
       if (
@@ -121,7 +100,7 @@ const getPrimitivesUnderPoint = (
         continue
       }
 
-      if (isPointInsideNumericPolygon(rwPoint, numericPoints)) {
+      if (isPointInsidePolygon(rwPoint, points)) {
         newMousedPrimitives.push(primitive)
       }
       continue
@@ -132,8 +111,7 @@ const getPrimitivesUnderPoint = (
         x: v.x,
         y: v.y,
       }))
-      const numericPoints = toNumericPoints(points)
-      const boundingBox = getNumericPolygonBoundingBox(numericPoints)
+      const boundingBox = getPolygonBoundingBox(points)
       if (!boundingBox) continue
 
       if (
@@ -145,7 +123,7 @@ const getPrimitivesUnderPoint = (
         continue
       }
 
-      if (isPointInsideNumericPolygon(rwPoint, numericPoints)) {
+      if (isPointInsidePolygon(rwPoint, points)) {
         newMousedPrimitives.push(primitive)
       }
       continue
