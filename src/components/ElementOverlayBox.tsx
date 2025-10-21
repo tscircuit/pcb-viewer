@@ -183,6 +183,11 @@ export const HighlightedPrimitiveBoxWithText = ({
     )
   }
 
+  const label = getTextForHighlightedPrimitive(primitive)
+  if (label.trim().length === 0) {
+    return null
+  }
+
   return (
     <div
       style={{
@@ -233,7 +238,7 @@ export const HighlightedPrimitiveBoxWithText = ({
             textAlign: "center",
           }}
         >
-          {getTextForHighlightedPrimitive(primitive)}
+          {label}
         </div>
       </div>
     </div>
