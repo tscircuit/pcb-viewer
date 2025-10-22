@@ -32,10 +32,17 @@ export const PcbNoteExample: React.FC = () => {
 
       {/* PcbNoteText - Text */}
       <pcbnotetext
-        text="Hello"
-        fontSize={0.5}
+        text="UPPERCASE"
+        fontSize={0.6}
         pcbX={10}
-        pcbY={5}
+        pcbY={7}
+        anchorAlignment="center"
+      />
+      <pcbnotetext
+        text="lowercase"
+        fontSize={0.6}
+        pcbX={10}
+        pcbY={3}
         anchorAlignment="center"
       />
     </board>,
