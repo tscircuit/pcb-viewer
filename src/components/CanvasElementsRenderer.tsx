@@ -152,6 +152,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           <DimensionOverlay
             transform={transform!}
             focusOnHover={props.focusOnHover}
+            primitives={primitivesWithoutInteractionMetadata}
           >
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>
