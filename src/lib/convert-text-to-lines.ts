@@ -37,7 +37,8 @@ export const convertTextToLines = (text: Text): Line[] => {
 
   for (let letterIndex = 0; letterIndex < text.text.length; letterIndex++) {
     const letter = text.text[letterIndex]
-    const letterLines = lineAlphabet[letter.toUpperCase()]
+    const letterLines =
+      lineAlphabet[letter] ?? lineAlphabet[letter.toUpperCase()]
 
     if (!letterLines) {
       current_x_origin_for_char_box += target_width_char + space_between_chars
