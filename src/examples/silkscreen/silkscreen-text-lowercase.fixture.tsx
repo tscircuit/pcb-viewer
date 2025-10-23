@@ -27,7 +27,7 @@ export const SilkscreenTextLowercase: React.FC = () => {
           layer="top"
         />
         <silkscreentext
-          text={"descenders\nqpgyj"}
+          text={"descenders"}
           pcbX={4}
           pcbY={3}
           anchorAlignment="top_right"
