@@ -2,6 +2,8 @@ import type { Rotation } from "circuit-json"
 import { type Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
 import { rotateText } from "./util/rotate-text"
 import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
+import { lineAlphabet } from "../assets/alphabet"
+import { compose, rotate, scale, translate } from "transformation-matrix"
 import type {
   Circle,
   Line,
@@ -100,6 +102,13 @@ export const drawText = (drawer: Drawer, text: Text) => {
   text.x ??= 0
   text.y ??= 0
 
+  const needsCanvasFallback = requiresCanvasText(text.text)
+
+  if (needsCanvasFallback) {
+    drawCanvasText(drawer, text, alignOffset)
+    return
+  }
+
   // Get rotation anchor point based on alignment
   const rotationAnchor = {
     x: text.x,
@@ -137,6 +146,81 @@ export const drawText = (drawer: Drawer, text: Text) => {
   for (const line of text_lines) {
     drawLine(drawer, line)
   }
+}
+
+const requiresCanvasText = (value: string): boolean => {
+  if (!value) return false
+
+  for (const char of value) {
+    if (char === " ") continue
+    if (char === "\n" || char === "\r") return true
+    if (lineAlphabet[char]) continue
+    const upper = char.toUpperCase()
+    if (lineAlphabet[upper] && char !== upper) {
+      return true
+    }
+    if (!lineAlphabet[upper]) {
+      return true
+    }
+  }
+
+  return false
+}
+
+const drawCanvasText = (
+  drawer: Drawer,
+  text: Text,
+  alignOffset: { x: number; y: number },
+) => {
+  drawer.applyAperture()
+  const ctx = drawer.getLayerCtx()
+
+  const baseX = (text.x ?? 0) + alignOffset.x
+  const baseY = (text.y ?? 0) + alignOffset.y
+
+  const actualSize = text.size ?? 1
+  const fontFamily = "sans-serif"
+  const fontSize = actualSize * 0.7
+
+  const lines = text.text.split(/\r?\n/)
+  const lineHeight = actualSize * 1.2
+
+  ctx.save()
+  ctx.fillStyle = drawer.aperture.color
+  ctx.textAlign = "left"
+  ctx.textBaseline = "alphabetic"
+  ctx.font = `${fontSize}px ${fontFamily}`
+
+  let transform = drawer.transform
+
+  if (text.ccw_rotation) {
+    const rad = ((text.ccw_rotation ?? 0) * Math.PI) / 180
+    transform = compose(
+      transform,
+      translate(text.x ?? 0, text.y ?? 0),
+      rotate(rad),
+      translate(-(text.x ?? 0), -(text.y ?? 0)),
+    )
+  }
+
+  if (text.layer === "bottom_silkscreen") {
+    transform = compose(
+      transform,
+      translate(text.x ?? 0, 0),
+      scale(-1, 1),
+      translate(-(text.x ?? 0), 0),
+    )
+  }
+
+  transform = compose(transform, translate(baseX, baseY))
+
+  ctx.setTransform(transform.a, transform.b, transform.c, transform.d, transform.e, transform.f)
+
+  lines.forEach((line, index) => {
+    ctx.fillText(line, 0, -index * lineHeight)
+  })
+
+  ctx.restore()
 }
 
 export const drawRect = (drawer: Drawer, rect: Rect) => {
