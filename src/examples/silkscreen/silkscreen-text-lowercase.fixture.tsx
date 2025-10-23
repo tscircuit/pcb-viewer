@@ -29,7 +29,7 @@ export const SilkscreenTextLowercase: React.FC = () => {
         <silkscreentext
           text={"descenders"}
           pcbX={4}
-          pcbY={3}
+          pcbY={1}
           anchorAlignment="top_right"
           fontSize={0.8}
           pcbRotation={0}
@@ -37,8 +37,8 @@ export const SilkscreenTextLowercase: React.FC = () => {
         />
         <silkscreentext
           text="bottom layer"
-          pcbX={4}
-          pcbY={-1}
+          pcbX={0}
+          pcbY={-2}
           anchorAlignment="top_right"
           fontSize={0.8}
           pcbRotation={0}
