@@ -11,6 +11,7 @@ import { scaleOnly } from "./util/scale-only"
 import { zIndexMap } from "./util/z-index-map"
 import { Rotation } from "circuit-json"
 import { BRepShape, Ring } from "lib/types"
+import colorParser from "color"
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -525,16 +526,15 @@ export class Drawer {
 
     if (mode === "add") {
       ctx.globalCompositeOperation = "source-over"
-      let colorString =
-        color?.[0] === "#" || color?.startsWith("rgb")
-          ? color
-          : (LAYER_NAME_TO_COLOR as any)[color?.toLowerCase()]
-            ? (LAYER_NAME_TO_COLOR as any)[color?.toLowerCase()]
-            : null
-      if (colorString === null) {
-        console.warn(`Color mapping for "${color}" not found`)
-        colorString = "white"
-      }
+      let colorString = LAYER_NAME_TO_COLOR[color.toLowerCase()]
+      if (!colorString)
+        try {
+          colorString = colorParser(color).rgb().toString()
+        } catch (error) {
+          console.warn(`Invalid color format: '${color}'`)
+          colorString = "white"
+        }
+
       ctx.fillStyle = colorString
       ctx.strokeStyle = colorString
     } else {
