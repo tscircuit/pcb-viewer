@@ -20,6 +20,32 @@ interface Props {
 const SNAP_THRESHOLD_PX = 16
 const SNAP_MARKER_SIZE = 5
 
+const shouldExcludePrimitiveFromSnapping = (primitive: Primitive) => {
+  if (primitive.pcb_drawing_type === "text") return true
+
+  const element = primitive._element as { type?: unknown } | undefined
+  if (!element || typeof element !== "object") {
+    return false
+  }
+
+  const elementType =
+    typeof element.type === "string" ? (element.type as string) : undefined
+
+  if (!elementType) return false
+
+  if (elementType.startsWith("pcb_silkscreen_")) return true
+  if (elementType.startsWith("pcb_note_")) return true
+  if (elementType === "pcb_text") return true
+  if (
+    elementType.startsWith("pcb_fabrication_note_") &&
+    elementType !== "pcb_fabrication_note_rect"
+  ) {
+    return true
+  }
+
+  return false
+}
+
 export const DimensionOverlay = ({
   children,
   transform,
@@ -55,6 +81,7 @@ export const DimensionOverlay = ({
 
     for (const primitive of primitives) {
       if (!primitive._element) continue
+      if (shouldExcludePrimitiveFromSnapping(primitive)) continue
       const bbox = getPrimitiveBoundingBox(primitive)
       if (!bbox) continue
 
