@@ -10,7 +10,7 @@ export const PcbNoteExample: React.FC = () => {
       <pcbnoteline x1={-10} y1={10} x2={-5} y2={10} color="#00FF00" />
 
       {/* PcbNoteRect - Filled rectangle */}
-      <pcbnoterect pcbX={5} pcbY={5} width={3} height={2} />
+      <pcbnoterect pcbX={5} pcbY={5} width={3} height={2} isFilled />
 
       <pcbnoterect
         pcbX={10}
