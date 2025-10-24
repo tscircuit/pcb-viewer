@@ -527,12 +527,14 @@ export class Drawer {
     if (mode === "add") {
       ctx.globalCompositeOperation = "source-over"
       let colorString = LAYER_NAME_TO_COLOR[color.toLowerCase()]
-      if (!colorString) colorString = colorParser(color).rgb().toString()
+      if (!colorString)
+        try {
+          colorString = colorParser(color).rgb().toString()
+        } catch (error) {
+          console.warn(`Invalid color format: '${color}'`)
+          colorString = "white"
+        }
 
-      if (!colorString) {
-        console.warn(`Color mapping for "${color}" not found`)
-        colorString = "white"
-      }
       ctx.fillStyle = colorString
       ctx.strokeStyle = colorString
     } else {
