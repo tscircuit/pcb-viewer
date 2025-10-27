@@ -6,6 +6,7 @@ import type {
   PcbNoteText,
   PcbNoteDimension,
   PcbSmtPadRotatedPill,
+  PcbPanel,
 } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
@@ -66,6 +67,59 @@ export const convertElementToPrimitives = (
     : undefined
 
   switch (element.type) {
+    case "pcb_panel": {
+      const { width, height } = element as PcbPanel
+      return [
+        {
+          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+          pcb_drawing_type: "line",
+          x1: 0,
+          y1: 0,
+          x2: width,
+          y2: 0,
+          width: 1,
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+        {
+          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+          pcb_drawing_type: "line",
+          x1: 0,
+          y1: height,
+          x2: width,
+          y2: height,
+          width: 1,
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+        {
+          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+          pcb_drawing_type: "line",
+          x1: 0,
+          y1: 0,
+          x2: 0,
+          y2: height,
+          width: 1,
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+        {
+          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+          pcb_drawing_type: "line",
+          x1: width,
+          y1: 0,
+          x2: width,
+          y2: height,
+          width: 1,
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        },
+      ]
+    }
     case "pcb_board": {
       const { width, height, center, outline } = element
 
@@ -1116,7 +1170,7 @@ export const convertElementToPrimitives = (
           y: noteTextElement.anchor_position.y,
           layer: "notes",
           align: noteTextElement.anchor_alignment ?? "center",
-          text: noteTextElement.text,
+          text: noteTextElement.text || "",
           size: noteTextElement.font_size,
           color: noteTextElement.color,
           _element: element,
