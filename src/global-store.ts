@@ -81,7 +81,10 @@ export const createStore = (
         is_showing_rats_nest: false,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
-        is_showing_copper_pours: true,
+        is_showing_copper_pours: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_COPPER_POURS,
+          true,
+        ),
         is_showing_pcb_groups: disablePcbGroups
           ? false
           : getStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, true),
@@ -118,8 +121,10 @@ export const createStore = (
           set({ is_showing_autorouting: is_showing }),
         setIsShowingDrcErrors: (is_showing) =>
           set({ is_showing_drc_errors: is_showing }),
-        setIsShowingCopperPours: (is_showing) =>
-          set({ is_showing_copper_pours: is_showing }),
+        setIsShowingCopperPours: (is_showing) => {
+          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_COPPER_POURS, is_showing)
+          set({ is_showing_copper_pours: is_showing })
+        },
         setIsShowingPcbGroups: (is_showing) => {
           if (disablePcbGroups) return
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, is_showing)

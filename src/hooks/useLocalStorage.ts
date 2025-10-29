@@ -3,6 +3,7 @@ import { useCallback } from "react"
 export const STORAGE_KEYS = {
   IS_SHOWING_PCB_GROUPS: "pcb_viewer_is_showing_pcb_groups",
   PCB_GROUP_VIEW_MODE: "pcb_viewer_group_view_mode",
+  IS_SHOWING_COPPER_POURS: "pcb_viewer_is_showing_copper_pours",
 } as const
 
 export const getStoredBoolean = (
