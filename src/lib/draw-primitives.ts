@@ -18,15 +18,21 @@ import color from "color"
 function getColor(primitive: Primitive): string {
   const explicitColor = (primitive as any).color
 
-  const baseColor =
+  const baseColorString =
     explicitColor ??
     LAYER_NAME_TO_COLOR[primitive.layer as keyof typeof LAYER_NAME_TO_COLOR]
 
-  if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
-    return color(baseColor).lighten(0.5).rgb().toString()
+  let c = color(baseColorString)
+
+  if (primitive._element?.type === "pcb_copper_pour") {
+    c = c.alpha(0.7)
   }
 
-  return baseColor
+  if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
+    return c.lighten(0.5).rgb().toString()
+  }
+
+  return c.rgb().toString()
 }
 
 export const drawLine = (drawer: Drawer, line: Line) => {
