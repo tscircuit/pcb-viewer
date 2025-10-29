@@ -30,6 +30,7 @@ export interface State {
 
   is_showing_multiple_traces_length: boolean
   is_showing_rats_nest: boolean
+  is_showing_copper_pours: boolean
   is_showing_pcb_groups: boolean
   pcb_group_view_mode: "all" | "named_only"
 
@@ -44,6 +45,7 @@ export interface State {
   setIsShowingAutorouting: (is_showing: boolean) => void
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
   setIsShowingDrcErrors: (is_showing: boolean) => void
+  setIsShowingCopperPours: (is_showing: boolean) => void
   setIsShowingPcbGroups: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
@@ -79,6 +81,7 @@ export const createStore = (
         is_showing_rats_nest: false,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
+        is_showing_copper_pours: true,
         is_showing_pcb_groups: disablePcbGroups
           ? false
           : getStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, true),
@@ -115,6 +118,8 @@ export const createStore = (
           set({ is_showing_autorouting: is_showing }),
         setIsShowingDrcErrors: (is_showing) =>
           set({ is_showing_drc_errors: is_showing }),
+        setIsShowingCopperPours: (is_showing) =>
+          set({ is_showing_copper_pours: is_showing }),
         setIsShowingPcbGroups: (is_showing) => {
           if (disablePcbGroups) return
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, is_showing)

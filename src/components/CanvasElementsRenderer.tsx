@@ -37,17 +37,28 @@ export interface CanvasElementsRendererProps {
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
   const hoveredErrorId = useGlobalStore((state) => state.hovered_error_id)
+  const isShowingCopperPours = useGlobalStore(
+    (state) => state.is_showing_copper_pours,
+  )
+
+  const elementsToRender = useMemo(
+    () =>
+      isShowingCopperPours
+        ? elements
+        : elements.filter((elm) => elm.type !== "pcb_copper_pour"),
+    [elements, isShowingCopperPours],
+  )
 
   const [primitivesWithoutInteractionMetadata, connectivityMap] =
     useMemo(() => {
-      const primitivesWithoutInteractionMetadata = props.elements.flatMap(
+      const primitivesWithoutInteractionMetadata = elementsToRender.flatMap(
         (elm) => convertElementToPrimitives(elm, props.elements),
       )
       const connectivityMap = getFullConnectivityMapFromCircuitJson(
         props.elements as any,
       )
       return [primitivesWithoutInteractionMetadata, connectivityMap]
-    }, [props.elements])
+    }, [elementsToRender, props.elements])
 
   const [hoverState, setHoverState] = useState({
     drawingObjectIdsWithMouseOver: new Set<string>(),
@@ -128,7 +139,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   return (
     <MouseElementTracker
-      elements={elements}
+      elements={elementsToRender}
       transform={transform}
       primitives={primitivesWithoutInteractionMetadata}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
