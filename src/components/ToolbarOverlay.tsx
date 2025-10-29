@@ -198,6 +198,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingMultipleTracesLength,
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
+    setIsShowingCopperPours,
     setIsShowingPcbGroups,
     setPcbGroupViewMode,
     setHoveredErrorId,
@@ -215,6 +216,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
+      is_showing_copper_pours: s.is_showing_copper_pours,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
@@ -223,6 +225,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
+    setIsShowingCopperPours: s.setIsShowingCopperPours,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
@@ -695,6 +698,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={viewSettings.is_showing_drc_errors}
                   onClick={() => {
                     setIsShowingDrcErrors(!viewSettings.is_showing_drc_errors)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Copper Pours"
+                  checked={viewSettings.is_showing_copper_pours}
+                  onClick={() => {
+                    setIsShowingCopperPours(
+                      !viewSettings.is_showing_copper_pours,
+                    )
                   }}
                 />
                 <CheckboxMenuItem
