@@ -36,7 +36,7 @@ export const LAYER_NAME_TO_COLOR = {
   top: colors.board.copper.f,
   inner1: colors.board.copper.in1,
   inner2: colors.board.copper.in2,
-
+  inner3: colors.board.copper.in3,
   inner4: colors.board.copper.in4,
   inner5: colors.board.copper.in5,
   inner6: colors.board.copper.in6,
@@ -64,16 +64,16 @@ export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
 
 export const DEFAULT_DRAW_ORDER = [
   "board",
+  "inner6",
+  "inner5",
+  "inner4",
+  "inner3",
+  "inner2",
+  "inner1",
+  "bottom",
+  "bottom_silkscreen",
   "top",
   "top_silkscreen",
-  "bottom_silkscreen",
-  "bottom",
-  "inner1",
-  "inner2",
-  "inner3",
-  "inner4",
-  "inner5",
-  "inner6",
 ] as const
 
 export const FILL_TYPES = {
@@ -490,22 +490,29 @@ export class Drawer {
           ? "bottom_silkscreen"
           : "",
     ])
+
+    // Build order with foregroundLayer at the end (highest z-index)
     const order = [
-      "drill",
       "board",
-      foregroundLayer,
+      "drill",
       ...DEFAULT_DRAW_ORDER.filter((l) => l !== foregroundLayer),
+      foregroundLayer,
     ]
+
     order.forEach((layer, i) => {
       const canvas = canvasLayerMap[layer]
       if (!canvas) return
-      if (
+
+      // Foreground layer and its associated silkscreen get the highest z-index
+      if (layer === foregroundLayer) {
+        canvas.style.zIndex = `${zIndexMap.topLayer}`
+      } else if (
         (layer === "bottom_silkscreen" && foregroundLayer === "bottom") ||
         (layer === "top_silkscreen" && foregroundLayer === "top")
       ) {
-        canvas.style.zIndex = `${zIndexMap.topLayer}` // zIndexMap.topLayer
+        canvas.style.zIndex = `${zIndexMap.topLayer + 1}`
       } else {
-        canvas.style.zIndex = `${zIndexMap.topLayer - i}`
+        canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
       }
       canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
     })
