@@ -63,7 +63,6 @@ export const LAYER_NAME_TO_COLOR = {
 export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
 
 export const DEFAULT_DRAW_ORDER = [
-  "board",
   "inner6",
   "inner5",
   "inner4",
@@ -74,6 +73,7 @@ export const DEFAULT_DRAW_ORDER = [
   "bottom_silkscreen",
   "top",
   "top_silkscreen",
+  "board",
 ] as const
 
 export const FILL_TYPES = {
