@@ -491,29 +491,32 @@ export class Drawer {
           : "",
     ])
 
-    // Build order with foregroundLayer at the end (highest z-index)
-    const order = [
-      "board",
-      "drill",
-      ...DEFAULT_DRAW_ORDER.filter((l) => l !== foregroundLayer),
+    const associatedSilkscreen =
+      foregroundLayer === "top"
+        ? "top_silkscreen"
+        : foregroundLayer === "bottom"
+          ? "bottom_silkscreen"
+          : undefined
+
+    const layersToShiftToTop = [
       foregroundLayer,
+      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+    ]
+
+    const order = [
+      ...DEFAULT_DRAW_ORDER.filter(
+        (l) => !layersToShiftToTop.includes(l as any),
+      ),
+      foregroundLayer,
+      "drill",
+      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
     ]
 
     order.forEach((layer, i) => {
       const canvas = canvasLayerMap[layer]
       if (!canvas) return
 
-      // Foreground layer and its associated silkscreen get the highest z-index
-      if (layer === foregroundLayer) {
-        canvas.style.zIndex = `${zIndexMap.topLayer}`
-      } else if (
-        (layer === "bottom_silkscreen" && foregroundLayer === "bottom") ||
-        (layer === "top_silkscreen" && foregroundLayer === "top")
-      ) {
-        canvas.style.zIndex = `${zIndexMap.topLayer + 1}`
-      } else {
-        canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
-      }
+      canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
       canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
     })
   }
