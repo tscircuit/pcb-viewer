@@ -13,6 +13,7 @@ export const HoleExample: React.FC = () => {
           <footprint>
             {/* @ts-ignore */}
             <hole pcbX="2mm" pcbY="0mm" diameter="1mm" />
+            <hole pcbX="-2mm" pcbY="-2mm" diameter="1mm" />
             <smtpad
               portHints={["1"]}
               pcbX="0mm"
