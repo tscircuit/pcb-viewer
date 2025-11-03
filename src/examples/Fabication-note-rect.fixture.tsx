@@ -22,7 +22,7 @@ export const FabricationNoteRect: React.FC = () => {
             },
             {
               type: "pcb_fabrication_note_rect",
-              pcb_fabrication_note_rect_id: "pcb_fabrication_note_rect_0",
+              pcb_fabrication_note_rect_id: "pcb_fabrication_note_rect_1",
               pcb_component_id: null,
               center: { x: -6, y: 6 },
               width: 5,
