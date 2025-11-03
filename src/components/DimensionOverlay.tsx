@@ -36,7 +36,10 @@ const shouldExcludePrimitiveFromSnapping = (primitive: Primitive) => {
   if (elementType.startsWith("pcb_silkscreen_")) return true
   if (elementType.startsWith("pcb_note_")) return true
   if (elementType === "pcb_text") return true
-  if (elementType.startsWith("pcb_fabrication_note_")) {
+  if (
+    elementType.startsWith("pcb_fabrication_note_") &&
+    elementType !== "pcb_fabrication_note_rect"
+  ) {
     return true
   }
 
