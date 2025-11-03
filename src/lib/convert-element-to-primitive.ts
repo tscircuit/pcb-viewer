@@ -744,6 +744,45 @@ export const convertElementToPrimitives = (
         },
       ]
     }
+    case "pcb_fabrication_note_rect": {
+      const rectElement = element as any
+
+      const layer =
+        rectElement.layer === "bottom"
+          ? "bottom_fabrication"
+          : "top_fabrication"
+
+      const hasStroke =
+        rectElement.has_stroke !== undefined
+          ? rectElement.has_stroke
+          : typeof rectElement.stroke_width === "number"
+            ? rectElement.stroke_width > 0
+            : undefined
+
+      return [
+        {
+          _pcb_drawing_object_id: getNewPcbDrawingObjectId(
+            "pcb_fabrication_note_rect",
+          ),
+          pcb_drawing_type: "rect",
+          x: rectElement.center.x,
+          y: rectElement.center.y,
+          w: rectElement.width,
+          h: rectElement.height,
+          roundness: rectElement.corner_radius,
+          layer,
+          stroke_width: rectElement.stroke_width,
+          is_filled: rectElement.is_filled,
+          has_stroke: hasStroke,
+          is_stroke_dashed: rectElement.is_stroke_dashed,
+          color: rectElement.color,
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+          _source_port,
+        },
+      ]
+    }
 
     case "pcb_fabrication_note_path":
     case "pcb_silkscreen_path": {
