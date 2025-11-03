@@ -9,8 +9,8 @@ import {
 import colors from "./colors"
 import { scaleOnly } from "./util/scale-only"
 import { zIndexMap } from "./util/z-index-map"
-import { Rotation } from "circuit-json"
-import { BRepShape, Ring } from "lib/types"
+import type { Rotation } from "circuit-json"
+import type { BRepShape, Ring } from "lib/types"
 import colorParser from "color"
 
 export interface Aperture {
@@ -69,10 +69,10 @@ export const DEFAULT_DRAW_ORDER = [
   "inner3",
   "inner2",
   "inner1",
-  "bottom",
   "bottom_silkscreen",
-  "top",
+  "bottom",
   "top_silkscreen",
+  "top",
   "board",
 ] as const
 
@@ -101,7 +101,7 @@ export class Drawer {
   // @ts-ignore this.equip({}) handles constructor assignment
   aperture: Aperture
   transform: Matrix
-  foregroundLayer: string = "top"
+  foregroundLayer = "top"
   lastPoint: { x: number; y: number }
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
@@ -145,7 +145,7 @@ export class Drawer {
     width: number,
     height: number,
     spacing: number,
-    angle: number = 45,
+    angle = 45,
   ) {
     const ctx = this.getLayerCtx()
     const [x1, y1] = applyToPoint(this.transform, [x, y])
@@ -159,7 +159,7 @@ export class Drawer {
     const drawLines = (angle: number) => {
       const sin = Math.sin(angle)
       const cos = Math.cos(angle)
-      const diag = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+      const diag = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
       for (let i = -diag; i <= diag; i += spacing$) {
         ctx.beginPath()
@@ -459,7 +459,7 @@ export class Drawer {
     this.applyAperture()
     const ctx = this.getLayerCtx()
 
-    ctx.font = `10px sans-serif`
+    ctx.font = "10px sans-serif"
     ctx.fillText(text, x$, y$)
   }
 
@@ -509,7 +509,6 @@ export class Drawer {
       ),
       foregroundLayer,
       "drill",
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
     ]
 
     order.forEach((layer, i) => {
@@ -523,7 +522,8 @@ export class Drawer {
 
   applyAperture() {
     const { transform, aperture } = this
-    let { size, mode, color, fontSize, layer } = aperture
+    const { size, mode, fontSize, layer } = aperture
+    let { color } = aperture
     if (!(layer in this.ctxLayerMap)) this.aperture.layer = "other"
 
     const ctx = this.getLayerCtx()
@@ -562,7 +562,7 @@ export class Drawer {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     const { size, shape, mode } = this.aperture
     const size$ = scaleOnly(this.transform, size)
-    let { lastPoint } = this
+    const { lastPoint } = this
     const lastPoint$ = applyToPoint(this.transform, lastPoint)
 
     this.applyAperture()
