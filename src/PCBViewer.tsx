@@ -66,6 +66,7 @@ export const PCBViewer = ({
     () => calculateCircuitJsonKey(circuitJson),
     [circuitJson],
   )
+  const prevCircuitJsonKey = useRef<string | null>(null)
 
   const pcbElmsPreEdit = useMemo(() => {
     return (
@@ -82,16 +83,16 @@ export const PCBViewer = ({
     })
   }, [pcbElmsPreEdit, editEvents])
 
-  // Calculate board bounds for tracking changes (from elements with edit events applied)
-  const boardBounds = useMemo(() => {
-    const pcbElements = elements.filter((e) => e.type.startsWith("pcb_"))
-    if (pcbElements.length === 0) return null
-    return findBoundsAndCenter(pcbElements as any)
+  // Track the pcb_board element's explicit width/height
+  const boardDimensions = useMemo(() => {
+    const pcbBoard = elements.find((e) => e.type === "pcb_board") as any
+    if (!pcbBoard?.width || !pcbBoard?.height) return null
+    return { width: pcbBoard.width, height: pcbBoard.height }
   }, [elements])
 
   // Extract width/height as primitives to avoid object reference changes triggering useEffect
-  const boardWidth = boardBounds?.width ?? null
-  const boardHeight = boardBounds?.height ?? null
+  const boardWidth = boardDimensions?.width ?? null
+  const boardHeight = boardDimensions?.height ?? null
 
   const resetTransform = () => {
     const elmBounds =
@@ -131,6 +132,7 @@ export const PCBViewer = ({
       resetTransform()
       prevBoundsRef.current = currentBounds
       initialRenderCompleted.current = true
+      prevCircuitJsonKey.current = circuitJsonKey
       return
     }
 
@@ -148,8 +150,9 @@ export const PCBViewer = ({
     if (boundsChanged) {
       resetTransform()
       prevBoundsRef.current = currentBounds
+      prevCircuitJsonKey.current = circuitJsonKey
     }
-  }, [boardWidth, boardHeight, refDimensions])
+  }, [boardWidth, boardHeight, refDimensions, circuitJsonKey])
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
