@@ -609,44 +609,53 @@ export const convertElementToPrimitives = (
     // The builder currently outputs these as smtpads and holes, so pcb_via isn't
     // used, but that maybe should be changed
     case "pcb_via": {
-      const { x, y, outer_diameter, hole_diameter, from_layer, to_layer } =
-        element
+      const { x, y, outer_diameter, hole_diameter } = element
+      const from_layer = element.from_layer
+      const to_layer = element.to_layer
+      const layers = element.layers
 
-      return [
-        {
+      // Support both old format (from_layer/to_layer) and new format (layers array)
+      const copperLayers: string[] = []
+      if (from_layer && to_layer) {
+        copperLayers.push(from_layer, to_layer)
+      } else if (layers && Array.isArray(layers)) {
+        copperLayers.push(...layers)
+      } else {
+        // Default to top and bottom if no layer info
+        copperLayers.push("top", "bottom")
+      }
+
+      // Create the outer copper circles on the via layers
+      // and the inner drill hole, similar to how pcb_plated_hole works
+      const primitives: Primitive[] = []
+
+      // Add outer copper circles for each layer
+      for (const layer of copperLayers) {
+        primitives.push({
           _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "circle",
           x,
           y,
           r: outer_diameter / 2,
-          layer: from_layer!,
+          layer,
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
-        },
-        {
-          _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-          _element: element,
-          pcb_drawing_type: "circle",
-          x,
-          y,
-          r: hole_diameter / 2,
-          layer: "drill",
-          _parent_pcb_component,
-          _parent_source_component,
-        },
-        {
-          _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "circle",
-          x,
-          y,
-          r: outer_diameter / 2,
-          layer: to_layer!,
-          _element: element,
-          _parent_pcb_component,
-          _parent_source_component,
-        },
-      ]
+        })
+      }
+
+      // Add inner drill hole (drawn on top due to layer order)
+      primitives.push({
+        _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+        pcb_drawing_type: "circle",
+        x,
+        y,
+        r: hole_diameter / 2,
+        layer: "drill",
+        _element: element,
+      })
+
+      return primitives
     }
 
     case "pcb_silkscreen_rect": {
