@@ -282,6 +282,35 @@ export const convertElementToPrimitives = (
             _parent_source_component,
           },
         ]
+      } else if (
+        element.hole_shape === "pill" ||
+        element.hole_shape === "rotated_pill"
+      ) {
+        const { x, y, hole_width, hole_height } = element as any
+        const ccw_rotation =
+          (element as any).hole_ccw_rotation ??
+          (element as any).ccw_rotation ??
+          0
+
+        if (typeof hole_width !== "number" || typeof hole_height !== "number") {
+          return []
+        }
+
+        return [
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            ccw_rotation,
+          },
+        ]
       }
       // TODO square hole
       // TODO oval hole
