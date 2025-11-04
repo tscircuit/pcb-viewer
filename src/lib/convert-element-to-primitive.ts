@@ -7,6 +7,8 @@ import type {
   PcbNoteDimension,
   PcbSmtPadRotatedPill,
   PcbPanel,
+  PcbHole,
+  PcbHoleRotatedPill,
 } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
@@ -280,6 +282,31 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
+          },
+        ]
+      } else if (
+        element.hole_shape === "pill" ||
+        element.hole_shape === "rotated_pill"
+      ) {
+        const { x, y, hole_width, hole_height } = element
+
+        if (typeof hole_width !== "number" || typeof hole_height !== "number") {
+          return []
+        }
+
+        return [
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            ccw_rotation: (element as PcbHoleRotatedPill).ccw_rotation,
           },
         ]
       }
