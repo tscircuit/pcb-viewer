@@ -22,9 +22,11 @@ export interface State {
   in_edit_mode: boolean
   in_move_footprint_mode: boolean
   in_draw_trace_mode: boolean
+  in_edit_board_size_mode: boolean
   is_mouse_over_container: boolean
   is_moving_component: boolean
   is_drawing_trace: boolean
+  is_editing_board_size: boolean
   is_showing_autorouting: boolean
   is_showing_drc_errors: boolean
 
@@ -37,9 +39,12 @@ export interface State {
   hovered_error_id: string | null
 
   selectLayer: (layer: LayerRef) => void
-  setEditMode: (mode: "off" | "move_footprint" | "draw_trace") => void
+  setEditMode: (
+    mode: "off" | "move_footprint" | "draw_trace" | "edit_board_size"
+  ) => void
   setIsMovingComponent: (is_moving: boolean) => void
   setIsDrawingTrace: (is_drawing: boolean) => void
+  setIsEditingBoardSize: (is_editing: boolean) => void
   setIsShowingRatsNest: (is_showing: boolean) => void
   setIsMouseOverContainer: (is_focused: boolean) => void
   setIsShowingAutorouting: (is_showing: boolean) => void
@@ -72,9 +77,11 @@ export const createStore = (
         in_edit_mode: false,
         in_move_footprint_mode: false,
         in_draw_trace_mode: false,
+        in_edit_board_size_mode: false,
 
         is_moving_component: false,
         is_drawing_trace: false,
+        is_editing_board_size: false,
         is_mouse_over_container: false,
 
         is_showing_multiple_traces_length: false,
@@ -104,6 +111,7 @@ export const createStore = (
             in_edit_mode: mode !== "off",
             in_move_footprint_mode: mode === "move_footprint",
             in_draw_trace_mode: mode === "draw_trace",
+            in_edit_board_size_mode: mode === "edit_board_size",
             is_moving_component: false,
             is_drawing_trace: false,
           }),
@@ -113,6 +121,8 @@ export const createStore = (
           set({ is_moving_component: is_moving }),
         setIsDrawingTrace: (is_drawing) =>
           set({ is_drawing_trace: is_drawing }),
+        setIsEditingBoardSize: (is_editing) =>
+          set({ is_editing_board_size: is_editing }),
         setIsMouseOverContainer: (is_focused) =>
           set({ is_mouse_over_container: is_focused }),
         setIsShowingMultipleTracesLength: (is_showing) =>

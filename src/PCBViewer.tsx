@@ -6,7 +6,6 @@ import type { StateProps } from "./global-store"
 import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
@@ -41,10 +40,24 @@ export const PCBViewer = ({
   clickToInteractEnabled = false,
   disablePcbGroups = false,
 }: Props) => {
+import { useMeasure } from "react-use"
+export const PCBViewer = ({
+  circuitJson,
+  debugGraphics,
+  height: heightProp,
+  initialState,
+  allowEditing = true,
+  editEvents: editEventsProp,
+  onEditEventsChanged,
+  focusOnHover = false,
+  clickToInteractEnabled = false,
+  disablePcbGroups = false,
+}: Props) => {
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
-  const [ref, refDimensions] = useMeasure()
+  const [measureRef, refDimensions] = useMeasure()
+  const height = heightProp ?? refDimensions.height
   const [transform, setTransformInternal] = useState(defaultTransform)
   const {
     ref: transformRef,
@@ -131,6 +144,11 @@ export const PCBViewer = ({
     )
     setEditEvents(newEditEvents)
     onEditEventsChanged?.(newEditEvents)
+    if (modifiedEvent.edit_event_type === "edit_pcb_board_size") {
+      console.log(
+        `New board size: ${modifiedEvent.width}x${modifiedEvent.height}`
+      )
+    }
   }
 
   const mergedInitialState = useMemo(
@@ -142,8 +160,12 @@ export const PCBViewer = ({
   )
 
   return (
-    <div ref={transformRef as any} style={{ position: "relative" }}>
-      <div ref={ref as any}>
+    <div
+      ref={transformRef as any}
+      style={{ position: "relative" }}
+      data-testid="pcb-viewer-container"
+    >
+      <div>
         <ContextProviders
           initialState={mergedInitialState}
           disablePcbGroups={disablePcbGroups}

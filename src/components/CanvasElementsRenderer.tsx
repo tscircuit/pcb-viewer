@@ -3,7 +3,7 @@ import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectiv
 import type { GraphicsObject } from "graphics-debug"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useState, useEffect } from "react"
 import type { Matrix } from "transformation-matrix"
 import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
@@ -11,6 +11,7 @@ import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
+import { EditBoardSizeOverlay } from "./EditBoardSizeOverlay"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { MouseElementTracker } from "./MouseElementTracker"
@@ -34,8 +35,10 @@ export interface CanvasElementsRendererProps {
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
 }
 
+import { useRef } from "react"
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
+  const ref = useRef<HTMLDivElement>(null)
   const hoveredErrorId = useGlobalStore((state) => state.hovered_error_id)
   const isShowingCopperPours = useGlobalStore(
     (state) => state.is_showing_copper_pours,
@@ -94,18 +97,14 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     return relatedIds
   }, [hoveredErrorId, elements])
 
-  const primitives = useMemo(() => {
-    const combinedPrimitiveIds = [
+  const primitives = addInteractionMetadataToPrimitives({
+    primitivesWithoutInteractionMetadata,
+    drawingObjectIdsWithMouseOver: hoverState.drawingObjectIdsWithMouseOver,
+    primitiveIdsInMousedOverNet: [
       ...hoverState.primitiveIdsInMousedOverNet,
       ...errorRelatedIds,
-    ]
-
-    return addInteractionMetadataToPrimitives({
-      primitivesWithoutInteractionMetadata,
-      drawingObjectIdsWithMouseOver: hoverState.drawingObjectIdsWithMouseOver,
-      primitiveIdsInMousedOverNet: combinedPrimitiveIds,
-    })
-  }, [primitivesWithoutInteractionMetadata, hoverState, errorRelatedIds])
+    ],
+  })
 
   const onMouseOverPrimitives = useCallback(
     (primitivesHoveredOver: Primitive[]) => {
@@ -135,7 +134,24 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       })
     },
     [connectivityMap],
+    [connectivityMap],
   )
+  useEffect(() => {
+    if (ref.current) {
+      console.log("CanvasElementsRenderer ref innerHTML:", ref.current.innerHTML)
+    }
+    const observer = new MutationObserver(() => {
+      if (ref.current) {
+        console.log("MutationObserver innerHTML:", ref.current.innerHTML)
+      }
+    })
+    if (ref.current) {
+      observer.observe(ref.current, { childList: true, subtree: true })
+    }
+    return () => observer.disconnect()
+  }, [])
+
+  console.log("primitives", primitives)
 
   return (
     <MouseElementTracker
@@ -143,6 +159,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       transform={transform}
       primitives={primitivesWithoutInteractionMetadata}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
+      ref={ref}
     >
       <EditPlacementOverlay
         disabled={!props.allowEditing}
@@ -152,14 +169,22 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         onCreateEditEvent={props.onCreateEditEvent}
         onModifyEditEvent={props.onModifyEditEvent}
       >
-        <EditTraceHintOverlay
-          disabled={!props.allowEditing}
+        <EditBoardSizeOverlay
+          pcb_board={elements.find((e) => e.type === "pcb_board")}
           transform={transform}
           soup={elements}
           cancelPanDrag={props.cancelPanDrag}
-          onCreateEditEvent={props.onCreateEditEvent as any}
-          onModifyEditEvent={props.onModifyEditEvent as any}
+          onCreateEditEvent={props.onCreateEditEvent}
+          onModifyEditEvent={props.onModifyEditEvent}
         >
+          <EditTraceHintOverlay
+            disabled={!props.allowEditing}
+            transform={transform}
+            soup={elements}
+            cancelPanDrag={props.cancelPanDrag}
+            onCreateEditEvent={props.onCreateEditEvent as any}
+            onModifyEditEvent={props.onModifyEditEvent as any}
+          >
           <DimensionOverlay
             transform={transform!}
             focusOnHover={props.focusOnHover}
@@ -191,7 +216,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
               </ErrorOverlay>
             </ToolbarOverlay>
           </DimensionOverlay>
-        </EditTraceHintOverlay>
+          </EditTraceHintOverlay>
+        </EditBoardSizeOverlay>
       </EditPlacementOverlay>
     </MouseElementTracker>
   )

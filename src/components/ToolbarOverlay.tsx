@@ -210,6 +210,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     editModes: {
       in_move_footprint_mode: s.in_move_footprint_mode,
       in_draw_trace_mode: s.in_draw_trace_mode,
+      in_edit_board_size_mode: s.in_edit_board_size_mode,
     },
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
@@ -441,6 +442,20 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               ))}
             </div>
           )}
+        </ToolbarButton>
+        <ToolbarButton
+          isSmallScreen={isSmallScreen}
+          style={{}}
+          onClick={() =>
+            setEditMode(
+              editModes.in_edit_board_size_mode ? "off" : "edit_board_size"
+            )
+          }
+        >
+          <div>
+            {editModes.in_edit_board_size_mode ? "✖ " : ""}
+            Edit Board Size
+          </div>
         </ToolbarButton>
         <ToolbarButton
           isSmallScreen={isSmallScreen}
