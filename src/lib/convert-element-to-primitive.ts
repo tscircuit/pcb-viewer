@@ -7,6 +7,8 @@ import type {
   PcbNoteDimension,
   PcbSmtPadRotatedPill,
   PcbPanel,
+  PcbHole,
+  PcbHoleRotatedPill,
 } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
@@ -286,11 +288,7 @@ export const convertElementToPrimitives = (
         element.hole_shape === "pill" ||
         element.hole_shape === "rotated_pill"
       ) {
-        const { x, y, hole_width, hole_height } = element as any
-        const ccw_rotation =
-          (element as any).hole_ccw_rotation ??
-          (element as any).ccw_rotation ??
-          0
+        const { x, y, hole_width, hole_height } = element
 
         if (typeof hole_width !== "number" || typeof hole_height !== "number") {
           return []
@@ -308,7 +306,7 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
-            ccw_rotation,
+            ccw_rotation: (element as PcbHoleRotatedPill).ccw_rotation,
           },
         ]
       }

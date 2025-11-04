@@ -25,7 +25,7 @@ export const RotatedPillHole = () => {
               hole_shape: "pill",
               hole_width: 2.5,
               hole_height: 5,
-              hole_ccw_rotation: 45,
+              ccw_rotation: 45,
             },
             {
               type: "pcb_hole",
@@ -35,7 +35,7 @@ export const RotatedPillHole = () => {
               hole_shape: "pill",
               hole_width: 2.5,
               hole_height: 5,
-              hole_ccw_rotation: 0,
+              ccw_rotation: 0,
             },
           ] as any
         }
