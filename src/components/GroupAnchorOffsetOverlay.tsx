@@ -58,7 +58,11 @@ const calculateGroupBoundingBox = (
   let maxY = -Infinity
 
   for (const comp of groupComponents) {
-    if (!comp.center || typeof comp.width !== "number" || typeof comp.height !== "number") {
+    if (
+      !comp.center ||
+      typeof comp.width !== "number" ||
+      typeof comp.height !== "number"
+    ) {
       continue
     }
 
@@ -71,7 +75,12 @@ const calculateGroupBoundingBox = (
     maxY = Math.max(maxY, comp.center.y + halfHeight)
   }
 
-  if (!Number.isFinite(minX) || !Number.isFinite(maxX) || !Number.isFinite(minY) || !Number.isFinite(maxY)) {
+  if (
+    !Number.isFinite(minX) ||
+    !Number.isFinite(maxX) ||
+    !Number.isFinite(minY) ||
+    !Number.isFinite(maxY)
+  ) {
     return null
   }
   return { minX, maxX, minY, maxY }
@@ -141,8 +150,10 @@ export const GroupAnchorOffsetOverlay = ({
   if (!parentGroup?.anchor_position) return null
 
   // Get component center position
-  const componentCenter: Point =
-    pcbComponent.center || { x: hoveredPrimitive.x, y: hoveredPrimitive.y }
+  const componentCenter: Point = pcbComponent.center || {
+    x: hoveredPrimitive.x,
+    y: hoveredPrimitive.y,
+  }
 
   // Calculate group bounding box with padding
   const groupComponents = elements
