@@ -30,6 +30,24 @@ export const BoardResizeTest = () => {
             pcbY={5}
           />
         )}
+        {boardSize === "large" && (
+          <>
+            <resistor
+              name="R3"
+              footprint="0805"
+              resistance="30k"
+              pcbX={40}
+              pcbY={20}
+            />
+            <resistor
+              name="R4"
+              footprint="0805"
+              resistance="40k"
+              pcbX={-40}
+              pcbY={-20}
+            />
+          </>
+        )}
       </board>,
     )
 

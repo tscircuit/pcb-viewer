@@ -12,7 +12,6 @@ import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
-import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -61,12 +60,6 @@ export const PCBViewer = ({
 
   const initialRenderCompleted = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
-  const prevBoundsRef = useRef<{ width: number; height: number } | null>(null)
-  const circuitJsonKey = useMemo(
-    () => calculateCircuitJsonKey(circuitJson),
-    [circuitJson],
-  )
-  const prevCircuitJsonKey = useRef<string | null>(null)
 
   const pcbElmsPreEdit = useMemo(() => {
     return (
@@ -74,7 +67,7 @@ export const PCBViewer = ({
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
       ) ?? []
     )
-  }, [circuitJsonKey])
+  }, [circuitJson])
 
   const elements = useMemo(() => {
     return applyEditEvents({
@@ -122,37 +115,28 @@ export const PCBViewer = ({
   }
 
   useEffect(() => {
+    if (initialRenderCompleted.current === true) {
+      resetTransform()
+    }
+  }, [
+    boardWidth,
+    boardHeight,
+    elements
+      .filter((e) => e.type === "pcb_board")
+      .flatMap((e: any) => [e.center?.x ?? 0, e.center?.y ?? 0])
+      .join(","),
+  ])
+
+  useEffect(() => {
     if (!refDimensions?.width) return
     if (boardWidth === null || boardHeight === null) return
 
-    const currentBounds = { width: boardWidth, height: boardHeight }
-    const prevBounds = prevBoundsRef.current
-
     if (!initialRenderCompleted.current) {
       resetTransform()
-      prevBoundsRef.current = currentBounds
       initialRenderCompleted.current = true
-      prevCircuitJsonKey.current = circuitJsonKey
       return
     }
-
-    const boundsChanged =
-      !prevBounds ||
-      (prevBounds.width > 0.01 &&
-        Math.abs(currentBounds.width - prevBounds.width) / prevBounds.width >
-          0.01) ||
-      (prevBounds.height > 0.01 &&
-        Math.abs(currentBounds.height - prevBounds.height) / prevBounds.height >
-          0.01) ||
-      Math.abs(currentBounds.width - prevBounds.width) > 0.1 ||
-      Math.abs(currentBounds.height - prevBounds.height) > 0.1
-
-    if (boundsChanged) {
-      resetTransform()
-      prevBoundsRef.current = currentBounds
-      prevCircuitJsonKey.current = circuitJsonKey
-    }
-  }, [boardWidth, boardHeight, refDimensions, circuitJsonKey])
+  }, [boardWidth, boardHeight, refDimensions])
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
