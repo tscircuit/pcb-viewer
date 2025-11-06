@@ -126,30 +126,29 @@ export const convertElementToPrimitives = (
       const { width, height, center, outline } = element
 
       if (outline && outline.length > 2) {
-        return outline.map((point, index, array) => {
-          return {
-            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "line",
-            x1: point.x,
-            y1: point.y,
-            x2: index === array.length - 1 ? array[0].x : array[index + 1].x,
-            y2: index === array.length - 1 ? array[0].y : array[index + 1].y,
-            width: 1, // Add the required width property
-            zoomIndependent: true,
-            layer: "board",
-            _element: element,
-          }
-        })
+        return outline.map((point, index, array) => ({
+          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+          pcb_drawing_type: "line",
+          x1: point.x,
+          y1: point.y,
+          x2: index === array.length - 1 ? array[0].x : array[index + 1].x,
+          y2: index === array.length - 1 ? array[0].y : array[index + 1].y,
+          width: 1,
+          zoomIndependent: true,
+          layer: "board",
+          _element: element,
+        }))
       }
+
       return [
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x - width / 2,
-          y1: center.y - height / 2,
-          x2: center.x + width / 2,
-          y2: center.y - height / 2,
-          width: 1, // Add the required width property
+          x1: center.x - width! / 2,
+          y1: center.y - height! / 2,
+          x2: center.x + width! / 2,
+          y2: center.y - height! / 2,
+          width: 1,
           zoomIndependent: true,
           layer: "board",
           _element: element,
@@ -157,11 +156,11 @@ export const convertElementToPrimitives = (
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x - width / 2,
-          y1: center.y + height / 2,
-          x2: center.x + width / 2,
-          y2: center.y + height / 2,
-          width: 1, // Add the required width property
+          x1: center.x - width! / 2,
+          y1: center.y + height! / 2,
+          x2: center.x + width! / 2,
+          y2: center.y + height! / 2,
+          width: 1,
           zoomIndependent: true,
           layer: "board",
           _element: element,
@@ -169,11 +168,11 @@ export const convertElementToPrimitives = (
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x - width / 2,
-          y1: center.y - height / 2,
-          x2: center.x - width / 2,
-          y2: center.y + height / 2,
-          width: 1, // Add the required width property
+          x1: center.x - width! / 2,
+          y1: center.y - height! / 2,
+          x2: center.x - width! / 2,
+          y2: center.y + height! / 2,
+          width: 1,
           zoomIndependent: true,
           layer: "board",
           _element: element,
@@ -181,17 +180,18 @@ export const convertElementToPrimitives = (
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x + width / 2,
-          y1: center.y - height / 2,
-          x2: center.x + width / 2,
-          y2: center.y + height / 2,
-          width: 1, // Add the required width property
+          x1: center.x + width! / 2,
+          y1: center.y - height! / 2,
+          x2: center.x + width! / 2,
+          y2: center.y + height! / 2,
+          width: 1,
           zoomIndependent: true,
           layer: "board",
           _element: element,
         },
       ]
     }
+
     case "pcb_smtpad": {
       if (element.shape === "rect" || element.shape === "rotated_rect") {
         const { shape, x, y, width, height, layer, rect_border_radius } =
