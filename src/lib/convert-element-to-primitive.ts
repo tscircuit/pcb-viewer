@@ -700,6 +700,7 @@ export const convertElementToPrimitives = (
           is_filled: element.is_filled,
           has_stroke: element.has_stroke,
           is_stroke_dashed: element.is_stroke_dashed,
+          roundness: element.corner_radius,
           _element: element,
         },
       ]
@@ -1201,6 +1202,7 @@ export const convertElementToPrimitives = (
           has_stroke: noteRectElement.has_stroke,
           is_stroke_dashed: noteRectElement.is_stroke_dashed,
           color: noteRectElement.color,
+          roundness: noteRectElement.corner_radius,
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
