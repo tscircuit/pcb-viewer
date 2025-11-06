@@ -7,7 +7,7 @@
         "@emotion/css": "^11.11.2",
         "@tscircuit/alphabet": "^0.0.3",
         "@vitejs/plugin-react": "^5.0.2",
-        "circuit-json": "^0.0.295",
+        "circuit-json": "latest",
         "circuit-to-svg": "^0.0.240",
         "color": "^4.2.3",
         "react-supergrid": "^1.0.10",
@@ -595,7 +595,7 @@
 
     "chownr": ["chownr@1.1.4", "", {}, "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="],
 
-    "circuit-json": ["circuit-json@0.0.295", "", {}, "sha512-vARRbZcTE09JhhRZF5tAwjbQbmTBZ3Z6U4H4PSYBazlWyidPNQcG+sd2kg7xqdGvwznxZ2GDdTSbtyG5O0/aog=="],
+    "circuit-json": ["circuit-json@0.0.302", "", {}, "sha512-r23QAWDm8EYPNGGuWnRUYy8tR3BOplojBtbW5lgLj/npRvJbDDLKWqCTHS0+eSTONcrbTGZAj0lA9xQtSBzGtw=="],
 
     "circuit-json-to-bpc": ["circuit-json-to-bpc@0.0.13", "", { "peerDependencies": { "bpc-graph": "*", "circuit-json": "*", "typescript": "^5" } }, "sha512-3wSMtPa6tJkiBQN4tsm7f0Mb7Wp90X2c8dNbULoDVE4mGGoFqP1DXqBlyvvZZl+4SjqznzQQ0EioLe2SCQTOcg=="],
 
