@@ -69,3 +69,19 @@ jobs:
                 -d "{\"ref\":\"main\",\"inputs\":{\"package_names\":\"${{ env.UPSTREAM_PACKAGES_TO_UPDATE }}\"}}"
             fi
           done
+      - name: Notify release-tracker of version update
+        # Continue-on-error just in case the tracker is down
+        continue-on-error: true
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          PACKAGE_JSON=$(cat package.json)
+          curl -X POST https://release-tracker.tscircuit.com/release_events/create \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"event\": {
+                \"event_type\": \"versions_updated\",
+                \"repo\": \"tscircuit/pcb-viewer\",
+                \"version\": \"$VERSION\",
+                \"package_json\": $PACKAGE_JSON
+              }
+            }"
