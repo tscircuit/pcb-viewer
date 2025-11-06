@@ -123,7 +123,7 @@ export const convertElementToPrimitives = (
       ]
     }
     case "pcb_board": {
-      const { width = 0, height = 0, center, outline } = element
+      const { width, height, center, outline } = element
 
       if (outline && outline.length > 2) {
         return outline.map((point, index, array) => ({
@@ -144,10 +144,10 @@ export const convertElementToPrimitives = (
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x - width / 2,
-          y1: center.y - height / 2,
-          x2: center.x + width / 2,
-          y2: center.y - height / 2,
+          x1: center.x - width! / 2,
+          y1: center.y - height! / 2,
+          x2: center.x + width! / 2,
+          y2: center.y - height! / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
@@ -156,10 +156,10 @@ export const convertElementToPrimitives = (
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x - width / 2,
-          y1: center.y + height / 2,
-          x2: center.x + width / 2,
-          y2: center.y + height / 2,
+          x1: center.x - width! / 2,
+          y1: center.y + height! / 2,
+          x2: center.x + width! / 2,
+          y2: center.y + height! / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
@@ -168,10 +168,10 @@ export const convertElementToPrimitives = (
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x - width / 2,
-          y1: center.y - height / 2,
-          x2: center.x - width / 2,
-          y2: center.y + height / 2,
+          x1: center.x - width! / 2,
+          y1: center.y - height! / 2,
+          x2: center.x - width! / 2,
+          y2: center.y + height! / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
@@ -180,10 +180,10 @@ export const convertElementToPrimitives = (
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: center.x + width / 2,
-          y1: center.y - height / 2,
-          x2: center.x + width / 2,
-          y2: center.y + height / 2,
+          x1: center.x + width! / 2,
+          y1: center.y - height! / 2,
+          x2: center.x + width! / 2,
+          y2: center.y + height! / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
