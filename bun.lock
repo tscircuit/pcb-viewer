@@ -7,7 +7,7 @@
         "@emotion/css": "^11.11.2",
         "@tscircuit/alphabet": "^0.0.3",
         "@vitejs/plugin-react": "^5.0.2",
-        "circuit-json": "latest",
+        "circuit-json": "^0.0.302",
         "circuit-to-svg": "^0.0.240",
         "color": "^4.2.3",
         "react-supergrid": "^1.0.10",
