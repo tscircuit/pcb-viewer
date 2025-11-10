@@ -440,7 +440,7 @@ export const convertElementToPrimitives = (
             y,
             w: rect_pad_width,
             h: rect_pad_height,
-            layer: "bottom", // Rectangular pad on top layer
+            layer: "bottom", // Rectangular pad on bottom layer
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -490,7 +490,7 @@ export const convertElementToPrimitives = (
             y,
             w: rect_pad_width,
             h: rect_pad_height,
-            layer: "bottom", // Rectangular pad on top layer
+            layer: "bottom", // Rectangular pad on bottom layer
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -544,7 +544,7 @@ export const convertElementToPrimitives = (
             y,
             w: rect_pad_width,
             h: rect_pad_height,
-            layer: "bottom", // Rectangular pad on top layer
+            layer: "bottom", // Rectangular pad on bottom layer
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
