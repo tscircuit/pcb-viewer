@@ -1115,13 +1115,19 @@ export const convertElementToPrimitives = (
       })
 
       if (text) {
+        const baseOffset = (font_size ?? 1) * 1.5
+        const perpX = -unitY
+        const perpY = unitX
+        const textOffset =
+          Math.abs(unitX) > Math.abs(unitY) ? baseOffset : -baseOffset
+
         primitives.push({
           _pcb_drawing_object_id: getNewPcbDrawingObjectId(
             "pcb_fabrication_note_dimension",
           ),
           pcb_drawing_type: "text",
-          x: (from.x + to.x) / 2,
-          y: (from.y + to.y) / 2,
+          x: (from.x + to.x) / 2 + perpX * textOffset,
+          y: (from.y + to.y) / 2 + perpY * textOffset,
           layer,
           align: "center",
           text,
@@ -1420,12 +1426,18 @@ export const convertElementToPrimitives = (
 
       // Text label in the middle if provided
       if (text) {
+        const baseOffset = font_size * 1.5
+        const perpX = -unitY
+        const perpY = unitX
+        const textOffset =
+          Math.abs(unitX) > Math.abs(unitY) ? baseOffset : -baseOffset
+
         primitives.push({
           _pcb_drawing_object_id:
             getNewPcbDrawingObjectId("pcb_note_dimension"),
           pcb_drawing_type: "text",
-          x: (from.x + to.x) / 2,
-          y: (from.y + to.y) / 2,
+          x: (from.x + to.x) / 2 + perpX * textOffset,
+          y: (from.y + to.y) / 2 + perpY * textOffset,
           layer: "notes",
           align: "center",
           text,
