@@ -1118,8 +1118,18 @@ export const convertElementToPrimitives = (
         const baseOffset = (font_size ?? 1) * 1.5
         const perpX = -unitY
         const perpY = unitX
-        const textOffset =
-          Math.abs(unitX) > Math.abs(unitY) ? baseOffset : -baseOffset
+        const midpointX = (from.x + to.x) / 2
+        const midpointY = (from.y + to.y) / 2
+
+        // Determine offset direction based on which side of board the dimension is on
+        let textOffset = baseOffset
+        if (Math.abs(unitX) > Math.abs(unitY)) {
+          // Horizontal dimension: offset based on y position
+          textOffset = midpointY >= 0 ? baseOffset : -baseOffset
+        } else {
+          // Vertical dimension: offset based on x position
+          textOffset = midpointX >= 0 ? -baseOffset : baseOffset
+        }
 
         primitives.push({
           _pcb_drawing_object_id: getNewPcbDrawingObjectId(
@@ -1429,8 +1439,18 @@ export const convertElementToPrimitives = (
         const baseOffset = font_size * 1.5
         const perpX = -unitY
         const perpY = unitX
-        const textOffset =
-          Math.abs(unitX) > Math.abs(unitY) ? baseOffset : -baseOffset
+        const midpointX = (from.x + to.x) / 2
+        const midpointY = (from.y + to.y) / 2
+
+        // Determine offset direction based on which side of board the dimension is on
+        let textOffset = baseOffset
+        if (Math.abs(unitX) > Math.abs(unitY)) {
+          // Horizontal dimension: offset based on y position
+          textOffset = midpointY >= 0 ? baseOffset : -baseOffset
+        } else {
+          // Vertical dimension: offset based on x position
+          textOffset = midpointX >= 0 ? -baseOffset : baseOffset
+        }
 
         primitives.push({
           _pcb_drawing_object_id:
