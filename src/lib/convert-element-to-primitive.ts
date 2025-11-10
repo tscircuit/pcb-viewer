@@ -434,6 +434,20 @@ export const convertElementToPrimitives = (
             roundness: rect_border_radius,
           },
           {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "bottom", // Rectangular pad on bottom layer
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            roundness: rect_border_radius,
+          },
+          {
             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
             _element: element,
             pcb_drawing_type: "circle",
@@ -463,6 +477,20 @@ export const convertElementToPrimitives = (
             w: rect_pad_width,
             h: rect_pad_height,
             layer: "top", // Rectangular pad on top layer
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "bottom", // Rectangular pad on bottom layer
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -502,6 +530,21 @@ export const convertElementToPrimitives = (
             w: rect_pad_width,
             h: rect_pad_height,
             layer: "top", // Rectangular pad on top layer
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: rect_ccw_rotation,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "bottom", // Rectangular pad on bottom layer
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
