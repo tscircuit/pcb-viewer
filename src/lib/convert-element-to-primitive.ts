@@ -309,8 +309,8 @@ export const convertElementToPrimitives = (
             ccw_rotation: (element as PcbHoleRotatedPill).ccw_rotation,
           },
         ]
-      } else if ((element as any).hole_shape === "rect") {
-        const { x, y, hole_width, hole_height } = element as any
+      } else if (element.hole_shape === "rect") {
+        const { x, y, hole_width, hole_height } = element
 
         if (typeof hole_width !== "number" || typeof hole_height !== "number") {
           return []
