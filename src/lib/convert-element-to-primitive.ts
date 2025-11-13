@@ -309,8 +309,28 @@ export const convertElementToPrimitives = (
             ccw_rotation: (element as PcbHoleRotatedPill).ccw_rotation,
           },
         ]
+      } else if (element.hole_shape === "rect") {
+        const { x, y, hole_width, hole_height } = element
+
+        if (typeof hole_width !== "number" || typeof hole_height !== "number") {
+          return []
+        }
+
+        return [
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+          },
+        ]
       }
-      // TODO square hole
       // TODO oval hole
       return []
     }
