@@ -11,6 +11,7 @@ export const PcbPanelExample = () => {
             width: 80,
             height: 60,
             covered_with_solder_mask: false,
+            center: { x: 40, y: 30 },
           },
           {
             type: "pcb_board",
