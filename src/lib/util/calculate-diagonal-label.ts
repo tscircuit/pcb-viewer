@@ -3,6 +3,8 @@ export interface DiagonalLabelParams {
   dimensionEnd: { x: number; y: number }
   screenDimensionStart: { x: number; y: number }
   screenDimensionEnd: { x: number; y: number }
+  flipX: boolean
+  flipY: boolean
 }
 
 export interface DiagonalLabelResult {
@@ -21,6 +23,8 @@ export function calculateDiagonalLabel(
     dimensionEnd,
     screenDimensionStart,
     screenDimensionEnd,
+    flipX,
+    flipY,
   } = params
 
   // Calculate dimension distance in world coordinates
@@ -35,10 +39,6 @@ export function calculateDiagonalLabel(
     screenDeltaX * screenDeltaX + screenDeltaY * screenDeltaY,
   )
 
-  // Find midpoint in screen coordinates
-  const midX = (screenDimensionStart.x + screenDimensionEnd.x) / 2
-  const midY = (screenDimensionStart.y + screenDimensionEnd.y) / 2
-
   // Calculate angle of the measurement line
   const angle = Math.atan2(screenDeltaY, screenDeltaX) * (180 / Math.PI)
 
@@ -46,19 +46,39 @@ export function calculateDiagonalLabel(
   const angleFromAxis = Math.min(normalizedAngle, 90 - normalizedAngle)
   const isDiagonal = angleFromAxis > 15
 
-  // Offset perpendicular to the line to avoid collision with the line itself
+  // Find midpoint of the diagonal line
+  const midX = (screenDimensionStart.x + screenDimensionEnd.x) / 2
+  const midY = (screenDimensionStart.y + screenDimensionEnd.y) / 2
+
+  // Offset perpendicular to the line, always pointing away from the inner triangle
   const offsetDistance = 15
   const perpendicularAngle = angle + 90
-  const offsetX =
-    Math.cos((perpendicularAngle * Math.PI) / 180) * offsetDistance
-  const offsetY =
-    Math.sin((perpendicularAngle * Math.PI) / 180) * offsetDistance
+
+  let offsetX = Math.cos((perpendicularAngle * Math.PI) / 180) * offsetDistance
+  let offsetY = Math.sin((perpendicularAngle * Math.PI) / 180) * offsetDistance
+
+  const isNE = screenDeltaX > 0 && screenDeltaY < 0
+  const isSW = screenDeltaX < 0 && screenDeltaY > 0
+
+  if (flipX !== flipY && !isNE) {
+    offsetX = -offsetX
+    offsetY = -offsetY
+  }
+
+  if (isNE) {
+    const lessOffset = -50
+    offsetX += Math.cos((perpendicularAngle * Math.PI) / 180) * lessOffset
+    offsetY += Math.sin((perpendicularAngle * Math.PI) / 180) * lessOffset
+  }
+
+  const x = midX + offsetX
+  const y = midY + offsetY
 
   return {
     distance,
     screenDistance,
-    x: midX + offsetX,
-    y: midY + offsetY,
+    x,
+    y,
     show: distance > 0.01 && screenDistance > 30 && isDiagonal,
   }
 }

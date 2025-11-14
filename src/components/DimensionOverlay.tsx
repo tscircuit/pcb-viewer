@@ -269,6 +269,8 @@ export const DimensionOverlay = ({
     dimensionEnd: dEnd,
     screenDimensionStart: screenDStart,
     screenDimensionEnd: screenDEnd,
+    flipX: arrowScreenBounds.flipX,
+    flipY: arrowScreenBounds.flipY,
   })
 
   return (

@@ -9,6 +9,8 @@ export interface UseDiagonalLabelParams {
   dimensionEnd: { x: number; y: number }
   screenDimensionStart: { x: number; y: number }
   screenDimensionEnd: { x: number; y: number }
+  flipX: boolean
+  flipY: boolean
 }
 
 export function useDiagonalLabel(
@@ -19,6 +21,8 @@ export function useDiagonalLabel(
     dimensionEnd,
     screenDimensionStart,
     screenDimensionEnd,
+    flipX,
+    flipY,
   } = params
 
   return useMemo(
@@ -28,7 +32,16 @@ export function useDiagonalLabel(
         dimensionEnd,
         screenDimensionStart,
         screenDimensionEnd,
+        flipX,
+        flipY,
       }),
-    [dimensionStart, dimensionEnd, screenDimensionStart, screenDimensionEnd],
+    [
+      dimensionStart,
+      dimensionEnd,
+      screenDimensionStart,
+      screenDimensionEnd,
+      flipX,
+      flipY,
+    ],
   )
 }
