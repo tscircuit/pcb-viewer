@@ -42,6 +42,10 @@ export function calculateDiagonalLabel(
   // Calculate angle of the measurement line
   const angle = Math.atan2(screenDeltaY, screenDeltaX) * (180 / Math.PI)
 
+  const normalizedAngle = Math.abs(angle) % 90
+  const angleFromAxis = Math.min(normalizedAngle, 90 - normalizedAngle)
+  const isDiagonal = angleFromAxis > 15
+
   // Offset perpendicular to the line to avoid collision with the line itself
   const offsetDistance = 15
   const perpendicularAngle = angle + 90
@@ -55,6 +59,6 @@ export function calculateDiagonalLabel(
     screenDistance,
     x: midX + offsetX,
     y: midY + offsetY,
-    show: distance > 0.01 && screenDistance > 30,
+    show: distance > 0.01 && screenDistance > 30 && isDiagonal,
   }
 }
