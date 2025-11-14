@@ -9,6 +9,7 @@ import {
   mergeBoundingBoxes,
 } from "lib/util/get-primitive-bounding-box"
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
+import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 
 interface Props {
   transform?: Matrix
@@ -263,6 +264,13 @@ export const DimensionOverlay = ({
   arrowScreenBounds.width = arrowScreenBounds.right - arrowScreenBounds.left
   arrowScreenBounds.height = arrowScreenBounds.bottom - arrowScreenBounds.top
 
+  const diagonalLabel = useDiagonalLabel({
+    realWorldStart: dStart,
+    realWorldEnd: dEnd,
+    screenStart: screenDStart,
+    screenEnd: screenDEnd,
+  })
+
   return (
     <div
       ref={containerRef}
@@ -319,56 +327,25 @@ export const DimensionOverlay = ({
       {children}
       {dimensionToolVisible && (
         <>
-          {/* Diagonal distance label along the main line */}
-          {(() => {
-            const dx = dEnd.x - dStart.x
-            const dy = dEnd.y - dStart.y
-            const distance = Math.sqrt(dx * dx + dy * dy)
+          {diagonalLabel.show && (
+            <div
+              style={{
+                position: "absolute",
+                left: diagonalLabel.x,
+                top: diagonalLabel.y,
+                color: "red",
+                mixBlendMode: "difference",
+                pointerEvents: "none",
+                fontSize: 12,
+                fontFamily: "sans-serif",
+                whiteSpace: "nowrap",
+                zIndex: zIndexMap.dimensionOverlay,
+              }}
+            >
+              {diagonalLabel.distance.toFixed(2)}
+            </div>
+          )}
 
-            // Use screen coordinates for angle calculation
-            const screenDx = screenDEnd.x - screenDStart.x
-            const screenDy = screenDEnd.y - screenDStart.y
-            const screenDistance = Math.sqrt(
-              screenDx * screenDx + screenDy * screenDy,
-            )
-
-            const midX = (screenDStart.x + screenDEnd.x) / 2
-            const midY = (screenDStart.y + screenDEnd.y) / 2
-            const angle = Math.atan2(screenDy, screenDx) * (180 / Math.PI)
-
-            // Offset perpendicular to the line to avoid collision
-            const offsetDistance = 15
-            const perpAngle = angle + 90
-            const offsetX =
-              Math.cos((perpAngle * Math.PI) / 180) * offsetDistance
-            const offsetY =
-              Math.sin((perpAngle * Math.PI) / 180) * offsetDistance
-
-            // Only show diagonal label if distance is significant
-            if (distance > 0.01 && screenDistance > 30) {
-              return (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: midX + offsetX,
-                    top: midY + offsetY,
-                    color: "red",
-                    mixBlendMode: "difference",
-                    pointerEvents: "none",
-                    fontSize: 12,
-                    fontFamily: "sans-serif",
-                    whiteSpace: "nowrap",
-                    zIndex: zIndexMap.dimensionOverlay,
-                  }}
-                >
-                  {distance.toFixed(2)}
-                </div>
-              )
-            }
-            return null
-          })()}
-
-          {/* Horizontal measurement */}
           <div
             style={{
               position: "absolute",
@@ -388,7 +365,6 @@ export const DimensionOverlay = ({
             {Math.abs(dStart.x - dEnd.x).toFixed(2)}
           </div>
 
-          {/* Vertical measurement */}
           <div
             style={{
               position: "absolute",
