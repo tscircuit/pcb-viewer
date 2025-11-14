@@ -265,10 +265,10 @@ export const DimensionOverlay = ({
   arrowScreenBounds.height = arrowScreenBounds.bottom - arrowScreenBounds.top
 
   const diagonalLabel = useDiagonalLabel({
-    realWorldStart: dStart,
-    realWorldEnd: dEnd,
-    screenStart: screenDStart,
-    screenEnd: screenDEnd,
+    dimensionStart: dStart,
+    dimensionEnd: dEnd,
+    screenDimensionStart: screenDStart,
+    screenDimensionEnd: screenDEnd,
   })
 
   return (

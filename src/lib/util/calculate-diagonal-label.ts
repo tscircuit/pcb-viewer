@@ -1,8 +1,8 @@
 export interface DiagonalLabelParams {
-  realWorldStart: { x: number; y: number }
-  realWorldEnd: { x: number; y: number }
-  screenStart: { x: number; y: number }
-  screenEnd: { x: number; y: number }
+  dimensionStart: { x: number; y: number }
+  dimensionEnd: { x: number; y: number }
+  screenDimensionStart: { x: number; y: number }
+  screenDimensionEnd: { x: number; y: number }
 }
 
 export interface DiagonalLabelResult {
@@ -16,23 +16,28 @@ export interface DiagonalLabelResult {
 export function calculateDiagonalLabel(
   params: DiagonalLabelParams,
 ): DiagonalLabelResult {
-  const { realWorldStart, realWorldEnd, screenStart, screenEnd } = params
+  const {
+    dimensionStart,
+    dimensionEnd,
+    screenDimensionStart,
+    screenDimensionEnd,
+  } = params
 
-  // Calculate real-world distance
-  const deltaX = realWorldEnd.x - realWorldStart.x
-  const deltaY = realWorldEnd.y - realWorldStart.y
+  // Calculate dimension distance in world coordinates
+  const deltaX = dimensionEnd.x - dimensionStart.x
+  const deltaY = dimensionEnd.y - dimensionStart.y
   const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
 
   // Calculate screen distance and angle
-  const screenDeltaX = screenEnd.x - screenStart.x
-  const screenDeltaY = screenEnd.y - screenStart.y
+  const screenDeltaX = screenDimensionEnd.x - screenDimensionStart.x
+  const screenDeltaY = screenDimensionEnd.y - screenDimensionStart.y
   const screenDistance = Math.sqrt(
     screenDeltaX * screenDeltaX + screenDeltaY * screenDeltaY,
   )
 
-  // Find midpoint
-  const midX = (screenStart.x + screenEnd.x) / 2
-  const midY = (screenStart.y + screenEnd.y) / 2
+  // Find midpoint in screen coordinates
+  const midX = (screenDimensionStart.x + screenDimensionEnd.x) / 2
+  const midY = (screenDimensionStart.y + screenDimensionEnd.y) / 2
 
   // Calculate angle of the measurement line
   const angle = Math.atan2(screenDeltaY, screenDeltaX) * (180 / Math.PI)
