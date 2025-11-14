@@ -97,9 +97,9 @@ export const DimensionOverlay = ({
 
   const snappingPoints = useMemo(() => {
     const points: {
-      anchor: NinePointAnchor
+      anchor: NinePointAnchor | "origin"
       point: { x: number; y: number }
-      element: object
+      element: object | null
     }[] = []
 
     elementBoundingBoxes.forEach((bounds, element) => {
@@ -130,6 +130,12 @@ export const DimensionOverlay = ({
           element,
         })
       }
+    })
+
+    points.push({
+      anchor: "origin",
+      point: { x: 0, y: 0 },
+      element: null,
     })
 
     return points
