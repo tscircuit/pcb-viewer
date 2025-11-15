@@ -58,6 +58,8 @@ export function calculateDiagonalLabel(
   let offsetY = Math.sin((perpendicularAngle * Math.PI) / 180) * offsetDistance
 
   const isNE = screenDeltaX > 0 && screenDeltaY < 0
+  const isNW = screenDeltaX < 0 && screenDeltaY < 0
+  const isSE = screenDeltaX > 0 && screenDeltaY > 0
   const isSW = screenDeltaX < 0 && screenDeltaY > 0
 
   if (flipX !== flipY && !isNE) {
@@ -66,9 +68,21 @@ export function calculateDiagonalLabel(
   }
 
   if (isNE) {
-    const lessOffset = -50
+    const lessOffset = -45
     offsetX += Math.cos((perpendicularAngle * Math.PI) / 180) * lessOffset
     offsetY += Math.sin((perpendicularAngle * Math.PI) / 180) * lessOffset
+  }
+
+  if (isSE) {
+    const seAdjust = -10
+    offsetX += Math.cos((perpendicularAngle * Math.PI) / 180) + seAdjust * 2
+    offsetY += Math.sin((perpendicularAngle * Math.PI) / 180) + seAdjust
+  }
+
+  if (isSW) {
+    const reduceOffset = 10
+    offsetX += Math.cos((perpendicularAngle * Math.PI) / 180) * reduceOffset
+    offsetY += Math.sin((perpendicularAngle * Math.PI) / 180) * reduceOffset
   }
 
   const x = midX + offsetX
