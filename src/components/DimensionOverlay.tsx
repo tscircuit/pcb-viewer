@@ -9,6 +9,7 @@ import {
   mergeBoundingBoxes,
 } from "lib/util/get-primitive-bounding-box"
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
+import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 
 interface Props {
   transform?: Matrix
@@ -269,6 +270,15 @@ export const DimensionOverlay = ({
   arrowScreenBounds.width = arrowScreenBounds.right - arrowScreenBounds.left
   arrowScreenBounds.height = arrowScreenBounds.bottom - arrowScreenBounds.top
 
+  const diagonalLabel = useDiagonalLabel({
+    dimensionStart: dStart,
+    dimensionEnd: dEnd,
+    screenDimensionStart: screenDStart,
+    screenDimensionEnd: screenDEnd,
+    flipX: arrowScreenBounds.flipX,
+    flipY: arrowScreenBounds.flipY,
+  })
+
   return (
     <div
       ref={containerRef}
@@ -325,6 +335,25 @@ export const DimensionOverlay = ({
       {children}
       {dimensionToolVisible && (
         <>
+          {diagonalLabel.show && (
+            <div
+              style={{
+                position: "absolute",
+                left: diagonalLabel.x,
+                top: diagonalLabel.y,
+                color: "red",
+                mixBlendMode: "difference",
+                pointerEvents: "none",
+                fontSize: 12,
+                fontFamily: "sans-serif",
+                whiteSpace: "nowrap",
+                zIndex: zIndexMap.dimensionOverlay,
+              }}
+            >
+              {diagonalLabel.distance.toFixed(2)}
+            </div>
+          )}
+
           <div
             style={{
               position: "absolute",
@@ -343,6 +372,7 @@ export const DimensionOverlay = ({
           >
             {Math.abs(dStart.x - dEnd.x).toFixed(2)}
           </div>
+
           <div
             style={{
               position: "absolute",
