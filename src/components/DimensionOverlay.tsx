@@ -10,6 +10,7 @@ import {
 } from "lib/util/get-primitive-bounding-box"
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
 import { useDiagonalLabel } from "hooks/useDiagonalLabel"
+import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
 
 interface Props {
   transform?: Matrix
@@ -83,6 +84,13 @@ export const DimensionOverlay = ({
     for (const primitive of primitives) {
       if (!primitive._element) continue
       if (shouldExcludePrimitiveFromSnapping(primitive)) continue
+      if (primitive.pcb_drawing_type === "pill") continue
+      if (
+        primitive.pcb_drawing_type === "rect" &&
+        primitive.ccw_rotation &&
+        primitive.ccw_rotation !== 0
+      )
+        continue
       const bbox = getPrimitiveBoundingBox(primitive)
       if (!bbox) continue
 
@@ -96,9 +104,35 @@ export const DimensionOverlay = ({
     return boundingBoxes
   }, [primitives])
 
+  const primitiveSnappingPoints = useMemo(() => {
+    const snapPoints: {
+      anchor: NinePointAnchor | string
+      point: { x: number; y: number }
+      element: object
+    }[] = []
+
+    for (const primitive of primitives) {
+      if (!primitive._element) continue
+      if (shouldExcludePrimitiveFromSnapping(primitive)) continue
+
+      const primitivePoints = getPrimitiveSnapPoints(primitive)
+      if (primitivePoints.length === 0) continue
+
+      for (const snap of primitivePoints) {
+        snapPoints.push({
+          anchor: snap.anchor,
+          point: snap.point,
+          element: primitive._element as object,
+        })
+      }
+    }
+
+    return snapPoints
+  }, [primitives])
+
   const snappingPoints = useMemo(() => {
     const points: {
-      anchor: NinePointAnchor | "origin"
+      anchor: NinePointAnchor | "origin" | string
       point: { x: number; y: number }
       element: object | null
     }[] = []
@@ -133,6 +167,10 @@ export const DimensionOverlay = ({
       }
     })
 
+    for (const snap of primitiveSnappingPoints) {
+      points.push(snap)
+    }
+
     points.push({
       anchor: "origin",
       point: { x: 0, y: 0 },
@@ -140,7 +178,7 @@ export const DimensionOverlay = ({
     })
 
     return points
-  }, [elementBoundingBoxes])
+  }, [elementBoundingBoxes, primitiveSnappingPoints])
 
   const snappingPointsWithScreen = useMemo(() => {
     return snappingPoints.map((snap, index) => ({
