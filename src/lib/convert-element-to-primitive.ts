@@ -11,7 +11,7 @@ import type {
   PcbHoleRotatedPill,
 } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
-import type { Primitive } from "./types"
+import type { BRepShape, PointWithBulge, Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 import { distance } from "circuit-json"
 
@@ -31,6 +31,166 @@ const normalizePolygonPoints = (points: Point[] | undefined) =>
     x: distance.parse(point.x),
     y: distance.parse(point.y),
   }))
+
+const normalizePointWithBulge = (
+  point: unknown,
+): PointWithBulge | null => {
+  if (!point) return null
+
+  if (Array.isArray(point)) {
+    if (point.length < 2) return null
+    const normalized: PointWithBulge = {
+      x: distance.parse(point[0] as number),
+      y: distance.parse(point[1] as number),
+    }
+    const bulge = point[2]
+    if (typeof bulge === "number" && !Number.isNaN(bulge)) {
+      normalized.bulge = bulge
+    }
+    return normalized
+  }
+
+  if (typeof point === "object") {
+    const vertex = point as Record<string, unknown>
+    if (vertex?.x === undefined || vertex?.y === undefined) return null
+
+    const normalized: PointWithBulge = {
+      x: distance.parse(vertex.x as number),
+      y: distance.parse(vertex.y as number),
+    }
+
+    const bulge = vertex.bulge
+    if (typeof bulge === "number" && !Number.isNaN(bulge)) {
+      normalized.bulge = bulge
+    }
+
+    return normalized
+  }
+
+  return null
+}
+
+const normalizeRingVertices = (ring: unknown): PointWithBulge[] => {
+  if (!ring) return []
+
+  const verticesSource = Array.isArray(ring)
+    ? ring
+    : Array.isArray((ring as any).vertices)
+      ? (ring as any).vertices
+      : Array.isArray((ring as any).points)
+        ? (ring as any).points
+        : Array.isArray((ring as any).route)
+          ? (ring as any).route
+          : []
+
+  return (verticesSource as unknown[]) 
+    .map((vertex) => normalizePointWithBulge(vertex))
+    .filter((vertex): vertex is PointWithBulge => Boolean(vertex))
+}
+
+const tryCreateBrepFromCandidate = (candidate: unknown): BRepShape | null => {
+  if (!candidate) return null
+
+  const handleVertexArray = (vertices: unknown) => {
+    const normalized = normalizeRingVertices(vertices)
+    if (normalized.length === 0) return null
+    return { outer_ring: { vertices: normalized } }
+  }
+
+  if (Array.isArray(candidate)) {
+    return handleVertexArray(candidate)
+  }
+
+  if (typeof candidate !== "object") {
+    return null
+  }
+
+  const candidateObj = candidate as Record<string, unknown>
+
+  if (Array.isArray(candidateObj.vertices)) {
+    return handleVertexArray(candidateObj.vertices)
+  }
+
+  if (Array.isArray(candidateObj.points)) {
+    return handleVertexArray(candidateObj.points)
+  }
+
+  if (Array.isArray(candidateObj.route)) {
+    return handleVertexArray(candidateObj.route)
+  }
+
+  const outerRingCandidate =
+    candidateObj.outer_ring ??
+    candidateObj.outerRing ??
+    candidateObj.ring ??
+    (Array.isArray(candidateObj.rings)
+      ? (candidateObj.rings as unknown[])[0]
+      : undefined)
+
+  if (outerRingCandidate) {
+    const outer_ring = {
+      vertices: normalizeRingVertices(outerRingCandidate),
+    }
+
+    if (outer_ring.vertices.length === 0) {
+      return null
+    }
+
+    const innerRingCandidates =
+      candidateObj.inner_rings ??
+      candidateObj.innerRings ??
+      candidateObj.holes ??
+      (Array.isArray(candidateObj.rings)
+        ? (candidateObj.rings as unknown[]).slice(1)
+        : undefined)
+
+    const normalizedInner = innerRingCandidates
+      ? (innerRingCandidates as unknown[])
+          .map((ring) => ({ vertices: normalizeRingVertices(ring) }))
+          .filter((ring) => ring.vertices.length > 0)
+      : undefined
+
+    return {
+      outer_ring,
+      ...(normalizedInner && normalizedInner.length > 0
+        ? { inner_rings: normalizedInner }
+        : {}),
+    }
+  }
+
+  if (candidateObj.path) {
+    const nested = tryCreateBrepFromCandidate(candidateObj.path)
+    if (nested) return nested
+  }
+
+  if (candidateObj.brep_shape) {
+    const nested = tryCreateBrepFromCandidate(candidateObj.brep_shape)
+    if (nested) return nested
+  }
+
+  return null
+}
+
+const resolveCutoutPathBrep = (element: any): BRepShape | null => {
+  const candidates = [
+    element?.path,
+    element?.brep_shape,
+    element?.path_definition,
+    element?.path_outline,
+    element?.rings,
+    element?.route,
+    element?.points,
+  ]
+
+  for (const candidate of candidates) {
+    const brep = tryCreateBrepFromCandidate(candidate)
+    if (brep) {
+      return brep
+    }
+  }
+
+  return null
+}
 
 export const convertElementToPrimitives = (
   element: AnyCircuitElement,
@@ -1231,6 +1391,29 @@ export const convertElementToPrimitives = (
                 getNewPcbDrawingObjectId("pcb_cutout_polygon"),
               pcb_drawing_type: "polygon",
               points: normalizePolygonPoints(cutoutElement.points as any),
+              layer: "drill",
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+            },
+          ]
+        }
+        case "path": {
+          const brepShape = resolveCutoutPathBrep(cutoutElement)
+
+          if (!brepShape) {
+            console.warn(
+              "Unsupported pcb_cutout path definition, expected at least one vertex",
+            )
+            return []
+          }
+
+          return [
+            {
+              _pcb_drawing_object_id:
+                getNewPcbDrawingObjectId("pcb_cutout_path"),
+              pcb_drawing_type: "polygon_with_arcs",
+              brep_shape: brepShape,
               layer: "drill",
               _element: element,
               _parent_pcb_component,
