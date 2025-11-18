@@ -56,36 +56,6 @@ export const PcbCutoutsExample: React.FC = () => {
         { x: -1.176, y: -14.19 }, // Top-left inner point
       ],
     },
-    {
-      type: "pcb_cutout",
-      pcb_cutout_id: "pcb_cutout_path_wave",
-      shape: "path",
-      path: {
-        outer_ring: {
-          vertices: [
-            { x: -15, y: -5 },
-            { x: -10, y: -8, bulge: 0.3 },
-            { x: -5, y: -5 },
-            { x: 0, y: -8, bulge: -0.3 },
-            { x: 5, y: -5 },
-            { x: 10, y: -8, bulge: 0.3 },
-            { x: 15, y: -5 },
-            { x: 15, y: -1 },
-            { x: -15, y: -1 },
-          ],
-        },
-        inner_rings: [
-          {
-            vertices: [
-              { x: -5, y: -4 },
-              { x: -2, y: -4 },
-              { x: -2, y: -2 },
-              { x: -5, y: -2 },
-            ],
-          },
-        ],
-      },
-    },
   ]
 
   return (
