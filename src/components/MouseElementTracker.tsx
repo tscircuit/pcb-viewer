@@ -170,7 +170,7 @@ export const MouseElementTracker = ({
   onMouseHoverOverPrimitives,
 }: {
   elements: AnyCircuitElement[]
-  children: any
+  children: React.ReactNode
   transform?: Matrix
   primitives: Primitive[]
   onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void

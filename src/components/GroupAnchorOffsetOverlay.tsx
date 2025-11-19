@@ -34,6 +34,7 @@ interface Props {
   transform: Matrix
   containerWidth: number
   containerHeight: number
+  children?: any
 }
 
 interface Point {
@@ -102,11 +103,14 @@ export const GroupAnchorOffsetOverlay = ({
   transform,
   containerWidth,
   containerHeight,
+  children,
 }: Props) => {
-  const is_showing_pcb_groups = useGlobalStore((s) => s.is_showing_pcb_groups)
+  const is_showing_group_anchor_offsets = useGlobalStore(
+    (s) => s.is_showing_group_anchor_offsets,
+  )
 
   // Early returns for cases where overlay should not be shown
-  if (!is_showing_pcb_groups || highlightedPrimitives.length === 0) {
+  if (!is_showing_group_anchor_offsets || highlightedPrimitives.length === 0) {
     return null
   }
 
