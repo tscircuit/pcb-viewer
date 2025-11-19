@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from "react"
-import type { Matrix } from "transformation-matrix"
-import { applyToPoint, inverse } from "transformation-matrix"
-import type { Primitive } from "lib/types"
-import { ElementOverlayBox } from "./ElementOverlayBox"
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement } from "circuit-json"
 import { distance } from "circuit-json"
+import type { Primitive } from "lib/types"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import React, { useState, useMemo } from "react"
+import { useMeasure } from "react-use"
+import type { Matrix } from "transformation-matrix"
+import { applyToPoint, inverse } from "transformation-matrix"
+import { ElementOverlayBox } from "./ElementOverlayBox"
+import { GroupAnchorOffsetOverlay } from "./GroupAnchorOffsetOverlay"
 
 const getPolygonBoundingBox = (
   points: ReadonlyArray<{ x: number; y: number }>,
@@ -175,6 +177,8 @@ export const MouseElementTracker = ({
 }) => {
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
+
   const highlightedPrimitives = useMemo(() => {
     const highlightedPrimitives: HighlightedPrimitive[] = []
     for (const primitive of mousedPrimitives) {
@@ -281,7 +285,8 @@ export const MouseElementTracker = ({
 
   return (
     <div
-      style={{ position: "relative" }}
+      ref={containerRef}
+      style={{ position: "relative", width: "100%", height: "100%" }}
       onMouseMove={(e) => {
         if (transform) {
           const rect = e.currentTarget.getBoundingClientRect()
@@ -306,6 +311,15 @@ export const MouseElementTracker = ({
         mousePos={mousePos}
         highlightedPrimitives={highlightedPrimitives}
       />
+      {transform && (
+        <GroupAnchorOffsetOverlay
+          elements={elements}
+          highlightedPrimitives={highlightedPrimitives}
+          transform={transform}
+          containerWidth={width}
+          containerHeight={height}
+        />
+      )}
     </div>
   )
 }
