@@ -9,6 +9,9 @@ import type {
   PcbPanel,
   PcbHole,
   PcbHoleRotatedPill,
+  PcbCutoutRect,
+  PcbCutoutCircle,
+  PcbCutoutPolygon,
 } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
@@ -1279,9 +1282,12 @@ export const convertElementToPrimitives = (
       ]
     }
     case "pcb_cutout": {
-      const cutoutElement = element as any
-      switch (cutoutElement.shape) {
+      switch (element.shape) {
         case "rect": {
+          const cutoutElement = element as PcbCutoutRect
+          const corner_radius = cutoutElement.corner_radius
+          const ccw_rotation = cutoutElement.rotation ?? cutoutElement.rotation
+
           return [
             {
               _pcb_drawing_object_id:
@@ -1292,6 +1298,8 @@ export const convertElementToPrimitives = (
               w: cutoutElement.width,
               h: cutoutElement.height,
               layer: "drill",
+              roundness: corner_radius,
+              ccw_rotation,
               _element: element,
               _parent_pcb_component,
               _parent_source_component,
@@ -1299,6 +1307,8 @@ export const convertElementToPrimitives = (
           ]
         }
         case "circle": {
+          const cutoutElement = element as PcbCutoutCircle
+
           return [
             {
               _pcb_drawing_object_id:
@@ -1315,12 +1325,14 @@ export const convertElementToPrimitives = (
           ]
         }
         case "polygon": {
+          const cutoutElement = element as PcbCutoutPolygon
+
           return [
             {
               _pcb_drawing_object_id:
                 getNewPcbDrawingObjectId("pcb_cutout_polygon"),
               pcb_drawing_type: "polygon",
-              points: normalizePolygonPoints(cutoutElement.points as any),
+              points: normalizePolygonPoints(cutoutElement.points),
               layer: "drill",
               _element: element,
               _parent_pcb_component,
@@ -1329,7 +1341,7 @@ export const convertElementToPrimitives = (
           ]
         }
         default:
-          console.warn(`Unsupported pcb_cutout shape: ${cutoutElement.shape}`)
+          console.warn(`Unsupported pcb_cutout shape: ${element.shape}`)
           return []
       }
     }
