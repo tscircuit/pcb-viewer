@@ -1282,6 +1282,10 @@ export const convertElementToPrimitives = (
       const cutoutElement = element as any
       switch (cutoutElement.shape) {
         case "rect": {
+          const corner_radius = cutoutElement.corner_radius
+          const ccw_rotation =
+            (cutoutElement as any).rotation ?? cutoutElement.ccw_rotation
+
           return [
             {
               _pcb_drawing_object_id:
@@ -1292,6 +1296,8 @@ export const convertElementToPrimitives = (
               w: cutoutElement.width,
               h: cutoutElement.height,
               layer: "drill",
+              roundness: corner_radius,
+              ccw_rotation,
               _element: element,
               _parent_pcb_component,
               _parent_source_component,
