@@ -706,20 +706,20 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     )
                   }}
                 />
-                <CheckboxMenuItem
-                  label="Show PCB Groups"
-                  checked={viewSettings.is_showing_pcb_groups}
-                  onClick={() => {
-                    setIsShowingPcbGroups(!viewSettings.is_showing_pcb_groups)
-                  }}
-                />
-                <CheckboxMenuItem
+                 <CheckboxMenuItem
                   label="Show Group Anchor Offsets"
                   checked={viewSettings.is_showing_group_anchor_offsets}
                   onClick={() => {
                     setIsShowingGroupAnchorOffsets(
                       !viewSettings.is_showing_group_anchor_offsets,
                     )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show PCB Groups"
+                  checked={viewSettings.is_showing_pcb_groups}
+                  onClick={() => {
+                    setIsShowingPcbGroups(!viewSettings.is_showing_pcb_groups)
                   }}
                 />
                 {viewSettings.is_showing_pcb_groups && (

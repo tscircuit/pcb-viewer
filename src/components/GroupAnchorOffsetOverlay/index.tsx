@@ -1,32 +1,18 @@
-import { getBoundsFromPoints } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
 import { applyToPoint } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
-import { useGlobalStore } from "../global-store"
-import type { BoundingBox } from "../lib/util/get-primitive-bounding-box"
-import { zIndexMap } from "../lib/util/z-index-map"
-import type { HighlightedPrimitive } from "./MouseElementTracker"
+import { useGlobalStore } from "../../global-store"
+import type { BoundingBox } from "../../lib/util/get-primitive-bounding-box"
+import { zIndexMap } from "../../lib/util/z-index-map"
+import type { HighlightedPrimitive } from "../MouseElementTracker"
+import { calculateGroupBoundingBox } from "./calculateGroupBoundingBox"
+import { COLORS, VISUAL_CONFIG } from "./constants"
+import { findAnchorMarkerPosition } from "./findAnchorMarkerPosition"
 
-// Constants for visual styling and thresholds
-const VISUAL_CONFIG = {
-  GROUP_PADDING: 1, // mm - padding around group bounds (matches PcbGroupOverlay)
-  MIN_LINE_LENGTH_FOR_LABEL: 40, // px - minimum line length to show labels
-  LABEL_OFFSET_ABOVE: 2, // px - label offset when positioned above line
-  LABEL_OFFSET_BELOW: -18, // px - label offset when positioned below line
-  LABEL_OFFSET_RIGHT: 8, // px - label offset when positioned to the right
-  LABEL_OFFSET_LEFT: -80, // px - label offset when positioned to the left
-  LINE_STROKE_WIDTH: 1.5,
-  LINE_DASH_PATTERN: "4,4",
-  COMPONENT_MARKER_RADIUS: 3,
-  LABEL_FONT_SIZE: 11,
-} as const
-
-const COLORS = {
-  OFFSET_LINE: "white",
-  COMPONENT_MARKER_FILL: "#66ccff",
-  COMPONENT_MARKER_STROKE: "white",
-  LABEL_TEXT: "white",
-} as const
+type Point = {
+  x: number
+  y: number
+}
 
 interface Props {
   elements: AnyCircuitElement[]
@@ -35,62 +21,6 @@ interface Props {
   containerWidth: number
   containerHeight: number
   children?: any
-}
-
-interface Point {
-  x: number
-  y: number
-}
-
-/**
- * Calculates the bounding box for all components within a PCB group
- */
-const calculateGroupBoundingBox = (
-  groupComponents: PcbComponent[],
-): BoundingBox | null => {
-  const points: Point[] = []
-
-  for (const comp of groupComponents) {
-    if (
-      !comp.center ||
-      typeof comp.width !== "number" ||
-      typeof comp.height !== "number"
-    ) {
-      continue
-    }
-
-    const halfWidth = comp.width / 2
-    const halfHeight = comp.height / 2
-
-    points.push({ x: comp.center.x - halfWidth, y: comp.center.y - halfHeight })
-    points.push({ x: comp.center.x + halfWidth, y: comp.center.y + halfHeight })
-  }
-
-  return getBoundsFromPoints(points)
-}
-
-/**
- * Finds the anchor marker position at the nearest edge of the group boundary.
- * The anchor marker ("+") is displayed at the group edge closest to the logical anchor point.
- */
-const findAnchorMarkerPosition = (
-  anchor: Point,
-  bounds: BoundingBox,
-): Point => {
-  const { minX, maxX, minY, maxY } = bounds
-
-  const distToLeft = Math.abs(anchor.x - minX)
-  const distToRight = Math.abs(anchor.x - maxX)
-  const distToTop = Math.abs(anchor.y - maxY)
-  const distToBottom = Math.abs(anchor.y - minY)
-
-  const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom)
-
-  // Position at the nearest edge
-  if (minDist === distToLeft) return { x: minX, y: anchor.y }
-  if (minDist === distToRight) return { x: maxX, y: anchor.y }
-  if (minDist === distToTop) return { x: anchor.x, y: maxY }
-  return { x: anchor.x, y: minY }
 }
 
 /**
@@ -109,12 +39,10 @@ export const GroupAnchorOffsetOverlay = ({
     (s) => s.is_showing_group_anchor_offsets,
   )
 
-  // Early returns for cases where overlay should not be shown
   if (!is_showing_group_anchor_offsets || highlightedPrimitives.length === 0) {
     return null
   }
 
-  // Find the hovered component
   const hoveredPrimitive = highlightedPrimitives.find(
     (p) =>
       p._parent_pcb_component?.type === "pcb_component" ||
@@ -128,14 +56,12 @@ export const GroupAnchorOffsetOverlay = ({
 
   if (!pcbComponent?.pcb_group_id) return null
 
-  // Find the parent group and verify it has an anchor
   const parentGroup = elements
     .filter((el): el is PcbGroup => el.type === "pcb_group")
     .find((group) => group.pcb_group_id === pcbComponent.pcb_group_id)
 
   if (!parentGroup?.anchor_position) return null
 
-  // Get target position (pad center or component center)
   const targetCenter: Point =
     hoveredPrimitive._element?.type === "pcb_smtpad"
       ? { x: hoveredPrimitive.x, y: hoveredPrimitive.y }
@@ -144,7 +70,6 @@ export const GroupAnchorOffsetOverlay = ({
           y: hoveredPrimitive.y,
         }
 
-  // Calculate group bounding box with padding
   const groupComponents = elements
     .filter((el): el is PcbComponent => el.type === "pcb_component")
     .filter((comp) => comp.pcb_group_id === parentGroup.pcb_group_id)
@@ -152,7 +77,6 @@ export const GroupAnchorOffsetOverlay = ({
   const boundingBox = calculateGroupBoundingBox(groupComponents)
   if (!boundingBox) return null
 
-  // Apply padding to bounding box
   const groupBounds: BoundingBox = {
     minX: boundingBox.minX - VISUAL_CONFIG.GROUP_PADDING,
     maxX: boundingBox.maxX + VISUAL_CONFIG.GROUP_PADDING,
@@ -160,22 +84,17 @@ export const GroupAnchorOffsetOverlay = ({
     maxY: boundingBox.maxY + VISUAL_CONFIG.GROUP_PADDING,
   }
 
-  // Find where the anchor marker is visually displayed
   const anchorMarkerPosition = findAnchorMarkerPosition(
     parentGroup.anchor_position,
     groupBounds,
   )
 
-  // Calculate offsets from the visual anchor marker position
-  // This ensures displayed values match the drawn lines
   const offsetX = targetCenter.x - anchorMarkerPosition.x
   const offsetY = targetCenter.y - anchorMarkerPosition.y
 
-  // Convert to screen coordinates
   const anchorMarkerScreen = applyToPoint(transform, anchorMarkerPosition)
   const componentScreen = applyToPoint(transform, targetCenter)
 
-  // Calculate line lengths and label positioning
   const xLineLength = Math.abs(componentScreen.x - anchorMarkerScreen.x)
   const yLineLength = Math.abs(componentScreen.y - anchorMarkerScreen.y)
 
@@ -190,11 +109,9 @@ export const GroupAnchorOffsetOverlay = ({
     ? VISUAL_CONFIG.LABEL_OFFSET_RIGHT
     : VISUAL_CONFIG.LABEL_OFFSET_LEFT
 
-  // Only show labels if lines are long enough to avoid clutter
   const shouldShowXLabel = xLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
   const shouldShowYLabel = yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-  // Common label styles
   const labelStyle: React.CSSProperties = {
     color: COLORS.LABEL_TEXT,
     mixBlendMode: "difference",
@@ -227,7 +144,6 @@ export const GroupAnchorOffsetOverlay = ({
         width={containerWidth}
         height={containerHeight}
       >
-        {/* Horizontal offset line (X-axis) */}
         <line
           x1={anchorMarkerScreen.x}
           y1={anchorMarkerScreen.y}
@@ -238,7 +154,6 @@ export const GroupAnchorOffsetOverlay = ({
           strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
         />
 
-        {/* Vertical offset line (Y-axis) */}
         <line
           x1={componentScreen.x}
           y1={anchorMarkerScreen.y}
@@ -249,7 +164,6 @@ export const GroupAnchorOffsetOverlay = ({
           strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
         />
 
-        {/* Component center marker */}
         <circle
           cx={componentScreen.x}
           cy={componentScreen.y}
@@ -260,7 +174,6 @@ export const GroupAnchorOffsetOverlay = ({
         />
       </svg>
 
-      {/* X-axis offset label */}
       {shouldShowXLabel && (
         <div
           style={{
@@ -276,7 +189,6 @@ export const GroupAnchorOffsetOverlay = ({
         </div>
       )}
 
-      {/* Y-axis offset label */}
       {shouldShowYLabel && (
         <div
           style={{
