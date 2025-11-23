@@ -986,31 +986,53 @@ export const convertElementToPrimitives = (
       if (type === "pcb_silkscreen_path") {
         layer =
           element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen"
+
+        return route
+          .slice(0, -1)
+          .map((point, index) => {
+            const nextPoint = route[index + 1]
+            return {
+              _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "line",
+              x1: point.x,
+              y1: point.y,
+              x2: nextPoint.x,
+              y2: nextPoint.y,
+              width: element.stroke_width ?? 0.1,
+              squareCap: false,
+              layer: layer!,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+            } as Primitive & MetaData
+          })
+          .filter(Boolean)
       } else if (type === "pcb_fabrication_note_path") {
         layer = "top_fabrication"
+        return route
+          .slice(0, -1)
+          .map((point, index) => {
+            const nextPoint = route[index + 1]
+            return {
+              _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "line",
+              x1: point.x,
+              y1: point.y,
+              x2: nextPoint.x,
+              y2: nextPoint.y,
+              width: element.stroke_width ?? 0.1,
+              squareCap: false,
+              layer: layer!,
+              color: element.color,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+            } as Primitive & MetaData
+          })
+          .filter(Boolean)
       }
-
-      return route
-        .slice(0, -1)
-        .map((point, index) => {
-          const nextPoint = route[index + 1]
-          return {
-            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "line",
-            x1: point.x,
-            y1: point.y,
-            x2: nextPoint.x,
-            y2: nextPoint.y,
-            width: element.stroke_width ?? 0.1,
-            squareCap: false,
-            layer: layer!,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-          } as Primitive & MetaData
-        })
-        .filter(Boolean)
     }
 
     case "pcb_silkscreen_text": {
