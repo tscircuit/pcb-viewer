@@ -145,6 +145,9 @@ const getPrimitivesUnderPoint = (
     } else if ("r" in primitive) {
       w = (primitive as any).r * 2
       h = (primitive as any).r * 2
+    } else if ("rX" in primitive && "rY" in primitive) {
+      w = primitive.rX * 2
+      h = primitive.rY * 2
     } else {
       continue
     }
@@ -208,13 +211,17 @@ export const MouseElementTracker = ({
             ? primitive.w
             : "r" in primitive
               ? primitive.r * 2
-              : 0
+              : "rX" in primitive
+                ? primitive.rX * 2
+                : 0
         h =
           "h" in primitive
             ? primitive.h
             : "r" in primitive
               ? primitive.r * 2
-              : 0
+              : "rY" in primitive
+                ? primitive.rY * 2
+                : 0
       }
 
       if (!basePoint) continue
