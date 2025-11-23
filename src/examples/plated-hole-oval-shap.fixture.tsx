@@ -1,7 +1,7 @@
 import { Circuit } from "@tscircuit/core"
 import { PCBViewer } from "../PCBViewer"
 
-export const PlatedHolePillShape: React.FC = () => {
+export const PlatedHoleOvalShape: React.FC = () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
@@ -42,4 +42,4 @@ export const PlatedHolePillShape: React.FC = () => {
   )
 }
 
-export default PlatedHolePillShape
+export default PlatedHoleOvalShape
