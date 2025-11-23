@@ -104,6 +104,19 @@ export const PlatedHolePillShape: React.FC = () => {
               pcb_component_id: "pcb_generic_component_0",
               fabrication_note_path_id: "fabrication_note_path_0",
               route: [
+                { x: 0.405, y: 0 },
+                { x: 12.4, y: 0 },
+              ],
+              stroke_width: 0.1,
+              port_hints: [],
+              color: "#FF0000",
+            },
+            {
+              type: "pcb_fabrication_note_path",
+              layer: "top",
+              pcb_component_id: "pcb_generic_component_0",
+              fabrication_note_path_id: "fabrication_note_path_0",
+              route: [
                 { x: -0.405, y: 6.35 },
                 { x: -0.405, y: -6.35 },
               ],
@@ -213,6 +226,7 @@ export const PlatedHolePillShape: React.FC = () => {
               anchor_alignment: "center",
               text: "Heatsink_AAVID_576802B03900G",
               port_hints: [],
+              color: "#FF0000",
             },
             {
               x: 3,
