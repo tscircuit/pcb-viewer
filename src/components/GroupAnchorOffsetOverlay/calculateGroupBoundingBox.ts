@@ -1,7 +1,8 @@
-import { getBoundsFromPoints } from "@tscircuit/math-utils"
 import type { PcbComponent } from "circuit-json"
-import type { BoundingBox } from "../../lib/util/get-primitive-bounding-box"
-
+import {
+  type BoundingBox,
+  getBoundsFromPoints,
+} from "../../lib/util/get-primitive-bounding-box"
 export const calculateGroupBoundingBox = (
   groupComponents: PcbComponent[],
 ): BoundingBox | null => {
