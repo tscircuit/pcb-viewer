@@ -1278,6 +1278,11 @@ export const convertElementToPrimitives = (
           size: element.font_size,
           align: element.anchor_alignment ?? "center",
           text: element.text,
+          color: element.color,
+          _element: element,
+          _parent_pcb_component,
+          _parent_source_component,
+          _source_port,
         },
       ]
     }

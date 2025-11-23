@@ -213,6 +213,7 @@ export const PlatedHolePillShape: React.FC = () => {
               anchor_alignment: "center",
               text: "Heatsink_AAVID_576802B03900G",
               port_hints: [],
+              color: "#FF0000",
             },
             {
               x: 3,
