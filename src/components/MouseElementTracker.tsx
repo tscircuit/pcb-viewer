@@ -211,7 +211,7 @@ export const MouseElementTracker = ({
             ? primitive.w
             : "r" in primitive
               ? primitive.r * 2
-              : "rX" in primitive
+              : "rX" in primitive && "rY" in primitive
                 ? primitive.rX * 2
                 : 0
         h =
@@ -219,7 +219,7 @@ export const MouseElementTracker = ({
             ? primitive.h
             : "r" in primitive
               ? primitive.r * 2
-              : "rY" in primitive
+              : "rX" in primitive && "rY" in primitive
                 ? primitive.rY * 2
                 : 0
       }
