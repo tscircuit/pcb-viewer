@@ -32,6 +32,7 @@ export interface State {
   is_showing_rats_nest: boolean
   is_showing_copper_pours: boolean
   is_showing_pcb_groups: boolean
+  is_showing_group_anchor_offsets: boolean
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
@@ -47,6 +48,7 @@ export interface State {
   setIsShowingDrcErrors: (is_showing: boolean) => void
   setIsShowingCopperPours: (is_showing: boolean) => void
   setIsShowingPcbGroups: (is_showing: boolean) => void
+  setIsShowingGroupAnchorOffsets: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
 }
@@ -88,6 +90,10 @@ export const createStore = (
         is_showing_pcb_groups: disablePcbGroups
           ? false
           : getStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, true),
+        is_showing_group_anchor_offsets: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_GROUP_ANCHOR_OFFSETS,
+          process.env.NODE_ENV !== "production",
+        ),
         pcb_group_view_mode: disablePcbGroups
           ? "all"
           : (getStoredString(
@@ -129,6 +135,13 @@ export const createStore = (
           if (disablePcbGroups) return
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, is_showing)
           set({ is_showing_pcb_groups: is_showing })
+        },
+        setIsShowingGroupAnchorOffsets: (is_showing) => {
+          setStoredBoolean(
+            STORAGE_KEYS.IS_SHOWING_GROUP_ANCHOR_OFFSETS,
+            is_showing,
+          )
+          set({ is_showing_group_anchor_offsets: is_showing })
         },
         setPcbGroupViewMode: (mode) => {
           if (disablePcbGroups) return

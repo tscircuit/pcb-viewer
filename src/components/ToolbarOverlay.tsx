@@ -1,10 +1,4 @@
-import React, {
-  Fragment,
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-} from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
@@ -200,6 +194,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingDrcErrors,
     setIsShowingCopperPours,
     setIsShowingPcbGroups,
+    setIsShowingGroupAnchorOffsets,
     setPcbGroupViewMode,
     setHoveredErrorId,
   } = useGlobalStore((s) => ({
@@ -218,6 +213,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_copper_pours: s.is_showing_copper_pours,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
+      is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setEditMode: s.setEditMode,
@@ -227,6 +223,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingCopperPours: s.setIsShowingCopperPours,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
+    setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
   }))
@@ -706,6 +703,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   onClick={() => {
                     setIsShowingCopperPours(
                       !viewSettings.is_showing_copper_pours,
+                    )
+                  }}
+                />
+                 <CheckboxMenuItem
+                  label="Show Group Anchor Offsets"
+                  checked={viewSettings.is_showing_group_anchor_offsets}
+                  onClick={() => {
+                    setIsShowingGroupAnchorOffsets(
+                      !viewSettings.is_showing_group_anchor_offsets,
                     )
                   }}
                 />
