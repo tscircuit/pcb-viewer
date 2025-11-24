@@ -761,7 +761,9 @@ export const convertElementToPrimitives = (
 
             if (isCoveredWithSolderMask) {
               const solderMaskLayer =
-                SOLDER_MASK_LAYER_FOR[layer as keyof typeof SOLDER_MASK_LAYER_FOR]
+                SOLDER_MASK_LAYER_FOR[
+                  layer as keyof typeof SOLDER_MASK_LAYER_FOR
+                ]
 
               if (solderMaskLayer) {
                 solderMaskPrimitives.push({
