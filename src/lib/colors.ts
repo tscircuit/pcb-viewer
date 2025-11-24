@@ -12,6 +12,10 @@ export default {
     soldermask: "rgb(20, 51, 36)",
     solderpaste: "rgb(128, 128, 128)",
   },
+  soldermask: {
+    top: "rgb(18, 82, 50)",
+    bottom: "rgb(77, 127, 196)",
+  },
   board: {
     anchor: "rgb(255, 38, 226)",
     aux_items: "rgb(255, 255, 255)",
