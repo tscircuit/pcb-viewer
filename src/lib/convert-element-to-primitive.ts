@@ -650,24 +650,29 @@ export const convertElementToPrimitives = (
           rect_border_radius,
         } = element as any // Use as any to access new properties
 
+        const solderMaskPrimitives: (Primitive & MetaData)[] =
+          isCoveredWithSolderMask
+            ? getSolderMaskLayers(element, ["top", "bottom"]).map(
+                (layer): Primitive & MetaData => ({
+                  _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+                  pcb_drawing_type: "rect" as const,
+                  x,
+                  y,
+                  w: rect_pad_width,
+                  h: rect_pad_height,
+                  layer,
+                  _element: element,
+                  _parent_pcb_component,
+                  _parent_source_component,
+                  _source_port,
+                  ccw_rotation: rect_ccw_rotation,
+                  roundness: rect_border_radius,
+                }),
+              )
+            : []
+
         return [
-          ...(isCoveredWithSolderMask
-            ? getSolderMaskLayers(element, ["top", "bottom"]).map((layer) => ({
-                _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-                pcb_drawing_type: "rect",
-                x,
-                y,
-                w: rect_pad_width,
-                h: rect_pad_height,
-                layer,
-                _element: element,
-                _parent_pcb_component,
-                _parent_source_component,
-                _source_port,
-                ccw_rotation: rect_ccw_rotation,
-                roundness: rect_border_radius,
-              }))
-            : []),
+          ...solderMaskPrimitives,
           {
             _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
             pcb_drawing_type: "rect",
