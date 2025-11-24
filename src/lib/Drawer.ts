@@ -489,11 +489,13 @@ export class Drawer {
       "drill",
       "other",
       "board",
-      ...(foregroundLayer === "top"
-        ? ["top_silkscreen", "top_solder_mask"]
+      "top_solder_mask",
+      "bottom_solder_mask",
+      foregroundLayer === "top"
+        ? "top_silkscreen"
         : foregroundLayer === "bottom"
-          ? ["bottom_silkscreen", "bottom_solder_mask"]
-          : []),
+          ? "bottom_silkscreen"
+          : "",
     ])
 
     const associatedSilkscreen =
