@@ -40,11 +40,12 @@ const SOLDER_MASK_LAYER_FOR = {
   bottom: "bottom_solder_mask",
 } as const
 
+type CircuitElementWithLayer = AnyCircuitElement & { layer?: "top" | "bottom" }
 const getSolderMaskLayers = (
-  element: AnyCircuitElement,
+  element: CircuitElementWithLayer,
   copperLayers: (keyof typeof SOLDER_MASK_LAYER_FOR)[] = ["top", "bottom"],
 ) => {
-  const explicitLayer = (element as { layer?: unknown }).layer
+  const explicitLayer = element.layer
 
   if (explicitLayer === "top" || explicitLayer === "bottom") {
     return [SOLDER_MASK_LAYER_FOR[explicitLayer]]
@@ -356,8 +357,10 @@ export const convertElementToPrimitives = (
       return []
     }
     case "pcb_plated_hole": {
+      // Extend the type locally to include is_covered_with_solder_mask
       const isCoveredWithSolderMask =
-        (element as any).is_covered_with_solder_mask === true
+        (element as { is_covered_with_solder_mask?: boolean })
+          .is_covered_with_solder_mask === true
       if (element.shape === "circle") {
         const { x, y, hole_diameter, outer_diameter } = element
 
@@ -517,7 +520,7 @@ export const convertElementToPrimitives = (
 
         const solderMaskPrimitives: (Primitive & MetaData)[] =
           isCoveredWithSolderMask
-            ? getSolderMaskLayers(element, ["top", "bottom"]).map((layer) => ({
+            ? getSolderMaskLayers(element).map((layer) => ({
                 _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
                 pcb_drawing_type: "rect",
                 x,
@@ -586,7 +589,7 @@ export const convertElementToPrimitives = (
 
         const solderMaskPrimitives: (Primitive & MetaData)[] =
           isCoveredWithSolderMask
-            ? getSolderMaskLayers(element, ["top", "bottom"]).map((layer) => ({
+            ? getSolderMaskLayers(element).map((layer) => ({
                 _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
                 pcb_drawing_type: "rect",
                 x,
@@ -658,7 +661,7 @@ export const convertElementToPrimitives = (
 
         const solderMaskPrimitives: (Primitive & MetaData)[] =
           isCoveredWithSolderMask
-            ? getSolderMaskLayers(element, ["top", "bottom"]).map((layer) => ({
+            ? getSolderMaskLayers(element).map((layer) => ({
                 _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
                 pcb_drawing_type: "rect",
                 x,
