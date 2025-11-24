@@ -44,7 +44,7 @@ const getSolderMaskLayers = (
   element: AnyCircuitElement,
   copperLayers: (keyof typeof SOLDER_MASK_LAYER_FOR)[] = ["top", "bottom"],
 ) => {
-  const explicitLayer = (element as any).layer
+  const explicitLayer = (element as { layer?: unknown }).layer
 
   if (explicitLayer === "top" || explicitLayer === "bottom") {
     return [SOLDER_MASK_LAYER_FOR[explicitLayer]]
@@ -365,7 +365,7 @@ export const convertElementToPrimitives = (
           isCoveredWithSolderMask
             ? getSolderMaskLayers(element).map((layer) => ({
                 _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-                pcb_drawing_type: "circle",
+                pcb_drawing_type: "circle" as const,
                 x,
                 y,
                 r: outer_diameter / 2,
@@ -414,7 +414,7 @@ export const convertElementToPrimitives = (
           isCoveredWithSolderMask
             ? getSolderMaskLayers(element).map((layer) => ({
                 _pcb_drawing_object_id: `oval_${globalPcbDrawingObjectCount++}`,
-                pcb_drawing_type: "oval",
+                pcb_drawing_type: "oval" as const,
                 x,
                 y,
                 rX: outer_width / 2,
@@ -461,7 +461,7 @@ export const convertElementToPrimitives = (
           isCoveredWithSolderMask
             ? getSolderMaskLayers(element).map((layer) => ({
                 _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
-                pcb_drawing_type: "pill",
+                pcb_drawing_type: "pill" as const,
                 x,
                 y,
                 w: outer_width,
@@ -519,7 +519,7 @@ export const convertElementToPrimitives = (
           ...(isCoveredWithSolderMask
             ? getSolderMaskLayers(element, ["top", "bottom"]).map((layer) => ({
                 _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-                pcb_drawing_type: "rect",
+                pcb_drawing_type: "rect" as const,
                 x,
                 y,
                 w: rect_pad_width,
@@ -585,7 +585,7 @@ export const convertElementToPrimitives = (
           ...(isCoveredWithSolderMask
             ? getSolderMaskLayers(element, ["top", "bottom"]).map((layer) => ({
                 _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-                pcb_drawing_type: "rect",
+                pcb_drawing_type: "rect" as const,
                 x,
                 y,
                 w: rect_pad_width,
