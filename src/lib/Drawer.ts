@@ -43,7 +43,10 @@ export const LAYER_NAME_TO_COLOR = {
   inner7: colors.board.copper.in7,
   inner8: colors.board.copper.in8,
 
+  top_solder_mask: colors.soldermask.top,
+
   bottom: colors.board.copper.b,
+  bottom_solder_mask: colors.soldermask.bottom,
   drill: colors.board.anchor,
   keepout: colors.board.background,
   tkeepout: colors.board.b_crtyd,
@@ -70,8 +73,10 @@ export const DEFAULT_DRAW_ORDER = [
   "inner2",
   "inner1",
   "bottom",
+  "bottom_solder_mask",
   "bottom_silkscreen",
   "top",
+  "top_solder_mask",
   "top_silkscreen",
   "board",
 ] as const
@@ -489,6 +494,11 @@ export class Drawer {
         : foregroundLayer === "bottom"
           ? "bottom_silkscreen"
           : "",
+      foregroundLayer === "top"
+        ? "top_solder_mask"
+        : foregroundLayer === "bottom"
+          ? "bottom_solder_mask"
+          : "",
     ])
 
     const associatedSilkscreen =
@@ -498,9 +508,17 @@ export class Drawer {
           ? "bottom_silkscreen"
           : undefined
 
+    const associatedSolderMask =
+      foregroundLayer === "top"
+        ? "top_solder_mask"
+        : foregroundLayer === "bottom"
+          ? "bottom_solder_mask"
+          : undefined
+
     const layersToShiftToTop = [
       foregroundLayer,
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+      ...(associatedSolderMask ? [associatedSolderMask] : []),
     ]
 
     const order = [
@@ -510,6 +528,7 @@ export class Drawer {
       foregroundLayer,
       "drill",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+      ...(associatedSolderMask ? [associatedSolderMask] : []),
     ]
 
     order.forEach((layer, i) => {
