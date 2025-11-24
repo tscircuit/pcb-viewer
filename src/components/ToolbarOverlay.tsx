@@ -706,7 +706,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     )
                   }}
                 />
-                 <CheckboxMenuItem
+                <CheckboxMenuItem
                   label="Show Group Anchor Offsets"
                   checked={viewSettings.is_showing_group_anchor_offsets}
                   onClick={() => {
