@@ -128,71 +128,128 @@ export const convertElementToPrimitives = (
     case "pcb_board": {
       const { width, height, center, outline } = element
 
-      if (outline && outline.length > 2) {
-        return outline.map((point, index, array) => ({
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: point.x,
-          y1: point.y,
-          x2: index === array.length - 1 ? array[0].x : array[index + 1].x,
-          y2: index === array.length - 1 ? array[0].y : array[index + 1].y,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        }))
+      const primitives: (Primitive & MetaData)[] = []
+
+      // Check if any SMT pad has solder mask enabled
+      const hasSolderMask = allElements.some(
+        (elm) =>
+          elm.type === "pcb_smtpad" &&
+          (elm as any).is_covered_with_solder_mask === true,
+      )
+
+      // Add solder mask board fill if enabled
+      if (hasSolderMask) {
+        if (outline && outline.length > 2) {
+          // For outline boards, create a filled polygon
+          primitives.push({
+            _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "polygon",
+            points: normalizePolygonPoints(outline),
+            layer: "soldermask_top" as any,
+            _element: element,
+          })
+          primitives.push({
+            _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "polygon",
+            points: normalizePolygonPoints(outline),
+            layer: "soldermask_bottom" as any,
+            _element: element,
+          })
+        } else if (width && height) {
+          // For rectangular boards, create filled rectangles
+          primitives.push({
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x: center.x,
+            y: center.y,
+            w: width,
+            h: height,
+            layer: "soldermask_top" as any,
+            _element: element,
+          })
+          primitives.push({
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x: center.x,
+            y: center.y,
+            w: width,
+            h: height,
+            layer: "soldermask_bottom" as any,
+            _element: element,
+          })
+        }
       }
 
-      return [
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: center.x - width! / 2,
-          y1: center.y - height! / 2,
-          x2: center.x + width! / 2,
-          y2: center.y - height! / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: center.x - width! / 2,
-          y1: center.y + height! / 2,
-          x2: center.x + width! / 2,
-          y2: center.y + height! / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: center.x - width! / 2,
-          y1: center.y - height! / 2,
-          x2: center.x - width! / 2,
-          y2: center.y + height! / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: center.x + width! / 2,
-          y1: center.y - height! / 2,
-          x2: center.x + width! / 2,
-          y2: center.y + height! / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-      ]
+      // Add board outline lines
+      if (outline && outline.length > 2) {
+        primitives.push(
+          ...outline.map((point, index, array) => ({
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "line" as const,
+            x1: point.x,
+            y1: point.y,
+            x2: index === array.length - 1 ? array[0].x : array[index + 1].x,
+            y2: index === array.length - 1 ? array[0].y : array[index + 1].y,
+            width: 1,
+            zoomIndependent: true,
+            layer: "board",
+            _element: element,
+          })),
+        )
+      } else {
+        primitives.push(
+          {
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "line",
+            x1: center.x - width! / 2,
+            y1: center.y - height! / 2,
+            x2: center.x + width! / 2,
+            y2: center.y - height! / 2,
+            width: 1,
+            zoomIndependent: true,
+            layer: "board",
+            _element: element,
+          },
+          {
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "line",
+            x1: center.x - width! / 2,
+            y1: center.y + height! / 2,
+            x2: center.x + width! / 2,
+            y2: center.y + height! / 2,
+            width: 1,
+            zoomIndependent: true,
+            layer: "board",
+            _element: element,
+          },
+          {
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "line",
+            x1: center.x - width! / 2,
+            y1: center.y - height! / 2,
+            x2: center.x - width! / 2,
+            y2: center.y + height! / 2,
+            width: 1,
+            zoomIndependent: true,
+            layer: "board",
+            _element: element,
+          },
+          {
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "line",
+            x1: center.x + width! / 2,
+            y1: center.y - height! / 2,
+            x2: center.x + width! / 2,
+            y2: center.y + height! / 2,
+            width: 1,
+            zoomIndependent: true,
+            layer: "board",
+            _element: element,
+          },
+        )
+      }
+
+      return primitives
     }
 
     case "pcb_smtpad": {
@@ -202,10 +259,10 @@ export const convertElementToPrimitives = (
         const corner_radius =
           (element as any).corner_radius ?? rect_border_radius ?? 0
 
-        return [
+        const primitives = [
           {
             _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "rect",
+            pcb_drawing_type: "rect" as const,
             x,
             y,
             w: width,
@@ -219,12 +276,41 @@ export const convertElementToPrimitives = (
             roundness: corner_radius,
           },
         ]
+
+        // Add solder mask if enabled
+        if (element.is_covered_with_solder_mask) {
+          const maskLayer =
+            layer === "bottom"
+              ? "soldermask_with_copper_bottom"
+              : "soldermask_with_copper_top"
+          const maskPrimitive: any = {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect" as const,
+            x,
+            y,
+            w: width,
+            h: height,
+            layer: maskLayer as any,
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: (element as any).ccw_rotation,
+            roundness: corner_radius,
+          }
+          if ((element as any).solder_mask_color) {
+            maskPrimitive.color = (element as any).solder_mask_color
+          }
+          primitives.push(maskPrimitive)
+        }
+
+        return primitives
       } else if (element.shape === "circle") {
         const { x, y, radius, layer } = element
-        return [
+        const primitives = [
           {
             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "circle",
+            pcb_drawing_type: "circle" as const,
             x,
             y,
             r: radius,
@@ -235,12 +321,38 @@ export const convertElementToPrimitives = (
             _source_port,
           },
         ]
+
+        // Add solder mask if enabled
+        if ((element as any).is_covered_with_solder_mask) {
+          const maskLayer =
+            layer === "bottom"
+              ? "soldermask_with_copper_bottom"
+              : "soldermask_with_copper_top"
+          const maskPrimitive: any = {
+            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "circle" as const,
+            x,
+            y,
+            r: radius,
+            layer: maskLayer as any,
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          }
+          if ((element as any).solder_mask_color) {
+            maskPrimitive.color = (element as any).solder_mask_color
+          }
+          primitives.push(maskPrimitive)
+        }
+
+        return primitives
       } else if (element.shape === "polygon") {
         const { layer, points } = element
-        return [
+        const primitives = [
           {
             _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "polygon",
+            pcb_drawing_type: "polygon" as const,
             points: normalizePolygonPoints(points),
             layer: layer || "top",
             _element: element,
@@ -249,12 +361,36 @@ export const convertElementToPrimitives = (
             _source_port,
           },
         ]
+
+        // Add solder mask if enabled
+        if ((element as any).is_covered_with_solder_mask) {
+          const maskLayer =
+            layer === "bottom"
+              ? "soldermask_with_copper_bottom"
+              : "soldermask_with_copper_top"
+          const maskPrimitive: any = {
+            _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "polygon" as const,
+            points: normalizePolygonPoints(points),
+            layer: maskLayer as any,
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          }
+          if ((element as any).solder_mask_color) {
+            maskPrimitive.color = (element as any).solder_mask_color
+          }
+          primitives.push(maskPrimitive)
+        }
+
+        return primitives
       } else if (element.shape === "pill" || element.shape === "rotated_pill") {
         const { x, y, width, height, layer } = element
-        return [
+        const primitives = [
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "pill",
+            pcb_drawing_type: "pill" as const,
             x,
             y,
             w: width,
@@ -267,6 +403,34 @@ export const convertElementToPrimitives = (
             ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
           },
         ]
+
+        // Add solder mask if enabled
+        if ((element as any).is_covered_with_solder_mask) {
+          const maskLayer =
+            layer === "bottom"
+              ? "soldermask_with_copper_bottom"
+              : "soldermask_with_copper_top"
+          const maskPrimitive: any = {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "pill" as const,
+            x,
+            y,
+            w: width,
+            h: height,
+            layer: maskLayer as any,
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+          }
+          if ((element as any).solder_mask_color) {
+            maskPrimitive.color = (element as any).solder_mask_color
+          }
+          primitives.push(maskPrimitive)
+        }
+
+        return primitives
       }
       return []
     }
