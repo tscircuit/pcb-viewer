@@ -256,8 +256,7 @@ export const convertElementToPrimitives = (
       if (element.shape === "rect" || element.shape === "rotated_rect") {
         const { shape, x, y, width, height, layer, rect_border_radius } =
           element
-        const corner_radius =
-          (element as any).corner_radius ?? rect_border_radius ?? 0
+        const corner_radius = element.corner_radius ?? rect_border_radius ?? 0
 
         const primitives = [
           {
@@ -290,7 +289,7 @@ export const convertElementToPrimitives = (
             y,
             w: width,
             h: height,
-            layer: maskLayer as any,
+            layer: maskLayer,
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -323,7 +322,7 @@ export const convertElementToPrimitives = (
         ]
 
         // Add solder mask if enabled
-        if ((element as any).is_covered_with_solder_mask) {
+        if (element.is_covered_with_solder_mask) {
           const maskLayer =
             layer === "bottom"
               ? "soldermask_with_copper_bottom"
@@ -334,7 +333,7 @@ export const convertElementToPrimitives = (
             x,
             y,
             r: radius,
-            layer: maskLayer as any,
+            layer: maskLayer,
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -363,7 +362,7 @@ export const convertElementToPrimitives = (
         ]
 
         // Add solder mask if enabled
-        if ((element as any).is_covered_with_solder_mask) {
+        if (element.is_covered_with_solder_mask) {
           const maskLayer =
             layer === "bottom"
               ? "soldermask_with_copper_bottom"
@@ -372,7 +371,7 @@ export const convertElementToPrimitives = (
             _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
             pcb_drawing_type: "polygon" as const,
             points: normalizePolygonPoints(points),
-            layer: maskLayer as any,
+            layer: maskLayer,
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
@@ -405,7 +404,7 @@ export const convertElementToPrimitives = (
         ]
 
         // Add solder mask if enabled
-        if ((element as any).is_covered_with_solder_mask) {
+        if (element.is_covered_with_solder_mask) {
           const maskLayer =
             layer === "bottom"
               ? "soldermask_with_copper_bottom"
@@ -417,7 +416,7 @@ export const convertElementToPrimitives = (
             y,
             w: width,
             h: height,
-            layer: maskLayer as any,
+            layer: maskLayer,
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
