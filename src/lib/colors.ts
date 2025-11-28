@@ -87,6 +87,14 @@ export default {
     plated_hole: "rgb(26, 196, 210)",
     ratsnest: "rgba(245, 255, 213, 0.702)",
     select_overlay: "rgb(4, 255, 67)",
+    soldermaskWithCopper: {
+      top: "rgb(18, 82, 50)",
+      bottom: "rgb(77, 127, 196)",
+    },
+    soldermask: {
+      top: "rgb(12, 55, 33)",
+      bottom: "rgb(12, 55, 33)",
+    },
     through_via: "rgb(236, 236, 236)",
     user_1: "rgb(194, 194, 194)",
     user_2: "rgb(89, 148, 220)",

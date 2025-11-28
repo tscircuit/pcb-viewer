@@ -195,6 +195,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingCopperPours,
     setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets,
+    setIsShowingSolderMask,
     setPcbGroupViewMode,
     setHoveredErrorId,
   } = useGlobalStore((s) => ({
@@ -214,6 +215,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_copper_pours: s.is_showing_copper_pours,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
       is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
+      is_showing_solder_mask: s.is_showing_solder_mask,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setEditMode: s.setEditMode,
@@ -224,6 +226,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingCopperPours: s.setIsShowingCopperPours,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
+    setIsShowingSolderMask: s.setIsShowingSolderMask,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
   }))
@@ -704,6 +707,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     setIsShowingCopperPours(
                       !viewSettings.is_showing_copper_pours,
                     )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Solder Mask"
+                  checked={viewSettings.is_showing_solder_mask}
+                  onClick={() => {
+                    setIsShowingSolderMask(!viewSettings.is_showing_solder_mask)
                   }}
                 />
                 <CheckboxMenuItem

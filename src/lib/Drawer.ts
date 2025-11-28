@@ -55,6 +55,11 @@ export const LAYER_NAME_TO_COLOR = {
   top_fabrication: colors.board.f_fab,
   bottom_fabrication: colors.board.b_fab,
 
+  soldermask_top: colors.board.soldermask.top,
+  soldermask_bottom: colors.board.soldermask.bottom,
+  soldermask_with_copper_top: colors.board.soldermaskWithCopper.top,
+  soldermask_with_copper_bottom: colors.board.soldermaskWithCopper.bottom,
+
   notes: colors.board.user_2,
 
   ...(colors.board as any),
@@ -70,9 +75,13 @@ export const DEFAULT_DRAW_ORDER = [
   "inner2",
   "inner1",
   "bottom",
+  "soldermask_bottom",
   "bottom_silkscreen",
   "top",
+  "soldermask_top",
   "top_silkscreen",
+  "soldermask_with_copper_bottom",
+  "soldermask_with_copper_top",
   "board",
 ] as const
 
@@ -479,18 +488,6 @@ export class Drawer {
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
-    const opaqueLayers = new Set([
-      foregroundLayer,
-      "drill",
-      "other",
-      "board",
-      foregroundLayer === "top"
-        ? "top_silkscreen"
-        : foregroundLayer === "bottom"
-          ? "bottom_silkscreen"
-          : "",
-    ])
-
     const associatedSilkscreen =
       foregroundLayer === "top"
         ? "top_silkscreen"
@@ -498,9 +495,31 @@ export class Drawer {
           ? "bottom_silkscreen"
           : undefined
 
+    // Ensure soldermask-with-copper for the active side is rendered above copper
+    const maskWithCopperLayerForForeground =
+      foregroundLayer === "top"
+        ? "soldermask_with_copper_top"
+        : foregroundLayer === "bottom"
+          ? "soldermask_with_copper_bottom"
+          : undefined
+
+    const opaqueLayers = new Set<string>([
+      foregroundLayer,
+      "drill",
+      "other",
+      "board",
+      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+      ...(maskWithCopperLayerForForeground
+        ? [maskWithCopperLayerForForeground]
+        : []),
+    ])
+
     const layersToShiftToTop = [
       foregroundLayer,
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+      ...(maskWithCopperLayerForForeground
+        ? [maskWithCopperLayerForForeground]
+        : []),
     ]
 
     const order = [
@@ -508,6 +527,9 @@ export class Drawer {
         (l) => !layersToShiftToTop.includes(l as any),
       ),
       foregroundLayer,
+      ...(maskWithCopperLayerForForeground
+        ? [maskWithCopperLayerForForeground]
+        : []),
       "drill",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
     ]
