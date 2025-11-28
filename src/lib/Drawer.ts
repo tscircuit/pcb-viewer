@@ -57,9 +57,8 @@ export const LAYER_NAME_TO_COLOR = {
 
   soldermask_top: colors.board.soldermask.top,
   soldermask_bottom: colors.board.soldermask.bottom,
-  soldermask_with_copper_top: colors.board.soldermaskWithCopperUnderneath.top,
-  soldermask_with_copper_bottom:
-    colors.board.soldermaskWithCopperUnderneath.bottom,
+  soldermask_with_copper_top: colors.board.soldermaskWithCopper.top,
+  soldermask_with_copper_bottom: colors.board.soldermaskWithCopper.bottom,
 
   notes: colors.board.user_2,
 
