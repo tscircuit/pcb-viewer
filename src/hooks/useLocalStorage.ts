@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   PCB_GROUP_VIEW_MODE: "pcb_viewer_group_view_mode",
   IS_SHOWING_COPPER_POURS: "pcb_viewer_is_showing_copper_pours",
   IS_SHOWING_GROUP_ANCHOR_OFFSETS: "pcb_viewer_is_showing_group_anchor_offsets",
+  IS_SHOWING_SOLDER_MASK: "pcb_viewer_is_showing_solder_mask",
 } as const
 
 export const getStoredBoolean = (

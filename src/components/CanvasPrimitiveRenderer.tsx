@@ -47,17 +47,38 @@ export const CanvasPrimitiveRenderer = ({
 }: Props) => {
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
+  const isShowingSolderMask = useGlobalStore((s) => s.is_showing_solder_mask)
 
   useEffect(() => {
     if (!canvasRefs.current) return
     if (Object.keys(canvasRefs.current).length === 0) return
-    const drawer = new Drawer(canvasRefs.current)
+
+    // Filter out null canvas refs and solder mask layers when disabled
+    const filteredCanvasRefs = Object.fromEntries(
+      Object.entries(canvasRefs.current).filter(([layer, canvas]) => {
+        if (!canvas) return false
+        if (!isShowingSolderMask && layer.includes("soldermask")) {
+          return false
+        }
+        return true
+      }),
+    )
+
+    if (Object.keys(filteredCanvasRefs).length === 0) return
+
+    const drawer = new Drawer(filteredCanvasRefs)
     if (transform) drawer.transform = transform
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
-    drawPrimitives(drawer, primitives)
+
+    // Filter out solder mask primitives when solder mask is disabled
+    const filteredPrimitives = isShowingSolderMask
+      ? primitives
+      : primitives.filter((p) => !p.layer?.includes("soldermask"))
+
+    drawPrimitives(drawer, filteredPrimitives)
     drawer.orderAndFadeLayers()
-  }, [primitives, transform, selectedLayer])
+  }, [primitives, transform, selectedLayer, isShowingSolderMask])
 
   return (
     <div
@@ -79,6 +100,13 @@ export const CanvasPrimitiveRenderer = ({
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
       {orderedLayers
+        .filter((layer) => {
+          if (!isShowingSolderMask) {
+            // Filter out solder mask layers when disabled
+            return !layer.includes("soldermask")
+          }
+          return true
+        })
         .map((l) => l.replace(/-/g, ""))
         .map((layer, i) => (
           <canvas
@@ -86,7 +114,12 @@ export const CanvasPrimitiveRenderer = ({
             className={`pcb-layer-${layer}`}
             ref={(el) => {
               canvasRefs.current ??= {}
-              canvasRefs.current[layer] = el!
+              if (el) {
+                canvasRefs.current[layer] = el
+              } else {
+                // Clean up ref when element is removed
+                delete canvasRefs.current[layer]
+              }
             }}
             style={{
               position: "absolute",

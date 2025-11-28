@@ -33,6 +33,7 @@ export interface State {
   is_showing_copper_pours: boolean
   is_showing_pcb_groups: boolean
   is_showing_group_anchor_offsets: boolean
+  is_showing_solder_mask: boolean
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
@@ -49,6 +50,7 @@ export interface State {
   setIsShowingCopperPours: (is_showing: boolean) => void
   setIsShowingPcbGroups: (is_showing: boolean) => void
   setIsShowingGroupAnchorOffsets: (is_showing: boolean) => void
+  setIsShowingSolderMask: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
 }
@@ -93,6 +95,10 @@ export const createStore = (
         is_showing_group_anchor_offsets: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_GROUP_ANCHOR_OFFSETS,
           process.env.NODE_ENV !== "production",
+        ),
+        is_showing_solder_mask: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_SOLDER_MASK,
+          false,
         ),
         pcb_group_view_mode: disablePcbGroups
           ? "all"
@@ -142,6 +148,10 @@ export const createStore = (
             is_showing,
           )
           set({ is_showing_group_anchor_offsets: is_showing })
+        },
+        setIsShowingSolderMask: (is_showing) => {
+          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_SOLDER_MASK, is_showing)
+          set({ is_showing_solder_mask: is_showing })
         },
         setPcbGroupViewMode: (mode) => {
           if (disablePcbGroups) return
