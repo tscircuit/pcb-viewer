@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.11.269",
+  "version": "1.11.271",
   "main": "dist/index.js",
   "type": "module",
   "repository": "tscircuit/pcb-viewer",
@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
-    "@tscircuit/alphabet": "^0.0.3",
+    "@tscircuit/alphabet": "^0.0.8",
     "@tscircuit/math-utils": "^0.0.29",
     "@vitejs/plugin-react": "^5.0.2",
     "circuit-json": "^0.0.325",
