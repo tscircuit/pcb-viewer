@@ -112,7 +112,6 @@ export class Drawer {
   transform: Matrix
   foregroundLayer: string = "top"
   lastPoint: { x: number; y: number }
-  _tempCompositeMode?: "source-over" | "destination-out"
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
     this.canvasLayerMap = canvasLayerMap
@@ -575,12 +574,6 @@ export class Drawer {
       ctx.fillStyle = "rgba(0,0,0,1)"
       ctx.strokeStyle = "rgba(0,0,0,1)"
     }
-
-    // Override compositing mode if temporarily set
-    if (this._tempCompositeMode) {
-      ctx.globalCompositeOperation = this._tempCompositeMode
-    }
-
     ctx.font = `${scaleOnly(inverse(transform), fontSize)}px sans-serif`
   }
 
