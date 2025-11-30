@@ -85,6 +85,7 @@ export interface Rect extends PCBDrawingObject {
   is_stroke_dashed?: boolean
   ccw_rotation?: number
   color?: string
+  composite_mode?: "source-over" | "destination-out"
 }
 
 export interface Circle extends PCBDrawingObject {
@@ -93,6 +94,7 @@ export interface Circle extends PCBDrawingObject {
   y: number
   r: number
   mesh_fill?: boolean
+  composite_mode?: "source-over" | "destination-out"
 }
 
 export interface Oval extends PCBDrawingObject {
@@ -110,6 +112,7 @@ export interface Pill extends PCBDrawingObject {
   w: number
   h: number
   ccw_rotation?: number
+  composite_mode?: "source-over" | "destination-out"
 }
 
 export interface Polygon extends PCBDrawingObject {
