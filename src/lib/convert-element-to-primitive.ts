@@ -17,6 +17,7 @@ import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 import { distance } from "circuit-json"
+import { color } from "bun"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -302,9 +303,9 @@ export const convertElementToPrimitives = (
               _source_port,
               ccw_rotation: (element as any).ccw_rotation,
               roundness: corner_radius,
-            }
-            if ((element as any).solder_mask_color) {
-              openingPrimitive.color = (element as any).solder_mask_color
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
             }
             primitives.push(openingPrimitive)
 
@@ -349,7 +350,7 @@ export const convertElementToPrimitives = (
             return primitives
           }
 
-          const soldermask_margin = rawMargin as number
+          const soldermask_margin = rawMargin
 
           if (soldermask_margin === 0) {
             return primitives
@@ -409,9 +410,9 @@ export const convertElementToPrimitives = (
               _source_port,
               ccw_rotation: (element as any).ccw_rotation,
               roundness: corner_radius,
-            }
-            if ((element as any).solder_mask_color) {
-              innerRingBase.color = (element as any).solder_mask_color
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
             }
             primitives.push(innerRingBase)
 
@@ -477,9 +478,9 @@ export const convertElementToPrimitives = (
               _parent_pcb_component,
               _parent_source_component,
               _source_port,
-            }
-            if ((element as any).solder_mask_color) {
-              openingPrimitive.color = (element as any).solder_mask_color
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
             }
             primitives.push(openingPrimitive)
 
@@ -518,7 +519,7 @@ export const convertElementToPrimitives = (
             return primitives
           }
 
-          const soldermask_margin = rawMargin as number
+          const soldermask_margin = rawMargin
 
           if (soldermask_margin === 0) {
             // FULL mask
@@ -569,9 +570,9 @@ export const convertElementToPrimitives = (
               _parent_pcb_component,
               _parent_source_component,
               _source_port,
-            }
-            if ((element as any).solder_mask_color) {
-              innerRingBase.color = (element as any).solder_mask_color
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
             }
             primitives.push(innerRingBase)
 
@@ -624,9 +625,9 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             _source_port,
-          }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
+            ...("solder_mask_color" in element && element.solder_mask_color
+              ? { color: element.solder_mask_color }
+              : {}),
           }
           primitives.push(maskPrimitive)
         }
@@ -678,9 +679,9 @@ export const convertElementToPrimitives = (
               _parent_source_component,
               _source_port,
               ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
-            }
-            if ((element as any).solder_mask_color) {
-              openingPrimitive.color = (element as any).solder_mask_color
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
             }
             primitives.push(openingPrimitive)
 
@@ -723,7 +724,7 @@ export const convertElementToPrimitives = (
             return primitives
           }
 
-          const soldermask_margin = rawMargin as number
+          const soldermask_margin = rawMargin
 
           if (soldermask_margin === 0) {
             return primitives
@@ -780,9 +781,9 @@ export const convertElementToPrimitives = (
               _parent_source_component,
               _source_port,
               ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
-            }
-            if ((element as any).solder_mask_color) {
-              innerRingBase.color = (element as any).solder_mask_color
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
             }
             primitives.push(innerRingBase)
 
