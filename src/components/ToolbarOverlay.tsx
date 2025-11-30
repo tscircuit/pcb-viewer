@@ -465,6 +465,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               zIndex: 1000,
               minWidth: isSmallScreen ? "280px" : "400px",
               maxWidth: isSmallScreen ? "90vw" : "600px",
+              maxHeight: "400px",
+              overflow: "auto",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
             }}
           >
