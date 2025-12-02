@@ -1,7 +1,7 @@
 import type { Rotation } from "circuit-json"
 import { type Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
 import { rotateText } from "./util/rotate-text"
-import { convertTextToLines, getTextWidth } from "./convert-text-to-lines"
+import { convertTextToLines, getTextMetrics } from "./convert-text-to-lines"
 import type {
   Circle,
   Line,
@@ -55,8 +55,7 @@ export const drawText = (drawer: Drawer, text: Text) => {
 
   // Alignment offset calculation
   let alignOffset = { x: 0, y: 0 }
-  const textWidth = getTextWidth(text)
-  const textHeight = text.size
+  const { width: textWidth, height: textHeight } = getTextMetrics(text)
 
   switch (text.align) {
     case "top_left":
