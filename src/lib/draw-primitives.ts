@@ -150,6 +150,12 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
     layer: rect.layer,
     size: rect.stroke_width,
   })
+
+  // Set temporary composite mode if specified
+  if (rect.composite_mode) {
+    drawer._tempCompositeMode = rect.composite_mode
+  }
+
   drawer.rect({
     x: rect.x,
     y: rect.y,
@@ -162,6 +168,11 @@ export const drawRect = (drawer: Drawer, rect: Rect) => {
     stroke_width: rect.stroke_width,
     roundness: rect.roundness,
   })
+
+  // Clear temporary composite mode
+  if (rect.composite_mode) {
+    drawer._tempCompositeMode = undefined
+  }
 }
 
 export const drawRotatedRect = (drawer: Drawer, rect: Rect) => {
@@ -169,6 +180,11 @@ export const drawRotatedRect = (drawer: Drawer, rect: Rect) => {
     color: getColor(rect),
     layer: rect.layer,
   })
+
+  // Set temporary composite mode if specified
+  if (rect.composite_mode) {
+    drawer._tempCompositeMode = rect.composite_mode
+  }
 
   drawer.rotatedRect(
     rect.x,
@@ -179,6 +195,11 @@ export const drawRotatedRect = (drawer: Drawer, rect: Rect) => {
     rect.roundness,
     rect.mesh_fill,
   )
+
+  // Clear temporary composite mode
+  if (rect.composite_mode) {
+    drawer._tempCompositeMode = undefined
+  }
 }
 
 export const drawRotatedPill = (drawer: Drawer, pill: Pill) => {
@@ -186,7 +207,18 @@ export const drawRotatedPill = (drawer: Drawer, pill: Pill) => {
     color: getColor(pill),
     layer: pill.layer,
   })
+
+  // Set temporary composite mode if specified
+  if (pill.composite_mode) {
+    drawer._tempCompositeMode = pill.composite_mode
+  }
+
   drawer.rotatedPill(pill.x, pill.y, pill.w, pill.h, pill.ccw_rotation!)
+
+  // Clear temporary composite mode
+  if (pill.composite_mode) {
+    drawer._tempCompositeMode = undefined
+  }
 }
 
 export const drawCircle = (drawer: Drawer, circle: Circle) => {
@@ -194,7 +226,18 @@ export const drawCircle = (drawer: Drawer, circle: Circle) => {
     color: getColor(circle),
     layer: circle.layer,
   })
+
+  // Set temporary composite mode if specified
+  if (circle.composite_mode) {
+    drawer._tempCompositeMode = circle.composite_mode
+  }
+
   drawer.circle(circle.x, circle.y, circle.r, circle.mesh_fill)
+
+  // Clear temporary composite mode
+  if (circle.composite_mode) {
+    drawer._tempCompositeMode = undefined
+  }
 }
 
 export const drawOval = (drawer: Drawer, oval: Oval) => {
@@ -210,7 +253,18 @@ export const drawPill = (drawer: Drawer, pill: Pill) => {
     color: getColor(pill),
     layer: pill.layer,
   })
+
+  // Set temporary composite mode if specified
+  if (pill.composite_mode) {
+    drawer._tempCompositeMode = pill.composite_mode
+  }
+
   drawer.pill(pill.x, pill.y, pill.w, pill.h)
+
+  // Clear temporary composite mode
+  if (pill.composite_mode) {
+    drawer._tempCompositeMode = undefined
+  }
 }
 
 export const drawPolygon = (drawer: Drawer, polygon: Polygon) => {

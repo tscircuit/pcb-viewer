@@ -17,6 +17,7 @@ import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 import { distance } from "circuit-json"
+import { color } from "bun"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -254,8 +255,7 @@ export const convertElementToPrimitives = (
 
     case "pcb_smtpad": {
       if (element.shape === "rect" || element.shape === "rotated_rect") {
-        const { shape, x, y, width, height, layer, rect_border_radius } =
-          element
+        const { x, y, width, height, layer, rect_border_radius } = element
         const corner_radius = element.corner_radius ?? rect_border_radius ?? 0
 
         const primitives = [
@@ -276,36 +276,170 @@ export const convertElementToPrimitives = (
           },
         ]
 
-        // Add solder mask if enabled
         if (element.is_covered_with_solder_mask) {
+          const rawMargin = element.soldermask_margin
           const maskLayer =
             layer === "bottom"
               ? "soldermask_with_copper_bottom"
               : "soldermask_with_copper_top"
-          const maskPrimitive: any = {
-            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "rect" as const,
-            x,
-            y,
-            w: width,
-            h: height,
-            layer: maskLayer,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-            ccw_rotation: (element as any).ccw_rotation,
-            roundness: corner_radius,
+
+          if (rawMargin === undefined || rawMargin === null) {
+            const soldermask_margin = 0
+
+            const openingWidth = Math.max(0.01, width + 2 * soldermask_margin)
+            const openingHeight = Math.max(0.01, height + 2 * soldermask_margin)
+
+            const openingPrimitive: any = {
+              _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "rect" as const,
+              x,
+              y,
+              w: openingWidth,
+              h: openingHeight,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as any).ccw_rotation,
+              roundness: corner_radius,
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
+            }
+            primitives.push(openingPrimitive)
+
+            const maskCoverageLayer =
+              layer === "bottom" ? "soldermask_bottom" : "soldermask_top"
+
+            const fullMaskCoverage: any = {
+              _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "rect" as const,
+              x,
+              y,
+              w: width,
+              h: height,
+              layer: maskCoverageLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as any).ccw_rotation,
+              roundness: corner_radius,
+            }
+            primitives.push(fullMaskCoverage)
+
+            const cutoutOpening: any = {
+              _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "rect" as const,
+              x,
+              y,
+              w: openingWidth,
+              h: openingHeight,
+              layer: maskCoverageLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as any).ccw_rotation,
+              roundness: corner_radius,
+              composite_mode: "destination-out",
+            }
+            primitives.push(cutoutOpening)
+
+            return primitives
           }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
+
+          const soldermask_margin = rawMargin
+
+          if (soldermask_margin === 0) {
+            return primitives
           }
-          primitives.push(maskPrimitive)
+
+          if (soldermask_margin > 0) {
+            const marginRing: any = {
+              _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "rect" as const,
+              x,
+              y,
+              w: width + 2 * soldermask_margin,
+              h: height + 2 * soldermask_margin,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as any).ccw_rotation,
+              roundness: corner_radius,
+              color: "rgb(201, 162, 110)",
+            }
+            primitives.push(marginRing)
+
+            const cutout: any = {
+              _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "rect" as const,
+              x,
+              y,
+              w: width,
+              h: height,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as any).ccw_rotation,
+              roundness: corner_radius,
+              composite_mode: "destination-out",
+            }
+            primitives.push(cutout)
+          } else {
+            const openingWidth = Math.max(0.01, width + 2 * soldermask_margin)
+            const openingHeight = Math.max(0.01, height + 2 * soldermask_margin)
+
+            const innerRingBase: any = {
+              _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "rect" as const,
+              x,
+              y,
+              w: width,
+              h: height,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as any).ccw_rotation,
+              roundness: corner_radius,
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
+            }
+            primitives.push(innerRingBase)
+
+            const innerCutout: any = {
+              _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "rect" as const,
+              x,
+              y,
+              w: openingWidth,
+              h: openingHeight,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as any).ccw_rotation,
+              roundness: corner_radius,
+              composite_mode: "destination-out",
+            }
+            primitives.push(innerCutout)
+          }
         }
 
         return primitives
       } else if (element.shape === "circle") {
         const { x, y, radius, layer } = element
+
         const primitives = [
           {
             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
@@ -321,33 +455,148 @@ export const convertElementToPrimitives = (
           },
         ]
 
-        // Add solder mask if enabled
         if (element.is_covered_with_solder_mask) {
+          const rawMargin = element.soldermask_margin
           const maskLayer =
             layer === "bottom"
               ? "soldermask_with_copper_bottom"
               : "soldermask_with_copper_top"
-          const maskPrimitive: any = {
-            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "circle" as const,
-            x,
-            y,
-            r: radius,
-            layer: maskLayer,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
+
+          if (rawMargin === undefined || rawMargin === null) {
+            const soldermask_margin = 0
+
+            const openingRadius = Math.max(0.01, radius + soldermask_margin)
+
+            const openingPrimitive: any = {
+              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "circle" as const,
+              x,
+              y,
+              r: openingRadius,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
+            }
+            primitives.push(openingPrimitive)
+
+            const maskCoverageLayer =
+              layer === "bottom" ? "soldermask_bottom" : "soldermask_top"
+
+            const fullMaskCoverage: any = {
+              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "circle" as const,
+              x,
+              y,
+              r: radius,
+              layer: maskCoverageLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+            }
+            primitives.push(fullMaskCoverage)
+
+            const cutoutOpening: any = {
+              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "circle" as const,
+              x,
+              y,
+              r: openingRadius,
+              layer: maskCoverageLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              composite_mode: "destination-out",
+            }
+            primitives.push(cutoutOpening)
+
+            return primitives
           }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
+
+          const soldermask_margin = rawMargin
+
+          if (soldermask_margin === 0) {
+            // FULL mask
+            return primitives
           }
-          primitives.push(maskPrimitive)
+
+          if (soldermask_margin > 0) {
+            const marginRing: any = {
+              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "circle" as const,
+              x,
+              y,
+              r: radius + soldermask_margin,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              color: "rgb(201, 162, 110)",
+            }
+            primitives.push(marginRing)
+
+            const cutout: any = {
+              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "circle" as const,
+              x,
+              y,
+              r: radius,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              composite_mode: "destination-out",
+            }
+            primitives.push(cutout)
+          } else {
+            const openingRadius = Math.max(0.01, radius + soldermask_margin)
+
+            const innerRingBase: any = {
+              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "circle" as const,
+              x,
+              y,
+              r: radius,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
+            }
+            primitives.push(innerRingBase)
+
+            const innerCutout: any = {
+              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "circle" as const,
+              x,
+              y,
+              r: openingRadius,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              composite_mode: "destination-out",
+            }
+            primitives.push(innerCutout)
+          }
         }
 
         return primitives
       } else if (element.shape === "polygon") {
         const { layer, points } = element
+
         const primitives = [
           {
             _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
@@ -361,12 +610,12 @@ export const convertElementToPrimitives = (
           },
         ]
 
-        // Add solder mask if enabled
         if (element.is_covered_with_solder_mask) {
           const maskLayer =
             layer === "bottom"
               ? "soldermask_with_copper_bottom"
               : "soldermask_with_copper_top"
+
           const maskPrimitive: any = {
             _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
             pcb_drawing_type: "polygon" as const,
@@ -376,9 +625,9 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             _source_port,
-          }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
+            ...("solder_mask_color" in element && element.solder_mask_color
+              ? { color: element.solder_mask_color }
+              : {}),
           }
           primitives.push(maskPrimitive)
         }
@@ -386,6 +635,7 @@ export const convertElementToPrimitives = (
         return primitives
       } else if (element.shape === "pill" || element.shape === "rotated_pill") {
         const { x, y, width, height, layer } = element
+
         const primitives = [
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
@@ -403,36 +653,165 @@ export const convertElementToPrimitives = (
           },
         ]
 
-        // Add solder mask if enabled
         if (element.is_covered_with_solder_mask) {
+          const rawMargin = (element as any).soldermask_margin
           const maskLayer =
             layer === "bottom"
               ? "soldermask_with_copper_bottom"
               : "soldermask_with_copper_top"
-          const maskPrimitive: any = {
-            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "pill" as const,
-            x,
-            y,
-            w: width,
-            h: height,
-            layer: maskLayer,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-            ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+
+          if (rawMargin === undefined || rawMargin === null) {
+            const soldermask_margin = 0
+
+            const openingWidth = Math.max(0.01, width + 2 * soldermask_margin)
+            const openingHeight = Math.max(0.01, height + 2 * soldermask_margin)
+
+            const openingPrimitive: any = {
+              _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "pill" as const,
+              x,
+              y,
+              w: openingWidth,
+              h: openingHeight,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
+            }
+            primitives.push(openingPrimitive)
+
+            const maskCoverageLayer =
+              layer === "bottom" ? "soldermask_bottom" : "soldermask_top"
+
+            const fullMaskCoverage: any = {
+              _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "pill" as const,
+              x,
+              y,
+              w: width,
+              h: height,
+              layer: maskCoverageLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+            }
+            primitives.push(fullMaskCoverage)
+
+            const cutoutOpening: any = {
+              _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "pill" as const,
+              x,
+              y,
+              w: openingWidth,
+              h: openingHeight,
+              layer: maskCoverageLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+              composite_mode: "destination-out",
+            }
+            primitives.push(cutoutOpening)
+
+            return primitives
           }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
+
+          const soldermask_margin = rawMargin
+
+          if (soldermask_margin === 0) {
+            return primitives
           }
-          primitives.push(maskPrimitive)
+
+          if (soldermask_margin > 0) {
+            const marginRing: any = {
+              _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "pill" as const,
+              x,
+              y,
+              w: width + 2 * soldermask_margin,
+              h: height + 2 * soldermask_margin,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+              color: "rgb(201, 162, 110)",
+            }
+            primitives.push(marginRing)
+
+            const cutout: any = {
+              _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "pill" as const,
+              x,
+              y,
+              w: width,
+              h: height,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+              composite_mode: "destination-out",
+            }
+            primitives.push(cutout)
+          } else {
+            const openingWidth = Math.max(0.01, width + 2 * soldermask_margin)
+            const openingHeight = Math.max(0.01, height + 2 * soldermask_margin)
+
+            const innerRingBase: any = {
+              _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "pill" as const,
+              x,
+              y,
+              w: width,
+              h: height,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+              ...("solder_mask_color" in element && element.solder_mask_color
+                ? { color: element.solder_mask_color }
+                : {}),
+            }
+            primitives.push(innerRingBase)
+
+            const innerCutout: any = {
+              _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "pill" as const,
+              x,
+              y,
+              w: openingWidth,
+              h: openingHeight,
+              layer: maskLayer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+              ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+              composite_mode: "destination-out",
+            }
+            primitives.push(innerCutout)
+          }
         }
 
         return primitives
       }
+
       return []
     }
+
     case "pcb_hole": {
       if (element.hole_shape === "circle" || !element.hole_shape) {
         const { x, y, hole_diameter } = element
