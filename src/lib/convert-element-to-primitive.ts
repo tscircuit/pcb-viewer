@@ -17,6 +17,10 @@ import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 import { distance } from "circuit-json"
+import { convertSmtpadRect } from "./convert-smtpad-rect"
+import { convertSmtpadCircle } from "./convert-smtpad-circle"
+import { convertSmtpadPolygon } from "./convert-smtpad-polygon"
+import { convertSmtpadPill } from "./convert-smtpad-pill"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -29,7 +33,7 @@ let globalPcbDrawingObjectCount = 0
 export const getNewPcbDrawingObjectId = (prefix: string) =>
   `${prefix}_${globalPcbDrawingObjectCount++}`
 
-const normalizePolygonPoints = (points: Point[] | undefined) =>
+export const normalizePolygonPoints = (points: Point[] | undefined) =>
   (points ?? []).map((point) => ({
     x: distance.parse(point.x),
     y: distance.parse(point.y),
@@ -253,183 +257,20 @@ export const convertElementToPrimitives = (
     }
 
     case "pcb_smtpad": {
+      const metadata: MetaData = {
+        _parent_pcb_component,
+        _parent_source_component,
+        _source_port,
+      }
+
       if (element.shape === "rect" || element.shape === "rotated_rect") {
-        const { shape, x, y, width, height, layer, rect_border_radius } =
-          element
-        const corner_radius = element.corner_radius ?? rect_border_radius ?? 0
-
-        const primitives = [
-          {
-            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "rect" as const,
-            x,
-            y,
-            w: width,
-            h: height,
-            layer: layer || "top",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-            ccw_rotation: (element as any).ccw_rotation,
-            roundness: corner_radius,
-          },
-        ]
-
-        // Add solder mask if enabled
-        if (element.is_covered_with_solder_mask) {
-          const maskLayer =
-            layer === "bottom"
-              ? "soldermask_with_copper_bottom"
-              : "soldermask_with_copper_top"
-          const maskPrimitive: any = {
-            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "rect" as const,
-            x,
-            y,
-            w: width,
-            h: height,
-            layer: maskLayer,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-            ccw_rotation: (element as any).ccw_rotation,
-            roundness: corner_radius,
-          }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
-          }
-          primitives.push(maskPrimitive)
-        }
-
-        return primitives
+        return convertSmtpadRect(element, metadata)
       } else if (element.shape === "circle") {
-        const { x, y, radius, layer } = element
-        const primitives = [
-          {
-            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "circle" as const,
-            x,
-            y,
-            r: radius,
-            layer: layer || "top",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-          },
-        ]
-
-        // Add solder mask if enabled
-        if (element.is_covered_with_solder_mask) {
-          const maskLayer =
-            layer === "bottom"
-              ? "soldermask_with_copper_bottom"
-              : "soldermask_with_copper_top"
-          const maskPrimitive: any = {
-            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "circle" as const,
-            x,
-            y,
-            r: radius,
-            layer: maskLayer,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-          }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
-          }
-          primitives.push(maskPrimitive)
-        }
-
-        return primitives
+        return convertSmtpadCircle(element, metadata)
       } else if (element.shape === "polygon") {
-        const { layer, points } = element
-        const primitives = [
-          {
-            _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "polygon" as const,
-            points: normalizePolygonPoints(points),
-            layer: layer || "top",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-          },
-        ]
-
-        // Add solder mask if enabled
-        if (element.is_covered_with_solder_mask) {
-          const maskLayer =
-            layer === "bottom"
-              ? "soldermask_with_copper_bottom"
-              : "soldermask_with_copper_top"
-          const maskPrimitive: any = {
-            _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "polygon" as const,
-            points: normalizePolygonPoints(points),
-            layer: maskLayer,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-          }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
-          }
-          primitives.push(maskPrimitive)
-        }
-
-        return primitives
+        return convertSmtpadPolygon(element, metadata)
       } else if (element.shape === "pill" || element.shape === "rotated_pill") {
-        const { x, y, width, height, layer } = element
-        const primitives = [
-          {
-            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "pill" as const,
-            x,
-            y,
-            w: width,
-            h: height,
-            layer: layer || "top",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-            ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
-          },
-        ]
-
-        // Add solder mask if enabled
-        if (element.is_covered_with_solder_mask) {
-          const maskLayer =
-            layer === "bottom"
-              ? "soldermask_with_copper_bottom"
-              : "soldermask_with_copper_top"
-          const maskPrimitive: any = {
-            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "pill" as const,
-            x,
-            y,
-            w: width,
-            h: height,
-            layer: maskLayer,
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            _source_port,
-            ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
-          }
-          if ((element as any).solder_mask_color) {
-            maskPrimitive.color = (element as any).solder_mask_color
-          }
-          primitives.push(maskPrimitive)
-        }
-
-        return primitives
+        return convertSmtpadPill(element, metadata)
       }
       return []
     }
