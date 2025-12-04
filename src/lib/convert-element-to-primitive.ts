@@ -73,51 +73,57 @@ export const convertElementToPrimitives = (
 
   switch (element.type) {
     case "pcb_panel": {
-      const { width, height } = element as PcbPanel
+      const { width, height, center } = element as PcbPanel
+      const cx = center?.x ?? 0
+      const cy = center?.y ?? 0
       return [
+        // Bottom line
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: 0,
-          y1: 0,
-          x2: width,
-          y2: 0,
+          x1: cx - width / 2,
+          y1: cy - height / 2,
+          x2: cx + width / 2,
+          y2: cy - height / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
           _element: element,
         },
+        // Top line
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: 0,
-          y1: height,
-          x2: width,
-          y2: height,
+          x1: cx - width / 2,
+          y1: cy + height / 2,
+          x2: cx + width / 2,
+          y2: cy + height / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
           _element: element,
         },
+        // Left line
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: 0,
-          y1: 0,
-          x2: 0,
-          y2: height,
+          x1: cx - width / 2,
+          y1: cy - height / 2,
+          x2: cx - width / 2,
+          y2: cy + height / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
           _element: element,
         },
+        // Right line
         {
           _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
           pcb_drawing_type: "line",
-          x1: width,
-          y1: 0,
-          x2: width,
-          y2: height,
+          x1: cx + width / 2,
+          y1: cy - height / 2,
+          x2: cx + width / 2,
+          y2: cy + height / 2,
           width: 1,
           zoomIndependent: true,
           layer: "board",
