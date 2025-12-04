@@ -142,7 +142,11 @@ export const PCBViewer = ({
   )
 
   return (
-    <div ref={transformRef as any} style={{ position: "relative" }}>
+    <div
+      ref={transformRef as any}
+      style={{ position: "relative" }}
+      onContextMenu={(event) => event.preventDefault()}
+    >
       <div ref={ref as any}>
         <ContextProviders
           initialState={mergedInitialState}
