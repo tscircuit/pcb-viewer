@@ -27,7 +27,7 @@ export const PillSmtpadExample = () => {
               pcb_component_id: "pcb_component_0",
               pcb_port_id: "pcb_port_0",
               layer: "top",
-              shape: "pill",
+              shape: "rotated_pill",
               radius: 0.5,
               height: 2,
               width: 1,
