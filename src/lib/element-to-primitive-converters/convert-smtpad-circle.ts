@@ -1,5 +1,6 @@
-import type { Primitive } from "./types"
-import { getNewPcbDrawingObjectId } from "./convert-element-to-primitive"
+import type { PcbSmtPadCircle } from "circuit-json"
+import type { Primitive } from "../types"
+import { getNewPcbDrawingObjectId } from "../convert-element-to-primitive"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -8,11 +9,11 @@ type MetaData = {
 }
 
 export const convertSmtpadCircle = (
-  element: any,
+  element: PcbSmtPadCircle,
   metadata: MetaData,
 ): (Primitive & MetaData)[] => {
   const { x, y, radius, layer } = element
-  const primitives = [
+  const primitives: (Primitive & MetaData)[] = [
     {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("circle"),
       pcb_drawing_type: "circle" as const,
@@ -33,7 +34,7 @@ export const convertSmtpadCircle = (
       layer === "bottom"
         ? "soldermask_with_copper_bottom"
         : "soldermask_with_copper_top"
-    const maskPrimitive: any = {
+    const maskPrimitive: Primitive & MetaData = {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("circle"),
       pcb_drawing_type: "circle" as const,
       x,
@@ -44,9 +45,9 @@ export const convertSmtpadCircle = (
       _parent_pcb_component: metadata._parent_pcb_component,
       _parent_source_component: metadata._parent_source_component,
       _source_port: metadata._source_port,
-    }
-    if ((element as any).solder_mask_color) {
-      maskPrimitive.color = (element as any).solder_mask_color
+      ...("solder_mask_color" in element && element.solder_mask_color
+        ? { color: element.solder_mask_color }
+        : {}),
     }
     primitives.push(maskPrimitive)
   }

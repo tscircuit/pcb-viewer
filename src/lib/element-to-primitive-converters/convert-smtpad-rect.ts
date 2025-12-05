@@ -1,6 +1,6 @@
-import type { PcbSmtPadRotatedPill } from "circuit-json"
-import type { Primitive } from "./types"
-import { getNewPcbDrawingObjectId } from "./convert-element-to-primitive"
+import type { PcbSmtPadRect, PcbSmtPadRotatedRect } from "circuit-json"
+import type { Primitive } from "../types"
+import { getNewPcbDrawingObjectId } from "../convert-element-to-primitive"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -9,13 +9,13 @@ type MetaData = {
 }
 
 export const convertSmtpadRect = (
-  element: any,
+  element: PcbSmtPadRect | PcbSmtPadRotatedRect,
   metadata: MetaData,
 ): (Primitive & MetaData)[] => {
-  const { shape, x, y, width, height, layer, rect_border_radius } = element
+  const { x, y, width, height, layer, rect_border_radius } = element
   const corner_radius = element.corner_radius ?? rect_border_radius ?? 0
 
-  const primitives = [
+  const primitives: (Primitive & MetaData)[] = [
     {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("rect"),
       pcb_drawing_type: "rect" as const,
@@ -28,8 +28,10 @@ export const convertSmtpadRect = (
       _parent_pcb_component: metadata._parent_pcb_component,
       _parent_source_component: metadata._parent_source_component,
       _source_port: metadata._source_port,
-      ccw_rotation: (element as any).ccw_rotation,
       roundness: corner_radius,
+      ...(element.shape === "rotated_rect" && element.ccw_rotation !== undefined
+        ? { ccw_rotation: element.ccw_rotation }
+        : {}),
     },
   ]
 
@@ -39,7 +41,7 @@ export const convertSmtpadRect = (
       layer === "bottom"
         ? "soldermask_with_copper_bottom"
         : "soldermask_with_copper_top"
-    const maskPrimitive: any = {
+    const maskPrimitiveBase: Primitive & MetaData = {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("rect"),
       pcb_drawing_type: "rect" as const,
       x,
@@ -51,11 +53,16 @@ export const convertSmtpadRect = (
       _parent_pcb_component: metadata._parent_pcb_component,
       _parent_source_component: metadata._parent_source_component,
       _source_port: metadata._source_port,
-      ccw_rotation: (element as any).ccw_rotation,
       roundness: corner_radius,
+      ...(element.shape === "rotated_rect" && element.ccw_rotation !== undefined
+        ? { ccw_rotation: element.ccw_rotation }
+        : {}),
     }
-    if ((element as any).solder_mask_color) {
-      maskPrimitive.color = (element as any).solder_mask_color
+    const maskPrimitive: Primitive & MetaData = {
+      ...maskPrimitiveBase,
+      ...("solder_mask_color" in element && element.solder_mask_color
+        ? { color: element.solder_mask_color as string }
+        : {}),
     }
     primitives.push(maskPrimitive)
   }

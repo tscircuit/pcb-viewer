@@ -1,6 +1,6 @@
-import type { PcbSmtPadRotatedPill } from "circuit-json"
-import type { Primitive } from "./types"
-import { getNewPcbDrawingObjectId } from "./convert-element-to-primitive"
+import type { PcbSmtPadPill, PcbSmtPadRotatedPill } from "circuit-json"
+import type { Primitive } from "../types"
+import { getNewPcbDrawingObjectId } from "../convert-element-to-primitive"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -9,11 +9,11 @@ type MetaData = {
 }
 
 export const convertSmtpadPill = (
-  element: any,
+  element: PcbSmtPadPill | PcbSmtPadRotatedPill,
   metadata: MetaData,
 ): (Primitive & MetaData)[] => {
   const { x, y, width, height, layer } = element
-  const primitives = [
+  const primitives: (Primitive & MetaData)[] = [
     {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("pill"),
       pcb_drawing_type: "pill" as const,
@@ -26,7 +26,9 @@ export const convertSmtpadPill = (
       _parent_pcb_component: metadata._parent_pcb_component,
       _parent_source_component: metadata._parent_source_component,
       _source_port: metadata._source_port,
-      ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
+      ...(element.shape === "rotated_pill" && element.ccw_rotation !== undefined
+        ? { ccw_rotation: element.ccw_rotation }
+        : {}),
     },
   ]
 
@@ -36,7 +38,7 @@ export const convertSmtpadPill = (
       layer === "bottom"
         ? "soldermask_with_copper_bottom"
         : "soldermask_with_copper_top"
-    const maskPrimitive: any = {
+    const maskPrimitive: Primitive & MetaData = {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("pill"),
       pcb_drawing_type: "pill" as const,
       x,
@@ -48,10 +50,12 @@ export const convertSmtpadPill = (
       _parent_pcb_component: metadata._parent_pcb_component,
       _parent_source_component: metadata._parent_source_component,
       _source_port: metadata._source_port,
-      ccw_rotation: (element as PcbSmtPadRotatedPill).ccw_rotation,
-    }
-    if ((element as any).solder_mask_color) {
-      maskPrimitive.color = (element as any).solder_mask_color
+      ...(element.shape === "rotated_pill" && element.ccw_rotation !== undefined
+        ? { ccw_rotation: element.ccw_rotation }
+        : {}),
+      ...("solder_mask_color" in element && element.solder_mask_color
+        ? { color: element.solder_mask_color }
+        : {}),
     }
     primitives.push(maskPrimitive)
   }

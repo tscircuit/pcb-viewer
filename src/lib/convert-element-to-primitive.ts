@@ -17,10 +17,10 @@ import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 import { distance } from "circuit-json"
-import { convertSmtpadRect } from "./convert-smtpad-rect"
-import { convertSmtpadCircle } from "./convert-smtpad-circle"
-import { convertSmtpadPolygon } from "./convert-smtpad-polygon"
-import { convertSmtpadPill } from "./convert-smtpad-pill"
+import { convertSmtpadRect } from "./element-to-primitive-converters/convert-smtpad-rect"
+import { convertSmtpadCircle } from "./element-to-primitive-converters/convert-smtpad-circle"
+import { convertSmtpadPolygon } from "./element-to-primitive-converters/convert-smtpad-polygon"
+import { convertSmtpadPill } from "./element-to-primitive-converters/convert-smtpad-pill"
 
 type MetaData = {
   _parent_pcb_component?: any

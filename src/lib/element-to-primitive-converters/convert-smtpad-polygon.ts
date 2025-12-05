@@ -1,8 +1,9 @@
-import type { Primitive } from "./types"
+import type { PcbSmtPadPolygon } from "circuit-json"
+import type { Primitive } from "../types"
 import {
   getNewPcbDrawingObjectId,
   normalizePolygonPoints,
-} from "./convert-element-to-primitive"
+} from "../convert-element-to-primitive"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -11,11 +12,11 @@ type MetaData = {
 }
 
 export const convertSmtpadPolygon = (
-  element: any,
+  element: PcbSmtPadPolygon,
   metadata: MetaData,
 ): (Primitive & MetaData)[] => {
   const { layer, points } = element
-  const primitives = [
+  const primitives: (Primitive & MetaData)[] = [
     {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("polygon"),
       pcb_drawing_type: "polygon" as const,
@@ -34,7 +35,7 @@ export const convertSmtpadPolygon = (
       layer === "bottom"
         ? "soldermask_with_copper_bottom"
         : "soldermask_with_copper_top"
-    const maskPrimitive: any = {
+    const maskPrimitive: Primitive & MetaData = {
       _pcb_drawing_object_id: getNewPcbDrawingObjectId("polygon"),
       pcb_drawing_type: "polygon" as const,
       points: normalizePolygonPoints(points),
@@ -43,9 +44,9 @@ export const convertSmtpadPolygon = (
       _parent_pcb_component: metadata._parent_pcb_component,
       _parent_source_component: metadata._parent_source_component,
       _source_port: metadata._source_port,
-    }
-    if ((element as any).solder_mask_color) {
-      maskPrimitive.color = (element as any).solder_mask_color
+      ...("solder_mask_color" in element && element.solder_mask_color
+        ? { color: element.solder_mask_color }
+        : {}),
     }
     primitives.push(maskPrimitive)
   }
