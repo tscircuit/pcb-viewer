@@ -20,7 +20,10 @@ import { distance } from "circuit-json"
 import { convertSmtpadRect } from "./element-to-primitive-converters/convert-smtpad-rect"
 import { convertSmtpadCircle } from "./element-to-primitive-converters/convert-smtpad-circle"
 import { convertSmtpadPolygon } from "./element-to-primitive-converters/convert-smtpad-polygon"
-import { convertSmtpadPill } from "./element-to-primitive-converters/convert-smtpad-pill"
+import {
+  convertSmtpadPill,
+  convertSmtpadRotatedPill,
+} from "./element-to-primitive-converters/convert-smtpad-pill"
 
 type MetaData = {
   _parent_pcb_component?: any
@@ -275,8 +278,10 @@ export const convertElementToPrimitives = (
         return convertSmtpadCircle(element, metadata)
       } else if (element.shape === "polygon") {
         return convertSmtpadPolygon(element, metadata)
-      } else if (element.shape === "pill" || element.shape === "rotated_pill") {
+      } else if (element.shape === "pill") {
         return convertSmtpadPill(element, metadata)
+      } else if (element.shape === "rotated_pill") {
+        return convertSmtpadRotatedPill(element, metadata)
       }
       return []
     }
