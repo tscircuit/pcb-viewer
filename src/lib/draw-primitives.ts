@@ -145,8 +145,11 @@ export const drawText = (drawer: Drawer, text: Text) => {
  * Draw knockout text - a filled rectangle with text cut out (transparent)
  */
 export const drawKnockoutText = (drawer: Drawer, text: Text) => {
-  const { width: textWidth, height: textHeight } = getTextMetrics(text)
-  const alignOffset = getAlignOffset(textWidth, textHeight, text.align)
+  const {
+    width: textWidth,
+    height: textHeight,
+    lineHeight,
+  } = getTextMetrics(text)
 
   text.x ??= 0
   text.y ??= 0
@@ -163,14 +166,24 @@ export const drawKnockoutText = (drawer: Drawer, text: Text) => {
   const rectWidth = textWidth + padding.left + padding.right
   const rectHeight = textHeight + padding.top + padding.bottom
 
-  // Calculate rectangle center based on alignment
-  // Text is drawn from bottom-left of its bounding box
-  const textBottomLeftX = text.x + alignOffset.x
-  const textBottomLeftY = text.y + alignOffset.y
+  // For knockout, we render text centered within the rectangle.
+  // The rectangle is centered at the anchor point (text.x, text.y).
+  // Text bounding box when drawn at origin (0,0):
+  //   - X: from 0 to textWidth (left-aligned, each line centered within)
+  //   - Y: from 0 (bottom of first line baseline) to lineHeight (top of first line)
+  //        then going down: line N is at Y = -N * (lineHeight + spacing)
+  //   - So Y ranges from lineHeight (top) to lineHeight - textHeight (bottom)
+  //
+  // To center the text in the rectangle, we need to offset it so that
+  // the text's center aligns with the rectangle's center (which is at anchor).
 
-  // Rectangle center
-  const rectCenterX = textBottomLeftX - padding.left + rectWidth / 2
-  const rectCenterY = textBottomLeftY - padding.bottom + rectHeight / 2
+  // Text center when drawn at (0, 0):
+  const textCenterXAtOrigin = textWidth / 2
+  const textCenterYAtOrigin = lineHeight - textHeight / 2
+
+  // To center text at anchor point, offset by negative of center
+  const textDrawX = text.x - textCenterXAtOrigin
+  const textDrawY = text.y - textCenterYAtOrigin
 
   // Get rotation anchor point
   const rotationAnchor = {
@@ -178,22 +191,20 @@ export const drawKnockoutText = (drawer: Drawer, text: Text) => {
     y: text.y,
   }
 
-  // First, draw the filled rectangle
+  // Draw the filled rectangle centered at anchor
   const rect: Rect = {
     _pcb_drawing_object_id: `knockout_rect_${text._pcb_drawing_object_id}`,
     pcb_drawing_type: "rect",
-    x: rectCenterX,
-    y: rectCenterY,
+    x: text.x,
+    y: text.y,
     w: rectWidth,
     h: rectHeight,
     layer: text.layer,
     ccw_rotation: text.ccw_rotation,
   }
 
-  // If mirrored, adjust the rectangle center
-  if (shouldMirrorText(text)) {
-    rect.x = 2 * text.x - rectCenterX
-  }
+  // If mirrored, the rectangle stays centered at anchor (no adjustment needed)
+  // but text will be mirrored around the anchor
 
   // Draw the background rectangle
   if (text.ccw_rotation) {
@@ -202,15 +213,14 @@ export const drawKnockoutText = (drawer: Drawer, text: Text) => {
     drawRect(drawer, rect)
   }
 
-  // Now draw the text as a cutout using destination-out compositing
-  // Generate the text lines with alignment offset
+  // Generate the text lines positioned to be centered in the rectangle
   let text_lines = convertTextToLines({
     ...text,
-    x: text.x + alignOffset.x,
-    y: text.y + alignOffset.y,
+    x: textDrawX,
+    y: textDrawY,
   })
 
-  // Mirror text if needed
+  // Mirror text if needed (around the anchor point)
   if (shouldMirrorText(text)) {
     text_lines = text_lines.map((line) => ({
       ...line,
@@ -230,15 +240,17 @@ export const drawKnockoutText = (drawer: Drawer, text: Text) => {
   }
 
   // Draw text lines with destination-out mode to cut them from the rectangle
-  drawer.equip({
-    fontSize: text.size,
-    color: getColor(text),
-    layer: text.layer,
-    mode: "subtract",
-  })
-
+  // We draw directly instead of using drawLine to preserve the subtract mode
   for (const line of text_lines) {
-    drawLine(drawer, { ...line, color: "black" })
+    drawer.equip({
+      size: line.width,
+      shape: "circle",
+      color: "black",
+      layer: text.layer,
+      mode: "subtract",
+    })
+    drawer.moveTo(line.x1, line.y1)
+    drawer.lineTo(line.x2, line.y2)
   }
 
   // Reset to normal mode

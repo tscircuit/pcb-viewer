@@ -51,14 +51,17 @@ describe("convertTextToLines", () => {
     const lines = convertTextToLines(text)
     const yValues = lines.flatMap((line) => [line.y1, line.y2])
 
-    const minY = Math.min(...yValues)
-    expect(minY).toBeCloseTo(text.y)
+    // First line (top) should be at text.y, second line should be below (lower Y)
+    // With 2 lines, total offset is (lineCount - 1) * (height + spacing)
+    const totalOffset = expectedTargetHeight + expectedSpacing
 
-    const secondLineYs = yValues.filter(
-      (y) => y > expectedTargetHeight + expectedSpacing / 2,
-    )
-    const minSecondLineY = Math.min(...secondLineYs)
-    expect(minSecondLineY).toBeCloseTo(expectedTargetHeight + expectedSpacing)
+    // Maximum Y should be near text.y + expectedTargetHeight (top of first line)
+    const maxY = Math.max(...yValues)
+    expect(maxY).toBeCloseTo(text.y + expectedTargetHeight)
+
+    // Minimum Y should be at text.y - totalOffset (bottom of last line)
+    const minY = Math.min(...yValues)
+    expect(minY).toBeCloseTo(text.y - totalOffset)
   })
 
   it("keeps lowercase letters on the baseline and renders descenders below it", () => {
