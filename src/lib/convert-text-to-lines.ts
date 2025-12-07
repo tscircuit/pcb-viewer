@@ -58,6 +58,7 @@ const getTextGeometry = (text: Text) => {
   return {
     text_lines,
     line_count,
+    line_widths,
     target_height,
     target_width_char,
     space_between_chars,
@@ -85,10 +86,12 @@ export const convertTextToLines = (text: Text): Line[] => {
   const {
     text_lines,
     line_count,
+    line_widths,
     target_height,
     target_width_char,
     space_between_chars,
     space_between_lines,
+    width: maxWidth,
   } = getTextGeometry(text)
 
   if (target_height <= 0 || line_count === 0) return []
@@ -98,8 +101,15 @@ export const convertTextToLines = (text: Text): Line[] => {
   const lines: Line[] = []
 
   for (let lineIndex = 0; lineIndex < line_count; lineIndex++) {
-    const lineYOffset = lineIndex * (target_height + space_between_lines)
-    let current_x_origin_for_char_box = text.x
+    // Lines go from top to bottom: first line (index 0) at highest Y, subsequent lines decrease in Y
+    // lineIndex 0 -> offset 0 (top), lineIndex 1 -> offset -step (below), etc.
+    const lineYOffset = -lineIndex * (target_height + space_between_lines)
+
+    // Center each line within the max width bounding box
+    // This ensures multiline text is properly centered when using center alignment
+    const lineWidth = line_widths[lineIndex]
+    const lineXOffset = (maxWidth - lineWidth) / 2
+    let current_x_origin_for_char_box = text.x + lineXOffset
 
     for (
       let letterIndex = 0;

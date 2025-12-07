@@ -1,4 +1,3 @@
-import type { Rotation } from "circuit-json"
 import { type Drawer, LAYER_NAME_TO_COLOR } from "./Drawer"
 import { rotateText } from "./util/rotate-text"
 import { convertTextToLines, getTextMetrics } from "./convert-text-to-lines"
@@ -46,6 +45,51 @@ export const drawLine = (drawer: Drawer, line: Line) => {
   drawer.lineTo(line.x2, line.y2)
 }
 
+/**
+ * Calculate alignment offset for text based on its dimensions and alignment setting
+ */
+const getAlignOffset = (
+  textWidth: number,
+  textHeight: number,
+  align?: string,
+): { x: number; y: number } => {
+  switch (align) {
+    case "top_left":
+      return { x: 0, y: -textHeight }
+    case "top_center":
+      return { x: -textWidth / 2, y: -textHeight }
+    case "top_right":
+      return { x: -textWidth, y: -textHeight }
+    case "center_left":
+      return { x: 0, y: -textHeight / 2 }
+    case "center":
+      return { x: -textWidth / 2, y: -textHeight / 2 }
+    case "center_right":
+      return { x: -textWidth, y: -textHeight / 2 }
+    case "bottom_left":
+      return { x: 0, y: 0 }
+    case "bottom_center":
+      return { x: -textWidth / 2, y: 0 }
+    case "bottom_right":
+      return { x: -textWidth, y: 0 }
+    default:
+      return { x: 0, y: 0 }
+  }
+}
+
+/**
+ * Determine if text should be mirrored based on layer and is_mirrored property
+ */
+const shouldMirrorText = (text: Text): boolean => {
+  // Bottom copper layer should auto-mirror (like bottom silkscreen)
+  if (text.layer === "bottom_silkscreen" || text.layer === "bottom") {
+    // If is_mirrored is explicitly set to false, don't mirror
+    return text.is_mirrored !== false
+  }
+  // For other layers, only mirror if explicitly requested
+  return text.is_mirrored === true
+}
+
 export const drawText = (drawer: Drawer, text: Text) => {
   drawer.equip({
     fontSize: text.size,
@@ -53,55 +97,9 @@ export const drawText = (drawer: Drawer, text: Text) => {
     layer: text.layer,
   })
 
-  // Alignment offset calculation
-  let alignOffset = { x: 0, y: 0 }
   const { width: textWidth, height: textHeight } = getTextMetrics(text)
+  const alignOffset = getAlignOffset(textWidth, textHeight, text.align)
 
-  switch (text.align) {
-    case "top_left":
-      alignOffset.x = 0
-      alignOffset.y = -textHeight
-      break
-    case "top_center":
-      alignOffset.x = -textWidth / 2
-      alignOffset.y = -textHeight
-      break
-    case "top_right":
-      alignOffset.x = -textWidth
-      alignOffset.y = -textHeight
-      break
-    case "center_left":
-      alignOffset.x = 0
-      alignOffset.y = -textHeight / 2
-      break
-    case "center":
-      alignOffset.x = -textWidth / 2
-      alignOffset.y = -textHeight / 2
-      break
-    case "center_right":
-      alignOffset.x = -textWidth
-      alignOffset.y = -textHeight / 2
-      break
-    case "bottom_left":
-      alignOffset.x = 0
-      alignOffset.y = 0
-      break
-    case "bottom_center":
-      alignOffset.x = -textWidth / 2
-      alignOffset.y = 0
-      break
-    case "bottom_right":
-      alignOffset.x = -textWidth
-      alignOffset.y = 0
-      break
-    default: // Default to bottom_left if align is not specified or invalid
-      alignOffset.x = 0
-      alignOffset.y = 0
-      break
-  }
-
-  // Non-gerber compatible
-  // drawer.text(text.text, text.x, text.y)
   text.x ??= 0
   text.y ??= 0
 
@@ -118,9 +116,8 @@ export const drawText = (drawer: Drawer, text: Text) => {
     y: text.y + alignOffset.y,
   })
 
-  // If on the bottom silkscreen layer, mirror the text horizontally
-  // around its anchor point text.x
-  if (text.layer === "bottom_silkscreen") {
+  // Mirror text if needed (bottom layers or explicit is_mirrored)
+  if (shouldMirrorText(text)) {
     text_lines = text_lines.map((line) => ({
       ...line,
       x1: 2 * text.x - line.x1,
@@ -142,6 +139,124 @@ export const drawText = (drawer: Drawer, text: Text) => {
   for (const line of text_lines) {
     drawLine(drawer, line)
   }
+}
+
+/**
+ * Draw knockout text - a filled rectangle with text cut out (transparent)
+ */
+export const drawKnockoutText = (drawer: Drawer, text: Text) => {
+  const {
+    width: textWidth,
+    height: textHeight,
+    lineHeight,
+  } = getTextMetrics(text)
+
+  text.x ??= 0
+  text.y ??= 0
+
+  // Calculate padding
+  const padding = text.knockout_padding ?? {
+    left: text.size * 0.5,
+    right: text.size * 0.5,
+    top: text.size * 0.3,
+    bottom: text.size * 0.3,
+  }
+
+  // Calculate the rectangle bounds
+  const rectWidth = textWidth + padding.left + padding.right
+  const rectHeight = textHeight + padding.top + padding.bottom
+
+  // For knockout, we render text centered within the rectangle.
+  // The rectangle is centered at the anchor point (text.x, text.y).
+  // Text bounding box when drawn at origin (0,0):
+  //   - X: from 0 to textWidth (left-aligned, each line centered within)
+  //   - Y: from 0 (bottom of first line baseline) to lineHeight (top of first line)
+  //        then going down: line N is at Y = -N * (lineHeight + spacing)
+  //   - So Y ranges from lineHeight (top) to lineHeight - textHeight (bottom)
+  //
+  // To center the text in the rectangle, we need to offset it so that
+  // the text's center aligns with the rectangle's center (which is at anchor).
+
+  // Text center when drawn at (0, 0):
+  const textCenterXAtOrigin = textWidth / 2
+  const textCenterYAtOrigin = lineHeight - textHeight / 2
+
+  // To center text at anchor point, offset by negative of center
+  const textDrawX = text.x - textCenterXAtOrigin
+  const textDrawY = text.y - textCenterYAtOrigin
+
+  // Get rotation anchor point
+  const rotationAnchor = {
+    x: text.x,
+    y: text.y,
+  }
+
+  // Draw the filled rectangle centered at anchor
+  const rect: Rect = {
+    _pcb_drawing_object_id: `knockout_rect_${text._pcb_drawing_object_id}`,
+    pcb_drawing_type: "rect",
+    x: text.x,
+    y: text.y,
+    w: rectWidth,
+    h: rectHeight,
+    layer: text.layer,
+    ccw_rotation: text.ccw_rotation,
+  }
+
+  // If mirrored, the rectangle stays centered at anchor (no adjustment needed)
+  // but text will be mirrored around the anchor
+
+  // Draw the background rectangle
+  if (text.ccw_rotation) {
+    drawRotatedRect(drawer, rect)
+  } else {
+    drawRect(drawer, rect)
+  }
+
+  // Generate the text lines positioned to be centered in the rectangle
+  let text_lines = convertTextToLines({
+    ...text,
+    x: textDrawX,
+    y: textDrawY,
+  })
+
+  // Mirror text if needed (around the anchor point)
+  if (shouldMirrorText(text)) {
+    text_lines = text_lines.map((line) => ({
+      ...line,
+      x1: 2 * text.x - line.x1,
+      x2: 2 * text.x - line.x2,
+    }))
+  }
+
+  // Apply rotation if needed
+  if (text.ccw_rotation) {
+    const rotateTextParams = {
+      lines: text_lines,
+      anchorPoint: rotationAnchor,
+      ccwRotation: text.ccw_rotation,
+    }
+    text_lines = rotateText(rotateTextParams)
+  }
+
+  // Draw text lines with destination-out mode to cut them from the rectangle
+  // We draw directly instead of using drawLine to preserve the subtract mode
+  for (const line of text_lines) {
+    drawer.equip({
+      size: line.width,
+      shape: "circle",
+      color: "black",
+      layer: text.layer,
+      mode: "subtract",
+    })
+    drawer.moveTo(line.x1, line.y1)
+    drawer.lineTo(line.x2, line.y2)
+  }
+
+  // Reset to normal mode
+  drawer.equip({
+    mode: "add",
+  })
 }
 
 export const drawRect = (drawer: Drawer, rect: Rect) => {
@@ -234,6 +349,9 @@ export const drawPrimitive = (drawer: Drawer, primitive: Primitive) => {
     case "line":
       return drawLine(drawer, primitive)
     case "text":
+      if (primitive.is_knockout) {
+        return drawKnockoutText(drawer, primitive)
+      }
       return drawText(drawer, primitive)
     case "rect": {
       if (primitive.ccw_rotation) {

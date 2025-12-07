@@ -68,6 +68,15 @@ export interface Text extends PCBDrawingObject {
   align?: AlignString
   ccw_rotation?: number
   color?: string
+  // Properties for copper text
+  is_mirrored?: boolean
+  is_knockout?: boolean
+  knockout_padding?: {
+    left: number
+    top: number
+    bottom: number
+    right: number
+  }
 }
 
 export interface Rect extends PCBDrawingObject {
