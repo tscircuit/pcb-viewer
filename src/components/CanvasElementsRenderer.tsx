@@ -1,9 +1,8 @@
 import type { AnyCircuitElement } from "circuit-json"
-import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
@@ -19,6 +18,7 @@ import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { useGlobalStore } from "../global-store"
+import { buildConnectivityMapAsync } from "lib/workers/connectivityWorkerClient"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
@@ -49,16 +49,55 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     [elements, isShowingCopperPours],
   )
 
-  const [primitivesWithoutInteractionMetadata, connectivityMap] =
-    useMemo(() => {
-      const primitivesWithoutInteractionMetadata = elementsToRender.flatMap(
-        (elm) => convertElementToPrimitives(elm, props.elements),
-      )
-      const connectivityMap = getFullConnectivityMapFromCircuitJson(
-        props.elements as any,
-      )
-      return [primitivesWithoutInteractionMetadata, connectivityMap]
-    }, [elementsToRender, props.elements])
+  const [primitivesWithoutInteractionMetadata] = useMemo(() => {
+    const primitivesWithoutInteractionMetadata = elementsToRender.flatMap(
+      (elm) => convertElementToPrimitives(elm, props.elements),
+    )
+    return [primitivesWithoutInteractionMetadata]
+  }, [elementsToRender, props.elements])
+
+  const [connectivity, setConnectivity] = useState<{
+    netMap: Record<string, string[]>
+    idToNetMap: Record<string, string>
+  }>({ netMap: {}, idToNetMap: {} })
+
+  useEffect(() => {
+    let cancelled = false
+    buildConnectivityMapAsync(props.elements as any)
+      .then((result) => {
+        if (!cancelled) {
+          setConnectivity({
+            netMap: result.netMap || {},
+            idToNetMap: result.idToNetMap || {},
+          })
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setConnectivity({ netMap: {}, idToNetMap: {} })
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [props.elements])
+
+  const connectivityMap = useMemo(() => {
+    const getNetConnectedToId = (id: string) => {
+      if (!id) return []
+      const netId = connectivity.idToNetMap[id]
+      if (!netId) return []
+      return connectivity.netMap[netId] || []
+    }
+
+    const getIdsConnectedToNet = (ids: string[]) => {
+      if (!ids) return []
+      // Ensure uniqueness to keep hover highlight stable
+      return Array.from(new Set(ids))
+    }
+
+    return { getNetConnectedToId, getIdsConnectedToNet }
+  }, [connectivity])
 
   const [hoverState, setHoverState] = useState({
     drawingObjectIdsWithMouseOver: new Set<string>(),
