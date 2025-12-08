@@ -17,6 +17,7 @@ import { HotkeyActionMenu } from "./HotkeyActionMenu"
 import { useToast } from "lib/toast"
 import { zIndexMap } from "lib/util/z-index-map"
 import type { EditTraceHintEvent } from "@tscircuit/props"
+import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
 
 interface Props {
   transform?: Matrix
@@ -143,6 +144,25 @@ export const EditTraceHintOverlay = ({
     dragEndScreen = applyToPoint(transform, dragState?.dragEnd!)
   }
 
+  const handlePointerMove = throttleAnimationFrame(
+    (clientX: number, clientY: number, target: HTMLDivElement) => {
+      if (!isElementSelected || !dragState) return
+      const rect = target.getBoundingClientRect()
+      const x = clientX - rect.left
+      const y = clientY - rect.top
+      if (isNaN(x) || isNaN(y)) return
+      const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+      setDragState((prev) =>
+        prev
+          ? {
+              ...prev,
+              dragEnd: rwMousePoint,
+            }
+          : prev,
+      )
+    },
+  )
+
   useEffect(() => {
     if (!isElementSelected) return
 
@@ -222,16 +242,7 @@ export const EditTraceHintOverlay = ({
         }
       }}
       onMouseMove={(e) => {
-        if (!isElementSelected || !dragState) return
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        if (isNaN(x) || isNaN(y)) return
-        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
-        setDragState({
-          ...dragState,
-          dragEnd: rwMousePoint,
-        })
+        handlePointerMove(e.clientX, e.clientY, e.currentTarget)
       }}
       onMouseUp={(e) => {
         if (!isElementSelected) return

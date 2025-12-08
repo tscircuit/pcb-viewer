@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
+import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
 
 interface Props {
   transform?: Matrix
@@ -57,6 +58,35 @@ export const EditPlacementOverlay = ({
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
 
   const disabled = disabledProp || !in_move_footprint_mode
+
+  const handlePointerMove = throttleAnimationFrame(
+    (clientX: number, clientY: number, target: HTMLDivElement) => {
+      if (!activePcbComponentId || !dragState) return
+      const rect = target.getBoundingClientRect()
+      const x = clientX - rect.left
+      const y = clientY - rect.top
+      if (Number.isNaN(x) || Number.isNaN(y)) return
+      const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+      const nextDragState = {
+        ...dragState,
+        dragEnd: rwMousePoint,
+      }
+      setDragState(nextDragState)
+      onModifyEditEvent({
+        edit_event_id: dragState.edit_event_id,
+        new_center: {
+          x:
+            dragState.originalCenter.x +
+            rwMousePoint.x -
+            dragState.dragStart.x,
+          y:
+            dragState.originalCenter.y +
+            rwMousePoint.y -
+            dragState.dragStart.y,
+        },
+      })
+    },
+  )
 
   return (
     <div
@@ -115,29 +145,7 @@ export const EditPlacementOverlay = ({
         }
       }}
       onMouseMove={(e) => {
-        if (!activePcbComponentId || !dragState) return
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        if (Number.isNaN(x) || Number.isNaN(y)) return
-        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
-        setDragState({
-          ...dragState,
-          dragEnd: rwMousePoint,
-        })
-        onModifyEditEvent({
-          edit_event_id: dragState.edit_event_id,
-          new_center: {
-            x:
-              dragState.originalCenter.x +
-              rwMousePoint.x -
-              dragState.dragStart.x,
-            y:
-              dragState.originalCenter.y +
-              rwMousePoint.y -
-              dragState.dragStart.y,
-          },
-        })
+        handlePointerMove(e.clientX, e.clientY, e.currentTarget)
       }}
       onMouseUp={(e) => {
         if (!activePcbComponentId) return
