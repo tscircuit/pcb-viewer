@@ -362,7 +362,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   }, [isViewMenuOpen])
   return (
     <div
-      style={{ position: "relative", zIndex: "999 !important" }}
+      style={{ position: "relative", zIndex: zIndexMap.toolbarOverlay }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
