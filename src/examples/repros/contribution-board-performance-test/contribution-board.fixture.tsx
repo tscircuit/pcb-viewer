@@ -5,6 +5,13 @@ import { usePICO_W } from "./usePICO"
 import { useHS91L02W2C01 } from "./useHS91L02W2C01"
 import { WS2812B_2020 as LedWithIc } from "./useWS2812B_2020"
 
+// Keep a lighter grid by default so the fixture doesn't hang dev tools.
+// Flip this flag to true when you specifically want the full stress run.
+const USE_FULL_GRID = false
+const GRID_COLS = USE_FULL_GRID ? 53 : 10
+const GRID_ROWS = USE_FULL_GRID ? 7 : 4
+const GRID_SPACING = 5
+
 export const contributionBoard: React.FC = () => {
   const circuit = new Circuit()
   type Point = { x: number; y: number }
@@ -96,10 +103,10 @@ export const contributionBoard: React.FC = () => {
         pcbY={19}
       />
       {grid({
-        cols: 53,
-        rows: 7,
-        xSpacing: 5,
-        ySpacing: 5,
+        cols: GRID_COLS,
+        rows: GRID_ROWS,
+        xSpacing: GRID_SPACING,
+        ySpacing: GRID_SPACING,
         offsetX: 3 - 122,
         offsetY: -32 / 2 - 7.5,
       }).map(({ center, index }) => {
@@ -173,7 +180,12 @@ export const contributionBoard: React.FC = () => {
   const soup = circuit.getCircuitJson()
 
   return (
-    <div style={{ backgroundColor: "black" }}>
+    <div
+      style={{
+        backgroundColor: "#0b0b0f",
+        padding: "16px",
+      }}
+    >
       <PCBViewer circuitJson={soup as any} />
     </div>
   )
