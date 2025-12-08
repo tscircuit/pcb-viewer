@@ -163,6 +163,121 @@ export const EditTraceHintOverlay = ({
     },
   )
 
+  const handlePointerDown = (
+    clientX: number,
+    clientY: number,
+    target: HTMLDivElement,
+  ) => {
+    if (disabled) return
+    const rect = target.getBoundingClientRect()
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+    if (isNaN(x) || isNaN(y)) return
+    const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+
+    if (!isElementSelected) {
+      for (const e of soup) {
+        if (
+          (e.type === "pcb_smtpad" &&
+            isInsideOfSmtpad(e, rwMousePoint, 10 / transform.a)) ||
+          (e.type === "pcb_plated_hole" &&
+            isInsideOfPlatedHole(e, rwMousePoint, 10 / transform.a))
+        ) {
+          if (!e.pcb_port_id) {
+            toast.error(`pcb_port_id is null on the selected "${e.type}"`)
+            return
+          }
+          const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)
+          if (!pcb_port) {
+            toast.error(
+              `Could not find associated pcb_port for "${e.pcb_port_id}"`,
+            )
+            return
+          }
+          setSelectedElement(e)
+          setShouldCreateAsVia(false)
+          setDragState({
+            dragStart: rwMousePoint,
+            originalCenter: { x: pcb_port.x, y: pcb_port.y },
+            dragEnd: rwMousePoint,
+            editEvent: {
+              pcb_edit_event_type: "edit_trace_hint",
+              pcb_port_id: e.pcb_port_id!,
+              pcb_trace_hint_id: Math.random().toString(),
+              route: [],
+              created_at: Date.now(),
+              edit_event_id: Math.random().toString(),
+              in_progress: true,
+            },
+            shouldDrawRouteHint: false,
+          })
+
+          cancelPanDrag()
+          break
+        }
+      }
+    } else {
+      setDragState({
+        ...(dragState as any),
+        dragStart: rwMousePoint,
+        shouldDrawRouteHint: true,
+      })
+    }
+  }
+
+  const handlePointerUp = (
+    clientX: number,
+    clientY: number,
+    target: HTMLDivElement,
+  ) => {
+    if (!isElementSelected) return
+    if (!dragState?.shouldDrawRouteHint) return
+
+    const { dragStart, dragEnd } = dragState
+    const rwDist = Math.sqrt(
+      (dragEnd.x - dragStart.x) ** 2 + (dragEnd.y - dragStart.y) ** 2,
+    )
+    const screenDist = rwDist * transform.a
+
+    if (screenDist > 20) return
+
+    const rect = target.getBoundingClientRect()
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+    if (isNaN(x) || isNaN(y)) return
+    const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+
+    if (dragState) {
+      cancelPanDrag()
+      const lastPointScreen = applyToPoint(
+        transform,
+        dragState.editEvent.route.slice(-1)[0] ?? dragState.originalCenter,
+      )
+      const distanceFromLastPoint = Math.sqrt(
+        (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2,
+      )
+      if (distanceFromLastPoint < 20) {
+        onCreateEditEvent({
+          ...dragState.editEvent,
+          in_progress: false,
+        })
+        setDragState(null)
+        setSelectedElement(null)
+        return
+      }
+      setDragState({
+        ...dragState,
+        editEvent: {
+          ...dragState.editEvent,
+          route: [
+            ...dragState.editEvent.route,
+            { ...rwMousePoint, via: shouldCreateAsVia },
+          ],
+        },
+      })
+    }
+  }
+
   useEffect(() => {
     if (!isElementSelected) return
 
@@ -185,116 +300,32 @@ export const EditTraceHintOverlay = ({
         overflow: "hidden",
       }}
       onMouseDown={(e) => {
-        if (disabled) return
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        if (isNaN(x) || isNaN(y)) return
-        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
-
-        if (!isElementSelected) {
-          for (const e of soup) {
-            if (
-              (e.type === "pcb_smtpad" &&
-                isInsideOfSmtpad(e, rwMousePoint, 10 / transform.a)) ||
-              (e.type === "pcb_plated_hole" &&
-                isInsideOfPlatedHole(e, rwMousePoint, 10 / transform.a))
-            ) {
-              if (!e.pcb_port_id) {
-                toast.error(`pcb_port_id is null on the selected "${e.type}"`)
-                return
-              }
-              const pcb_port = su(soup).pcb_port.get(e.pcb_port_id)
-              if (!pcb_port) {
-                toast.error(
-                  `Could not find associated pcb_port for "${e.pcb_port_id}"`,
-                )
-                return
-              }
-              setSelectedElement(e)
-              setShouldCreateAsVia(false)
-              setDragState({
-                dragStart: rwMousePoint,
-                originalCenter: { x: pcb_port.x, y: pcb_port.y },
-                dragEnd: rwMousePoint,
-                editEvent: {
-                  pcb_edit_event_type: "edit_trace_hint",
-                  pcb_port_id: e.pcb_port_id!,
-                  pcb_trace_hint_id: Math.random().toString(),
-                  route: [],
-                  created_at: Date.now(),
-                  edit_event_id: Math.random().toString(),
-                  in_progress: true,
-                },
-                shouldDrawRouteHint: false,
-              })
-
-              cancelPanDrag()
-              break
-            }
-          }
-        } else {
-          setDragState({
-            ...(dragState as any),
-            dragStart: rwMousePoint,
-            shouldDrawRouteHint: true,
-          })
-        }
+        handlePointerDown(e.clientX, e.clientY, e.currentTarget)
       }}
       onMouseMove={(e) => {
         handlePointerMove(e.clientX, e.clientY, e.currentTarget)
       }}
       onMouseUp={(e) => {
-        if (!isElementSelected) return
-        if (!dragState?.shouldDrawRouteHint) return
-
-        // Compute distance that has been dragged
-        const { dragStart, dragEnd } = dragState
-        const rwDist = Math.sqrt(
-          (dragEnd.x - dragStart.x) ** 2 + (dragEnd.y - dragStart.y) ** 2,
-        )
-        const screenDist = rwDist * transform.a
-
-        // If the user dragged, don't create a point
-        if (screenDist > 20) return
-
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        if (isNaN(x) || isNaN(y)) return
-        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
-
-        if (dragState) {
-          cancelPanDrag()
-          const lastPointScreen = applyToPoint(
-            transform,
-            dragState.editEvent.route.slice(-1)[0] ?? dragState.originalCenter,
-          )
-          const distanceFromLastPoint = Math.sqrt(
-            (x - lastPointScreen.x) ** 2 + (y - lastPointScreen.y) ** 2,
-          )
-          if (distanceFromLastPoint < 20) {
-            // Close the trace hint
-            onCreateEditEvent({
-              ...dragState.editEvent,
-              in_progress: false,
-            })
-            setDragState(null)
-            setSelectedElement(null)
-            return
-          }
-          // Edit existing edit event by adding a new point at the rwMousePoint
-          setDragState({
-            ...dragState,
-            editEvent: {
-              ...dragState.editEvent,
-              route: [
-                ...dragState.editEvent.route,
-                { ...rwMousePoint, via: shouldCreateAsVia },
-              ],
-            },
-          })
-        }
+        handlePointerUp(e.clientX, e.clientY, e.currentTarget)
+      }}
+      onTouchStart={(e) => {
+        const touch = e.touches[0]
+        if (!touch) return
+        handlePointerDown(touch.clientX, touch.clientY, e.currentTarget)
+        e.preventDefault()
+        e.stopPropagation()
+      }}
+      onTouchMove={(e) => {
+        const touch = e.touches[0]
+        if (!touch) return
+        handlePointerMove(touch.clientX, touch.clientY, e.currentTarget)
+      }}
+      onTouchEnd={(e) => {
+        const touch = e.changedTouches[0]
+        if (!touch) return
+        handlePointerUp(touch.clientX, touch.clientY, e.currentTarget)
+        e.preventDefault()
+        e.stopPropagation()
       }}
     >
       {children}
