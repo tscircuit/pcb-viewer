@@ -176,6 +176,18 @@ export const ErrorOverlay = ({
     }
   })
 
+  const setMessageVisibility = (
+    currentTarget: EventTarget | null,
+    visible: boolean,
+  ) => {
+    if (!(currentTarget instanceof HTMLElement)) return
+    const popup = currentTarget.nextElementSibling as HTMLElement | null
+    const msg = popup?.querySelector(".error-message") as HTMLElement | null
+    if (msg) {
+      msg.style.opacity = visible ? "1" : "0"
+    }
+  }
+
   return (
     <div style={{ position: "relative" }} ref={containerRef}>
       {children}
@@ -243,27 +255,26 @@ export const ErrorOverlay = ({
                   zIndex: zIndexMap.errorOverlay + 5,
                   cursor: "pointer",
                   borderRadius: "50%",
+                  touchAction: "manipulation",
                 }}
                 onMouseEnter={(e) => {
-                  const popup = e.currentTarget
-                    .nextElementSibling as HTMLElement
-                  if (popup) {
-                    const msg = popup.querySelector(
-                      ".error-message",
-                    ) as HTMLElement
-                    if (msg) msg.style.opacity = "1"
-                  }
+                  setMessageVisibility(e.currentTarget, true)
                 }}
                 onMouseLeave={(e) => {
                   if (!isHighlighted) {
-                    const popup = e.currentTarget
-                      .nextElementSibling as HTMLElement
-                    if (popup) {
-                      const msg = popup.querySelector(
-                        ".error-message",
-                      ) as HTMLElement
-                      if (msg) msg.style.opacity = "0"
-                    }
+                    setMessageVisibility(e.currentTarget, false)
+                  }
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setMessageVisibility(e.currentTarget, true)
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (!isHighlighted) {
+                    setMessageVisibility(e.currentTarget, false)
                   }
                 }}
               />
@@ -324,27 +335,26 @@ export const ErrorOverlay = ({
                   zIndex: zIndexMap.errorOverlay + 5,
                   cursor: "pointer",
                   borderRadius: "50%",
+                  touchAction: "manipulation",
                 }}
                 onMouseEnter={(e) => {
-                  const popup = e.currentTarget
-                    .nextElementSibling as HTMLElement
-                  if (popup) {
-                    const msg = popup.querySelector(
-                      ".error-message",
-                    ) as HTMLElement
-                    if (msg) msg.style.opacity = "1"
-                  }
+                  setMessageVisibility(e.currentTarget, true)
                 }}
                 onMouseLeave={(e) => {
                   if (!isHighlighted) {
-                    const popup = e.currentTarget
-                      .nextElementSibling as HTMLElement
-                    if (popup) {
-                      const msg = popup.querySelector(
-                        ".error-message",
-                      ) as HTMLElement
-                      if (msg) msg.style.opacity = "0"
-                    }
+                    setMessageVisibility(e.currentTarget, false)
+                  }
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setMessageVisibility(e.currentTarget, true)
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (!isHighlighted) {
+                    setMessageVisibility(e.currentTarget, false)
                   }
                 }}
               />
