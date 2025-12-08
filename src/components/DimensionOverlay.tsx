@@ -11,6 +11,7 @@ import {
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
 import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
+import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
 
 interface Props {
   transform?: Matrix
@@ -352,6 +353,17 @@ export const DimensionOverlay = ({
     setActiveSnapIds({ start: null, end: null })
   }
 
+  const handlePointerMove = throttleAnimationFrame(
+    (clientX: number, clientY: number, target: HTMLElement) => {
+      const rwPoint = updateFromClientPoint(clientX, clientY, target)
+      if (dimensionToolStretching && rwPoint) {
+        const snap = findSnap(rwPoint)
+        setDEnd({ x: snap.point.x, y: snap.point.y })
+        setActiveSnapIds((prev) => ({ ...prev, end: snap.id }))
+      }
+    },
+  )
+
   return (
     <div
       ref={containerRef}
@@ -369,16 +381,7 @@ export const DimensionOverlay = ({
         }
       }}
       onMouseMove={(e: React.MouseEvent<HTMLDivElement>) => {
-        const rwPoint = updateFromClientPoint(
-          e.clientX,
-          e.clientY,
-          e.currentTarget,
-        )
-        if (dimensionToolStretching && rwPoint) {
-          const snap = findSnap(rwPoint)
-          setDEnd({ x: snap.point.x, y: snap.point.y })
-          setActiveSnapIds((prev) => ({ ...prev, end: snap.id }))
-        }
+        handlePointerMove(e.clientX, e.clientY, e.currentTarget)
       }}
       onMouseDown={(e) => {
         const rwPoint = updateFromClientPoint(
@@ -414,16 +417,7 @@ export const DimensionOverlay = ({
       onTouchMove={(e) => {
         const touch = e.touches[0]
         if (!touch) return
-        const rwPoint = updateFromClientPoint(
-          touch.clientX,
-          touch.clientY,
-          e.currentTarget,
-        )
-        if (dimensionToolStretching && rwPoint) {
-          const snap = findSnap(rwPoint)
-          setDEnd({ x: snap.point.x, y: snap.point.y })
-          setActiveSnapIds((prev) => ({ ...prev, end: snap.id }))
-        }
+        handlePointerMove(touch.clientX, touch.clientY, e.currentTarget)
       }}
       onTouchEnd={(e) => {
         e.preventDefault()
