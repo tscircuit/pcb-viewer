@@ -5,7 +5,6 @@ import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
-import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
 
 interface Props {
   transform?: Matrix
