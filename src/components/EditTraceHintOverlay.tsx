@@ -298,6 +298,7 @@ export const EditTraceHintOverlay = ({
       style={{
         position: "relative",
         overflow: "hidden",
+        touchAction: "none",
       }}
       onMouseDown={(e) => {
         handlePointerDown(e.clientX, e.clientY, e.currentTarget)

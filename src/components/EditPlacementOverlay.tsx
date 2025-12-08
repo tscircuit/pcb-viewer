@@ -159,6 +159,7 @@ export const EditPlacementOverlay = ({
       style={{
         position: "relative",
         overflow: "hidden",
+        touchAction: "none",
       }}
       onMouseDown={(e) => {
         const foundActiveComponent = handlePointerDown(
