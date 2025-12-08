@@ -3,8 +3,8 @@ import type { AnyCircuitElement } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import { useGlobalStore } from "../global-store"
 import { zIndexMap } from "lib/util/z-index-map"
-import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { buildConnectivityMapAsync } from "lib/workers/connectivityWorkerClient"
 
 interface Props {
   transform?: Matrix
@@ -22,11 +22,37 @@ type RatsNestLine = {
 
 export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
   const isShowingRatsNest = useGlobalStore((s) => s.is_showing_rats_nest)
+  const [connectivity, setConnectivity] = useState<{
+    netMap: Record<string, string[]>
+    idToNetMap: Record<string, string>
+  }>({ netMap: {}, idToNetMap: {} })
 
-  const { netMap, idToNetMap } = useMemo(
-    () => getFullConnectivityMapFromCircuitJson(soup || []),
-    [soup],
-  )
+  useEffect(() => {
+    let cancelled = false
+    if (!soup || !isShowingRatsNest) {
+      setConnectivity({ netMap: {}, idToNetMap: {} })
+      return
+    }
+    buildConnectivityMapAsync(soup)
+      .then((result) => {
+        if (!cancelled) {
+          setConnectivity({
+            netMap: result.netMap || {},
+            idToNetMap: result.idToNetMap || {},
+          })
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setConnectivity({ netMap: {}, idToNetMap: {} })
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [soup, isShowingRatsNest])
+
+  const { netMap, idToNetMap } = connectivity
 
   const ratsNestLines = useMemo(() => {
     if (!soup || !isShowingRatsNest) return []
