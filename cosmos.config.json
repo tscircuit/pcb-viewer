@@ -3,7 +3,7 @@
   "plugins": ["react-cosmos-plugin-vite"],
   "fixturesDir": "src/examples",
   "fixtureFileSuffix": "fixture",
-  "ignore": ["*.ts"],
+  "ignore": ["*.ts", "src/examples/assets/**"],
   "vite": {
     "configPath": "./vite.config.ts"
   }
