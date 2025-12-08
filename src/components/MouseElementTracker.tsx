@@ -3,6 +3,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { distance } from "circuit-json"
 import type { Primitive } from "lib/types"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
+import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
 import React, { useState, useMemo } from "react"
 import { useMeasure } from "react-use"
 import type { Matrix } from "transformation-matrix"
@@ -290,17 +291,22 @@ export const MouseElementTracker = ({
     onMouseHoverOverPrimitives(newMousedPrimitives)
   }
 
+  const handleMouseMove = throttleAnimationFrame(
+    (clientX: number, clientY: number, target: HTMLDivElement) => {
+      if (!transform) return
+      const rect = target.getBoundingClientRect()
+      const x = clientX - rect.left
+      const y = clientY - rect.top
+      handleInteraction(x, y, transform, primitives)
+    },
+  )
+
   return (
     <div
       ref={containerRef}
       style={{ position: "relative", width: "100%", height: "100%" }}
       onMouseMove={(e) => {
-        if (transform) {
-          const rect = e.currentTarget.getBoundingClientRect()
-          const x = e.clientX - rect.left
-          const y = e.clientY - rect.top
-          handleInteraction(x, y, transform, primitives)
-        }
+        handleMouseMove(e.clientX, e.clientY, e.currentTarget)
       }}
       onTouchStart={(e) => {
         if (transform) {
