@@ -1,4 +1,6 @@
 import "@tscircuit/core"
+import { PCBViewer } from "../../PCBViewer"
+import { ContextProviders } from "../../components/ContextProviders"
 
 /**
  * A switch shaft you can use to connect a pluggable Kailh socket.
@@ -145,33 +147,39 @@ export const MacroKeypad = () => {
   }
 
   return (
-    <board width="120mm" height="80mm">
-      {keyPositions.map(({ keyNum, x, y }) => (
-        <Key
-          key={keyNum}
-          name={`K${keyNum}`}
-          keyNum={keyNum}
-          pcbX={x}
-          pcbY={y}
-        />
-      ))}
-      <ArduinoProMicroBreakout key="u1" name="U1" pcbX={44} />
-      {keyPositions.map(({ keyNum, row, col }) => (
-        <trace
-          // @ts-ignore
-          key={`trace-${keyNum}-col`}
-          from={`.SW${keyNum} .pin1`}
-          to={`.U1 .${colToMicroPin[col as 0 | 1 | 2]}`}
-        />
-      ))}
-      {keyPositions.map(({ keyNum, row, col }) => (
-        <trace
-          // @ts-ignore
-          key={`trace-${keyNum}-row`}
-          from={`.D${keyNum} .pin2`}
-          to={`.U1 .${rowToMicroPin[row as 0 | 1 | 2]}`}
-        />
-      ))}
-    </board>
+    <ContextProviders>
+      <div style={{ background: "black" }}>
+        <PCBViewer>
+          <board width="120mm" height="80mm">
+            {keyPositions.map(({ keyNum, x, y }) => (
+              <Key
+                key={keyNum}
+                name={`K${keyNum}`}
+                keyNum={keyNum}
+                pcbX={x}
+                pcbY={y}
+              />
+            ))}
+            <ArduinoProMicroBreakout key="u1" name="U1" pcbX={44} />
+            {keyPositions.map(({ keyNum, row, col }) => (
+              <trace
+                // @ts-ignore
+                key={`trace-${keyNum}-col`}
+                from={`.SW${keyNum} .pin1`}
+                to={`.U1 .${colToMicroPin[col as 0 | 1 | 2]}`}
+              />
+            ))}
+            {keyPositions.map(({ keyNum, row, col }) => (
+              <trace
+                // @ts-ignore
+                key={`trace-${keyNum}-row`}
+                from={`.D${keyNum} .pin2`}
+                to={`.U1 .${rowToMicroPin[row as 0 | 1 | 2]}`}
+              />
+            ))}
+          </board>
+        </PCBViewer>
+      </div>
+    </ContextProviders>
   )
 }
