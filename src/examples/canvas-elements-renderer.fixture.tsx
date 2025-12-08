@@ -1,4 +1,5 @@
 import { CanvasElementsRenderer } from "../components/CanvasElementsRenderer"
+import { ContextProviders } from "../components/ContextProviders"
 import { useState } from "react"
 import { useMeasure } from "react-use"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
@@ -121,30 +122,32 @@ const CanvasElementsTest = () => {
     onSetTransform: setTransform,
   })
   return (
-    <div ref={transformRef as any}>
-      <div ref={ref as any}>
-        <CanvasElementsRenderer
-          key={refDimensions.width}
-          elements={exampleSoup as any}
-          transform={transform}
-          height={600}
-          width={refDimensions.width}
-          grid={{
-            spacing: 1,
-            view_window: {
-              left: 0,
-              right: refDimensions.width || 500,
-              top: 600,
-              bottom: 0,
-            },
-          }}
-          allowEditing={false}
-          cancelPanDrag={() => {}}
-          onCreateEditEvent={() => {}}
-          onModifyEditEvent={() => {}}
-        />
+    <ContextProviders>
+      <div ref={transformRef as any}>
+        <div ref={ref as any}>
+          <CanvasElementsRenderer
+            key={refDimensions.width}
+            elements={exampleSoup as any}
+            transform={transform}
+            height={600}
+            width={refDimensions.width}
+            grid={{
+              spacing: 1,
+              view_window: {
+                left: 0,
+                right: refDimensions.width || 500,
+                top: 600,
+                bottom: 0,
+              },
+            }}
+            allowEditing={false}
+            cancelPanDrag={() => {}}
+            onCreateEditEvent={() => {}}
+            onModifyEditEvent={() => {}}
+          />
+        </div>
       </div>
-    </div>
+    </ContextProviders>
   )
 }
 

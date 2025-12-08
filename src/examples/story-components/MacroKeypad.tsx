@@ -1,4 +1,5 @@
-import "@tscircuit/core"
+import { Circuit } from "@tscircuit/core"
+import { PCBViewer } from "../../PCBViewer"
 
 /**
  * A switch shaft you can use to connect a pluggable Kailh socket.
@@ -144,7 +145,8 @@ export const MacroKeypad = () => {
     2: "D7",
   }
 
-  return (
+  const circuit = new Circuit()
+  circuit.add(
     <board width="120mm" height="80mm">
       {keyPositions.map(({ keyNum, x, y }) => (
         <Key
@@ -172,6 +174,16 @@ export const MacroKeypad = () => {
           to={`.U1 .${rowToMicroPin[row as 0 | 1 | 2]}`}
         />
       ))}
-    </board>
+    </board>,
   )
+
+  return (
+    <div style={{ background: "black" }}>
+      <PCBViewer circuitJson={circuit.getCircuitJson() as any} />
+    </div>
+  )
+}
+
+export default {
+  MacroKeypad,
 }

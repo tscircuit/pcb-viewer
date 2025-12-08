@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
+import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
 
 interface Props {
   transform?: Matrix
@@ -58,98 +59,146 @@ export const EditPlacementOverlay = ({
 
   const disabled = disabledProp || !in_move_footprint_mode
 
+  const handlePointerMove = throttleAnimationFrame(
+    (clientX: number, clientY: number, target: HTMLDivElement) => {
+      if (!activePcbComponentId || !dragState) return
+      const rect = target.getBoundingClientRect()
+      const x = clientX - rect.left
+      const y = clientY - rect.top
+      if (Number.isNaN(x) || Number.isNaN(y)) return
+      const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+      const nextDragState = {
+        ...dragState,
+        dragEnd: rwMousePoint,
+      }
+      setDragState(nextDragState)
+      onModifyEditEvent({
+        edit_event_id: dragState.edit_event_id,
+        new_center: {
+          x:
+            dragState.originalCenter.x +
+            rwMousePoint.x -
+            dragState.dragStart.x,
+          y:
+            dragState.originalCenter.y +
+            rwMousePoint.y -
+            dragState.dragStart.y,
+        },
+      })
+    },
+  )
+
+  const handlePointerDown = (
+    clientX: number,
+    clientY: number,
+    target: HTMLDivElement,
+  ) => {
+    if (disabled) return false
+    const rect = target.getBoundingClientRect()
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+    if (Number.isNaN(x) || Number.isNaN(y)) return false
+    const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+
+    let foundActiveComponent = false
+    for (const e of soup) {
+      if (
+        e.type === "pcb_component" &&
+        isInsideOf(e, rwMousePoint, 10 / transform.a)
+      ) {
+        cancelPanDrag()
+        setActivePcbComponent(e.pcb_component_id)
+        foundActiveComponent = true
+        const edit_event_id = Math.random().toString()
+        setDragState({
+          dragStart: rwMousePoint,
+          originalCenter: e.center,
+          dragEnd: rwMousePoint,
+          edit_event_id,
+        })
+
+        onCreateEditEvent({
+          edit_event_id,
+          edit_event_type: "edit_pcb_component_location",
+          pcb_edit_event_type: "edit_component_location",
+          pcb_component_id: e.pcb_component_id,
+          original_center: e.center,
+          new_center: e.center,
+          in_progress: true,
+          created_at: Date.now(),
+        })
+
+        setIsMovingComponent(true)
+        break
+      }
+    }
+    if (!foundActiveComponent) {
+      setActivePcbComponent(null)
+    }
+
+    return foundActiveComponent
+  }
+
+  const handlePointerUp = () => {
+    if (!activePcbComponentId) return
+    setActivePcbComponent(null)
+    setIsMovingComponent(false)
+    if (dragState) {
+      onModifyEditEvent({
+        edit_event_id: dragState.edit_event_id,
+        in_progress: false,
+      })
+      setDragState(null)
+    }
+  }
+
   return (
     <div
       ref={containerRef}
       style={{
         position: "relative",
         overflow: "hidden",
+        touchAction: "none",
       }}
       onMouseDown={(e) => {
-        if (disabled) return
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        if (Number.isNaN(x) || Number.isNaN(y)) return
-        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
-
-        let foundActiveComponent = false
-        for (const e of soup) {
-          if (
-            e.type === "pcb_component" &&
-            isInsideOf(e, rwMousePoint, 10 / transform.a)
-          ) {
-            cancelPanDrag()
-            setActivePcbComponent(e.pcb_component_id)
-            foundActiveComponent = true
-            const edit_event_id = Math.random().toString()
-            setDragState({
-              dragStart: rwMousePoint,
-              originalCenter: e.center,
-              dragEnd: rwMousePoint,
-              edit_event_id,
-            })
-
-            onCreateEditEvent({
-              edit_event_id,
-              edit_event_type: "edit_pcb_component_location",
-              pcb_edit_event_type: "edit_component_location",
-              pcb_component_id: e.pcb_component_id,
-              original_center: e.center,
-              new_center: e.center,
-              in_progress: true,
-              created_at: Date.now(),
-            })
-
-            setIsMovingComponent(true)
-            break
-          }
-        }
-        if (!foundActiveComponent) {
-          setActivePcbComponent(null)
-        }
-
+        const foundActiveComponent = handlePointerDown(
+          e.clientX,
+          e.clientY,
+          e.currentTarget,
+        )
         if (foundActiveComponent) {
           e.preventDefault()
           return false
         }
       }}
       onMouseMove={(e) => {
-        if (!activePcbComponentId || !dragState) return
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        if (Number.isNaN(x) || Number.isNaN(y)) return
-        const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
-        setDragState({
-          ...dragState,
-          dragEnd: rwMousePoint,
-        })
-        onModifyEditEvent({
-          edit_event_id: dragState.edit_event_id,
-          new_center: {
-            x:
-              dragState.originalCenter.x +
-              rwMousePoint.x -
-              dragState.dragStart.x,
-            y:
-              dragState.originalCenter.y +
-              rwMousePoint.y -
-              dragState.dragStart.y,
-          },
-        })
+        handlePointerMove(e.clientX, e.clientY, e.currentTarget)
       }}
       onMouseUp={(e) => {
-        if (!activePcbComponentId) return
-        setActivePcbComponent(null)
-        setIsMovingComponent(false)
-        if (dragState) {
-          onModifyEditEvent({
-            edit_event_id: dragState.edit_event_id,
-            in_progress: false,
-          })
-          setDragState(null)
+        handlePointerUp()
+      }}
+      onTouchStart={(e) => {
+        const touch = e.touches[0]
+        if (!touch) return
+        const foundActiveComponent = handlePointerDown(
+          touch.clientX,
+          touch.clientY,
+          e.currentTarget,
+        )
+        if (foundActiveComponent) {
+          e.preventDefault()
+          e.stopPropagation()
         }
+      }}
+      onTouchMove={(e) => {
+        const touch = e.touches[0]
+        if (!touch) return
+        handlePointerMove(touch.clientX, touch.clientY, e.currentTarget)
+      }}
+      onTouchEnd={(e) => {
+        handlePointerUp()
+        e.preventDefault()
+        e.stopPropagation()
       }}
     >
       {children}

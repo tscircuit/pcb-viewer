@@ -11,6 +11,7 @@ import {
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
 import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
+import { throttleAnimationFrame } from "lib/util/throttleAnimationFrame"
 
 interface Props {
   transform?: Matrix
@@ -317,12 +318,58 @@ export const DimensionOverlay = ({
     flipY: arrowScreenBounds.flipY,
   })
 
+  const updateFromClientPoint = (
+    clientX: number,
+    clientY: number,
+    target?: HTMLElement | null,
+  ) => {
+    const rect = target?.getBoundingClientRect()
+    if (!rect) return null
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+    const rwPoint = applyToPoint(inverse(transform!), { x, y })
+    mousePosRef.current.x = rwPoint.x
+    mousePosRef.current.y = rwPoint.y
+    return rwPoint
+  }
+
+  const startMeasurementAt = (rwPoint: { x: number; y: number }) => {
+    const snap = findSnap(rwPoint)
+    setDStart({ x: snap.point.x, y: snap.point.y })
+    setDEnd({ x: snap.point.x, y: snap.point.y })
+    setActiveSnapIds({ start: snap.id, end: snap.id })
+    setDimensionToolVisible(true)
+    setDimensionToolStretching(true)
+    disarmMeasure()
+  }
+
+  const stopStretching = () => {
+    setDimensionToolStretching(false)
+    setActiveSnapIds((prev) => ({ ...prev, end: null }))
+  }
+
+  const hideMeasurement = () => {
+    setDimensionToolVisible(false)
+    setActiveSnapIds({ start: null, end: null })
+  }
+
+  const handlePointerMove = throttleAnimationFrame(
+    (clientX: number, clientY: number, target: HTMLElement) => {
+      const rwPoint = updateFromClientPoint(clientX, clientY, target)
+      if (dimensionToolStretching && rwPoint) {
+        const snap = findSnap(rwPoint)
+        setDEnd({ x: snap.point.x, y: snap.point.y })
+        setActiveSnapIds((prev) => ({ ...prev, end: snap.id }))
+      }
+    },
+  )
+
   return (
     <div
       ref={containerRef}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: <explanation>
       tabIndex={0}
-      style={{ position: "relative" }}
+      style={{ position: "relative", touchAction: "none" }}
       onMouseEnter={() => {
         if (focusOnHover && containerRef.current) {
           containerRef.current.focus()
@@ -334,39 +381,51 @@ export const DimensionOverlay = ({
         }
       }}
       onMouseMove={(e: React.MouseEvent<HTMLDivElement>) => {
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        const rwPoint = applyToPoint(inverse(transform!), { x, y })
-        mousePosRef.current.x = rwPoint.x
-        mousePosRef.current.y = rwPoint.y
-
-        if (dimensionToolStretching) {
-          const snap = findSnap(rwPoint)
-          setDEnd({ x: snap.point.x, y: snap.point.y })
-          setActiveSnapIds((prev) => ({ ...prev, end: snap.id }))
-        }
+        handlePointerMove(e.clientX, e.clientY, e.currentTarget)
       }}
       onMouseDown={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        const rwPoint = applyToPoint(inverse(transform!), { x, y })
+        const rwPoint = updateFromClientPoint(
+          e.clientX,
+          e.clientY,
+          e.currentTarget,
+        )
+        if (!rwPoint) return
 
         if (measureToolArmed && !dimensionToolVisible) {
-          const snap = findSnap(rwPoint)
-          setDStart({ x: snap.point.x, y: snap.point.y })
-          setDEnd({ x: snap.point.x, y: snap.point.y })
-          setActiveSnapIds({ start: snap.id, end: snap.id })
-          setDimensionToolVisible(true)
-          setDimensionToolStretching(true)
-          disarmMeasure()
+          startMeasurementAt(rwPoint)
         } else if (dimensionToolStretching) {
-          setDimensionToolStretching(false)
-          setActiveSnapIds((prev) => ({ ...prev, end: null }))
+          stopStretching()
         } else if (dimensionToolVisible) {
-          setDimensionToolVisible(false)
-          setActiveSnapIds({ start: null, end: null })
+          hideMeasurement()
+        }
+      }}
+      onTouchStart={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        const touch = e.touches[0]
+        if (!touch) return
+        const rwPoint = updateFromClientPoint(
+          touch.clientX,
+          touch.clientY,
+          e.currentTarget,
+        )
+        if (!rwPoint) return
+        if (measureToolArmed && !dimensionToolVisible) {
+          startMeasurementAt(rwPoint)
+        }
+      }}
+      onTouchMove={(e) => {
+        const touch = e.touches[0]
+        if (!touch) return
+        handlePointerMove(touch.clientX, touch.clientY, e.currentTarget)
+      }}
+      onTouchEnd={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (dimensionToolStretching) {
+          stopStretching()
+        } else if (dimensionToolVisible) {
+          hideMeasurement()
         }
       }}
     >
