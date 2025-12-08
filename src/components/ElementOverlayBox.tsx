@@ -14,6 +14,7 @@ const containerStyle = {
   position: "absolute",
   left: 0,
   top: 0,
+  zIndex: zIndexMap.elementOverlay,
   pointerEvents: "none",
   color: "red",
   fontFamily: "sans-serif",
