@@ -9,6 +9,7 @@ import type { Matrix } from "transformation-matrix"
 import { applyToPoint, inverse } from "transformation-matrix"
 import { ElementOverlayBox } from "./ElementOverlayBox"
 import { GroupAnchorOffsetOverlay } from "./GroupAnchorOffsetOverlay"
+import { PadOffsetOverlay } from "./PadOffsetOverlay"
 
 const getPolygonBoundingBox = (
   points: ReadonlyArray<{ x: number; y: number }>,
@@ -320,6 +321,15 @@ export const MouseElementTracker = ({
       />
       {transform && (
         <GroupAnchorOffsetOverlay
+          elements={elements}
+          highlightedPrimitives={highlightedPrimitives}
+          transform={transform}
+          containerWidth={width}
+          containerHeight={height}
+        />
+      )}
+      {transform && (
+        <PadOffsetOverlay
           elements={elements}
           highlightedPrimitives={highlightedPrimitives}
           transform={transform}
