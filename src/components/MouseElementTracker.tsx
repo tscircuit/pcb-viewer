@@ -8,10 +8,12 @@ import { useMeasure } from "react-use"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, inverse } from "transformation-matrix"
 import { ElementOverlayBox } from "./ElementOverlayBox"
+import { GroupAnchorOffsetOverlay } from "./GroupAnchorOffsetOverlay"
 import type { AnyCircuitElement } from "circuit-json"
 import { distance } from "circuit-json"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import { useMeasure } from "react-use"
 
 const getPolygonBoundingBox = (
   points: ReadonlyArray<{ x: number; y: number }>,
@@ -296,6 +298,7 @@ export const MouseElementTracker = ({
 
   return (
     <div
+      ref={containerRef}
       style={{ position: "relative" }}
       onMouseMove={(e) => {
         if (transform) {
@@ -321,6 +324,15 @@ export const MouseElementTracker = ({
         mousePos={mousePos}
         highlightedPrimitives={highlightedPrimitives}
       />
+      {transform && width && height && (
+        <GroupAnchorOffsetOverlay
+          elements={elements}
+          highlightedPrimitives={highlightedPrimitives}
+          transform={transform}
+          containerWidth={width}
+          containerHeight={height}
+        />
+      )}
     </div>
   )
 }
