@@ -1,10 +1,9 @@
-import type { AnyCircuitElement, PcbComponent } from "circuit-json"
+import type { PcbComponent } from "circuit-json"
 import { applyToPoint, type Matrix } from "transformation-matrix"
 import type { HighlightedPrimitive } from "./MouseElementTracker"
 import { zIndexMap } from "lib/util/z-index-map"
 
 interface Props {
-    elements: AnyCircuitElement[]
     highlightedPrimitives: HighlightedPrimitive[]
     transform: Matrix
     containerWidth: number
@@ -32,7 +31,6 @@ const COLORS = {
 }
 
 export const PadOffsetOverlay = ({
-    elements,
     highlightedPrimitives,
     transform,
     containerWidth,

@@ -330,7 +330,6 @@ export const MouseElementTracker = ({
       )}
       {transform && (
         <PadOffsetOverlay
-          elements={elements}
           highlightedPrimitives={highlightedPrimitives}
           transform={transform}
           containerWidth={width}
