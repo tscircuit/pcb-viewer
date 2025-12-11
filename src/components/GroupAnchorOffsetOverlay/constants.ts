@@ -9,6 +9,8 @@ export const VISUAL_CONFIG = {
   LINE_DASH_PATTERN: "4,4",
   COMPONENT_MARKER_RADIUS: 3,
   LABEL_FONT_SIZE: 11,
+  COMPONENT_ANCHOR_MARKER_SIZE: 6,
+  GROUP_ANCHOR_MARKER_SIZE: 7,
 } as const
 
 export const COLORS = {
@@ -16,4 +18,6 @@ export const COLORS = {
   COMPONENT_MARKER_FILL: "#66ccff",
   COMPONENT_MARKER_STROKE: "white",
   LABEL_TEXT: "white",
+  COMPONENT_OUTLINE: "white",
+  ANCHOR_MARKER: "white",
 } as const
