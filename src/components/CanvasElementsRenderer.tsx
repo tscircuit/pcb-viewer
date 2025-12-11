@@ -64,6 +64,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     drawingObjectIdsWithMouseOver: new Set<string>(),
     primitiveIdsInMousedOverNet: [] as string[],
   })
+  const [hoveredComponentIds, setHoveredComponentIds] = useState<string[]>([])
 
   const errorRelatedIds = useMemo(() => {
     if (!hoveredErrorId) return []
@@ -133,6 +134,26 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         drawingObjectIdsWithMouseOver,
         primitiveIdsInMousedOverNet,
       })
+
+      const componentIds = primitivesHoveredOver
+        .map((primitive) => {
+          if (
+            primitive._parent_pcb_component?.type === "pcb_component" &&
+            primitive._parent_pcb_component.pcb_component_id
+          ) {
+            return primitive._parent_pcb_component.pcb_component_id
+          }
+          if (
+            primitive._element?.type === "pcb_component" &&
+            primitive._element.pcb_component_id
+          ) {
+            return primitive._element.pcb_component_id
+          }
+          return null
+        })
+        .filter((id): id is string => Boolean(id))
+
+      setHoveredComponentIds(Array.from(new Set(componentIds)))
     },
     [connectivityMap],
   )
@@ -168,7 +189,11 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>
                 <RatsNestOverlay transform={transform} soup={elements}>
-                  <PcbGroupOverlay transform={transform} elements={elements}>
+                  <PcbGroupOverlay
+                    transform={transform}
+                    elements={elements}
+                    hoveredComponentIds={hoveredComponentIds}
+                  >
                     <DebugGraphicsOverlay
                       transform={transform}
                       debugGraphics={props.debugGraphics}

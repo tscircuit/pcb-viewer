@@ -16,6 +16,7 @@ interface Props {
   transform?: Matrix
   elements: AnyCircuitElement[]
   children: any
+  hoveredComponentIds?: string[]
 }
 
 const GROUP_COLORS = [
@@ -35,15 +36,19 @@ export const PcbGroupOverlay = ({
   children,
   transform = identity(),
   elements = [],
+  hoveredComponentIds = [],
 }: Props) => {
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { is_showing_pcb_groups, pcb_group_view_mode } = useGlobalStore(
-    (s) => ({
-      is_showing_pcb_groups: s.is_showing_pcb_groups,
-      pcb_group_view_mode: s.pcb_group_view_mode,
-    }),
-  )
+  const {
+    is_showing_pcb_groups,
+    pcb_group_view_mode,
+    is_showing_group_anchor_offsets,
+  } = useGlobalStore((s) => ({
+    is_showing_pcb_groups: s.is_showing_pcb_groups,
+    pcb_group_view_mode: s.pcb_group_view_mode,
+    is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
+  }))
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -116,6 +121,16 @@ export const PcbGroupOverlay = ({
         return 0
       }
       return 1 + getGroupDepthLevel(groupWithParent.parent_source_group_id)
+    }
+
+    const hoveredGroupIds = new Set<string>()
+    if (hoveredComponentIds.length > 0) {
+      for (const comp of pcbComponents) {
+        if (!hoveredComponentIds.includes(comp.pcb_component_id)) continue
+        const targetGroupId =
+          comp.positioned_relative_to_pcb_group_id ?? comp.pcb_group_id
+        if (targetGroupId) hoveredGroupIds.add(targetGroupId)
+      }
     }
 
     visiblePcbGroups.forEach((group, groupIndex) => {
@@ -245,9 +260,19 @@ export const PcbGroupOverlay = ({
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelPadding, labelY - labelHeight / 2)
 
-      // Draw anchor position if it exists
-      if (group.anchor_position) {
-        const anchorScreenPos = applyToPoint(transform, group.anchor_position)
+      const shouldShowAnchorMarker =
+        is_showing_group_anchor_offsets &&
+        hoveredGroupIds.has(group.pcb_group_id) &&
+        Boolean(group.anchor_position)
+
+      if (shouldShowAnchorMarker && group.anchor_position) {
+        const anchorPositionValue = Array.isArray(group.anchor_position)
+          ? {
+              x: group.anchor_position[0] ?? 0,
+              y: group.anchor_position[1] ?? 0,
+            }
+          : { x: group.anchor_position.x, y: group.anchor_position.y }
+        const anchorScreenPos = applyToPoint(transform, anchorPositionValue)
 
         // Draw a simple "+" symbol
         ctx.strokeStyle = "white"
@@ -276,6 +301,8 @@ export const PcbGroupOverlay = ({
     height,
     is_showing_pcb_groups,
     pcb_group_view_mode,
+    is_showing_group_anchor_offsets,
+    hoveredComponentIds,
   ])
 
   return (
