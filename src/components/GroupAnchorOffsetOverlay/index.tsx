@@ -50,15 +50,15 @@ export const GroupAnchorOffsetOverlay = ({
   const hoveredElement = (hoveredPrimitive._parent_pcb_component ||
     hoveredPrimitive._element) as PcbComponent | undefined
 
-  if (!pcbComponent?.pcb_group_id) return null
+  if (!hoveredElement?.pcb_group_id) return null
 
   const parentGroup = elements
     .filter((el): el is PcbGroup => el.type === "pcb_group")
-    .find((group) => group.pcb_group_id === pcbComponent.pcb_group_id)
+    .find((group) => group.pcb_group_id === hoveredElement.pcb_group_id)
 
   if (!parentGroup?.anchor_position) return null
 
-  const targetCenter: Point = pcbComponent.center || {
+  const targetCenter: Point = hoveredElement.center || {
     x: hoveredPrimitive.x,
     y: hoveredPrimitive.y,
   }
