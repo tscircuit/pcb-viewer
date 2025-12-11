@@ -1,5 +1,6 @@
 import type React from "react"
 import { PCBViewer } from "../PCBViewer"
+import { AnyCircuitElement } from "circuit-json"
 
 export const GroupAnchorHoverOffset: React.FC = () => {
   return (
@@ -295,7 +296,7 @@ export const GroupAnchorHoverOffset: React.FC = () => {
               anchor_alignment: "bottom_right",
               pcb_component_ids: ["pcb_resistor_3", "pcb_capacitor_2"],
             },
-          ] as any
+          ] as AnyCircuitElement[]
         }
       />
     </div>

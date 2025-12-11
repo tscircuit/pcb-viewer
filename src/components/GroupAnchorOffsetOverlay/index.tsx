@@ -7,7 +7,6 @@ import { zIndexMap } from "../../lib/util/z-index-map"
 import type { HighlightedPrimitive } from "../MouseElementTracker"
 import { calculateGroupBoundingBox } from "./calculateGroupBoundingBox"
 import { COLORS, VISUAL_CONFIG } from "./constants"
-import { findAnchorMarkerPosition } from "./findAnchorMarkerPosition"
 
 type Point = {
   x: number
@@ -20,9 +19,7 @@ interface Props {
   transform: Matrix
   containerWidth: number
   containerHeight: number
-  children?: any
 }
-
 /**
  * Overlay component that displays offset measurements from a group's anchor point
  * to the hovered component. Shows dotted lines and distance labels for X and Y axes.
@@ -33,7 +30,6 @@ export const GroupAnchorOffsetOverlay = ({
   transform,
   containerWidth,
   containerHeight,
-  children,
 }: Props) => {
   const is_showing_group_anchor_offsets = useGlobalStore(
     (s) => s.is_showing_group_anchor_offsets,
@@ -51,24 +47,34 @@ export const GroupAnchorOffsetOverlay = ({
 
   if (!hoveredPrimitive) return null
 
-  const pcbComponent = (hoveredPrimitive._parent_pcb_component ||
+  const hoveredElement = (hoveredPrimitive._parent_pcb_component ||
     hoveredPrimitive._element) as PcbComponent | undefined
 
-  if (!pcbComponent?.pcb_group_id) return null
+  if (!hoveredElement) return null
 
-  const parentGroup = elements
-    .filter((el): el is PcbGroup => el.type === "pcb_group")
-    .find((group) => group.pcb_group_id === pcbComponent.pcb_group_id)
+  let parentGroup: PcbGroup | undefined
+  let targetCenter: Point | undefined
 
-  if (!parentGroup?.anchor_position) return null
+  if (
+    hoveredElement.type === "pcb_component" &&
+    hoveredElement.position_mode === "relative_to_group_anchor"
+  ) {
+    parentGroup = elements
+      .filter((el): el is PcbGroup => el.type === "pcb_group")
+      .find(
+        (group) =>
+          group.pcb_group_id ===
+          hoveredElement.positioned_relative_to_pcb_group_id,
+      )
+    targetCenter = hoveredElement.center
+  } else if ("pcb_group_id" in hoveredElement) {
+    parentGroup = elements
+      .filter((el): el is PcbGroup => el.type === "pcb_group")
+      .find((group) => group.pcb_group_id === hoveredElement.pcb_group_id)
+    targetCenter = hoveredElement.center
+  }
 
-  const targetCenter: Point =
-    hoveredPrimitive._element?.type === "pcb_smtpad"
-      ? { x: hoveredPrimitive.x, y: hoveredPrimitive.y }
-      : pcbComponent.center || {
-          x: hoveredPrimitive.x,
-          y: hoveredPrimitive.y,
-        }
+  if (!parentGroup?.anchor_position || !targetCenter) return null
 
   const groupComponents = elements
     .filter((el): el is PcbComponent => el.type === "pcb_component")
@@ -84,10 +90,7 @@ export const GroupAnchorOffsetOverlay = ({
     maxY: boundingBox.maxY + VISUAL_CONFIG.GROUP_PADDING,
   }
 
-  const anchorMarkerPosition = findAnchorMarkerPosition(
-    parentGroup.anchor_position,
-    groupBounds,
-  )
+  const anchorMarkerPosition = parentGroup.anchor_position
 
   const offsetX = targetCenter.x - anchorMarkerPosition.x
   const offsetY = targetCenter.y - anchorMarkerPosition.y
