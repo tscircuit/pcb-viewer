@@ -266,10 +266,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     numLayers <= 2
       ? ["top", "bottom"]
       : [
-          "top",
-          ...Array.from({ length: numLayers - 2 }, (_, i) => `inner${i + 1}`),
-          "bottom",
-        ]
+        "top",
+        ...Array.from({ length: numLayers - 2 }, (_, i) => `inner${i + 1}`),
+        "bottom",
+      ]
 
   const processedLayers = availableLayers
 
@@ -719,7 +719,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   }}
                 />
                 <CheckboxMenuItem
-                  label="Show Group Anchor Offsets"
+                  label="Anchor Offsets on Hover"
                   checked={viewSettings.is_showing_group_anchor_offsets}
                   onClick={() => {
                     setIsShowingGroupAnchorOffsets(

@@ -94,7 +94,7 @@ export const createStore = (
           : getStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_GROUPS, true),
         is_showing_group_anchor_offsets: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_GROUP_ANCHOR_OFFSETS,
-          process.env.NODE_ENV !== "production",
+          true,
         ),
         is_showing_solder_mask: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_SOLDER_MASK,
