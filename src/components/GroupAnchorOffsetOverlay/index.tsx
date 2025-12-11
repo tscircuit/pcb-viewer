@@ -62,13 +62,10 @@ export const GroupAnchorOffsetOverlay = ({
 
   if (!parentGroup?.anchor_position) return null
 
-  const targetCenter: Point =
-    hoveredPrimitive._element?.type === "pcb_smtpad"
-      ? { x: hoveredPrimitive.x, y: hoveredPrimitive.y }
-      : pcbComponent.center || {
-          x: hoveredPrimitive.x,
-          y: hoveredPrimitive.y,
-        }
+  const targetCenter: Point = pcbComponent.center || {
+    x: hoveredPrimitive.x,
+    y: hoveredPrimitive.y,
+  }
 
   const groupComponents = elements
     .filter((el): el is PcbComponent => el.type === "pcb_component")

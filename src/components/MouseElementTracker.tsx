@@ -9,7 +9,6 @@ import type { Matrix } from "transformation-matrix"
 import { applyToPoint, inverse } from "transformation-matrix"
 import { ElementOverlayBox } from "./ElementOverlayBox"
 import { GroupAnchorOffsetOverlay } from "./GroupAnchorOffsetOverlay"
-import { PadOffsetOverlay } from "./PadOffsetOverlay"
 
 const getPolygonBoundingBox = (
   points: ReadonlyArray<{ x: number; y: number }>,
@@ -65,11 +64,13 @@ const isPointInsidePolygon = (
 
 const getPrimitivesUnderPoint = (
   primitives: Primitive[],
+  elements: AnyCircuitElement[],
   rwPoint: { x: number; y: number },
   transform: Matrix,
 ): Primitive[] => {
   const newMousedPrimitives: Primitive[] = []
 
+  // Check primitives
   for (const primitive of primitives) {
     if (!primitive._element) continue
 
@@ -187,7 +188,6 @@ export const MouseElementTracker = ({
     const highlightedPrimitives: HighlightedPrimitive[] = []
     for (const primitive of mousedPrimitives) {
       if (primitive._element?.type === "pcb_via") continue
-      if (primitive._element?.type === "pcb_component") continue
       if (primitive?.layer === "drill") continue
       let basePoint: { x: number; y: number } | null = null
       let w = 0
@@ -274,6 +274,7 @@ export const MouseElementTracker = ({
     const rwPoint = applyToPoint(inverse(transform), { x, y })
     const newMousedPrimitives = getPrimitivesUnderPoint(
       primitives,
+      elements,
       rwPoint,
       transform,
     )
@@ -322,14 +323,6 @@ export const MouseElementTracker = ({
       {transform && (
         <GroupAnchorOffsetOverlay
           elements={elements}
-          highlightedPrimitives={highlightedPrimitives}
-          transform={transform}
-          containerWidth={width}
-          containerHeight={height}
-        />
-      )}
-      {transform && (
-        <PadOffsetOverlay
           highlightedPrimitives={highlightedPrimitives}
           transform={transform}
           containerWidth={width}
