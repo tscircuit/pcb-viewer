@@ -8,7 +8,10 @@ import { useMeasure } from "react-use"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, inverse } from "transformation-matrix"
 import { ElementOverlayBox } from "./ElementOverlayBox"
-import { GroupAnchorOffsetOverlay } from "./GroupAnchorOffsetOverlay"
+import {
+  BoardAnchorOffsetOverlay,
+  GroupAnchorOffsetOverlay,
+} from "./AnchorOffsetOverlay"
 
 const getPolygonBoundingBox = (
   points: ReadonlyArray<{ x: number; y: number }>,
@@ -319,13 +322,22 @@ export const MouseElementTracker = ({
         highlightedPrimitives={highlightedPrimitives}
       />
       {transform && (
-        <GroupAnchorOffsetOverlay
-          elements={elements}
-          highlightedPrimitives={highlightedPrimitives}
-          transform={transform}
-          containerWidth={width}
-          containerHeight={height}
-        />
+        <>
+          <BoardAnchorOffsetOverlay
+            elements={elements}
+            highlightedPrimitives={highlightedPrimitives}
+            transform={transform}
+            containerWidth={width}
+            containerHeight={height}
+          />
+          <GroupAnchorOffsetOverlay
+            elements={elements}
+            highlightedPrimitives={highlightedPrimitives}
+            transform={transform}
+            containerWidth={width}
+            containerHeight={height}
+          />
+        </>
       )}
     </div>
   )

@@ -1,12 +1,13 @@
 import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
 import { applyToPoint } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
-import { useGlobalStore } from "../../global-store"
-import type { BoundingBox } from "../../lib/util/get-primitive-bounding-box"
-import { zIndexMap } from "../../lib/util/z-index-map"
-import type { HighlightedPrimitive } from "../MouseElementTracker"
+import { useGlobalStore } from "../../../global-store"
+import type { BoundingBox } from "../../../lib/util/get-primitive-bounding-box"
+import { zIndexMap } from "../../../lib/util/z-index-map"
+import type { HighlightedPrimitive } from "../../MouseElementTracker"
+import { COLORS, VISUAL_CONFIG } from "../common/constants"
 import { calculateGroupBoundingBox } from "./calculateGroupBoundingBox"
-import { COLORS, VISUAL_CONFIG } from "./constants"
+import { isPcbComponent, isPcbGroup } from "../common/guards"
 
 type Point = {
   x: number
@@ -41,14 +42,18 @@ export const GroupAnchorOffsetOverlay = ({
 
   const hoveredPrimitive = highlightedPrimitives.find(
     (p) =>
-      p._parent_pcb_component?.type === "pcb_component" ||
-      p._element?.type === "pcb_component",
+      isPcbComponent(p._parent_pcb_component) || isPcbComponent(p._element),
   )
 
   if (!hoveredPrimitive) return null
 
-  const hoveredElement = (hoveredPrimitive._parent_pcb_component ||
-    hoveredPrimitive._element) as PcbComponent | undefined
+  let hoveredElement: PcbComponent | undefined
+
+  if (isPcbComponent(hoveredPrimitive._parent_pcb_component)) {
+    hoveredElement = hoveredPrimitive._parent_pcb_component
+  } else if (isPcbComponent(hoveredPrimitive._element)) {
+    hoveredElement = hoveredPrimitive._element
+  }
 
   if (!hoveredElement) return null
 
@@ -60,7 +65,7 @@ export const GroupAnchorOffsetOverlay = ({
     hoveredElement.position_mode === "relative_to_group_anchor"
   ) {
     parentGroup = elements
-      .filter((el): el is PcbGroup => el.type === "pcb_group")
+      .filter((el): el is PcbGroup => isPcbGroup(el))
       .find(
         (group) =>
           group.pcb_group_id ===
@@ -69,7 +74,7 @@ export const GroupAnchorOffsetOverlay = ({
     targetCenter = hoveredElement.center
   } else if ("pcb_group_id" in hoveredElement) {
     parentGroup = elements
-      .filter((el): el is PcbGroup => el.type === "pcb_group")
+      .filter((el): el is PcbGroup => isPcbGroup(el))
       .find((group) => group.pcb_group_id === hoveredElement.pcb_group_id)
     targetCenter = hoveredElement.center
   }
