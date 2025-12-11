@@ -6,11 +6,7 @@ import { useGlobalStore } from "../../../global-store"
 import { zIndexMap } from "../../../lib/util/z-index-map"
 import type { HighlightedPrimitive } from "../../MouseElementTracker"
 import { COLORS, VISUAL_CONFIG } from "../common/constants"
-import {
-  isBoardAnchoredComponent,
-  isPcbBoard,
-  isPcbComponent,
-} from "../common/guards"
+import { isPcbBoard, isPcbComponent } from "../common/guards"
 
 type Point = {
   x: number
@@ -25,22 +21,6 @@ interface Props {
   containerHeight: number
 }
 
-const getHoveredComponent = (
-  highlightedPrimitives: HighlightedPrimitive[],
-): PcbComponent | undefined => {
-  for (const primitive of highlightedPrimitives) {
-    if (isPcbComponent(primitive._parent_pcb_component)) {
-      return primitive._parent_pcb_component
-    }
-
-    if (isPcbComponent(primitive._element)) {
-      return primitive._element
-    }
-  }
-
-  return undefined
-}
-
 export const BoardAnchorOffsetOverlay = ({
   elements,
   highlightedPrimitives,
@@ -48,56 +28,46 @@ export const BoardAnchorOffsetOverlay = ({
   containerWidth,
   containerHeight,
 }: Props) => {
+  const boards = elements.filter((el): el is PcbBoard => isPcbBoard(el))
+  const components = elements.filter((el): el is PcbComponent =>
+    isPcbComponent(el),
+  )
+
+  const hoveredComponentIds = highlightedPrimitives
+    .map((primitive) => {
+      if (isPcbComponent(primitive._parent_pcb_component)) {
+        return primitive._parent_pcb_component.pcb_component_id
+      }
+      if (isPcbComponent(primitive._element)) {
+        return primitive._element.pcb_component_id
+      }
+      return null
+    })
+    .filter((id): id is string => Boolean(id))
+
   const isShowingAnchorOffsets = useGlobalStore(
     (state) => state.is_showing_group_anchor_offsets,
   )
 
-  if (!isShowingAnchorOffsets || highlightedPrimitives.length === 0) {
+  if (!isShowingAnchorOffsets && hoveredComponentIds.length === 0) {
     return null
   }
 
-  const hoveredComponent = getHoveredComponent(highlightedPrimitives)
+  const targets = components
+    .map((component) => {
+      const boardId = component.positioned_relative_to_pcb_board_id
+      if (!boardId) return null
 
-  if (!hoveredComponent) return null
+      const board = boards.find((b) => b.pcb_board_id === boardId)
+      return board ? { component, board } : null
+    })
+    .filter((target): target is { component: PcbComponent; board: PcbBoard } =>
+      Boolean(target),
+    )
 
-  const targetBoardId = isBoardAnchoredComponent(hoveredComponent)
-    ? hoveredComponent.positioned_relative_to_pcb_board_id
-    : undefined
+  if (targets.length === 0) return null
 
-  if (!targetBoardId) return null
-
-  const targetBoard = elements.find(
-    (element): element is PcbBoard =>
-      isPcbBoard(element) && element.pcb_board_id === targetBoardId,
-  )
-
-  if (!targetBoard) return null
-
-  const anchorPosition: Point = targetBoard.center
-  const componentCenter: Point = hoveredComponent.center
-
-  const offsetX = componentCenter.x - anchorPosition.x
-  const offsetY = componentCenter.y - anchorPosition.y
-
-  const anchorMarkerScreen = applyToPoint(transform, anchorPosition)
-  const componentScreen = applyToPoint(transform, componentCenter)
-
-  const xLineLength = Math.abs(componentScreen.x - anchorMarkerScreen.x)
-  const yLineLength = Math.abs(componentScreen.y - anchorMarkerScreen.y)
-
-  const isComponentAboveAnchor = componentScreen.y < anchorMarkerScreen.y
-  const isComponentRightOfAnchor = componentScreen.x > anchorMarkerScreen.x
-
-  const xLabelOffset = isComponentAboveAnchor
-    ? VISUAL_CONFIG.LABEL_OFFSET_ABOVE
-    : VISUAL_CONFIG.LABEL_OFFSET_BELOW
-
-  const yLabelOffset = isComponentRightOfAnchor
-    ? VISUAL_CONFIG.LABEL_OFFSET_RIGHT
-    : VISUAL_CONFIG.LABEL_OFFSET_LEFT
-
-  const shouldShowXLabel = xLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
-  const shouldShowYLabel = yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
+  const shouldShowAllTargets = hoveredComponentIds.length === 0
 
   const labelStyle: CSSProperties = {
     color: COLORS.LABEL_TEXT,
@@ -107,6 +77,16 @@ export const BoardAnchorOffsetOverlay = ({
     fontFamily: "monospace",
     fontWeight: "bold",
   }
+
+  const targetEntries = targets.filter(
+    ({ component }) =>
+      shouldShowAllTargets ||
+      hoveredComponentIds.includes(component.pcb_component_id),
+  )
+
+  if (targetEntries.length === 0) return null
+
+  const boardAnchorScreens = new Map<string, Point>()
 
   return (
     <div
@@ -131,84 +111,140 @@ export const BoardAnchorOffsetOverlay = ({
         width={containerWidth}
         height={containerHeight}
       >
-        <line
-          x1={anchorMarkerScreen.x}
-          y1={anchorMarkerScreen.y}
-          x2={componentScreen.x}
-          y2={anchorMarkerScreen.y}
-          stroke={COLORS.OFFSET_LINE}
-          strokeWidth={VISUAL_CONFIG.LINE_STROKE_WIDTH}
-          strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
-        />
+        {targetEntries.map(({ component, board }) => {
+          const anchorPosition = board.center
+          const componentCenter = component.center as Point
 
-        <line
-          x1={componentScreen.x}
-          y1={anchorMarkerScreen.y}
-          x2={componentScreen.x}
-          y2={componentScreen.y}
-          stroke={COLORS.OFFSET_LINE}
-          strokeWidth={VISUAL_CONFIG.LINE_STROKE_WIDTH}
-          strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
-        />
+          const anchorKey = board.pcb_board_id
+          if (!boardAnchorScreens.has(anchorKey)) {
+            const screenPoint = applyToPoint(transform, anchorPosition)
+            boardAnchorScreens.set(anchorKey, screenPoint)
+          }
 
-        <line
-          x1={anchorMarkerScreen.x - VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
-          y1={anchorMarkerScreen.y}
-          x2={anchorMarkerScreen.x + VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
-          y2={anchorMarkerScreen.y}
-          stroke={COLORS.OFFSET_LINE}
-          strokeWidth={VISUAL_CONFIG.ANCHOR_MARKER_STROKE_WIDTH}
-        />
-        <line
-          x1={anchorMarkerScreen.x}
-          y1={anchorMarkerScreen.y - VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
-          x2={anchorMarkerScreen.x}
-          y2={anchorMarkerScreen.y + VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
-          stroke={COLORS.OFFSET_LINE}
-          strokeWidth={VISUAL_CONFIG.ANCHOR_MARKER_STROKE_WIDTH}
-        />
+          const anchorMarkerScreen = boardAnchorScreens.get(anchorKey)!
+          const componentScreen = applyToPoint(transform, componentCenter)
 
-        <circle
-          cx={componentScreen.x}
-          cy={componentScreen.y}
-          r={VISUAL_CONFIG.COMPONENT_MARKER_RADIUS}
-          fill={COLORS.COMPONENT_MARKER_FILL}
-          stroke={COLORS.COMPONENT_MARKER_STROKE}
-          strokeWidth={1}
-        />
+          const offsetX = componentCenter.x - anchorPosition.x
+          const offsetY = componentCenter.y - anchorPosition.y
+
+          const xLineLength = Math.abs(componentScreen.x - anchorMarkerScreen.x)
+          const yLineLength = Math.abs(componentScreen.y - anchorMarkerScreen.y)
+
+          const isComponentAboveAnchor =
+            componentScreen.y < anchorMarkerScreen.y
+          const isComponentRightOfAnchor =
+            componentScreen.x > anchorMarkerScreen.x
+
+          const xLabelOffset = isComponentAboveAnchor
+            ? VISUAL_CONFIG.LABEL_OFFSET_ABOVE
+            : VISUAL_CONFIG.LABEL_OFFSET_BELOW
+
+          const yLabelOffset = isComponentRightOfAnchor
+            ? VISUAL_CONFIG.LABEL_OFFSET_RIGHT
+            : VISUAL_CONFIG.LABEL_OFFSET_LEFT
+
+          const shouldShowXLabel =
+            xLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
+          const shouldShowYLabel =
+            yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
+
+          const xLabelText =
+            component.display_offset_x ?? `Board Δx: ${offsetX.toFixed(2)}mm`
+          const yLabelText =
+            component.display_offset_y ?? `Board Δy: ${offsetY.toFixed(2)}mm`
+
+          return (
+            <g key={`${board.pcb_board_id}-${component.pcb_component_id}`}>
+              <line
+                x1={anchorMarkerScreen.x}
+                y1={anchorMarkerScreen.y}
+                x2={componentScreen.x}
+                y2={anchorMarkerScreen.y}
+                stroke={COLORS.OFFSET_LINE}
+                strokeWidth={VISUAL_CONFIG.LINE_STROKE_WIDTH}
+                strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
+              />
+
+              <line
+                x1={componentScreen.x}
+                y1={anchorMarkerScreen.y}
+                x2={componentScreen.x}
+                y2={componentScreen.y}
+                stroke={COLORS.OFFSET_LINE}
+                strokeWidth={VISUAL_CONFIG.LINE_STROKE_WIDTH}
+                strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
+              />
+
+              <circle
+                cx={componentScreen.x}
+                cy={componentScreen.y}
+                r={VISUAL_CONFIG.COMPONENT_MARKER_RADIUS}
+                fill={COLORS.COMPONENT_MARKER_FILL}
+                stroke={COLORS.COMPONENT_MARKER_STROKE}
+                strokeWidth={1}
+              />
+
+              {shouldShowXLabel && (
+                <foreignObject
+                  x={Math.min(anchorMarkerScreen.x, componentScreen.x)}
+                  y={anchorMarkerScreen.y + xLabelOffset}
+                  width={Math.abs(componentScreen.x - anchorMarkerScreen.x)}
+                  height={20}
+                  style={{ overflow: "visible" }}
+                >
+                  <div style={{ ...labelStyle, textAlign: "center" }}>
+                    {xLabelText}
+                  </div>
+                </foreignObject>
+              )}
+
+              {shouldShowYLabel && (
+                <foreignObject
+                  x={componentScreen.x + yLabelOffset}
+                  y={Math.min(anchorMarkerScreen.y, componentScreen.y)}
+                  width={20}
+                  height={Math.abs(componentScreen.y - anchorMarkerScreen.y)}
+                  style={{ overflow: "visible" }}
+                >
+                  <div
+                    style={{
+                      ...labelStyle,
+                      display: "flex",
+                      alignItems: "center",
+                      height: "100%",
+                    }}
+                  >
+                    {yLabelText}
+                  </div>
+                </foreignObject>
+              )}
+            </g>
+          )
+        })}
+
+        {Array.from(boardAnchorScreens.entries()).map(
+          ([boardId, anchorScreen]) => (
+            <g key={`anchor-${boardId}`}>
+              <line
+                x1={anchorScreen.x - VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                y1={anchorScreen.y}
+                x2={anchorScreen.x + VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                y2={anchorScreen.y}
+                stroke={COLORS.OFFSET_LINE}
+                strokeWidth={VISUAL_CONFIG.ANCHOR_MARKER_STROKE_WIDTH}
+              />
+              <line
+                x1={anchorScreen.x}
+                y1={anchorScreen.y - VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                x2={anchorScreen.x}
+                y2={anchorScreen.y + VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                stroke={COLORS.OFFSET_LINE}
+                strokeWidth={VISUAL_CONFIG.ANCHOR_MARKER_STROKE_WIDTH}
+              />
+            </g>
+          ),
+        )}
       </svg>
-
-      {shouldShowXLabel && (
-        <div
-          style={{
-            ...labelStyle,
-            position: "absolute",
-            left: Math.min(anchorMarkerScreen.x, componentScreen.x),
-            top: anchorMarkerScreen.y + xLabelOffset,
-            width: Math.abs(componentScreen.x - anchorMarkerScreen.x),
-            textAlign: "center",
-          }}
-        >
-          Board Δx: {offsetX.toFixed(2)}mm
-        </div>
-      )}
-
-      {shouldShowYLabel && (
-        <div
-          style={{
-            ...labelStyle,
-            position: "absolute",
-            left: componentScreen.x + yLabelOffset,
-            top: Math.min(anchorMarkerScreen.y, componentScreen.y),
-            height: Math.abs(componentScreen.y - anchorMarkerScreen.y),
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          Board Δy: {offsetY.toFixed(2)}mm
-        </div>
-      )}
     </div>
   )
 }
