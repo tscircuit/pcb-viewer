@@ -1,4 +1,10 @@
-import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbBoard,
+  PcbComponent,
+  PcbGroup,
+  PcbPanel,
+} from "circuit-json"
 import { applyToPoint } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../../global-store"
@@ -8,6 +14,18 @@ import type { HighlightedPrimitive } from "../MouseElementTracker"
 import { calculateGroupBoundingBox } from "./calculateGroupBoundingBox"
 import { COLORS, VISUAL_CONFIG } from "./constants"
 import { findAnchorMarkerPosition } from "./findAnchorMarkerPosition"
+
+type NamedGroup = PcbGroup | PcbPanel | PcbBoard
+type AnchoredNamedGroup = NamedGroup & {
+  anchor_position: { x: number; y: number }
+}
+
+const hasAnchorPosition = (group: NamedGroup): group is AnchoredNamedGroup => {
+  return (
+    typeof (group as any).anchor_position?.x === "number" &&
+    typeof (group as any).anchor_position?.y === "number"
+  )
+}
 
 type Point = {
   x: number
@@ -54,13 +72,32 @@ export const GroupAnchorOffsetOverlay = ({
   const pcbComponent = (hoveredPrimitive._parent_pcb_component ||
     hoveredPrimitive._element) as PcbComponent | undefined
 
-  if (!pcbComponent?.pcb_group_id) return null
+  if (!pcbComponent) return null
 
-  const parentGroup = elements
-    .filter((el): el is PcbGroup => el.type === "pcb_group")
-    .find((group) => group.pcb_group_id === pcbComponent.pcb_group_id)
+  const namedGroups = elements.filter(
+    (el): el is NamedGroup =>
+      el.type === "pcb_group" ||
+      el.type === "pcb_panel" ||
+      el.type === "pcb_board",
+  )
 
-  if (!parentGroup?.anchor_position) return null
+  const positionedGroupId =
+    pcbComponent.positioned_relative_to_pcb_group_id ||
+    pcbComponent.pcb_group_id
+
+  const parentGroup = namedGroups.find((group) => {
+    if (group.type === "pcb_group")
+      return group.pcb_group_id === positionedGroupId
+    if (group.type === "pcb_panel")
+      return group.pcb_panel_id === positionedGroupId
+    if (group.type === "pcb_board")
+      return group.pcb_board_id === positionedGroupId
+    return false
+  })
+
+  if (!parentGroup || !hasAnchorPosition(parentGroup)) {
+    return null
+  }
 
   const targetCenter: Point =
     hoveredPrimitive._element?.type === "pcb_smtpad"
@@ -72,9 +109,42 @@ export const GroupAnchorOffsetOverlay = ({
 
   const groupComponents = elements
     .filter((el): el is PcbComponent => el.type === "pcb_component")
-    .filter((comp) => comp.pcb_group_id === parentGroup.pcb_group_id)
+    .filter((comp) => {
+      const targetId = positionedGroupId
+      return (
+        comp.pcb_group_id === targetId ||
+        comp.positioned_relative_to_pcb_group_id === targetId
+      )
+    })
 
-  const boundingBox = calculateGroupBoundingBox(groupComponents)
+  const boundingBox = (() => {
+    if (parentGroup.type === "pcb_panel") {
+      if (parentGroup.center && parentGroup.width && parentGroup.height) {
+        return {
+          minX: parentGroup.center.x - parentGroup.width / 2,
+          maxX: parentGroup.center.x + parentGroup.width / 2,
+          minY: parentGroup.center.y - parentGroup.height / 2,
+          maxY: parentGroup.center.y + parentGroup.height / 2,
+        }
+      }
+      return null
+    }
+
+    if (parentGroup.type === "pcb_board") {
+      if (parentGroup.center && parentGroup.width && parentGroup.height) {
+        return {
+          minX: parentGroup.center.x - parentGroup.width / 2,
+          maxX: parentGroup.center.x + parentGroup.width / 2,
+          minY: parentGroup.center.y - parentGroup.height / 2,
+          maxY: parentGroup.center.y + parentGroup.height / 2,
+        }
+      }
+      return null
+    }
+
+    return calculateGroupBoundingBox(groupComponents)
+  })()
+
   if (!boundingBox) return null
 
   const groupBounds: BoundingBox = {
