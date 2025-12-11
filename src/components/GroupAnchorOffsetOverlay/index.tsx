@@ -20,7 +20,10 @@ interface Props {
   containerWidth: number
   containerHeight: number
 }
-
+/**
+ * Overlay component that displays offset measurements from a group's anchor point
+ * to the hovered component. Shows dotted lines and distance labels for X and Y axes.
+ */
 export const GroupAnchorOffsetOverlay = ({
   elements,
   highlightedPrimitives,
