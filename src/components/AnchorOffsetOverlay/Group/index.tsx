@@ -22,9 +22,9 @@ interface Props {
 }
 
 /**
- * Overlay that shows offsets from group anchors to their components.
+ * Overlay that shows offsets from group anchors to their components and groups.
  * When the view toggle is on, offsets are always shown. Hover narrows the
- * view to the hovered component only, but pads/components still always show.
+ * view to the hovered component/group only, but pads/components still always show.
  */
 export const GroupAnchorOffsetOverlay = ({
   elements,
@@ -50,6 +50,21 @@ export const GroupAnchorOffsetOverlay = ({
     })
     .filter((id): id is string => Boolean(id))
 
+  // Track hovered groups by checking if any components in the group are hovered
+  const hoveredGroupIds = new Set<string>()
+  hoveredComponentIds.forEach((componentId) => {
+    const component = components.find((c) => c.pcb_component_id === componentId)
+    if (component?.pcb_group_id) {
+      hoveredGroupIds.add(component.pcb_group_id)
+    }
+    if (
+      component?.position_mode === "relative_to_group_anchor" &&
+      component.positioned_relative_to_pcb_group_id
+    ) {
+      hoveredGroupIds.add(component.positioned_relative_to_pcb_group_id)
+    }
+  })
+
   const isShowingAnchorOffsets = useGlobalStore(
     (s) => s.is_showing_group_anchor_offsets,
   )
@@ -58,7 +73,8 @@ export const GroupAnchorOffsetOverlay = ({
     return null
   }
 
-  const targets = components
+  // Component-to-group targets
+  const componentTargets = components
     .map((component) => {
       if (
         component.position_mode === "relative_to_group_anchor" &&
@@ -70,7 +86,7 @@ export const GroupAnchorOffsetOverlay = ({
             component.positioned_relative_to_pcb_group_id,
         )
         return parentGroup && parentGroup.anchor_position
-          ? { component, parentGroup }
+          ? { component, parentGroup, type: "component" as const }
           : null
       }
 
@@ -79,7 +95,7 @@ export const GroupAnchorOffsetOverlay = ({
           (group) => group.pcb_group_id === component.pcb_group_id,
         )
         return parentGroup && parentGroup.anchor_position
-          ? { component, parentGroup }
+          ? { component, parentGroup, type: "component" as const }
           : null
       }
 
@@ -91,8 +107,37 @@ export const GroupAnchorOffsetOverlay = ({
       ): target is {
         component: PcbComponent
         parentGroup: PcbGroup
+        type: "component"
       } => Boolean(target),
     )
+
+  // Group-to-group targets
+  const groupTargets = groups
+    .map((group) => {
+      if (
+        group.position_mode === "relative_to_group_anchor" &&
+        group.positioned_relative_to_pcb_group_id
+      ) {
+        const parentGroup = groups.find(
+          (g) => g.pcb_group_id === group.positioned_relative_to_pcb_group_id,
+        )
+        if (parentGroup && parentGroup.anchor_position && group.center) {
+          return { group, parentGroup, type: "group" as const }
+        }
+      }
+      return null
+    })
+    .filter(
+      (
+        target,
+      ): target is {
+        group: PcbGroup
+        parentGroup: PcbGroup
+        type: "group"
+      } => Boolean(target),
+    )
+
+  const targets = [...componentTargets, ...groupTargets]
 
   if (targets.length === 0) return null
 
@@ -107,20 +152,34 @@ export const GroupAnchorOffsetOverlay = ({
     fontWeight: "bold",
   }
 
-  const targetEntries = targets.filter(
-    ({ component }) =>
-      shouldShowAllTargets ||
-      hoveredComponentIds.includes(component.pcb_component_id),
-  )
+  const targetEntries = targets.filter((target) => {
+    if (target.type === "component") {
+      // Only show offset for the specific hovered component, not all components in the group
+      return (
+        shouldShowAllTargets ||
+        hoveredComponentIds.includes(target.component.pcb_component_id)
+      )
+    } else {
+      // For group targets, show if the group or parent group is hovered
+      return (
+        shouldShowAllTargets ||
+        hoveredGroupIds.has(target.group.pcb_group_id) ||
+        hoveredGroupIds.has(target.parentGroup.pcb_group_id)
+      )
+    }
+  })
 
   if (targetEntries.length === 0) return null
 
   const groupAnchorScreens = new Map<string, Point>()
 
-  targetEntries.forEach(({ parentGroup }) => {
-    if (!parentGroup.anchor_position) return
-    const anchorScreen = applyToPoint(transform, parentGroup.anchor_position)
-    groupAnchorScreens.set(parentGroup.pcb_group_id, anchorScreen)
+  targetEntries.forEach((target) => {
+    if (!target.parentGroup.anchor_position) return
+    const anchorScreen = applyToPoint(
+      transform,
+      target.parentGroup.anchor_position,
+    )
+    groupAnchorScreens.set(target.parentGroup.pcb_group_id, anchorScreen)
   })
 
   return (
@@ -146,19 +205,35 @@ export const GroupAnchorOffsetOverlay = ({
         width={containerWidth}
         height={containerHeight}
       >
-        {targetEntries.map(({ component, parentGroup }) => {
-          const anchor = parentGroup.anchor_position
-          const center = component.center
-          if (!anchor || !center) return null
+        {targetEntries.map((target) => {
+          const anchor = target.parentGroup.anchor_position
+          if (!anchor) return null
 
           const anchorMarkerPosition: Point = { x: anchor.x, y: anchor.y }
-          const targetCenter: Point = { x: center.x, y: center.y }
 
-          const groupComponents = components.filter(
-            (comp) => comp.pcb_group_id === parentGroup.pcb_group_id,
-          )
-          const boundingBox = calculateGroupBoundingBox(groupComponents)
-          if (!boundingBox) return null
+          let targetCenter: Point | null = null
+          let targetId: string
+          let displayOffsetX: string | undefined
+          let displayOffsetY: string | undefined
+
+          if (target.type === "component") {
+            const center = target.component.center
+            if (!center) return null
+            targetCenter = { x: center.x, y: center.y }
+            targetId = target.component.pcb_component_id
+            displayOffsetX = target.component.display_offset_x
+            displayOffsetY = target.component.display_offset_y
+          } else {
+            // Group target
+            if (!target.group.center) return null
+            targetCenter = {
+              x: target.group.center.x,
+              y: target.group.center.y,
+            }
+            targetId = target.group.pcb_group_id
+            displayOffsetX = target.group.display_offset_x
+            displayOffsetY = target.group.display_offset_y
+          }
 
           const offsetX = targetCenter.x - anchorMarkerPosition.x
           const offsetY = targetCenter.y - anchorMarkerPosition.y
@@ -167,21 +242,19 @@ export const GroupAnchorOffsetOverlay = ({
             transform,
             anchorMarkerPosition,
           )
-          const componentScreen = applyToPoint(transform, targetCenter)
+          const targetScreen = applyToPoint(transform, targetCenter)
 
-          const xLineLength = Math.abs(componentScreen.x - anchorMarkerScreen.x)
-          const yLineLength = Math.abs(componentScreen.y - anchorMarkerScreen.y)
+          const xLineLength = Math.abs(targetScreen.x - anchorMarkerScreen.x)
+          const yLineLength = Math.abs(targetScreen.y - anchorMarkerScreen.y)
 
-          const isComponentAboveAnchor =
-            componentScreen.y < anchorMarkerScreen.y
-          const isComponentRightOfAnchor =
-            componentScreen.x > anchorMarkerScreen.x
+          const isTargetAboveAnchor = targetScreen.y < anchorMarkerScreen.y
+          const isTargetRightOfAnchor = targetScreen.x > anchorMarkerScreen.x
 
-          const xLabelOffset = isComponentAboveAnchor
+          const xLabelOffset = isTargetAboveAnchor
             ? VISUAL_CONFIG.LABEL_OFFSET_ABOVE
             : VISUAL_CONFIG.LABEL_OFFSET_BELOW
 
-          const yLabelOffset = isComponentRightOfAnchor
+          const yLabelOffset = isTargetRightOfAnchor
             ? VISUAL_CONFIG.LABEL_OFFSET_RIGHT
             : VISUAL_CONFIG.LABEL_OFFSET_LEFT
 
@@ -190,19 +263,17 @@ export const GroupAnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText =
-            component.display_offset_x ?? `Δx: ${offsetX.toFixed(2)}mm`
-          const yLabelText =
-            component.display_offset_y ?? `Δy: ${offsetY.toFixed(2)}mm`
+          const xLabelText = displayOffsetX ?? `Δx: ${offsetX.toFixed(2)}mm`
+          const yLabelText = displayOffsetY ?? `Δy: ${offsetY.toFixed(2)}mm`
 
           return (
             <g
-              key={`${parentGroup.pcb_group_id}-${component.pcb_component_id}`}
+              key={`${target.parentGroup.pcb_group_id}-${targetId}-${target.type}`}
             >
               <line
                 x1={anchorMarkerScreen.x}
                 y1={anchorMarkerScreen.y}
-                x2={componentScreen.x}
+                x2={targetScreen.x}
                 y2={anchorMarkerScreen.y}
                 stroke={COLORS.OFFSET_LINE}
                 strokeWidth={VISUAL_CONFIG.LINE_STROKE_WIDTH}
@@ -210,18 +281,18 @@ export const GroupAnchorOffsetOverlay = ({
               />
 
               <line
-                x1={componentScreen.x}
+                x1={targetScreen.x}
                 y1={anchorMarkerScreen.y}
-                x2={componentScreen.x}
-                y2={componentScreen.y}
+                x2={targetScreen.x}
+                y2={targetScreen.y}
                 stroke={COLORS.OFFSET_LINE}
                 strokeWidth={VISUAL_CONFIG.LINE_STROKE_WIDTH}
                 strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
               />
 
               <circle
-                cx={componentScreen.x}
-                cy={componentScreen.y}
+                cx={targetScreen.x}
+                cy={targetScreen.y}
                 r={VISUAL_CONFIG.COMPONENT_MARKER_RADIUS}
                 fill={COLORS.COMPONENT_MARKER_FILL}
                 stroke={COLORS.COMPONENT_MARKER_STROKE}
@@ -230,9 +301,9 @@ export const GroupAnchorOffsetOverlay = ({
 
               {shouldShowXLabel && (
                 <foreignObject
-                  x={Math.min(anchorMarkerScreen.x, componentScreen.x)}
+                  x={Math.min(anchorMarkerScreen.x, targetScreen.x)}
                   y={anchorMarkerScreen.y + xLabelOffset}
-                  width={Math.abs(componentScreen.x - anchorMarkerScreen.x)}
+                  width={Math.abs(targetScreen.x - anchorMarkerScreen.x)}
                   height={20}
                   style={{ overflow: "visible" }}
                 >
@@ -244,10 +315,10 @@ export const GroupAnchorOffsetOverlay = ({
 
               {shouldShowYLabel && (
                 <foreignObject
-                  x={componentScreen.x + yLabelOffset}
-                  y={Math.min(anchorMarkerScreen.y, componentScreen.y)}
+                  x={targetScreen.x + yLabelOffset}
+                  y={Math.min(anchorMarkerScreen.y, targetScreen.y)}
                   width={20}
-                  height={Math.abs(componentScreen.y - anchorMarkerScreen.y)}
+                  height={Math.abs(targetScreen.y - anchorMarkerScreen.y)}
                   style={{ overflow: "visible" }}
                 >
                   <div
