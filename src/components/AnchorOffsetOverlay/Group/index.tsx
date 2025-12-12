@@ -154,10 +154,10 @@ export const GroupAnchorOffsetOverlay = ({
 
   const targetEntries = targets.filter((target) => {
     if (target.type === "component") {
+      // Only show offset for the specific hovered component, not all components in the group
       return (
         shouldShowAllTargets ||
-        hoveredComponentIds.includes(target.component.pcb_component_id) ||
-        hoveredGroupIds.has(target.parentGroup.pcb_group_id)
+        hoveredComponentIds.includes(target.component.pcb_component_id)
       )
     } else {
       // For group targets, show if the group or parent group is hovered
