@@ -5,7 +5,6 @@ import { useGlobalStore } from "../../../global-store"
 import { zIndexMap } from "../../../lib/util/z-index-map"
 import type { HighlightedPrimitive } from "../../MouseElementTracker"
 import { COLORS, VISUAL_CONFIG } from "../common/constants"
-import { calculateGroupBoundingBox } from "./calculateGroupBoundingBox"
 import { isPcbComponent, isPcbGroup } from "../common/guards"
 
 type Point = {
@@ -109,21 +108,39 @@ export const GroupAnchorOffsetOverlay = ({
             group.pcb_group_id ===
             component.positioned_relative_to_pcb_group_id,
         )
-        return parentGroup && parentGroup.anchor_position
-          ? { component, parentGroup, type: "component" as const }
+        if (!parentGroup) return null
+
+        const anchorPosition =
+          parentGroup.anchor_position ?? parentGroup.center ?? null
+
+        return anchorPosition
+          ? {
+              component,
+              parentGroup,
+              anchorPosition,
+              type: "component" as const,
+            }
           : null
       }
 
-      if (component.pcb_group_id) {
-        const parentGroup = groups.find(
-          (group) => group.pcb_group_id === component.pcb_group_id,
-        )
-        return parentGroup && parentGroup.anchor_position
-          ? { component, parentGroup, type: "component" as const }
-          : null
-      }
+      if (!component.pcb_group_id) return null
 
-      return null
+      const parentGroup = groups.find(
+        (group) => group.pcb_group_id === component.pcb_group_id,
+      )
+      if (!parentGroup) return null
+
+      const anchorPosition =
+        parentGroup.anchor_position ?? parentGroup.center ?? null
+
+      return anchorPosition
+        ? {
+            component,
+            parentGroup,
+            anchorPosition,
+            type: "component" as const,
+          }
+        : null
     })
     .filter(
       (
@@ -131,6 +148,7 @@ export const GroupAnchorOffsetOverlay = ({
       ): target is {
         component: PcbComponent
         parentGroup: PcbGroup
+        anchorPosition: Point
         type: "component"
       } => Boolean(target),
     )
@@ -145,8 +163,16 @@ export const GroupAnchorOffsetOverlay = ({
         const parentGroup = groups.find(
           (g) => g.pcb_group_id === group.positioned_relative_to_pcb_group_id,
         )
-        if (parentGroup && parentGroup.anchor_position && group.center) {
-          return { group, parentGroup, type: "group" as const }
+        const anchorPosition =
+          parentGroup?.anchor_position ?? parentGroup?.center ?? null
+
+        if (parentGroup && anchorPosition && group.center) {
+          return {
+            group,
+            parentGroup,
+            anchorPosition,
+            type: "group" as const,
+          }
         }
       }
       return null
@@ -157,6 +183,7 @@ export const GroupAnchorOffsetOverlay = ({
       ): target is {
         group: PcbGroup
         parentGroup: PcbGroup
+        anchorPosition: Point
         type: "group"
       } => Boolean(target),
     )
@@ -198,12 +225,11 @@ export const GroupAnchorOffsetOverlay = ({
   const groupAnchorScreens = new Map<string, Point>()
 
   targetEntries.forEach((target) => {
-    if (!target.parentGroup.anchor_position) return
-    const anchorScreen = applyToPoint(
-      transform,
-      target.parentGroup.anchor_position,
-    )
-    groupAnchorScreens.set(target.parentGroup.pcb_group_id, anchorScreen)
+    const anchorKey = target.parentGroup.pcb_group_id
+    if (groupAnchorScreens.has(anchorKey)) return
+
+    const anchorScreen = applyToPoint(transform, target.anchorPosition)
+    groupAnchorScreens.set(anchorKey, anchorScreen)
   })
 
   return (
@@ -230,10 +256,10 @@ export const GroupAnchorOffsetOverlay = ({
         height={containerHeight}
       >
         {targetEntries.map((target) => {
-          const anchor = target.parentGroup.anchor_position
-          if (!anchor) return null
-
-          const anchorMarkerPosition: Point = { x: anchor.x, y: anchor.y }
+          const anchorMarkerPosition: Point = {
+            x: target.anchorPosition.x,
+            y: target.anchorPosition.y,
+          }
 
           let targetCenter: Point | null = null
           let targetId: string
@@ -287,8 +313,12 @@ export const GroupAnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText = displayOffsetX ?? `Δx: ${offsetX.toFixed(2)}mm`
-          const yLabelText = displayOffsetY ?? `Δy: ${offsetY.toFixed(2)}mm`
+          const xLabelText = displayOffsetX
+            ? `Δx: ${displayOffsetX}`
+            : `Δx: ${offsetX.toFixed(2)}mm`
+          const yLabelText = displayOffsetY
+            ? `Δy: ${displayOffsetY}`
+            : `Δy: ${offsetY.toFixed(2)}mm`
 
           return (
             <g
@@ -362,7 +392,7 @@ export const GroupAnchorOffsetOverlay = ({
                 <foreignObject
                   x={targetScreen.x + yLabelOffset}
                   y={Math.min(anchorMarkerScreen.y, targetScreen.y)}
-                  width={20}
+                  width={VISUAL_CONFIG.Y_LABEL_MIN_WIDTH}
                   height={Math.abs(targetScreen.y - anchorMarkerScreen.y)}
                   style={{ overflow: "visible" }}
                 >
@@ -371,6 +401,11 @@ export const GroupAnchorOffsetOverlay = ({
                       ...labelStyle,
                       display: "flex",
                       alignItems: "center",
+                      justifyContent: isTargetRightOfAnchor
+                        ? "flex-start"
+                        : "flex-end",
+                      whiteSpace: "nowrap",
+                      padding: "0 4px",
                       height: "100%",
                     }}
                   >

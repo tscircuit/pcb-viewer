@@ -213,10 +213,12 @@ export const BoardAnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText =
-            displayOffsetX ?? `Board Δx: ${offsetX.toFixed(2)}mm`
-          const yLabelText =
-            displayOffsetY ?? `Board Δy: ${offsetY.toFixed(2)}mm`
+          const xLabelText = displayOffsetX
+            ? `Board Δx: ${displayOffsetX}`
+            : `Board Δx: ${offsetX.toFixed(2)}mm`
+          const yLabelText = displayOffsetY
+            ? `Board Δy: ${displayOffsetY}`
+            : `Board Δy: ${offsetY.toFixed(2)}mm`
 
           return (
             <g key={`${target.board.pcb_board_id}-${targetId}-${target.type}`}>
@@ -288,7 +290,7 @@ export const BoardAnchorOffsetOverlay = ({
                 <foreignObject
                   x={targetScreen.x + yLabelOffset}
                   y={Math.min(anchorMarkerScreen.y, targetScreen.y)}
-                  width={20}
+                  width={VISUAL_CONFIG.Y_LABEL_MIN_WIDTH}
                   height={Math.abs(targetScreen.y - anchorMarkerScreen.y)}
                   style={{ overflow: "visible" }}
                 >
@@ -297,6 +299,11 @@ export const BoardAnchorOffsetOverlay = ({
                       ...labelStyle,
                       display: "flex",
                       alignItems: "center",
+                      justifyContent: isTargetRightOfAnchor
+                        ? "flex-start"
+                        : "flex-end",
+                      whiteSpace: "nowrap",
+                      padding: "0 4px",
                       height: "100%",
                     }}
                   >

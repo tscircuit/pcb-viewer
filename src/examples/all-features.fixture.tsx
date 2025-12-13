@@ -304,7 +304,6 @@ export const AllFeaturesExample = () => {
   )
 
   const circuitJson = circuit.getCircuitJson()
-  console.log(JSON.stringify(circuitJson, null, 2))
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
