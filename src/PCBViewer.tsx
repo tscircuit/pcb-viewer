@@ -12,7 +12,6 @@ import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
-import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -61,10 +60,32 @@ export const PCBViewer = ({
 
   const initialRenderCompleted = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
-  const circuitJsonKey = useMemo(
-    () => calculateCircuitJsonKey(circuitJson),
-    [circuitJson],
-  )
+
+  const pcbElmsPreEdit = useMemo(() => {
+    return (
+      circuitJson?.filter(
+        (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
+      ) ?? []
+    )
+  }, [circuitJson])
+
+  const elements = useMemo(() => {
+    return applyEditEvents({
+      circuitJson: pcbElmsPreEdit as any,
+      editEvents,
+    })
+  }, [pcbElmsPreEdit, editEvents])
+
+  // Track the pcb_board element's explicit width/height
+  const boardDimensions = useMemo(() => {
+    const pcbBoard = elements.find((e) => e.type === "pcb_board") as any
+    if (!pcbBoard?.width || !pcbBoard?.height) return null
+    return { width: pcbBoard.width, height: pcbBoard.height }
+  }, [elements])
+
+  // Extract width/height as primitives to avoid object reference changes triggering useEffect
+  const boardWidth = boardDimensions?.width ?? null
+  const boardHeight = boardDimensions?.height ?? null
 
   const resetTransform = () => {
     const elmBounds =
@@ -94,30 +115,28 @@ export const PCBViewer = ({
   }
 
   useEffect(() => {
+    if (initialRenderCompleted.current === true) {
+      resetTransform()
+    }
+  }, [
+    boardWidth,
+    boardHeight,
+    elements
+      .filter((e) => e.type === "pcb_board")
+      .flatMap((e: any) => [e.center?.x ?? 0, e.center?.y ?? 0])
+      .join(","),
+  ])
+
+  useEffect(() => {
     if (!refDimensions?.width) return
-    if (!circuitJson) return
-    if (circuitJson.length === 0) return
+    if (boardWidth === null || boardHeight === null) return
 
     if (!initialRenderCompleted.current) {
       resetTransform()
       initialRenderCompleted.current = true
+      return
     }
-  }, [circuitJson, refDimensions])
-
-  const pcbElmsPreEdit = useMemo(() => {
-    return (
-      circuitJson?.filter(
-        (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
-      ) ?? []
-    )
-  }, [circuitJsonKey])
-
-  const elements = useMemo(() => {
-    return applyEditEvents({
-      circuitJson: pcbElmsPreEdit as any,
-      editEvents,
-    })
-  }, [pcbElmsPreEdit, editEvents])
+  }, [boardWidth, boardHeight, refDimensions])
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
