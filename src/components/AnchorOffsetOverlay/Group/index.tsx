@@ -50,18 +50,42 @@ export const GroupAnchorOffsetOverlay = ({
     })
     .filter((id): id is string => Boolean(id))
 
+  // Helper function to traverse up the group hierarchy and collect all parent groups
+  const collectParentGroups = (groupId: string, collected: Set<string>) => {
+    if (collected.has(groupId)) return // Avoid infinite loops
+    collected.add(groupId)
+
+    const group = groups.find((g) => g.pcb_group_id === groupId)
+    if (
+      group?.position_mode === "relative_to_group_anchor" &&
+      group.positioned_relative_to_pcb_group_id
+    ) {
+      // This group is positioned relative to another group, so add that parent too
+      collectParentGroups(group.positioned_relative_to_pcb_group_id, collected)
+    }
+  }
+
   // Track hovered groups by checking if any components in the group are hovered
+  // This includes traversing up the group hierarchy for nested groups
   const hoveredGroupIds = new Set<string>()
   hoveredComponentIds.forEach((componentId) => {
     const component = components.find((c) => c.pcb_component_id === componentId)
-    if (component?.pcb_group_id) {
-      hoveredGroupIds.add(component.pcb_group_id)
-    }
+    if (!component) return
+
+    // If component is directly positioned relative to a group anchor
     if (
-      component?.position_mode === "relative_to_group_anchor" &&
+      component.position_mode === "relative_to_group_anchor" &&
       component.positioned_relative_to_pcb_group_id
     ) {
-      hoveredGroupIds.add(component.positioned_relative_to_pcb_group_id)
+      collectParentGroups(
+        component.positioned_relative_to_pcb_group_id,
+        hoveredGroupIds,
+      )
+    }
+
+    // If component belongs to a group (via pcb_group_id)
+    if (component.pcb_group_id) {
+      collectParentGroups(component.pcb_group_id, hoveredGroupIds)
     }
   })
 
