@@ -14,19 +14,8 @@ export const calculateGroupBoundingBox = (
     if (!comp.center) {
       continue
     }
-
-    const width =
-      typeof comp.width === "number" ? comp.width : distance.parse(comp.width)
-    const height =
-      typeof comp.height === "number"
-        ? comp.height
-        : distance.parse(comp.height)
-
-    const halfWidth = width / 2
-    const halfHeight = height / 2
-
-    points.push({ x: comp.center.x - halfWidth, y: comp.center.y - halfHeight })
-    points.push({ x: comp.center.x + halfWidth, y: comp.center.y + halfHeight })
+    points.push({ x: comp.center.x, y: comp.center.y })
+    points.push({ x: comp.center.x, y: comp.center.y })
   }
 
   return getBoundsFromPoints(points)
