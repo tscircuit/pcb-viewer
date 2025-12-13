@@ -314,14 +314,35 @@ export const GroupAnchorOffsetOverlay = ({
                 strokeDasharray={VISUAL_CONFIG.LINE_DASH_PATTERN}
               />
 
-              <circle
-                cx={targetScreen.x}
-                cy={targetScreen.y}
-                r={VISUAL_CONFIG.COMPONENT_MARKER_RADIUS}
-                fill={COLORS.COMPONENT_MARKER_FILL}
-                stroke={COLORS.COMPONENT_MARKER_STROKE}
-                strokeWidth={1}
-              />
+              {target.type === "component" ? (
+                <circle
+                  cx={targetScreen.x}
+                  cy={targetScreen.y}
+                  r={VISUAL_CONFIG.COMPONENT_MARKER_RADIUS}
+                  fill={COLORS.COMPONENT_MARKER_FILL}
+                  stroke={COLORS.COMPONENT_MARKER_STROKE}
+                  strokeWidth={1}
+                />
+              ) : (
+                <>
+                  <line
+                    x1={targetScreen.x - VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                    y1={targetScreen.y}
+                    x2={targetScreen.x + VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                    y2={targetScreen.y}
+                    stroke={COLORS.OFFSET_LINE}
+                    strokeWidth={VISUAL_CONFIG.ANCHOR_MARKER_STROKE_WIDTH}
+                  />
+                  <line
+                    x1={targetScreen.x}
+                    y1={targetScreen.y - VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                    x2={targetScreen.x}
+                    y2={targetScreen.y + VISUAL_CONFIG.ANCHOR_MARKER_SIZE}
+                    stroke={COLORS.OFFSET_LINE}
+                    strokeWidth={VISUAL_CONFIG.ANCHOR_MARKER_STROKE_WIDTH}
+                  />
+                </>
+              )}
 
               {shouldShowXLabel && (
                 <foreignObject
