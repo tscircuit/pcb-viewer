@@ -157,32 +157,45 @@ export const PcbGroupOverlay = ({
         }
       }
 
-      if (groupComponents.length === 0) return
+      let minX: number, minY: number, maxX: number, maxY: number
+      let isExplicitlySized = false
 
-      let minX = Infinity
-      let minY = Infinity
-      let maxX = -Infinity
-      let maxY = -Infinity
+      if (group.center && group.width && group.height) {
+        isExplicitlySized = true
+        const halfWidth = group.width / 2
+        const halfHeight = group.height / 2
+        minX = group.center.x - halfWidth
+        maxX = group.center.x + halfWidth
+        minY = group.center.y - halfHeight
+        maxY = group.center.y + halfHeight
+      } else {
+        if (groupComponents.length === 0) return
 
-      groupComponents.forEach((comp) => {
-        if (
-          comp.center &&
-          typeof comp.width === "number" &&
-          typeof comp.height === "number"
-        ) {
-          const left = comp.center.x - comp.width / 2
-          const right = comp.center.x + comp.width / 2
-          const top = comp.center.y + comp.height / 2
-          const bottom = comp.center.y - comp.height / 2
+        minX = Infinity
+        minY = Infinity
+        maxX = -Infinity
+        maxY = -Infinity
 
-          minX = Math.min(minX, left)
-          maxX = Math.max(maxX, right)
-          minY = Math.min(minY, bottom)
-          maxY = Math.max(maxY, top)
-        }
-      })
+        groupComponents.forEach((comp) => {
+          if (
+            comp.center &&
+            typeof comp.width === "number" &&
+            typeof comp.height === "number"
+          ) {
+            const left = comp.center.x - comp.width / 2
+            const right = comp.center.x + comp.width / 2
+            const top = comp.center.y + comp.height / 2
+            const bottom = comp.center.y - comp.height / 2
 
-      if (minX === Infinity || maxX === -Infinity) return
+            minX = Math.min(minX, left)
+            maxX = Math.max(maxX, right)
+            minY = Math.min(minY, bottom)
+            maxY = Math.max(maxY, top)
+          }
+        })
+
+        if (minX === Infinity || maxX === -Infinity) return
+      }
 
       const depthLevel = group.source_group_id
         ? getGroupDepthLevel(group.source_group_id)
@@ -191,14 +204,16 @@ export const PcbGroupOverlay = ({
         ? getAllDescendantSourceGroups(group.source_group_id).length > 0
         : false
 
-      const basePadding = 1
-      const hierarchyPadding = hasChildren ? 0.5 : 0
-      const totalPadding = basePadding + hierarchyPadding
+      if (!isExplicitlySized) {
+        const basePadding = 1
+        const hierarchyPadding = hasChildren ? 0.5 : 0
+        const totalPadding = basePadding + hierarchyPadding
 
-      minX -= totalPadding
-      maxX += totalPadding
-      minY -= totalPadding
-      maxY += totalPadding
+        minX -= totalPadding
+        maxX += totalPadding
+        minY -= totalPadding
+        maxY += totalPadding
+      }
 
       const topLeft = applyToPoint(transform, { x: minX, y: maxY })
       const topRight = applyToPoint(transform, { x: maxX, y: maxY })

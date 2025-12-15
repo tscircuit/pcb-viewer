@@ -175,8 +175,8 @@ export const BoardAnchorOffsetOverlay = ({
             // Group target
             if (!target.group.center) return null
             targetCenter = {
-              x: target.group.center.x,
-              y: target.group.center.y,
+              x: target.group.anchor_position?.x ?? target.group.center.x,
+              y: target.group.anchor_position?.y ?? target.group.center.y,
             }
             targetId = target.group.pcb_group_id
             displayOffsetX = target.group.display_offset_x
@@ -213,10 +213,8 @@ export const BoardAnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText =
-            displayOffsetX ?? `Board Δx: ${offsetX.toFixed(2)}mm`
-          const yLabelText =
-            displayOffsetY ?? `Board Δy: ${offsetY.toFixed(2)}mm`
+          const xLabelText = `Board Δx: ${displayOffsetX ? displayOffsetX : offsetX.toFixed(2)}mm`
+          const yLabelText = `Board Δy: ${displayOffsetX ? displayOffsetX : offsetY.toFixed(2)}mm`
 
           return (
             <g key={`${target.board.pcb_board_id}-${targetId}-${target.type}`}>
@@ -288,7 +286,7 @@ export const BoardAnchorOffsetOverlay = ({
                 <foreignObject
                   x={targetScreen.x + yLabelOffset}
                   y={Math.min(anchorMarkerScreen.y, targetScreen.y)}
-                  width={20}
+                  width={VISUAL_CONFIG.Y_LABEL_MIN_WIDTH}
                   height={Math.abs(targetScreen.y - anchorMarkerScreen.y)}
                   style={{ overflow: "visible" }}
                 >
@@ -297,6 +295,11 @@ export const BoardAnchorOffsetOverlay = ({
                       ...labelStyle,
                       display: "flex",
                       alignItems: "center",
+                      justifyContent: isTargetRightOfAnchor
+                        ? "flex-start"
+                        : "flex-end",
+                      whiteSpace: "nowrap",
+                      padding: "0 4px",
                       height: "100%",
                     }}
                   >
