@@ -37,7 +37,7 @@
     "react-cosmos-plugin-vite": "7.0.0-beta.0",
     "react-dom": "19.1.0",
     "react-use": "^17.4.0",
-    "tscircuit": "^0.0.1040",
+    "tscircuit": "^0.0.1054",
     "tsup": "^8.0.2",
     "type-fest": "^3.0.0",
     "typescript": "^5.4.4",
