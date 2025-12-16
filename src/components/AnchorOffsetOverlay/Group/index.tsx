@@ -92,6 +92,7 @@ export const GroupAnchorOffsetOverlay = ({
   const isShowingAnchorOffsets = useGlobalStore(
     (s) => s.is_showing_group_anchor_offsets,
   )
+  const isMovingComponent = useGlobalStore((s) => s.is_moving_component)
 
   if (!isShowingAnchorOffsets && hoveredComponentIds.length === 0) {
     return null
@@ -287,8 +288,26 @@ export const GroupAnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText = `Δx: ${displayOffsetX ? displayOffsetX : offsetX.toFixed(2)}mm`
-          const yLabelText = `Δy: ${displayOffsetY ? displayOffsetY : offsetY.toFixed(2)}mm`
+          // Always show calculated offset when component is being moved or when stored offset doesn't match current position
+          const storedOffsetX = displayOffsetX
+            ? parseFloat(displayOffsetX)
+            : null
+          const storedOffsetY = displayOffsetY
+            ? parseFloat(displayOffsetY)
+            : null
+          const offsetMatchesStored =
+            storedOffsetX !== null &&
+            storedOffsetY !== null &&
+            Math.abs(offsetX - storedOffsetX) < 0.01 && // Allow small tolerance for floating point precision
+            Math.abs(offsetY - storedOffsetY) < 0.01
+
+          const shouldUseCalculatedOffset =
+            isMovingComponent ||
+            !displayOffsetX ||
+            !displayOffsetY ||
+            !offsetMatchesStored
+          const xLabelText = `Δx: ${shouldUseCalculatedOffset ? offsetX.toFixed(2) : displayOffsetX || offsetX.toFixed(2)}mm`
+          const yLabelText = `Δy: ${shouldUseCalculatedOffset ? offsetY.toFixed(2) : displayOffsetY || offsetY.toFixed(2)}mm`
 
           return (
             <g
