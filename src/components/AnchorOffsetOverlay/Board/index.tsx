@@ -214,7 +214,7 @@ export const BoardAnchorOffsetOverlay = ({
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
           const xLabelText = `Board Δx: ${displayOffsetX ? displayOffsetX : offsetX.toFixed(2)}mm`
-          const yLabelText = `Board Δy: ${displayOffsetX ? displayOffsetX : offsetY.toFixed(2)}mm`
+          const yLabelText = `Board Δy: ${displayOffsetY ? displayOffsetY : offsetY.toFixed(2)}mm`
 
           return (
             <g key={`${target.board.pcb_board_id}-${targetId}-${target.type}`}>
