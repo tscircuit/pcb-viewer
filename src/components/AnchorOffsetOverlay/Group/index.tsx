@@ -287,8 +287,12 @@ export const GroupAnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText = `Δx: ${displayOffsetX ? displayOffsetX : offsetX.toFixed(2)}mm`
-          const yLabelText = `Δy: ${displayOffsetY ? displayOffsetY : offsetY.toFixed(2)}mm`
+          const xLabelText = displayOffsetX
+            ? `Δx: ${displayOffsetX}mm`
+            : `Δx: ${offsetX.toFixed(2)}mm`
+          const yLabelText = displayOffsetY
+            ? `Δy: ${displayOffsetY}mm`
+            : `Δy: ${offsetY.toFixed(2)}mm`
 
           return (
             <g
