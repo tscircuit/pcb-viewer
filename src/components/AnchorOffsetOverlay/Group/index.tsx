@@ -289,10 +289,10 @@ export const GroupAnchorOffsetOverlay = ({
 
           const xLabelText = displayOffsetX
             ? displayOffsetX
-            : `Δx: ${offsetX.toFixed(2)}mm`
+            : `${offsetX.toFixed(2)}`
           const yLabelText = displayOffsetY
             ? displayOffsetY
-            : `Δy: ${offsetY.toFixed(2)}mm`
+            : `${offsetY.toFixed(2)}`
 
           return (
             <g
