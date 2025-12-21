@@ -11,6 +11,7 @@ import { ElementOverlayBox } from "./ElementOverlayBox"
 import {
   BoardAnchorOffsetOverlay,
   GroupAnchorOffsetOverlay,
+  PanelAnchorOffsetOverlay,
 } from "./AnchorOffsetOverlay"
 
 const getPolygonBoundingBox = (
@@ -331,6 +332,13 @@ export const MouseElementTracker = ({
             containerHeight={height}
           />
           <GroupAnchorOffsetOverlay
+            elements={elements}
+            highlightedPrimitives={highlightedPrimitives}
+            transform={transform}
+            containerWidth={width}
+            containerHeight={height}
+          />
+          <PanelAnchorOffsetOverlay
             elements={elements}
             highlightedPrimitives={highlightedPrimitives}
             transform={transform}
