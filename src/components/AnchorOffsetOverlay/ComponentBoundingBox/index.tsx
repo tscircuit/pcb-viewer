@@ -1,11 +1,11 @@
 import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
-import { distance } from "circuit-json"
+import { getBoundsOfPcbElements, su } from "@tscircuit/circuit-json-util"
 import { applyToPoint } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
 import { zIndexMap } from "../../../lib/util/z-index-map"
 import type { HighlightedPrimitive } from "../../MouseElementTracker"
 import { COLORS, VISUAL_CONFIG } from "../common/constants"
-import { isPcbComponent, isPcbGroup } from "../common/guards"
+import { isPcbComponent } from "../common/guards"
 
 interface Props {
   elements: AnyCircuitElement[]
@@ -28,117 +28,10 @@ const calculateComponentBoundingBox = (
   )
 
   if (padsAndHoles.length === 0) {
-    if (component.center && component.width && component.height) {
-      const w =
-        typeof component.width === "number"
-          ? component.width
-          : distance.parse(component.width)
-      const h =
-        typeof component.height === "number"
-          ? component.height
-          : distance.parse(component.height)
-      return {
-        minX: component.center.x - w / 2,
-        maxX: component.center.x + w / 2,
-        minY: component.center.y - h / 2,
-        maxY: component.center.y + h / 2,
-      }
-    }
-    return null
+    return getBoundsOfPcbElements([component])
   }
 
-  let minX = Infinity
-  let maxX = -Infinity
-  let minY = Infinity
-  let maxY = -Infinity
-
-  for (const pad of padsAndHoles) {
-    let x = 0,
-      y = 0,
-      w = 0,
-      h = 0
-
-    if (pad.type === "pcb_smtpad") {
-      if (pad.shape === "polygon") {
-        for (const pt of pad.points) {
-          const px = typeof pt.x === "number" ? pt.x : distance.parse(pt.x)
-          const py = typeof pt.y === "number" ? pt.y : distance.parse(pt.y)
-          minX = Math.min(minX, px)
-          maxX = Math.max(maxX, px)
-          minY = Math.min(minY, py)
-          maxY = Math.max(maxY, py)
-        }
-        continue
-      } else if (pad.shape === "rect" || pad.shape === "rotated_rect") {
-        x = pad.x
-        y = pad.y
-        w = pad.width
-        h = pad.height
-      } else if (pad.shape === "circle") {
-        x = pad.x
-        y = pad.y
-        w = pad.radius * 2
-        h = pad.radius * 2
-      } else if (pad.shape === "pill" || pad.shape === "rotated_pill") {
-        x = pad.x
-        y = pad.y
-        w = pad.width
-        h = pad.height
-      }
-    } else if (pad.type === "pcb_plated_hole") {
-      x = pad.x
-      y = pad.y
-      if (pad.shape === "circle") {
-        w = pad.outer_diameter
-        h = pad.outer_diameter
-      } else if (pad.shape === "oval" || pad.shape === "pill") {
-        w = pad.outer_width
-        h = pad.outer_height
-      } else if (pad.shape === "circular_hole_with_rect_pad") {
-        w = pad.rect_pad_width
-        h = pad.rect_pad_height
-      } else if (
-        pad.shape === "pill_hole_with_rect_pad" ||
-        pad.shape === "rotated_pill_hole_with_rect_pad"
-      ) {
-        w = pad.rect_pad_width
-        h = pad.rect_pad_height
-      } else if (
-        pad.shape === "hole_with_polygon_pad" &&
-        (pad as any).pad_outline
-      ) {
-        for (const pt of (pad as any).pad_outline) {
-          const px =
-            (typeof pt.x === "number" ? pt.x : distance.parse(pt.x)) + x
-          const py =
-            (typeof pt.y === "number" ? pt.y : distance.parse(pt.y)) + y
-          minX = Math.min(minX, px)
-          maxX = Math.max(maxX, px)
-          minY = Math.min(minY, py)
-          maxY = Math.max(maxY, py)
-        }
-        continue
-      }
-    } else if (pad.type === "pcb_hole") {
-      x = pad.x
-      y = pad.y
-      if (!pad.hole_shape || pad.hole_shape === "circle") {
-        w = pad.hole_diameter
-        h = pad.hole_diameter
-      } else if (pad.hole_shape === "pill" || pad.hole_shape === "rect") {
-        w = pad.hole_width ?? 0
-        h = pad.hole_height ?? 0
-      }
-    }
-
-    minX = Math.min(minX, x - w / 2)
-    maxX = Math.max(maxX, x + w / 2)
-    minY = Math.min(minY, y - h / 2)
-    maxY = Math.max(maxY, y + h / 2)
-  }
-
-  if (!Number.isFinite(minX)) return null
-  return { minX, maxX, minY, maxY }
+  return getBoundsOfPcbElements(padsAndHoles)
 }
 
 export const ComponentBoundingBoxOverlay = ({
@@ -148,11 +41,6 @@ export const ComponentBoundingBoxOverlay = ({
   containerWidth,
   containerHeight,
 }: Props) => {
-  const components = elements.filter((el): el is PcbComponent =>
-    isPcbComponent(el),
-  )
-  const groups = elements.filter((el): el is PcbGroup => isPcbGroup(el))
-
   const hoveredComponents = new Map<string, PcbComponent>()
   for (const primitive of highlightedPrimitives) {
     if (isPcbComponent(primitive._parent_pcb_component)) {
@@ -181,20 +69,11 @@ export const ComponentBoundingBoxOverlay = ({
     const bbox = calculateComponentBoundingBox(component, elements)
     if (!bbox) continue
 
-    let group: PcbGroup | null = null
-    if (
-      component.position_mode === "relative_to_group_anchor" &&
-      component.positioned_relative_to_pcb_group_id
-    ) {
-      group =
-        groups.find(
-          (g) =>
-            g.pcb_group_id === component.positioned_relative_to_pcb_group_id,
-        ) ?? null
-    } else if (component.pcb_group_id) {
-      group =
-        groups.find((g) => g.pcb_group_id === component.pcb_group_id) ?? null
-    }
+    const groupId =
+      component.positioned_relative_to_pcb_group_id ?? component.pcb_group_id
+    const group = groupId
+      ? (su(elements).pcb_group.get(groupId) as PcbGroup | null)
+      : null
 
     renderData.push({ component, bbox, group })
   }

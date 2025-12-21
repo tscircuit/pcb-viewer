@@ -340,6 +340,12 @@ export const MouseElementTracker = ({
             containerHeight={height}
           />
           <ComponentBoundingBoxOverlay
+            elements={elements}
+            highlightedPrimitives={highlightedPrimitives}
+            transform={transform}
+            containerWidth={width}
+            containerHeight={height}
+          />
           <PanelAnchorOffsetOverlay
             elements={elements}
             highlightedPrimitives={highlightedPrimitives}
