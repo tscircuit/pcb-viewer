@@ -3,6 +3,7 @@ import type {
   PcbBoard,
   PcbComponent,
   PcbGroup,
+  PcbPanel,
 } from "circuit-json"
 
 export const isPcbComponent = (
@@ -11,6 +12,9 @@ export const isPcbComponent = (
 
 export const isPcbGroup = (element?: AnyCircuitElement): element is PcbGroup =>
   element?.type === "pcb_group"
+
+export const isPcbPanel = (element?: AnyCircuitElement): element is PcbPanel =>
+  element?.type === "pcb_panel"
 
 export const isPcbBoard = (element?: AnyCircuitElement): element is PcbBoard =>
   element?.type === "pcb_board"

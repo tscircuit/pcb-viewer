@@ -5,22 +5,6 @@ import type { Line, Text } from "./types"
 export const LETTER_HEIGHT_TO_WIDTH_RATIO = 0.6
 export const LETTER_HEIGHT_TO_SPACE_RATIO = 0.2
 
-const LOWERCASE_BASELINE_OFFSET = (() => {
-  const referenceLetters = ["a", "c", "e", "m", "n", "o", "r", "s", "u", "x"]
-
-  const offsets = referenceLetters
-    .map((letter) => lineAlphabet[letter])
-    .filter((lines) => lines && lines.length > 0)
-    .map((lines) =>
-      Math.min(...lines.map((line) => Math.min(line.y1, line.y2))),
-    )
-
-  return offsets.length > 0 ? Math.min(...offsets) : 0
-})()
-
-const getBaselineOffsetForLetter = (letter: string) =>
-  letter >= "a" && letter <= "z" ? LOWERCASE_BASELINE_OFFSET : 0
-
 const getTextGeometry = (text: Text) => {
   const target_height = text.size * 0.7 // Apply 70% scaling
 
@@ -43,16 +27,10 @@ const getTextGeometry = (text: Text) => {
     : []
 
   const width = line_widths.length > 0 ? Math.max(...line_widths) : 0
-  const hasLowercase = /[a-z]/.test(text.text)
-  const baselineOffset = hasLowercase
-    ? LOWERCASE_BASELINE_OFFSET * target_height
-    : 0
 
   const height =
     line_count > 0
-      ? line_count * target_height +
-        (line_count - 1) * space_between_lines +
-        baselineOffset
+      ? line_count * target_height + (line_count - 1) * space_between_lines
       : 0
 
   return {
@@ -119,7 +97,6 @@ export const convertTextToLines = (text: Text): Line[] => {
       const letter = text_lines[lineIndex][letterIndex]
       const letterLines =
         lineAlphabet[letter] ?? lineAlphabet[letter.toUpperCase()]
-      const baselineOffset = getBaselineOffsetForLetter(letter)
 
       if (!letterLines) {
         current_x_origin_for_char_box += target_width_char + space_between_chars
@@ -132,15 +109,13 @@ export const convertTextToLines = (text: Text): Line[] => {
         x2: norm_x2,
         y2: norm_y2,
       } of letterLines) {
-        const adjusted_y1 = norm_y1 - baselineOffset
-        const adjusted_y2 = norm_y2 - baselineOffset
         lines.push({
           _pcb_drawing_object_id: getNewPcbDrawingObjectId("line"),
           pcb_drawing_type: "line",
           x1: current_x_origin_for_char_box + target_width_char * norm_x1,
-          y1: text.y + lineYOffset + target_height * adjusted_y1,
+          y1: text.y + lineYOffset + target_height * norm_y1,
           x2: current_x_origin_for_char_box + target_width_char * norm_x2,
-          y2: text.y + lineYOffset + target_height * adjusted_y2,
+          y2: text.y + lineYOffset + target_height * norm_y2,
           width: strokeWidth,
           layer: text.layer,
           unit: text.unit,
