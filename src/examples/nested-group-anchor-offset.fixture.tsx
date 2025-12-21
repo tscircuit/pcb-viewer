@@ -245,8 +245,8 @@ export const NestedGroupAnchorOffset: React.FC = () => {
               anchor_alignment: "center",
               position_mode: "relative_to_group_anchor",
               positioned_relative_to_pcb_group_id: "group_a",
-              display_offset_x: "Group A 15.00",
-              display_offset_y: "Group A 0.00",
+              display_offset_x: "Group A Δx: 15.00mm",
+              display_offset_y: "Group A Δy: 0.00mm",
               pcb_component_ids: ["pcb_resistor_3", "pcb_resistor_4"],
             },
             // Group C - Positioned relative to Group B's anchor (right side, 3 levels deep)
@@ -337,8 +337,8 @@ export const NestedGroupAnchorOffset: React.FC = () => {
               anchor_alignment: "center",
               position_mode: "relative_to_group_anchor",
               positioned_relative_to_pcb_group_id: "group_b",
-              display_offset_x: "Group B 15.00",
-              display_offset_y: "Group B 0.00",
+              display_offset_x: "Group B Δx: 15.00mm",
+              display_offset_y: "Group B Δy: 0.00mm",
               pcb_component_ids: ["pcb_resistor_5", "pcb_resistor_6"],
             },
           ] as AnyCircuitElement[]
