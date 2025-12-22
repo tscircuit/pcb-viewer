@@ -1,12 +1,12 @@
 import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import { useGlobalStore } from "../../../global-store"
-import type { HighlightedPrimitive } from "../../MouseElementTracker"
-import { isPcbComponent, isPcbGroup } from "../common/guards"
+import { useGlobalStore } from "../../global-store"
+import type { HighlightedPrimitive } from "../MouseElementTracker"
+import { isPcbComponent, isPcbGroup } from "./common/guards"
 import {
   type AnchorOffsetTarget,
   AnchorOffsetOverlay,
-} from "../AnchorOffsetOverlay"
+} from "./AnchorOffsetOverlay"
 
 type Point = {
   x: number

@@ -2,10 +2,10 @@ import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
 import { getBoundsOfPcbElements, su } from "@tscircuit/circuit-json-util"
 import { applyToPoint } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
-import { zIndexMap } from "../../../lib/util/z-index-map"
-import type { HighlightedPrimitive } from "../../MouseElementTracker"
-import { COLORS, VISUAL_CONFIG } from "../common/constants"
-import { isPcbComponent } from "../common/guards"
+import { zIndexMap } from "../../lib/util/z-index-map"
+import type { HighlightedPrimitive } from "../MouseElementTracker"
+import { COLORS, VISUAL_CONFIG } from "./common/constants"
+import { isPcbComponent } from "./common/guards"
 
 interface Props {
   elements: AnyCircuitElement[]

@@ -1,4 +1,4 @@
-export { BoardAnchorOffsetOverlay } from "./Board"
-export { GroupAnchorOffsetOverlay } from "./Group"
-export { ComponentBoundingBoxOverlay } from "./ComponentBoundingBox"
-export { PanelAnchorOffsetOverlay } from "./Panel"
+export { BoardAnchorOffsetOverlay } from "./BoardAnchorOffsetOverlay"
+export { GroupAnchorOffsetOverlay } from "./GroupAnchorOffsetOverlay"
+export { ComponentBoundingBoxOverlay } from "./ComponentBoundingBoxOverlay"
+export { PanelAnchorOffsetOverlay } from "./PanelAnchorOffsetOverlay"
