@@ -135,7 +135,7 @@ export const GroupAnchorOffsetOverlay = ({
       } => Boolean(target),
     )
 
-  // Group-to-group targets
+  // Group-to-group targets (anchor-to-anchor offsets)
   const groupTargets = groups
     .map((group) => {
       if (
@@ -145,7 +145,11 @@ export const GroupAnchorOffsetOverlay = ({
         const parentGroup = groups.find(
           (g) => g.pcb_group_id === group.positioned_relative_to_pcb_group_id,
         )
-        if (parentGroup && parentGroup.anchor_position && group.center) {
+        if (
+          parentGroup &&
+          parentGroup.anchor_position &&
+          group.anchor_position
+        ) {
           return { group, parentGroup, type: "group" as const }
         }
       }
@@ -203,13 +207,13 @@ export const GroupAnchorOffsetOverlay = ({
           display_offset_y: target.component.display_offset_y,
         }
       }
-      // group
-      if (!target.group.center) return null
+      // group - use anchor_position for anchor-to-anchor offsets
+      if (!target.group.anchor_position) return null
       return {
         id: `${target.parentGroup.pcb_group_id}-${target.group.pcb_group_id}-${target.type}`,
         anchor,
         anchor_id: target.parentGroup.pcb_group_id,
-        target: target.group.center,
+        target: target.group.anchor_position,
         type: "group",
         display_offset_x: target.group.display_offset_x,
         display_offset_y: target.group.display_offset_y,
