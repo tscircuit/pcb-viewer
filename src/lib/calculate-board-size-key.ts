@@ -10,10 +10,11 @@ export const calculateBoardSizeKey = (
     | undefined
 
   if (!board) return "no-board"
+  const round = (n: number) => Math.round(n * 1000) / 1000
 
   if (board.outline) {
-    return board.outline.map((o) => `${o.x}_${o.y}`).join(",")
+    return board.outline.map((o) => `${round(o.x)}_${round(o.y)}`).join(",")
   }
 
-  return `${board.width}_${board.height}`
+  return `${round(board.width ?? 0)}_${round(board.height ?? 0)}`
 }
