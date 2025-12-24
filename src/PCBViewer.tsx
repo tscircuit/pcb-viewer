@@ -13,6 +13,7 @@ import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
+import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -65,6 +66,7 @@ export const PCBViewer = ({
     () => calculateCircuitJsonKey(circuitJson),
     [circuitJson],
   )
+  const boardSizeKey = calculateBoardSizeKey(circuitJson)
 
   const resetTransform = () => {
     const elmBounds =
@@ -103,6 +105,12 @@ export const PCBViewer = ({
       initialRenderCompleted.current = true
     }
   }, [circuitJson, refDimensions])
+
+  useEffect(() => {
+    if (initialRenderCompleted.current === true) {
+      resetTransform()
+    }
+  }, [boardSizeKey])
 
   const pcbElmsPreEdit = useMemo(() => {
     return (
