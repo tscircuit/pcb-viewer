@@ -16,5 +16,5 @@ export const calculateBoardSizeKey = (
     return board.outline.map((o) => `${round(o.x)}_${round(o.y)}`).join(",")
   }
 
-  return `${round(board.width ?? 0)}_${round(board.height ?? 0)}`
+  return `${round(board.width!)}_${round(board.height!)}`
 }
