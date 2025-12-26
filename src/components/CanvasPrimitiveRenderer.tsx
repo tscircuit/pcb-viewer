@@ -6,10 +6,12 @@ import { drawPrimitives } from "lib/draw-primitives"
 import { Drawer } from "lib/Drawer"
 import type { GridConfig, Primitive } from "lib/types"
 import { useGlobalStore } from "../global-store"
-import { all_layers } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
+import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 
 interface Props {
   primitives: Primitive[]
+  elements: AnyCircuitElement[]
   defaultUnit?: string
   transform?: Matrix
   grid?: GridConfig
@@ -40,6 +42,7 @@ const orderedLayers = [
 
 export const CanvasPrimitiveRenderer = ({
   primitives,
+  elements,
   transform,
   grid,
   width = 500,
@@ -77,8 +80,34 @@ export const CanvasPrimitiveRenderer = ({
       : primitives.filter((p) => !p.layer?.includes("soldermask"))
 
     drawPrimitives(drawer, filteredPrimitives)
+
+    // Draw silkscreen elements using circuit-to-canvas
+    if (transform) {
+      // Draw top silkscreen
+      const topSilkscreenCanvas = canvasRefs.current.top_silkscreen
+      if (topSilkscreenCanvas) {
+        drawSilkscreenElementsForLayer(
+          topSilkscreenCanvas,
+          elements,
+          "top_silkscreen",
+          transform,
+        )
+      }
+
+      // Draw bottom silkscreen
+      const bottomSilkscreenCanvas = canvasRefs.current.bottom_silkscreen
+      if (bottomSilkscreenCanvas) {
+        drawSilkscreenElementsForLayer(
+          bottomSilkscreenCanvas,
+          elements,
+          "bottom_silkscreen",
+          transform,
+        )
+      }
+    }
+
     drawer.orderAndFadeLayers()
-  }, [primitives, transform, selectedLayer, isShowingSolderMask])
+  }, [primitives, elements, transform, selectedLayer, isShowingSolderMask])
 
   return (
     <div

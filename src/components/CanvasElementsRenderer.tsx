@@ -205,6 +205,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                         <CanvasPrimitiveRenderer
                           transform={transform}
                           primitives={primitives}
+                          elements={elementsToRender}
                           width={props.width}
                           height={props.height}
                           grid={props.grid}

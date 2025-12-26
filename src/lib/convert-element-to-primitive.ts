@@ -857,93 +857,6 @@ export const convertElementToPrimitives = (
       return primitives
     }
 
-    case "pcb_silkscreen_rect": {
-      return [
-        {
-          _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "rect",
-          x: element.center.x,
-          y: element.center.y,
-          w: element.width,
-          h: element.height,
-          layer:
-            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-          stroke_width: element.stroke_width,
-          is_filled: element.is_filled,
-          has_stroke: element.has_stroke,
-          is_stroke_dashed: element.is_stroke_dashed,
-          roundness: element.corner_radius,
-          _element: element,
-        },
-      ]
-    }
-
-    case "pcb_silkscreen_circle": {
-      return [
-        {
-          _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "circle",
-          x: element.center.x,
-          y: element.center.y,
-          r: element.radius,
-          layer:
-            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-        },
-      ]
-    }
-
-    case "pcb_silkscreen_oval": {
-      return [
-        {
-          _pcb_drawing_object_id: `oval_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "oval",
-          x: element.center.x,
-          y: element.center.y,
-          rX: element.radius_x / 2,
-          rY: element.radius_y / 2,
-          layer:
-            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-        },
-      ]
-    }
-
-    // @ts-ignore
-    case "pcb_silkscreen_pill": {
-      return [
-        {
-          _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "pill",
-          // @ts-ignore
-          x: element.center.x,
-          // @ts-ignore
-          y: element.center.y,
-          // @ts-ignore
-          w: element.width,
-          // @ts-ignore
-          h: element.height,
-          layer:
-            // @ts-ignore
-            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-        },
-      ]
-    }
-
-    case "pcb_silkscreen_line": {
-      return [
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: element.x1,
-          y1: element.y1,
-          x2: element.x2,
-          y2: element.y2,
-          width: 0.1, // TODO add strokewidth
-          squareCap: false,
-          layer:
-            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-        },
-      ]
-    }
     case "pcb_fabrication_note_rect": {
       const rectElement = element as any
 
@@ -984,88 +897,32 @@ export const convertElementToPrimitives = (
       ]
     }
 
-    case "pcb_fabrication_note_path":
-    case "pcb_silkscreen_path": {
-      const {
-        pcb_component_id,
-        route, // Array<{ x: number, y: number }>
-        type,
-      } = element
+    case "pcb_fabrication_note_path": {
+      const { route } = element
 
-      let layer:
-        | "bottom_silkscreen"
-        | "top_silkscreen"
-        | "bottom_fabrication"
-        | "top_fabrication"
-        | null
-
-      if (type === "pcb_silkscreen_path") {
-        layer =
-          element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen"
-
-        return route
-          .slice(0, -1)
-          .map((point, index) => {
-            const nextPoint = route[index + 1]
-            return {
-              _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-              pcb_drawing_type: "line",
-              x1: point.x,
-              y1: point.y,
-              x2: nextPoint.x,
-              y2: nextPoint.y,
-              width: element.stroke_width ?? 0.1,
-              squareCap: false,
-              layer: layer!,
-              _element: element,
-              _parent_pcb_component,
-              _parent_source_component,
-              _source_port,
-            } as Primitive & MetaData
-          })
-          .filter(Boolean)
-      } else if (type === "pcb_fabrication_note_path") {
-        layer = "top_fabrication"
-        return route
-          .slice(0, -1)
-          .map((point, index) => {
-            const nextPoint = route[index + 1]
-            return {
-              _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-              pcb_drawing_type: "line",
-              x1: point.x,
-              y1: point.y,
-              x2: nextPoint.x,
-              y2: nextPoint.y,
-              width: element.stroke_width ?? 0.1,
-              squareCap: false,
-              layer: layer!,
-              color: element.color,
-              _element: element,
-              _parent_pcb_component,
-              _parent_source_component,
-              _source_port,
-            } as Primitive & MetaData
-          })
-          .filter(Boolean)
-      }
-    }
-
-    case "pcb_silkscreen_text": {
-      return [
-        {
-          _pcb_drawing_object_id: `text_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "text",
-          x: element.anchor_position.x,
-          y: element.anchor_position.y,
-          layer:
-            element.layer === "bottom" ? "bottom_silkscreen" : "top_silkscreen",
-          align: element.anchor_alignment ?? "center",
-          text: element.text,
-          size: element.font_size, // Add the required 'size' property
-          ccw_rotation: element.ccw_rotation,
-        },
-      ]
+      const layer = "top_fabrication"
+      return route
+        .slice(0, -1)
+        .map((point, index) => {
+          const nextPoint = route[index + 1]
+          return {
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "line",
+            x1: point.x,
+            y1: point.y,
+            x2: nextPoint.x,
+            y2: nextPoint.y,
+            width: element.stroke_width ?? 0.1,
+            squareCap: false,
+            layer: layer,
+            color: element.color,
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          } as Primitive & MetaData
+        })
+        .filter(Boolean)
     }
     case "pcb_copper_text": {
       return convertPcbCopperTextToPrimitive(element, {
