@@ -526,12 +526,12 @@ export class Drawer {
       ...DEFAULT_DRAW_ORDER.filter(
         (l) => !layersToShiftToTop.includes(l as any),
       ),
+      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       foregroundLayer,
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
       "drill",
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
     ]
 
     order.forEach((layer, i) => {
