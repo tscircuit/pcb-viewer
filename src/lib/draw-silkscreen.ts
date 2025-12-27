@@ -17,10 +17,14 @@ const PCB_VIEWER_COLOR_MAP: PcbColorMap = {
   },
 }
 
+export function isSilkscreenElement(element: AnyCircuitElement) {
+  return element.type.includes("pcb_silkscreen")
+}
+
 export function drawSilkscreenElementsForLayer(
   canvas: HTMLCanvasElement,
   elements: AnyCircuitElement[],
-  layer: PcbRenderLayer,
+  layers: PcbRenderLayer[],
   realToCanvasMat: Matrix,
 ) {
   const drawer = new CircuitToCanvasDrawer(canvas)
@@ -31,5 +35,7 @@ export function drawSilkscreenElementsForLayer(
 
   drawer.realToCanvasMat = realToCanvasMat
 
-  drawer.drawElements(elements, { layers: [layer] })
+  const silkscreenElements = elements.filter(isSilkscreenElement)
+
+  drawer.drawElements(silkscreenElements, { layers })
 }

@@ -8,6 +8,7 @@ import type { GridConfig, Primitive } from "lib/types"
 import { useGlobalStore } from "../global-store"
 import type { AnyCircuitElement } from "circuit-json"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
+import { drawPlatedHolePads } from "lib/draw-plated-hole"
 
 interface Props {
   primitives: Primitive[]
@@ -83,13 +84,24 @@ export const CanvasPrimitiveRenderer = ({
 
     // Draw silkscreen elements using circuit-to-canvas
     if (transform) {
+      // Draw plated holes using circuit-to-canvas (pads on copper layers, drills on drill layer)
+      const topCanvas = canvasRefs.current.top
+      if (topCanvas) {
+        drawPlatedHolePads(topCanvas, elements, ["top_copper"], transform)
+      }
+
+      const bottomCanvas = canvasRefs.current.bottom
+      if (bottomCanvas) {
+        drawPlatedHolePads(bottomCanvas, elements, ["bottom_copper"], transform)
+      }
+
       // Draw top silkscreen
       const topSilkscreenCanvas = canvasRefs.current.top_silkscreen
       if (topSilkscreenCanvas) {
         drawSilkscreenElementsForLayer(
           topSilkscreenCanvas,
           elements,
-          "top_silkscreen",
+          ["top_silkscreen"],
           transform,
         )
       }
@@ -100,7 +112,7 @@ export const CanvasPrimitiveRenderer = ({
         drawSilkscreenElementsForLayer(
           bottomSilkscreenCanvas,
           elements,
-          "bottom_silkscreen",
+          ["bottom_silkscreen"],
           transform,
         )
       }
