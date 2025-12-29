@@ -9,6 +9,7 @@ import { useGlobalStore } from "../global-store"
 import type { AnyCircuitElement } from "circuit-json"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
+import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 
 interface Props {
   primitives: Primitive[]
@@ -30,6 +31,8 @@ const orderedLayers = [
   "soldermask_with_copper_bottom",
   "soldermask_with_copper_top",
   "top_silkscreen",
+  "top_fabrication",
+  "bottom_fabrication",
   "inner1",
   "inner2",
   "inner3",
@@ -113,6 +116,28 @@ export const CanvasPrimitiveRenderer = ({
           bottomSilkscreenCanvas,
           elements,
           ["bottom_silkscreen"],
+          transform,
+        )
+      }
+
+      // Draw top fabrication
+      const topFabCanvas = canvasRefs.current.top_fabrication
+      if (topFabCanvas) {
+        drawFabricationNoteElementsForLayer(
+          topFabCanvas,
+          elements,
+          ["top_fabrication_note"],
+          transform,
+        )
+      }
+
+      // Draw bottom fabrication
+      const bottomFabCanvas = canvasRefs.current.bottom_fabrication
+      if (bottomFabCanvas) {
+        drawFabricationNoteElementsForLayer(
+          bottomFabCanvas,
+          elements,
+          ["bottom_fabrication_note"],
           transform,
         )
       }
