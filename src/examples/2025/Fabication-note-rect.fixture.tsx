@@ -18,6 +18,7 @@ export const FabricationNoteRect: React.FC = () => {
               is_filled: true,
               is_stroke_dashed: true,
               layer: "top",
+              color: "#ff0000",
               corner_radius: 0.3,
             },
             {
