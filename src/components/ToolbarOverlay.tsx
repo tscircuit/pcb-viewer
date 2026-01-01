@@ -493,7 +493,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                       backgroundColor: "#2a2a2a",
                       transition: "background-color 0.2s ease",
                       touchAction: "manipulation",
-                      userSelect: "none",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = "#333"
@@ -562,7 +561,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
+                        userSelect: "text",
                       }}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
                     >
                       {e.message}
                     </div>
@@ -602,7 +604,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         wordWrap: "break-word",
                         overflowWrap: "break-word",
                         hyphens: "auto",
+                        userSelect: "text",
                       }}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
                     >
                       {e.message}
                     </div>
