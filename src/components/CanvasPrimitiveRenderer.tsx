@@ -10,6 +10,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
+import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 
 interface Props {
   primitives: Primitive[]
@@ -40,7 +41,8 @@ const orderedLayers = [
   "inner5",
   "inner6",
   "drill",
-  "notes",
+  "bottom_notes",
+  "top_notes",
   "other",
 ]
 
@@ -138,6 +140,28 @@ export const CanvasPrimitiveRenderer = ({
           bottomFabCanvas,
           elements,
           ["bottom_fabrication_note"],
+          transform,
+        )
+      }
+
+      // Draw bottom notes
+      const bottomNotesCanvas = canvasRefs.current.bottom_notes
+      if (bottomNotesCanvas) {
+        drawPcbNoteElementsForLayer(
+          bottomNotesCanvas,
+          elements,
+          ["bottom_user_note"],
+          transform,
+        )
+      }
+
+      // Draw top notes
+      const topNotesCanvas = canvasRefs.current.top_notes
+      if (topNotesCanvas) {
+        drawPcbNoteElementsForLayer(
+          topNotesCanvas,
+          elements,
+          ["top_user_note"],
           transform,
         )
       }
