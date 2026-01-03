@@ -12,6 +12,7 @@ import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
+import { drawPcbBoardElements } from "lib/draw-pcb-board"
 
 interface Props {
   primitives: Primitive[]
@@ -82,9 +83,9 @@ export const CanvasPrimitiveRenderer = ({
     drawer.foregroundLayer = selectedLayer
 
     // Filter out solder mask primitives when solder mask is disabled
-    const filteredPrimitives = isShowingSolderMask
-      ? primitives
-      : primitives.filter((p) => !p.layer?.includes("soldermask"))
+    const filteredPrimitives = primitives
+      .filter((p) => isShowingSolderMask || !p.layer?.includes("soldermask"))
+      .filter((p) => p.layer !== "board")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -166,11 +167,15 @@ export const CanvasPrimitiveRenderer = ({
           transform,
         )
       }
-
       // Draw PCB holes
       const drillCanvas = canvasRefs.current.drill
       if (drillCanvas) {
         drawPcbHoleElementsForLayer(drillCanvas, elements, ["drill"], transform)
+      }
+      // Draw board outline using circuit-to-canvas
+      const boardCanvas = canvasRefs.current.board
+      if (boardCanvas) {
+        drawPcbBoardElements(boardCanvas, elements, [], transform)
       }
     }
 
