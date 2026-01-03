@@ -11,6 +11,7 @@ import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
+import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
 
 interface Props {
@@ -166,7 +167,11 @@ export const CanvasPrimitiveRenderer = ({
           transform,
         )
       }
-
+      // Draw PCB holes
+      const drillCanvas = canvasRefs.current.drill
+      if (drillCanvas) {
+        drawPcbHoleElementsForLayer(drillCanvas, elements, ["drill"], transform)
+      }
       // Draw board outline using circuit-to-canvas
       const boardCanvas = canvasRefs.current.board
       if (boardCanvas) {

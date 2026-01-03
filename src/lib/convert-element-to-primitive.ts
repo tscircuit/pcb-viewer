@@ -7,8 +7,6 @@ import type {
   PcbNoteDimension,
   PcbSmtPadRotatedPill,
   PcbPanel,
-  PcbHole,
-  PcbHoleRotatedPill,
   PcbCutoutRect,
   PcbCutoutCircle,
   PcbCutoutPolygon,
@@ -160,73 +158,7 @@ export const convertElementToPrimitives = (
       }
       return []
     }
-    case "pcb_hole": {
-      if (element.hole_shape === "circle" || !element.hole_shape) {
-        const { x, y, hole_diameter } = element
 
-        return [
-          {
-            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "circle",
-            x,
-            y,
-            r: hole_diameter / 2,
-            layer: "drill",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-          },
-        ]
-      } else if (
-        element.hole_shape === "pill" ||
-        element.hole_shape === "rotated_pill"
-      ) {
-        const { x, y, hole_width, hole_height } = element
-
-        if (typeof hole_width !== "number" || typeof hole_height !== "number") {
-          return []
-        }
-
-        return [
-          {
-            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "pill",
-            x,
-            y,
-            w: hole_width,
-            h: hole_height,
-            layer: "drill",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            ccw_rotation: (element as PcbHoleRotatedPill).ccw_rotation,
-          },
-        ]
-      } else if (element.hole_shape === "rect") {
-        const { x, y, hole_width, hole_height } = element
-
-        if (typeof hole_width !== "number" || typeof hole_height !== "number") {
-          return []
-        }
-
-        return [
-          {
-            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "rect",
-            x,
-            y,
-            w: hole_width,
-            h: hole_height,
-            layer: "drill",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-          },
-        ]
-      }
-      // TODO oval hole
-      return []
-    }
     case "pcb_keepout": {
       if (element.shape === "circle") {
         const { center, radius } = element
