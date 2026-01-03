@@ -170,7 +170,7 @@ export const CanvasPrimitiveRenderer = ({
       // Draw PCB holes
       const drillCanvas = canvasRefs.current.drill
       if (drillCanvas) {
-        drawPcbHoleElementsForLayer(drillCanvas, elements, [], transform)
+        drawPcbHoleElementsForLayer(drillCanvas, elements, ["drill"], transform)
       }
     }
 
