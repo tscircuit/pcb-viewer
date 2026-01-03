@@ -1,3 +1,4 @@
+import { AnyCircuitElement } from "circuit-json"
 import { PCBViewer } from "../../PCBViewer"
 
 export const RotatedPillHole = () => {
@@ -22,7 +23,7 @@ export const RotatedPillHole = () => {
               pcb_hole_id: "pcb_hole_rotated_pill_0",
               x: -4,
               y: 0,
-              hole_shape: "pill",
+              hole_shape: "rotated_pill",
               hole_width: 2.5,
               hole_height: 5,
               ccw_rotation: 45,
@@ -37,7 +38,7 @@ export const RotatedPillHole = () => {
               hole_height: 5,
               ccw_rotation: 0,
             },
-          ] as any
+          ] as AnyCircuitElement[]
         }
       />
     </div>
