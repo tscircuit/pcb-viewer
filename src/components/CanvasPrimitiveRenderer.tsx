@@ -11,7 +11,7 @@ import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
-import { drawPcbHoleElementsForLayer } from "lib/draw-pcb-hole"
+import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 
 interface Props {
   primitives: Primitive[]
