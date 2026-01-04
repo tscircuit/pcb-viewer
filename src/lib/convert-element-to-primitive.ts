@@ -7,9 +7,6 @@ import type {
   PcbNoteDimension,
   PcbSmtPadRotatedPill,
   PcbPanel,
-  PcbCutoutRect,
-  PcbCutoutCircle,
-  PcbCutoutPolygon,
 } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
@@ -377,70 +374,6 @@ export const convertElementToPrimitives = (
         }
       }
       return []
-    }
-    case "pcb_cutout": {
-      switch (element.shape) {
-        case "rect": {
-          const cutoutElement = element as PcbCutoutRect
-          const corner_radius = cutoutElement.corner_radius
-          const ccw_rotation = cutoutElement.rotation ?? cutoutElement.rotation
-
-          return [
-            {
-              _pcb_drawing_object_id:
-                getNewPcbDrawingObjectId("pcb_cutout_rect"),
-              pcb_drawing_type: "rect",
-              x: cutoutElement.center.x,
-              y: cutoutElement.center.y,
-              w: cutoutElement.width,
-              h: cutoutElement.height,
-              layer: "drill",
-              roundness: corner_radius,
-              ccw_rotation,
-              _element: element,
-              _parent_pcb_component,
-              _parent_source_component,
-            },
-          ]
-        }
-        case "circle": {
-          const cutoutElement = element as PcbCutoutCircle
-
-          return [
-            {
-              _pcb_drawing_object_id:
-                getNewPcbDrawingObjectId("pcb_cutout_circle"),
-              pcb_drawing_type: "circle",
-              x: cutoutElement.center.x,
-              y: cutoutElement.center.y,
-              r: cutoutElement.radius,
-              layer: "drill",
-              _element: element,
-              _parent_pcb_component,
-              _parent_source_component,
-            },
-          ]
-        }
-        case "polygon": {
-          const cutoutElement = element as PcbCutoutPolygon
-
-          return [
-            {
-              _pcb_drawing_object_id:
-                getNewPcbDrawingObjectId("pcb_cutout_polygon"),
-              pcb_drawing_type: "polygon",
-              points: normalizePolygonPoints(cutoutElement.points),
-              layer: "drill",
-              _element: element,
-              _parent_pcb_component,
-              _parent_source_component,
-            },
-          ]
-        }
-        default:
-          console.warn(`Unsupported pcb_cutout shape: ${element.shape}`)
-          return []
-      }
     }
   }
 

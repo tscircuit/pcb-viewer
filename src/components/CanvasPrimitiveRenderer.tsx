@@ -13,6 +13,7 @@ import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
+import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
 
 interface Props {
   primitives: Primitive[]
@@ -43,6 +44,7 @@ const orderedLayers = [
   "inner5",
   "inner6",
   "drill",
+  "edge_cuts",
   "bottom_notes",
   "top_notes",
   "other",
@@ -176,6 +178,17 @@ export const CanvasPrimitiveRenderer = ({
       const boardCanvas = canvasRefs.current.board
       if (boardCanvas) {
         drawPcbBoardElements(boardCanvas, elements, [], transform)
+      }
+
+      // Draw PCB cutouts using circuit-to-canvas
+      const edgeCutsCanvas = canvasRefs.current.edge_cuts
+      if (edgeCutsCanvas) {
+        drawPcbCutoutElementsForLayer(
+          edgeCutsCanvas,
+          elements,
+          ["edge_cuts"],
+          transform,
+        )
       }
     }
 
