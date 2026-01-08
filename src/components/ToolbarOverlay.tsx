@@ -1,4 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from "react"
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useLayoutEffect,
+} from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
@@ -309,9 +315,44 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   useHotKey("7", hotKeyCallbacks["7"])
   useHotKey("8", hotKeyCallbacks["8"])
 
+  const hasCheckedInitialMousePosition = useRef(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    if (hasCheckedInitialMousePosition.current) return
+    hasCheckedInitialMousePosition.current = true
+
+    const checkMousePosition = (e: MouseEvent) => {
+      if (wrapperRef.current) {
+        const rect = wrapperRef.current.getBoundingClientRect()
+        const isInside =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+
+        if (isInside) {
+          setIsMouseOverContainer(true)
+        }
+      }
+      document.removeEventListener("mousemove", checkMousePosition)
+    }
+
+    document.addEventListener("mousemove", checkMousePosition)
+    return () => {
+      document.removeEventListener("mousemove", checkMousePosition)
+    }
+  }, [setIsMouseOverContainer])
+
   const handleMouseEnter = useCallback(() => {
     setIsMouseOverContainer(true)
   }, [setIsMouseOverContainer])
+
+  const handleMouseMove = useCallback(() => {
+    if (!isMouseOverContainer) {
+      setIsMouseOverContainer(true)
+    }
+  }, [isMouseOverContainer, setIsMouseOverContainer])
 
   const handleMouseLeave = useCallback(() => {
     setIsMouseOverContainer(false)
@@ -362,9 +403,11 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   }, [isViewMenuOpen])
   return (
     <div
+      ref={wrapperRef}
       style={{ position: "relative", zIndex: "999 !important" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
       {children}
       <div
