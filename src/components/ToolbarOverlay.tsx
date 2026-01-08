@@ -279,6 +279,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
   const processedLayers = availableLayers
 
+  const hasCheckedInitialMousePosition = useRef(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
   const hotKeyCallbacks = {
     "1": availableLayers[0]
       ? () => selectLayer(availableLayers[0] as LayerRef)
@@ -306,17 +309,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       : () => {},
   }
 
-  useHotKey("1", hotKeyCallbacks["1"])
-  useHotKey("2", hotKeyCallbacks["2"])
-  useHotKey("3", hotKeyCallbacks["3"])
-  useHotKey("4", hotKeyCallbacks["4"])
-  useHotKey("5", hotKeyCallbacks["5"])
-  useHotKey("6", hotKeyCallbacks["6"])
-  useHotKey("7", hotKeyCallbacks["7"])
-  useHotKey("8", hotKeyCallbacks["8"])
-
-  const hasCheckedInitialMousePosition = useRef(false)
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  useHotKey("1", hotKeyCallbacks["1"], wrapperRef)
+  useHotKey("2", hotKeyCallbacks["2"], wrapperRef)
+  useHotKey("3", hotKeyCallbacks["3"], wrapperRef)
+  useHotKey("4", hotKeyCallbacks["4"], wrapperRef)
+  useHotKey("5", hotKeyCallbacks["5"], wrapperRef)
+  useHotKey("6", hotKeyCallbacks["6"], wrapperRef)
+  useHotKey("7", hotKeyCallbacks["7"], wrapperRef)
+  useHotKey("8", hotKeyCallbacks["8"], wrapperRef)
 
   useLayoutEffect(() => {
     if (hasCheckedInitialMousePosition.current) return

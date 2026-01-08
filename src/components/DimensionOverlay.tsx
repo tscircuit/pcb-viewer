@@ -232,8 +232,7 @@ export const DimensionOverlay = ({
     const down = (e: KeyboardEvent) => {
       const containerHasFocus =
         containerRef.current?.contains(document.activeElement) ||
-        document.activeElement === containerRef.current ||
-        document.activeElement?.closest("[data-pcb-viewer]") !== null
+        document.activeElement === containerRef.current
       if (!isMouseOverContainer && !containerHasFocus) return
 
       if (e.key === "d") {

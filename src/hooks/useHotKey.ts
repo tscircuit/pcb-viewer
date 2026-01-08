@@ -1,7 +1,11 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, type RefObject } from "react"
 import { useGlobalStore } from "../global-store"
 
-export const useHotKey = (key: string, onUse: () => void) => {
+export const useHotKey = (
+  key: string,
+  onUse: () => void,
+  containerRef?: RefObject<HTMLElement | null>,
+) => {
   const isMouseOverContainer = useGlobalStore(
     (s) => s.is_mouse_over_container,
   ) as boolean
@@ -29,11 +33,12 @@ export const useHotKey = (key: string, onUse: () => void) => {
       const metaRequired = keyParts.includes("meta")
       const mainKey = keyParts[keyParts.length - 1]
 
-      const activeElement = document.activeElement
-      const isInsidePcbViewer =
-        activeElement?.closest("[data-pcb-viewer]") !== null
+      const containerHasFocus = containerRef?.current
+        ? containerRef.current.contains(document.activeElement) ||
+          document.activeElement === containerRef.current
+        : false
 
-      const shouldTrigger = isMouseOverContainerRef.current || isInsidePcbViewer
+      const shouldTrigger = isMouseOverContainerRef.current || containerHasFocus
 
       if (
         shouldTrigger &&
