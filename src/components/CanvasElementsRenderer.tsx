@@ -209,6 +209,9 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           width={props.width}
                           height={props.height}
                           grid={props.grid}
+                          hoveredDrawingObjectIds={
+                            hoverState.drawingObjectIdsWithMouseOver
+                          }
                         />
                       </WarningGraphicsOverlay>
                     </DebugGraphicsOverlay>
