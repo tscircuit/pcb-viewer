@@ -24,7 +24,6 @@ interface Props {
   grid?: GridConfig
   width?: number
   height?: number
-  hoveredDrawingObjectIds?: Set<string>
 }
 
 const orderedLayers = [
@@ -59,7 +58,6 @@ export const CanvasPrimitiveRenderer = ({
   grid,
   width = 500,
   height = 500,
-  hoveredDrawingObjectIds,
 }: Props) => {
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
@@ -109,19 +107,6 @@ export const CanvasPrimitiveRenderer = ({
         drawPlatedHolePads(bottomCanvas, elements, ["bottom_copper"], transform)
       }
 
-      // Calculate hovered SMT pad elements for color lightening
-      const hoveredSmtPadElementIds = new Set<string>()
-      if (hoveredDrawingObjectIds) {
-        for (const primitive of primitives) {
-          if (
-            hoveredDrawingObjectIds.has(primitive._pcb_drawing_object_id) &&
-            primitive._element?.type === "pcb_smtpad"
-          ) {
-            hoveredSmtPadElementIds.add(primitive._element.pcb_smtpad_id)
-          }
-        }
-      }
-
       // Draw SMT pads using circuit-to-canvas (on copper layers)
       if (topCanvas) {
         drawPcbSmtPadElementsForLayer(
@@ -129,7 +114,7 @@ export const CanvasPrimitiveRenderer = ({
           elements,
           ["top_copper"],
           transform,
-          hoveredSmtPadElementIds,
+          primitives,
         )
       }
 
@@ -139,7 +124,7 @@ export const CanvasPrimitiveRenderer = ({
           elements,
           ["bottom_copper"],
           transform,
-          hoveredSmtPadElementIds,
+          primitives,
         )
       }
 

@@ -8,7 +8,7 @@ import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
 import color from "color"
 
-// Create color map with lighter copper colors for hover effect
+// Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
   ...DEFAULT_PCB_COLOR_MAP,
   copper: {
@@ -27,40 +27,53 @@ export function drawPcbSmtPadElementsForLayer(
   elements: AnyCircuitElement[],
   layers: PcbRenderLayer[],
   realToCanvasMat: Matrix,
-  hoveredElementIds?: Set<string>,
+  primitives?: any[],
 ) {
-  const smtPadElements = elements.filter(isPcbSmtPad)
+  // Filter SMT pads to only those on the specified layers
+  const smtPadElements = elements.filter(isPcbSmtPad).filter((element) => {
+    const elementLayer = element.layer
+    return layers.some((layer) => {
+      if (layer === "top_copper" && elementLayer === "top") return true
+      if (layer === "bottom_copper" && elementLayer === "bottom") return true
+      return false
+    })
+  })
 
   if (smtPadElements.length === 0) return
 
-  // Draw non-hovered SMT pads with default colors
-  if (!hoveredElementIds || hoveredElementIds.size === 0) {
-    const drawer = new CircuitToCanvasDrawer(canvas)
-    drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(smtPadElements, { layers })
-    return
+  // Find which SMT pad elements have highlighted primitives
+  const highlightedElementIds = new Set<string>()
+  if (primitives) {
+    for (const primitive of primitives) {
+      if (
+        (primitive.is_mouse_over || primitive.is_in_highlighted_net) &&
+        primitive._element?.type === "pcb_smtpad"
+      ) {
+        highlightedElementIds.add(primitive._element.pcb_smtpad_id)
+      }
+    }
   }
 
-  // Separate hovered and non-hovered elements
-  const hoveredElements = smtPadElements.filter((element) =>
-    hoveredElementIds.has(element.pcb_smtpad_id),
+  // Separate highlighted and non-highlighted elements
+  const highlightedElements = smtPadElements.filter((element) =>
+    highlightedElementIds.has(element.pcb_smtpad_id),
   )
-  const nonHoveredElements = smtPadElements.filter(
-    (element) => !hoveredElementIds.has((element as any).pcb_smtpad_id),
+  const nonHighlightedElements = smtPadElements.filter(
+    (element) => !highlightedElementIds.has(element.pcb_smtpad_id),
   )
 
-  // Draw non-hovered elements with default colors
-  if (nonHoveredElements.length > 0) {
+  // Draw non-highlighted elements with default colors
+  if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHoveredElements, { layers })
+    drawer.drawElements(nonHighlightedElements, { layers: [] })
   }
 
-  // Draw hovered elements with lighter colors
-  if (hoveredElements.length > 0) {
-    const hoverDrawer = new CircuitToCanvasDrawer(canvas)
-    hoverDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
-    hoverDrawer.realToCanvasMat = realToCanvasMat
-    hoverDrawer.drawElements(hoveredElements, { layers })
+  // Draw highlighted elements with lighter colors
+  if (highlightedElements.length > 0) {
+    const highlightDrawer = new CircuitToCanvasDrawer(canvas)
+    highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
+    highlightDrawer.realToCanvasMat = realToCanvasMat
+    highlightDrawer.drawElements(highlightedElements, { layers: [] })
   }
 }
