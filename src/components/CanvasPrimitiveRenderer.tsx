@@ -14,6 +14,7 @@ import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
 import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
+import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 
 interface Props {
   primitives: Primitive[]
@@ -85,9 +86,11 @@ export const CanvasPrimitiveRenderer = ({
     drawer.foregroundLayer = selectedLayer
 
     // Filter out solder mask primitives when solder mask is disabled
+    // Also filter out SMT pad primitives since they're drawn with circuit-to-canvas
     const filteredPrimitives = primitives
       .filter((p) => isShowingSolderMask || !p.layer?.includes("soldermask"))
       .filter((p) => p.layer !== "board")
+      .filter((p) => p._element?.type !== "pcb_smtpad")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -102,6 +105,27 @@ export const CanvasPrimitiveRenderer = ({
       const bottomCanvas = canvasRefs.current.bottom
       if (bottomCanvas) {
         drawPlatedHolePads(bottomCanvas, elements, ["bottom_copper"], transform)
+      }
+
+      // Draw SMT pads using circuit-to-canvas (on copper layers)
+      if (topCanvas) {
+        drawPcbSmtPadElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (bottomCanvas) {
+        drawPcbSmtPadElementsForLayer({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
       }
 
       // Draw top silkscreen
