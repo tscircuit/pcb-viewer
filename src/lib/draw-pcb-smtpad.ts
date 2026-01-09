@@ -22,13 +22,19 @@ export function isPcbSmtPad(element: AnyCircuitElement) {
   return element.type === "pcb_smtpad"
 }
 
-export function drawPcbSmtPadElementsForLayer(
-  canvas: HTMLCanvasElement,
-  elements: AnyCircuitElement[],
-  layers: PcbRenderLayer[],
-  realToCanvasMat: Matrix,
-  primitives?: any[],
-) {
+export function drawPcbSmtPadElementsForLayer({
+  canvas,
+  elements,
+  layers,
+  realToCanvasMat,
+  primitives,
+}: {
+  canvas: HTMLCanvasElement
+  elements: AnyCircuitElement[]
+  layers: PcbRenderLayer[]
+  realToCanvasMat: Matrix
+  primitives?: any[]
+}) {
   // Filter SMT pads to only those on the specified layers
   const smtPadElements = elements.filter(isPcbSmtPad).filter((element) => {
     const elementLayer = element.layer

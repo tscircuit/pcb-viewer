@@ -109,23 +109,23 @@ export const CanvasPrimitiveRenderer = ({
 
       // Draw SMT pads using circuit-to-canvas (on copper layers)
       if (topCanvas) {
-        drawPcbSmtPadElementsForLayer(
-          topCanvas,
+        drawPcbSmtPadElementsForLayer({
+          canvas: topCanvas,
           elements,
-          ["top_copper"],
-          transform,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
           primitives,
-        )
+        })
       }
 
       if (bottomCanvas) {
-        drawPcbSmtPadElementsForLayer(
-          bottomCanvas,
+        drawPcbSmtPadElementsForLayer({
+          canvas: bottomCanvas,
           elements,
-          ["bottom_copper"],
-          transform,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
           primitives,
-        )
+        })
       }
 
       // Draw top silkscreen
