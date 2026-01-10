@@ -87,12 +87,11 @@ export const CanvasPrimitiveRenderer = ({
     drawer.foregroundLayer = selectedLayer
 
     // Filter out solder mask primitives when solder mask is disabled
-    // Also filter out SMT pad and keepout primitives since they're drawn with circuit-to-canvas
+    // Also filter out SMT pad primitives since they're drawn with circuit-to-canvas
     const filteredPrimitives = primitives
       .filter((p) => isShowingSolderMask || !p.layer?.includes("soldermask"))
       .filter((p) => p.layer !== "board")
       .filter((p) => p._element?.type !== "pcb_smtpad")
-      .filter((p) => p._element?.type !== "pcb_keepout")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -219,76 +218,81 @@ export const CanvasPrimitiveRenderer = ({
 
       // Draw keepouts using circuit-to-canvas (on copper layers)
       if (topCanvas) {
-        drawPcbKeepoutElementsForLayer(topCanvas, elements, ["top"], transform)
+        drawPcbKeepoutElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top"],
+          realToCanvasMat: transform,
+        })
       }
 
       if (bottomCanvas) {
-        drawPcbKeepoutElementsForLayer(
-          bottomCanvas,
+        drawPcbKeepoutElementsForLayer({
+          canvas: bottomCanvas,
           elements,
-          ["bottom"],
-          transform,
-        )
+          layers: ["bottom"],
+          realToCanvasMat: transform,
+        })
       }
 
       const inner1Canvas = canvasRefs.current.inner1
       if (inner1Canvas) {
-        drawPcbKeepoutElementsForLayer(
-          inner1Canvas,
+        drawPcbKeepoutElementsForLayer({
+          canvas: inner1Canvas,
           elements,
-          ["inner1"],
-          transform,
-        )
+          layers: ["inner1"],
+          realToCanvasMat: transform,
+        })
       }
 
       const inner2Canvas = canvasRefs.current.inner2
       if (inner2Canvas) {
-        drawPcbKeepoutElementsForLayer(
-          inner2Canvas,
+        drawPcbKeepoutElementsForLayer({
+          canvas: inner2Canvas,
           elements,
-          ["inner2"],
-          transform,
-        )
+          layers: ["inner2"],
+          realToCanvasMat: transform,
+        })
       }
 
       const inner3Canvas = canvasRefs.current.inner3
       if (inner3Canvas) {
-        drawPcbKeepoutElementsForLayer(
-          inner3Canvas,
+        drawPcbKeepoutElementsForLayer({
+          canvas: inner3Canvas,
           elements,
-          ["inner3"],
-          transform,
-        )
+          layers: ["inner3"],
+          realToCanvasMat: transform,
+        })
       }
 
       const inner4Canvas = canvasRefs.current.inner4
       if (inner4Canvas) {
-        drawPcbKeepoutElementsForLayer(
-          inner4Canvas,
+        drawPcbKeepoutElementsForLayer({
+          canvas: inner4Canvas,
           elements,
-          ["inner4"],
-          transform,
-        )
+          layers: ["inner4"],
+          realToCanvasMat: transform,
+        })
       }
 
       const inner5Canvas = canvasRefs.current.inner5
       if (inner5Canvas) {
-        drawPcbKeepoutElementsForLayer(
-          inner5Canvas,
+        drawPcbKeepoutElementsForLayer({
+          canvas: inner5Canvas,
           elements,
-          ["inner5"],
-          transform,
-        )
+          layers: ["inner5"],
+          realToCanvasMat: transform,
+        })
       }
 
       const inner6Canvas = canvasRefs.current.inner6
       if (inner6Canvas) {
-        drawPcbKeepoutElementsForLayer(
-          inner6Canvas,
+        drawPcbKeepoutElementsForLayer({
+          canvas: inner6Canvas,
           elements,
-          ["inner6"],
-          transform,
-        )
+          layers: ["inner6"],
+          realToCanvasMat: transform,
+        })
       }
     }
 
