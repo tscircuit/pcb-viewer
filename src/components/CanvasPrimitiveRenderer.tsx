@@ -91,6 +91,7 @@ export const CanvasPrimitiveRenderer = ({
       .filter((p) => isShowingSolderMask || !p.layer?.includes("soldermask"))
       .filter((p) => p.layer !== "board")
       .filter((p) => p._element?.type !== "pcb_smtpad")
+      .filter((p) => p._element?.type !== "pcb_plated_hole")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -99,12 +100,24 @@ export const CanvasPrimitiveRenderer = ({
       // Draw plated holes using circuit-to-canvas (pads on copper layers, drills on drill layer)
       const topCanvas = canvasRefs.current.top
       if (topCanvas) {
-        drawPlatedHolePads(topCanvas, elements, ["top_copper"], transform)
+        drawPlatedHolePads({
+          canvas: topCanvas,
+          elements,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
       }
 
       const bottomCanvas = canvasRefs.current.bottom
       if (bottomCanvas) {
-        drawPlatedHolePads(bottomCanvas, elements, ["bottom_copper"], transform)
+        drawPlatedHolePads({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
       }
 
       // Draw SMT pads using circuit-to-canvas (on copper layers)

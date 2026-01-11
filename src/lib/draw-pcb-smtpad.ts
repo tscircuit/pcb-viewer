@@ -7,6 +7,7 @@ import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
 import color from "color"
+import { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
@@ -33,7 +34,7 @@ export function drawPcbSmtPadElementsForLayer({
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
-  primitives?: any[]
+  primitives?: Primitive[]
 }) {
   // Filter SMT pads to only those on the specified layers
   const smtPadElements = elements.filter(isPcbSmtPad).filter((element) => {
