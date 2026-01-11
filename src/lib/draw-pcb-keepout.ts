@@ -20,12 +20,7 @@ export function drawPcbKeepoutElementsForLayer({
   realToCanvasMat: Matrix
 }) {
   // Filter keepouts to only those on the specified layers
-  const keepoutElements = elements.filter(isPcbKeepout).filter((element) => {
-    const keepoutLayers = (element as any).layer
-    if (!Array.isArray(keepoutLayers)) return false
-    // Check if any of the target layers match any of the keepout's layers
-    return layers.some((layer) => keepoutLayers.includes(layer))
-  })
+  const keepoutElements = elements.filter(isPcbKeepout)
 
   if (keepoutElements.length === 0) return
 
