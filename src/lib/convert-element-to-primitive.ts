@@ -316,6 +316,351 @@ export const convertElementToPrimitives = (
       return primitives
     }
 
+    case "pcb_plated_hole": {
+      if (element.shape === "circle") {
+        const { x, y, hole_diameter, outer_diameter } = element
+
+        return [
+          {
+            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "circle",
+            x,
+            y,
+            r: outer_diameter / 2,
+            // TODO support layer on pcb_plated_hole
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          },
+          {
+            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "circle",
+            x,
+            y,
+            r: hole_diameter / 2,
+            // TODO support layer on pcb_plated_hole
+            layer: "drill",
+            _element: element,
+
+            // double highlights are annoying
+            // _element: element,
+          },
+        ]
+      } else if (element.shape === "oval") {
+        const { x, y, outer_height, outer_width, hole_height, hole_width } =
+          element
+
+        return [
+          {
+            _pcb_drawing_object_id: `oval_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "oval",
+            x,
+            y,
+            rX: outer_width / 2,
+            rY: outer_height / 2,
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+          },
+          {
+            _pcb_drawing_object_id: `oval_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            pcb_drawing_type: "oval",
+            x,
+            y,
+            rX: hole_width / 2,
+            rY: hole_height / 2,
+            layer: "drill",
+          },
+        ]
+      } else if (element.shape === "pill") {
+        const { x, y, outer_height, outer_width, hole_height, hole_width } =
+          element
+
+        return [
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: outer_width,
+            h: outer_height,
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: element.ccw_rotation,
+          },
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill",
+            ccw_rotation: element.ccw_rotation,
+          },
+        ]
+      } else if (element.shape === "circular_hole_with_rect_pad") {
+        const {
+          x,
+          y,
+          hole_diameter,
+          rect_pad_width,
+          rect_pad_height,
+          rect_border_radius,
+        } = element
+        const hole_offset_x = (element as any).hole_offset_x ?? 0
+        const hole_offset_y = (element as any).hole_offset_y ?? 0
+
+        return [
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "bottom",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            pcb_drawing_type: "circle",
+            x: x + hole_offset_x,
+            y: y + hole_offset_y,
+            r: hole_diameter / 2,
+            layer: "drill",
+          },
+        ]
+      } else if (element.shape === "pill_hole_with_rect_pad") {
+        const {
+          x,
+          y,
+          hole_width,
+          hole_height,
+          rect_pad_width,
+          rect_pad_height,
+          rect_border_radius,
+        } = element
+
+        return [
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "bottom",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill",
+          },
+        ]
+      } else if (element.shape === "rotated_pill_hole_with_rect_pad") {
+        const {
+          x,
+          y,
+          hole_width,
+          hole_height,
+          hole_ccw_rotation,
+          rect_pad_width,
+          rect_pad_height,
+          rect_ccw_rotation,
+          rect_border_radius,
+        } = element
+
+        return [
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "top",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: rect_ccw_rotation,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "rect",
+            x,
+            y,
+            w: rect_pad_width,
+            h: rect_pad_height,
+            layer: "bottom",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            _source_port,
+            ccw_rotation: rect_ccw_rotation,
+            roundness: rect_border_radius,
+          },
+          {
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            pcb_drawing_type: "pill",
+            x,
+            y,
+            w: hole_width,
+            h: hole_height,
+            layer: "drill",
+            ccw_rotation: hole_ccw_rotation,
+          },
+        ]
+      } else if (element.shape === "hole_with_polygon_pad") {
+        const {
+          x,
+          y,
+          pad_outline,
+          hole_shape,
+          hole_diameter,
+          hole_width,
+          hole_height,
+          layers,
+        } = element as any
+
+        const hole_offset_x = distance.parse(
+          (element as any).hole_offset_x ?? 0,
+        )
+        const hole_offset_y = distance.parse(
+          (element as any).hole_offset_y ?? 0,
+        )
+
+        const pcb_outline = pad_outline
+
+        const padPrimitives: Primitive[] = []
+        if (pcb_outline && Array.isArray(pcb_outline)) {
+          const translatedPoints = normalizePolygonPoints(pcb_outline).map(
+            (p) => ({ x: p.x + x, y: p.y + y }),
+          )
+
+          for (const layer of layers || ["top", "bottom"]) {
+            padPrimitives.push({
+              _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+              pcb_drawing_type: "polygon",
+              points: translatedPoints,
+              layer: layer,
+              _element: element,
+              _parent_pcb_component,
+              _parent_source_component,
+              _source_port,
+            })
+          }
+        }
+
+        const holeCenter = {
+          x: x + hole_offset_x,
+          y: y + hole_offset_y,
+        }
+
+        const holePrimitives: Primitive[] = []
+
+        if (hole_shape === "circle") {
+          holePrimitives.push({
+            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "circle",
+            x: holeCenter.x,
+            y: holeCenter.y,
+            r: (hole_diameter ?? 0) / 2,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+          })
+        } else if (hole_shape === "oval") {
+          holePrimitives.push({
+            _pcb_drawing_object_id: `oval_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "oval",
+            x: holeCenter.x,
+            y: holeCenter.y,
+            rX: (hole_width ?? 0) / 2,
+            rY: (hole_height ?? 0) / 2,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+          })
+        } else if (hole_shape === "pill" || hole_shape === "rotated_pill") {
+          holePrimitives.push({
+            _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
+            pcb_drawing_type: "pill",
+            x: holeCenter.x,
+            y: holeCenter.y,
+            w: hole_width ?? 0,
+            h: hole_height ?? 0,
+            layer: "drill",
+            _element: element,
+            _parent_pcb_component,
+            _parent_source_component,
+            ccw_rotation: (element as any).ccw_rotation,
+          })
+        }
+
+        return [...padPrimitives, ...holePrimitives]
+      } else {
+        return []
+      }
+    }
+
     case "pcb_copper_text": {
       return convertPcbCopperTextToPrimitive(element, {
         _parent_pcb_component,
