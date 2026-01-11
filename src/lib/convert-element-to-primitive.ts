@@ -416,9 +416,11 @@ export const convertElementToPrimitives = (
           rect_pad_width,
           rect_pad_height,
           rect_border_radius,
+          hole_offset_x,
+          hole_offset_y,
         } = element
-        const hole_offset_x = (element as any).hole_offset_x ?? 0
-        const hole_offset_y = (element as any).hole_offset_y ?? 0
+        const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0)
+        const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0)
 
         return [
           {
@@ -453,8 +455,8 @@ export const convertElementToPrimitives = (
             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
             _element: element,
             pcb_drawing_type: "circle",
-            x: x + hole_offset_x,
-            y: y + hole_offset_y,
+            x: x + parsed_hole_offset_x,
+            y: y + parsed_hole_offset_y,
             r: hole_diameter / 2,
             layer: "drill",
           },
@@ -576,14 +578,12 @@ export const convertElementToPrimitives = (
           hole_width,
           hole_height,
           layers,
-        } = element as any
+          hole_offset_x,
+          hole_offset_y,
+        } = element
 
-        const hole_offset_x = distance.parse(
-          (element as any).hole_offset_x ?? 0,
-        )
-        const hole_offset_y = distance.parse(
-          (element as any).hole_offset_y ?? 0,
-        )
+        const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0)
+        const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0)
 
         const pcb_outline = pad_outline
 
@@ -608,8 +608,8 @@ export const convertElementToPrimitives = (
         }
 
         const holeCenter = {
-          x: x + hole_offset_x,
-          y: y + hole_offset_y,
+          x: x + parsed_hole_offset_x,
+          y: y + parsed_hole_offset_y,
         }
 
         const holePrimitives: Primitive[] = []

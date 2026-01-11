@@ -7,6 +7,7 @@ import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
 import color from "color"
+import { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
@@ -33,7 +34,7 @@ export function drawPlatedHolePads({
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
-  primitives?: any[]
+  primitives?: Primitive[]
 }) {
   const platedHoleElements = elements.filter(isPlatedHole)
 
@@ -54,11 +55,10 @@ export function drawPlatedHolePads({
 
   // Separate highlighted and non-highlighted elements
   const highlightedElements = platedHoleElements.filter((element) =>
-    highlightedElementIds.has((element as any).pcb_plated_hole_id),
+    highlightedElementIds.has(element.pcb_plated_hole_id),
   )
   const nonHighlightedElements = platedHoleElements.filter(
-    (element) =>
-      !highlightedElementIds.has((element as any).pcb_plated_hole_id),
+    (element) => !highlightedElementIds.has(element.pcb_plated_hole_id),
   )
 
   // Draw non-highlighted elements with default colors
