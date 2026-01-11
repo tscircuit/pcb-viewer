@@ -1,17 +1,8 @@
-import {
-  DEFAULT_PCB_COLOR_MAP,
-  type PcbColorMap,
-  CircuitToCanvasDrawer,
-} from "circuit-to-canvas"
+import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import type { AnyCircuitElement } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import colors from "./colors"
 
 // Color map for keepouts - uses background color for all layers
-const KEEPOUT_COLOR_MAP: PcbColorMap = {
-  ...DEFAULT_PCB_COLOR_MAP,
-  keepout: colors.board.background,
-}
 
 export function isPcbKeepout(element: AnyCircuitElement) {
   return element.type === "pcb_keepout"
@@ -39,7 +30,6 @@ export function drawPcbKeepoutElementsForLayer({
   if (keepoutElements.length === 0) return
 
   const drawer = new CircuitToCanvasDrawer(canvas)
-  drawer.configure({ colorOverrides: KEEPOUT_COLOR_MAP })
   drawer.realToCanvasMat = realToCanvasMat
 
   drawer.drawElements(keepoutElements, { layers: [] })

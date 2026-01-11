@@ -270,66 +270,6 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
         })
       }
-
-      const inner1Canvas = canvasRefs.current.inner1
-      if (inner1Canvas) {
-        drawPcbKeepoutElementsForLayer({
-          canvas: inner1Canvas,
-          elements,
-          layers: ["inner1"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      const inner2Canvas = canvasRefs.current.inner2
-      if (inner2Canvas) {
-        drawPcbKeepoutElementsForLayer({
-          canvas: inner2Canvas,
-          elements,
-          layers: ["inner2"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      const inner3Canvas = canvasRefs.current.inner3
-      if (inner3Canvas) {
-        drawPcbKeepoutElementsForLayer({
-          canvas: inner3Canvas,
-          elements,
-          layers: ["inner3"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      const inner4Canvas = canvasRefs.current.inner4
-      if (inner4Canvas) {
-        drawPcbKeepoutElementsForLayer({
-          canvas: inner4Canvas,
-          elements,
-          layers: ["inner4"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      const inner5Canvas = canvasRefs.current.inner5
-      if (inner5Canvas) {
-        drawPcbKeepoutElementsForLayer({
-          canvas: inner5Canvas,
-          elements,
-          layers: ["inner5"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      const inner6Canvas = canvasRefs.current.inner6
-      if (inner6Canvas) {
-        drawPcbKeepoutElementsForLayer({
-          canvas: inner6Canvas,
-          elements,
-          layers: ["inner6"],
-          realToCanvasMat: transform,
-        })
-      }
     }
 
     drawer.orderAndFadeLayers()
