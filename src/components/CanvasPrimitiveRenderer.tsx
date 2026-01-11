@@ -15,6 +15,7 @@ import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
 import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
+import { drawPcbViaElementsForLayer } from "lib/draw-via"
 
 interface Props {
   primitives: Primitive[]
@@ -92,6 +93,7 @@ export const CanvasPrimitiveRenderer = ({
       .filter((p) => p.layer !== "board")
       .filter((p) => p._element?.type !== "pcb_smtpad")
       .filter((p) => p._element?.type !== "pcb_plated_hole")
+      .filter((p) => p._element?.type !== "pcb_via")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -133,6 +135,27 @@ export const CanvasPrimitiveRenderer = ({
 
       if (bottomCanvas) {
         drawPcbSmtPadElementsForLayer({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      // Draw vias using circuit-to-canvas (on copper layers)
+      if (topCanvas) {
+        drawPcbViaElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (bottomCanvas) {
+        drawPcbViaElementsForLayer({
           canvas: bottomCanvas,
           elements,
           layers: ["bottom_copper"],
