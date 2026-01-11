@@ -156,45 +156,6 @@ export const convertElementToPrimitives = (
       return []
     }
 
-    case "pcb_keepout": {
-      if (element.shape === "circle") {
-        const { center, radius } = element
-
-        return [
-          {
-            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "circle",
-            x: center.x,
-            y: center.y,
-            r: radius,
-            layer: "top",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            mesh_fill: true,
-          },
-        ]
-      } else if (element.shape === "rect") {
-        const { center, width, height } = element
-
-        return [
-          {
-            _pcb_drawing_object_id: `rect_${globalPcbDrawingObjectCount++}`,
-            pcb_drawing_type: "rect",
-            x: center.x,
-            y: center.y,
-            w: width,
-            h: height,
-            layer: "top",
-            _element: element,
-            _parent_pcb_component,
-            _parent_source_component,
-            mesh_fill: true,
-          },
-        ]
-      }
-      break
-    }
     case "pcb_trace": {
       const primitives: Primitive[] = []
 

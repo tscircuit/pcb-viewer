@@ -6,7 +6,7 @@ import { drawPrimitives } from "lib/draw-primitives"
 import { Drawer } from "lib/Drawer"
 import type { GridConfig, Primitive } from "lib/types"
 import { useGlobalStore } from "../global-store"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
@@ -15,6 +15,7 @@ import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
 import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
+import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 
 interface Props {
@@ -249,6 +250,25 @@ export const CanvasPrimitiveRenderer = ({
           ["edge_cuts"],
           transform,
         )
+      }
+
+      // Draw keepouts using circuit-to-canvas (on copper layers)
+      if (topCanvas) {
+        drawPcbKeepoutElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top"],
+          realToCanvasMat: transform,
+        })
+      }
+
+      if (bottomCanvas) {
+        drawPcbKeepoutElementsForLayer({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom"],
+          realToCanvasMat: transform,
+        })
       }
     }
 
