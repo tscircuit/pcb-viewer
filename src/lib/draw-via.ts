@@ -19,11 +19,11 @@ const HOVER_COLOR_MAP: PcbColorMap = {
   },
 }
 
-export function isPcbSmtPad(element: AnyCircuitElement) {
-  return element.type === "pcb_smtpad"
+export function isPcbVia(element: AnyCircuitElement) {
+  return element.type === "pcb_via"
 }
 
-export function drawPcbSmtPadElementsForLayer({
+export function drawPcbViaElementsForLayer({
   canvas,
   elements,
   layers,
@@ -36,44 +36,40 @@ export function drawPcbSmtPadElementsForLayer({
   realToCanvasMat: Matrix
   primitives?: Primitive[]
 }) {
-  // Filter SMT pads to only those on the specified layers
-  const smtPadElements = elements.filter(isPcbSmtPad).filter((element) => {
-    const elementLayer = element.layer
-    return layers.some((layer) => {
-      if (layer === "top_copper" && elementLayer === "top") return true
-      if (layer === "bottom_copper" && elementLayer === "bottom") return true
-      return false
-    })
+  // Filter vias to only those on the specified layers
+  const viaElements = elements.filter(isPcbVia).filter((element) => {
+    // Vias are typically drawn on copper layers
+    return layers.some((layer) => layer.includes("copper"))
   })
 
-  if (smtPadElements.length === 0) return
+  if (viaElements.length === 0) return
 
-  // Find which SMT pad elements have highlighted primitives
+  // Find which via elements have highlighted primitives
   const highlightedElementIds = new Set<string>()
   if (primitives) {
     for (const primitive of primitives) {
       if (
         (primitive.is_mouse_over || primitive.is_in_highlighted_net) &&
-        primitive._element?.type === "pcb_smtpad"
+        primitive._element?.type === "pcb_via"
       ) {
-        highlightedElementIds.add(primitive._element.pcb_smtpad_id)
+        highlightedElementIds.add(primitive._element.pcb_via_id)
       }
     }
   }
 
   // Separate highlighted and non-highlighted elements
-  const highlightedElements = smtPadElements.filter((element) =>
-    highlightedElementIds.has(element.pcb_smtpad_id),
+  const highlightedElements = viaElements.filter((element) =>
+    highlightedElementIds.has(element.pcb_via_id),
   )
-  const nonHighlightedElements = smtPadElements.filter(
-    (element) => !highlightedElementIds.has(element.pcb_smtpad_id),
+  const nonHighlightedElements = viaElements.filter(
+    (element) => !highlightedElementIds.has(element.pcb_via_id),
   )
 
   // Draw non-highlighted elements with default colors
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, { layers: [] })
+    drawer.drawElements(nonHighlightedElements, { layers })
   }
 
   // Draw highlighted elements with lighter colors
@@ -81,6 +77,6 @@ export function drawPcbSmtPadElementsForLayer({
     const highlightDrawer = new CircuitToCanvasDrawer(canvas)
     highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
     highlightDrawer.realToCanvasMat = realToCanvasMat
-    highlightDrawer.drawElements(highlightedElements, { layers: [] })
+    highlightDrawer.drawElements(highlightedElements, { layers })
   }
 }
