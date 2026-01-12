@@ -64,8 +64,7 @@ export const convertElementToPrimitives = (
     "source_port_id" in element
       ? element.source_port_id
       : "pcb_port_id" in element
-        ? su(allElements as any).pcb_port.get(element.pcb_port_id!)
-            ?.source_port_id
+        ? su(allElements).pcb_port.get(element.pcb_port_id!)?.source_port_id
         : undefined
 
   const _source_port = _source_port_id
@@ -612,7 +611,7 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
-            ccw_rotation: (element as any).ccw_rotation,
+            ccw_rotation: element.ccw_rotation,
           })
         }
 
@@ -629,7 +628,7 @@ export const convertElementToPrimitives = (
       })
     }
     case "pcb_copper_pour": {
-      const pour = element as any
+      const pour = element
 
       switch (pour.shape) {
         case "rect": {
