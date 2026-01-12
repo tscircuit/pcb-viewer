@@ -8,7 +8,7 @@
         "@tscircuit/alphabet": "^0.0.9",
         "@tscircuit/math-utils": "^0.0.29",
         "@vitejs/plugin-react": "^5.0.2",
-        "circuit-json": "^0.0.353",
+        "circuit-json": "^0.0.354",
         "circuit-to-canvas": "^0.0.47",
         "circuit-to-svg": "^0.0.271",
         "color": "^4.2.3",
@@ -625,7 +625,7 @@
 
     "chownr": ["chownr@1.1.4", "", {}, "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="],
 
-    "circuit-json": ["circuit-json@0.0.353", "", {}, "sha512-FBkuZthf/X2XL7xTujUAp9YAfW0vWDwjjnys/lJl9qmk+t7bvmUtlLqOuZtQWVj4KdMhRCnITDgfoitIMqQwQg=="],
+    "circuit-json": ["circuit-json@0.0.354", "", {}, "sha512-3bKbT1xRo6LDLWjqsA2F+KDDT4fj83C+abnBSUCEtjjJ5aPwcr7JyGozxC0wtCgL709raENwgdraVi4Achy6RA=="],
 
     "circuit-json-to-bpc": ["circuit-json-to-bpc@0.0.13", "", { "peerDependencies": { "bpc-graph": "*", "circuit-json": "*", "typescript": "^5" } }, "sha512-3wSMtPa6tJkiBQN4tsm7f0Mb7Wp90X2c8dNbULoDVE4mGGoFqP1DXqBlyvvZZl+4SjqznzQQ0EioLe2SCQTOcg=="],
 

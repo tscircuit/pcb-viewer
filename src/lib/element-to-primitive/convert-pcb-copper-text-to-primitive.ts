@@ -1,5 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
 import { distance } from "circuit-json"
+import type { PcbCopperText } from "circuit-json"
 import type { Primitive } from "../types"
 import { getNewPcbDrawingObjectId } from "../convert-element-to-primitive"
 
@@ -14,7 +15,7 @@ export const convertPcbCopperTextToPrimitive = (
   metadata: MetaData,
 ): (Primitive & MetaData)[] => {
   const { _parent_pcb_component, _parent_source_component } = metadata
-  const copperText = element as any
+  const copperText = element as PcbCopperText
 
   const fontSize =
     typeof copperText.font_size === "string"
