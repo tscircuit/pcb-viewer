@@ -279,8 +279,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
   const processedLayers = availableLayers
 
-  const hasCheckedInitialMousePosition = useRef(false)
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  const hasRunInitialMouseCheck = useRef(false)
+  const hotkeyBoundaryRef = useRef<HTMLDivElement>(null)
 
   const hotKeyCallbacks = {
     "1": availableLayers[0]
@@ -309,22 +309,22 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       : () => {},
   }
 
-  useHotKey("1", hotKeyCallbacks["1"], wrapperRef)
-  useHotKey("2", hotKeyCallbacks["2"], wrapperRef)
-  useHotKey("3", hotKeyCallbacks["3"], wrapperRef)
-  useHotKey("4", hotKeyCallbacks["4"], wrapperRef)
-  useHotKey("5", hotKeyCallbacks["5"], wrapperRef)
-  useHotKey("6", hotKeyCallbacks["6"], wrapperRef)
-  useHotKey("7", hotKeyCallbacks["7"], wrapperRef)
-  useHotKey("8", hotKeyCallbacks["8"], wrapperRef)
+  useHotKey("1", hotKeyCallbacks["1"], hotkeyBoundaryRef)
+  useHotKey("2", hotKeyCallbacks["2"], hotkeyBoundaryRef)
+  useHotKey("3", hotKeyCallbacks["3"], hotkeyBoundaryRef)
+  useHotKey("4", hotKeyCallbacks["4"], hotkeyBoundaryRef)
+  useHotKey("5", hotKeyCallbacks["5"], hotkeyBoundaryRef)
+  useHotKey("6", hotKeyCallbacks["6"], hotkeyBoundaryRef)
+  useHotKey("7", hotKeyCallbacks["7"], hotkeyBoundaryRef)
+  useHotKey("8", hotKeyCallbacks["8"], hotkeyBoundaryRef)
 
   useLayoutEffect(() => {
-    if (hasCheckedInitialMousePosition.current) return
-    hasCheckedInitialMousePosition.current = true
+    if (hasRunInitialMouseCheck.current) return
+    hasRunInitialMouseCheck.current = true
 
     const checkMousePosition = (e: MouseEvent) => {
-      if (wrapperRef.current) {
-        const rect = wrapperRef.current.getBoundingClientRect()
+      if (hotkeyBoundaryRef.current) {
+        const rect = hotkeyBoundaryRef.current.getBoundingClientRect()
         const isInside =
           e.clientX >= rect.left &&
           e.clientX <= rect.right &&
@@ -403,7 +403,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   }, [isViewMenuOpen])
   return (
     <div
-      ref={wrapperRef}
+      ref={hotkeyBoundaryRef}
       style={{ position: "relative", zIndex: "999 !important" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
