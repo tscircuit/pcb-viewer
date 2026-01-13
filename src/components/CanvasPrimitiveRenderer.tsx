@@ -17,6 +17,7 @@ import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
+import { drawCopperPourElementsForLayer } from "lib/draw-copper-pour"
 
 interface Props {
   primitives: Primitive[]
@@ -162,6 +163,25 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["bottom_copper"],
           realToCanvasMat: transform,
           primitives,
+        })
+      }
+
+      // Draw copper pour elements using circuit-to-canvas (on copper layers)
+      if (topCanvas) {
+        drawCopperPourElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
+        })
+      }
+
+      if (bottomCanvas) {
+        drawCopperPourElementsForLayer({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
         })
       }
 
