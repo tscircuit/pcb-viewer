@@ -1,4 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from "react"
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useLayoutEffect,
+} from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
@@ -273,6 +279,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
   const processedLayers = availableLayers
 
+  const hasRunInitialMouseCheck = useRef(false)
+  const hotkeyBoundaryRef = useRef<HTMLDivElement>(null)
+
   const hotKeyCallbacks = {
     "1": availableLayers[0]
       ? () => selectLayer(availableLayers[0] as LayerRef)
@@ -300,18 +309,50 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       : () => {},
   }
 
-  useHotKey("1", hotKeyCallbacks["1"])
-  useHotKey("2", hotKeyCallbacks["2"])
-  useHotKey("3", hotKeyCallbacks["3"])
-  useHotKey("4", hotKeyCallbacks["4"])
-  useHotKey("5", hotKeyCallbacks["5"])
-  useHotKey("6", hotKeyCallbacks["6"])
-  useHotKey("7", hotKeyCallbacks["7"])
-  useHotKey("8", hotKeyCallbacks["8"])
+  useHotKey("1", hotKeyCallbacks["1"], hotkeyBoundaryRef)
+  useHotKey("2", hotKeyCallbacks["2"], hotkeyBoundaryRef)
+  useHotKey("3", hotKeyCallbacks["3"], hotkeyBoundaryRef)
+  useHotKey("4", hotKeyCallbacks["4"], hotkeyBoundaryRef)
+  useHotKey("5", hotKeyCallbacks["5"], hotkeyBoundaryRef)
+  useHotKey("6", hotKeyCallbacks["6"], hotkeyBoundaryRef)
+  useHotKey("7", hotKeyCallbacks["7"], hotkeyBoundaryRef)
+  useHotKey("8", hotKeyCallbacks["8"], hotkeyBoundaryRef)
+
+  useLayoutEffect(() => {
+    if (hasRunInitialMouseCheck.current) return
+    hasRunInitialMouseCheck.current = true
+
+    const checkMousePosition = (e: MouseEvent) => {
+      if (hotkeyBoundaryRef.current) {
+        const rect = hotkeyBoundaryRef.current.getBoundingClientRect()
+        const isInside =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+
+        if (isInside) {
+          setIsMouseOverContainer(true)
+        }
+      }
+      document.removeEventListener("mousemove", checkMousePosition)
+    }
+
+    document.addEventListener("mousemove", checkMousePosition)
+    return () => {
+      document.removeEventListener("mousemove", checkMousePosition)
+    }
+  }, [setIsMouseOverContainer])
 
   const handleMouseEnter = useCallback(() => {
     setIsMouseOverContainer(true)
   }, [setIsMouseOverContainer])
+
+  const handleMouseMove = useCallback(() => {
+    if (!isMouseOverContainer) {
+      setIsMouseOverContainer(true)
+    }
+  }, [isMouseOverContainer, setIsMouseOverContainer])
 
   const handleMouseLeave = useCallback(() => {
     setIsMouseOverContainer(false)
@@ -362,9 +403,11 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   }, [isViewMenuOpen])
   return (
     <div
+      ref={hotkeyBoundaryRef}
       style={{ position: "relative", zIndex: "999 !important" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
       {children}
       <div

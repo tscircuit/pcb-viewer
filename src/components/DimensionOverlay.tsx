@@ -11,6 +11,7 @@ import {
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
 import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
+import { useGlobalStore } from "../global-store"
 
 interface Props {
   transform?: Matrix
@@ -62,6 +63,8 @@ export const DimensionOverlay = ({
     start: null as string | null,
     end: null as string | null,
   })
+
+  const isMouseOverContainer = useGlobalStore((s) => s.is_mouse_over_container)
 
   const disarmMeasure = useCallback(() => {
     if (measureToolArmed) {
@@ -226,9 +229,12 @@ export const DimensionOverlay = ({
   )
 
   useEffect(() => {
-    const container = containerRef.current
-
     const down = (e: KeyboardEvent) => {
+      const containerHasFocus =
+        containerRef.current?.contains(document.activeElement) ||
+        document.activeElement === containerRef.current
+      if (!isMouseOverContainer && !containerHasFocus) return
+
       if (e.key === "d") {
         const snap = findSnap({
           x: mousePosRef.current.x,
@@ -261,36 +267,15 @@ export const DimensionOverlay = ({
       setMeasureToolArmed(true)
     }
 
-    const addKeyListener = () => {
-      if (container) {
-        window.addEventListener("keydown", down)
-      }
-    }
-
-    const removeKeyListener = () => {
-      if (container) {
-        window.removeEventListener("keydown", down)
-      }
-    }
+    window.addEventListener("keydown", down)
     window.addEventListener("arm-dimension-tool", armMeasure)
 
-    if (container) {
-      container.addEventListener("focus", addKeyListener)
-      container.addEventListener("blur", removeKeyListener)
-      container.addEventListener("mouseenter", addKeyListener)
-      container.addEventListener("mouseleave", removeKeyListener)
-    }
     return () => {
+      window.removeEventListener("keydown", down)
       window.removeEventListener("arm-dimension-tool", armMeasure)
       disarmMeasure()
-      if (container) {
-        container.removeEventListener("focus", addKeyListener)
-        container.removeEventListener("blur", removeKeyListener)
-        container.removeEventListener("mouseenter", addKeyListener)
-        container.removeEventListener("mouseleave", removeKeyListener)
-      }
     }
-  }, [containerRef, dimensionToolVisible, disarmMeasure, findSnap])
+  }, [isMouseOverContainer, dimensionToolVisible, disarmMeasure, findSnap])
 
   const screenDStart = applyToPoint(transform, dStart)
   const screenDEnd = applyToPoint(transform, dEnd)
@@ -320,9 +305,10 @@ export const DimensionOverlay = ({
   return (
     <div
       ref={containerRef}
+      data-pcb-viewer
       // biome-ignore lint/a11y/noNoninteractiveTabindex: <explanation>
       tabIndex={0}
-      style={{ position: "relative" }}
+      style={{ position: "relative", outline: "none" }}
       onMouseEnter={() => {
         if (focusOnHover && containerRef.current) {
           containerRef.current.focus()
@@ -331,6 +317,11 @@ export const DimensionOverlay = ({
       onMouseLeave={() => {
         if (containerRef.current) {
           containerRef.current.blur()
+        }
+      }}
+      onClick={() => {
+        if (containerRef.current) {
+          containerRef.current.focus()
         }
       }}
       onMouseMove={(e: React.MouseEvent<HTMLDivElement>) => {

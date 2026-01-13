@@ -1,13 +1,28 @@
-import { useEffect } from "react"
+import { useEffect, useRef, type RefObject } from "react"
 import { useGlobalStore } from "../global-store"
 
-export const useHotKey = (key: string, onUse: () => void) => {
+export const useHotKey = (
+  key: string,
+  onUse: () => void,
+  containerRef?: RefObject<HTMLElement | null>,
+) => {
   const isMouseOverContainer = useGlobalStore(
     (s) => s.is_mouse_over_container,
   ) as boolean
 
+  const isMouseOverContainerRef = useRef(isMouseOverContainer)
+  const onUseRef = useRef(onUse)
+
   useEffect(() => {
-    if (!key || typeof onUse !== "function") return
+    isMouseOverContainerRef.current = isMouseOverContainer
+  }, [isMouseOverContainer])
+
+  useEffect(() => {
+    onUseRef.current = onUse
+  }, [onUse])
+
+  useEffect(() => {
+    if (!key) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const keyParts = key.split("+")
@@ -18,8 +33,15 @@ export const useHotKey = (key: string, onUse: () => void) => {
       const metaRequired = keyParts.includes("meta")
       const mainKey = keyParts[keyParts.length - 1]
 
+      const containerHasFocus = containerRef?.current
+        ? containerRef.current.contains(document.activeElement) ||
+          document.activeElement === containerRef.current
+        : false
+
+      const shouldTrigger = isMouseOverContainerRef.current || containerHasFocus
+
       if (
-        isMouseOverContainer &&
+        shouldTrigger &&
         (!ctrlRequired || event.ctrlKey) &&
         (!shiftRequired || event.shiftKey) &&
         (!altRequired || event.altKey) &&
@@ -27,7 +49,7 @@ export const useHotKey = (key: string, onUse: () => void) => {
         event.key.toLowerCase() === mainKey.toLowerCase()
       ) {
         event.preventDefault()
-        onUse()
+        onUseRef.current()
       }
     }
 
@@ -36,5 +58,5 @@ export const useHotKey = (key: string, onUse: () => void) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [key, onUse])
+  }, [key])
 }
