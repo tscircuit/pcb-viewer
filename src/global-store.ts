@@ -69,7 +69,7 @@ export const createStore = (
   createZustandStore<State>(
     (set) =>
       ({
-        selected_layer: "top",
+        selected_layer: localStorage.getItem("selected_layer") as LayerRef || "top",
 
         pcb_viewer_id: `pcb_viewer_${Math.random().toString().slice(2, 10)}`,
 
@@ -110,7 +110,10 @@ export const createStore = (
         hovered_error_id: null,
         ...initialState,
 
-        selectLayer: (layer) => set({ selected_layer: layer }),
+        selectLayer: (layer) =>{
+          localStorage.setItem("selected_layer", layer)
+          set({ selected_layer: layer })
+        },
         setEditMode: (mode) =>
           set({
             in_edit_mode: mode !== "off",
