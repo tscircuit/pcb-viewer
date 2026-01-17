@@ -9,6 +9,9 @@ const sampleCircuit: AnyCircuitElement[] = [
     width: 20,
     height: 20,
     center: { x: 0, y: 0 },
+    thickness: 1.6,
+    num_layers: 2,
+    material: "fr4",
   },
   {
     type: "pcb_smtpad",
@@ -34,8 +37,8 @@ const sampleCircuit: AnyCircuitElement[] = [
     type: "pcb_trace",
     pcb_trace_id: "trace1",
     route: [
-      { x: -5, y: 0, via: false, layer: "top" },
-      { x: 5, y: 0, via: false, layer: "top" },
+      { x: -5, y: 0, width: 0.2, layer: "top", route_type: "wire" },
+      { x: 5, y: 0, width: 0.2, layer: "top", route_type: "wire" },
     ],
   },
 ]
