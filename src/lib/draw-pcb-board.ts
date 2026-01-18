@@ -1,5 +1,5 @@
-import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import type { Matrix } from "transformation-matrix"
 
 export function isPcbBoardElement(element: AnyCircuitElement) {
@@ -11,6 +11,7 @@ export function drawPcbBoardElements(
   elements: AnyCircuitElement[],
   layers: PcbRenderLayer[],
   realToCanvasMat: Matrix,
+  drawSoldermask?: boolean,
 ) {
   const drawer = new CircuitToCanvasDrawer(canvas)
 
@@ -18,5 +19,5 @@ export function drawPcbBoardElements(
 
   const pcbBoardElements = elements.filter(isPcbBoardElement)
 
-  drawer.drawElements(pcbBoardElements, { layers })
+  drawer.drawElements(pcbBoardElements, { layers, drawSoldermask })
 }

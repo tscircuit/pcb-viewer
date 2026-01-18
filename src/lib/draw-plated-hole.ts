@@ -1,13 +1,14 @@
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import {
+  CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
   type PcbColorMap,
-  CircuitToCanvasDrawer,
 } from "circuit-to-canvas"
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
-import type { Matrix } from "transformation-matrix"
-import colors from "./colors"
 import color from "color"
-import { Primitive } from "./types"
+import type { Matrix } from "transformation-matrix"
+import { useGlobalStore } from "../global-store"
+import colors from "./colors"
+import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
@@ -29,12 +30,14 @@ export function drawPlatedHolePads({
   layers,
   realToCanvasMat,
   primitives,
+  drawSoldermask,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
   primitives?: Primitive[]
+  drawSoldermask?: boolean
 }) {
   const platedHoleElements = elements.filter(isPlatedHole)
 
@@ -65,7 +68,7 @@ export function drawPlatedHolePads({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, { layers })
+    drawer.drawElements(nonHighlightedElements, { layers, drawSoldermask })
   }
 
   // Draw highlighted elements with lighter colors
@@ -73,6 +76,9 @@ export function drawPlatedHolePads({
     const highlightDrawer = new CircuitToCanvasDrawer(canvas)
     highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
     highlightDrawer.realToCanvasMat = realToCanvasMat
-    highlightDrawer.drawElements(highlightedElements, { layers })
+    highlightDrawer.drawElements(highlightedElements, {
+      layers,
+      drawSoldermask,
+    })
   }
 }

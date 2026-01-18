@@ -1,23 +1,23 @@
-import { drawGrid } from "lib/draw-grid"
-import { SuperGrid, toMMSI } from "react-supergrid"
-import React, { useEffect, useRef } from "react"
-import type { Matrix } from "transformation-matrix"
-import { drawPrimitives } from "lib/draw-primitives"
-import { Drawer } from "lib/Drawer"
-import type { GridConfig, Primitive } from "lib/types"
-import { useGlobalStore } from "../global-store"
 import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
-import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
-import { drawPlatedHolePads } from "lib/draw-plated-hole"
+import { Drawer } from "lib/Drawer"
+import { drawCopperPourElementsForLayer } from "lib/draw-copper-pour"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
-import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
+import { drawGrid } from "lib/draw-grid"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
 import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
-import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
+import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
+import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
+import { drawPlatedHolePads } from "lib/draw-plated-hole"
+import { drawPrimitives } from "lib/draw-primitives"
+import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
-import { drawCopperPourElementsForLayer } from "lib/draw-copper-pour"
+import type { GridConfig, Primitive } from "lib/types"
+import React, { useEffect, useRef } from "react"
+import { SuperGrid, toMMSI } from "react-supergrid"
+import type { Matrix } from "transformation-matrix"
+import { useGlobalStore } from "../global-store"
 
 interface Props {
   primitives: Primitive[]
@@ -110,6 +110,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["top_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
       }
 
@@ -121,6 +122,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["bottom_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
       }
 
@@ -132,6 +134,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["top_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
       }
 
@@ -142,6 +145,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["bottom_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
       }
 
@@ -253,12 +257,24 @@ export const CanvasPrimitiveRenderer = ({
       // Draw PCB holes
       const drillCanvas = canvasRefs.current.drill
       if (drillCanvas) {
-        drawPcbHoleElementsForLayer(drillCanvas, elements, ["drill"], transform)
+        drawPcbHoleElementsForLayer(
+          drillCanvas,
+          elements,
+          ["drill"],
+          transform,
+          isShowingSolderMask,
+        )
       }
       // Draw board outline using circuit-to-canvas
       const boardCanvas = canvasRefs.current.board
       if (boardCanvas) {
-        drawPcbBoardElements(boardCanvas, elements, [], transform)
+        drawPcbBoardElements(
+          boardCanvas,
+          elements,
+          [],
+          transform,
+          isShowingSolderMask,
+        )
       }
 
       // Draw PCB cutouts using circuit-to-canvas
