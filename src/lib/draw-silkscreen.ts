@@ -1,9 +1,9 @@
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import {
+  CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
   type PcbColorMap,
-  CircuitToCanvasDrawer,
 } from "circuit-to-canvas"
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
 
@@ -21,12 +21,17 @@ export function isSilkscreenElement(element: AnyCircuitElement) {
   return element.type.includes("pcb_silkscreen")
 }
 
-export function drawSilkscreenElementsForLayer(
-  canvas: HTMLCanvasElement,
-  elements: AnyCircuitElement[],
-  layers: PcbRenderLayer[],
-  realToCanvasMat: Matrix,
-) {
+export function drawSilkscreenElementsForLayer({
+  canvas,
+  elements,
+  layers,
+  realToCanvasMat,
+}: {
+  canvas: HTMLCanvasElement
+  elements: AnyCircuitElement[]
+  layers: PcbRenderLayer[]
+  realToCanvasMat: Matrix
+}) {
   const drawer = new CircuitToCanvasDrawer(canvas)
 
   drawer.configure({
