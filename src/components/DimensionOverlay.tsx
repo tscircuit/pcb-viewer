@@ -230,6 +230,15 @@ export const DimensionOverlay = ({
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
       const containerHasFocus =
         containerRef.current?.contains(document.activeElement) ||
         document.activeElement === containerRef.current

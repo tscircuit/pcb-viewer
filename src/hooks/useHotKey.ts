@@ -25,6 +25,15 @@ export const useHotKey = (
     if (!key) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
       const keyParts = key.split("+")
 
       const ctrlRequired = keyParts.includes("ctrl")
