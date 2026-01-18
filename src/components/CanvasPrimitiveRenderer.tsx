@@ -192,100 +192,100 @@ export const CanvasPrimitiveRenderer = ({
       // Draw top silkscreen
       const topSilkscreenCanvas = canvasRefs.current.top_silkscreen
       if (topSilkscreenCanvas) {
-        drawSilkscreenElementsForLayer(
-          topSilkscreenCanvas,
+        drawSilkscreenElementsForLayer({
+          canvas: topSilkscreenCanvas,
           elements,
-          ["top_silkscreen"],
-          transform,
-        )
+          layers: ["top_silkscreen"],
+          realToCanvasMat: transform,
+        })
       }
 
       // Draw bottom silkscreen
       const bottomSilkscreenCanvas = canvasRefs.current.bottom_silkscreen
       if (bottomSilkscreenCanvas) {
-        drawSilkscreenElementsForLayer(
-          bottomSilkscreenCanvas,
+        drawSilkscreenElementsForLayer({
+          canvas: bottomSilkscreenCanvas,
           elements,
-          ["bottom_silkscreen"],
-          transform,
-        )
+          layers: ["bottom_silkscreen"],
+          realToCanvasMat: transform,
+        })
       }
 
       // Draw top fabrication
       const topFabCanvas = canvasRefs.current.top_fabrication
       if (topFabCanvas) {
-        drawFabricationNoteElementsForLayer(
-          topFabCanvas,
+        drawFabricationNoteElementsForLayer({
+          canvas: topFabCanvas,
           elements,
-          ["top_fabrication_note"],
-          transform,
-        )
+          layers: ["top_fabrication_note"],
+          realToCanvasMat: transform,
+        })
       }
 
       // Draw bottom fabrication
       const bottomFabCanvas = canvasRefs.current.bottom_fabrication
       if (bottomFabCanvas) {
-        drawFabricationNoteElementsForLayer(
-          bottomFabCanvas,
+        drawFabricationNoteElementsForLayer({
+          canvas: bottomFabCanvas,
           elements,
-          ["bottom_fabrication_note"],
-          transform,
-        )
+          layers: ["bottom_fabrication_note"],
+          realToCanvasMat: transform,
+        })
       }
 
       // Draw bottom notes
       const bottomNotesCanvas = canvasRefs.current.bottom_notes
       if (bottomNotesCanvas) {
-        drawPcbNoteElementsForLayer(
-          bottomNotesCanvas,
+        drawPcbNoteElementsForLayer({
+          canvas: bottomNotesCanvas,
           elements,
-          ["bottom_user_note"],
-          transform,
-        )
+          layers: ["bottom_user_note"],
+          realToCanvasMat: transform,
+        })
       }
 
       // Draw top notes
       const topNotesCanvas = canvasRefs.current.top_notes
       if (topNotesCanvas) {
-        drawPcbNoteElementsForLayer(
-          topNotesCanvas,
+        drawPcbNoteElementsForLayer({
+          canvas: topNotesCanvas,
           elements,
-          ["top_user_note"],
-          transform,
-        )
+          layers: ["top_user_note"],
+          realToCanvasMat: transform,
+        })
       }
       // Draw PCB holes
       const drillCanvas = canvasRefs.current.drill
       if (drillCanvas) {
-        drawPcbHoleElementsForLayer(
-          drillCanvas,
+        drawPcbHoleElementsForLayer({
+          canvas: drillCanvas,
           elements,
-          ["drill"],
-          transform,
-          isShowingSolderMask,
-        )
+          layers: ["drill"],
+          realToCanvasMat: transform,
+          drawSoldermask: isShowingSolderMask,
+        })
       }
       // Draw board outline using circuit-to-canvas
       const boardCanvas = canvasRefs.current.board
       if (boardCanvas) {
-        drawPcbBoardElements(
-          boardCanvas,
+        drawPcbBoardElements({
+          canvas: boardCanvas,
           elements,
-          [],
-          transform,
-          isShowingSolderMask,
-        )
+          layers: [],
+          realToCanvasMat: transform,
+          drawSoldermask: isShowingSolderMask,
+        })
       }
 
       // Draw PCB cutouts using circuit-to-canvas
       const edgeCutsCanvas = canvasRefs.current.edge_cuts
       if (edgeCutsCanvas) {
-        drawPcbCutoutElementsForLayer(
-          edgeCutsCanvas,
+        drawPcbCutoutElementsForLayer({
+          canvas: edgeCutsCanvas,
           elements,
-          ["edge_cuts"],
-          transform,
-        )
+          layers: ["edge_cuts"],
+          realToCanvasMat: transform,
+        })
       }
 
       // Draw keepouts using circuit-to-canvas (on copper layers)
