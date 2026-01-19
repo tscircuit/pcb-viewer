@@ -156,7 +156,6 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       if (inner1Canvas) {
-        console.log("Drawing inner1 SMT pads")
         drawPcbSmtPadElementsForLayer({
           canvas: inner1Canvas,
           elements,
