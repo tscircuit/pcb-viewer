@@ -103,6 +103,13 @@ export const CanvasPrimitiveRenderer = ({
     if (transform) {
       // Draw plated holes using circuit-to-canvas (pads on copper layers, drills on drill layer)
       const topCanvas = canvasRefs.current.top
+      const bottomCanvas = canvasRefs.current.bottom
+      const inner1Canvas = canvasRefs.current.inner1
+      const inner2Canvas = canvasRefs.current.inner2
+      const inner3Canvas = canvasRefs.current.inner3
+      const inner4Canvas = canvasRefs.current.inner4
+      const inner5Canvas = canvasRefs.current.inner5
+      const inner6Canvas = canvasRefs.current.inner6
       if (topCanvas) {
         drawPlatedHolePads({
           canvas: topCanvas,
@@ -114,7 +121,6 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      const bottomCanvas = canvasRefs.current.bottom
       if (bottomCanvas) {
         drawPlatedHolePads({
           canvas: bottomCanvas,
@@ -143,6 +149,73 @@ export const CanvasPrimitiveRenderer = ({
           canvas: bottomCanvas,
           elements,
           layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+          primitives,
+          drawSoldermask: isShowingSolderMask,
+        })
+      }
+
+      if (inner1Canvas) {
+        console.log("Drawing inner1 SMT pads")
+        drawPcbSmtPadElementsForLayer({
+          canvas: inner1Canvas,
+          elements,
+          layers: ["inner1_copper"],
+          realToCanvasMat: transform,
+          primitives,
+          drawSoldermask: isShowingSolderMask,
+        })
+      }
+
+      if (inner2Canvas) {
+        drawPcbSmtPadElementsForLayer({
+          canvas: inner2Canvas,
+          elements,
+          layers: ["inner2_copper"],
+          realToCanvasMat: transform,
+          primitives,
+          drawSoldermask: isShowingSolderMask,
+        })
+      }
+
+      if (inner3Canvas) {
+        drawPcbSmtPadElementsForLayer({
+          canvas: inner3Canvas,
+          elements,
+          layers: ["inner3_copper"],
+          realToCanvasMat: transform,
+          primitives,
+          drawSoldermask: isShowingSolderMask,
+        })
+      }
+
+      if (inner4Canvas) {
+        drawPcbSmtPadElementsForLayer({
+          canvas: inner4Canvas,
+          elements,
+          layers: ["inner4_copper"],
+          realToCanvasMat: transform,
+          primitives,
+          drawSoldermask: isShowingSolderMask,
+        })
+      }
+
+      if (inner5Canvas) {
+        drawPcbSmtPadElementsForLayer({
+          canvas: inner5Canvas,
+          elements,
+          layers: ["inner5_copper"],
+          realToCanvasMat: transform,
+          primitives,
+          drawSoldermask: isShowingSolderMask,
+        })
+      }
+
+      if (inner6Canvas) {
+        drawPcbSmtPadElementsForLayer({
+          canvas: inner6Canvas,
+          elements,
+          layers: ["inner6_copper"],
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
