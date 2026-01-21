@@ -1,5 +1,5 @@
 import type React from "react"
-import { PCBViewer } from "../PCBViewer"
+import { PCBViewer } from "../../PCBViewer"
 import { AnyCircuitElement } from "circuit-json"
 
 /**

@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react"
 import { PCBViewer } from "../../PCBViewer"
 import { Circuit } from "@tscircuit/core"
 import { AnyCircuitElement } from "circuit-json"
@@ -20,36 +19,18 @@ for (let y = 0; y < numBoardsY; y++) {
 
 export const PanelLayoutModeGrid: React.FC = () => {
   const circuit = new Circuit()
-  const [circuitJson, setCircuitJson] = useState(0)
 
   circuit.add(
     <panel width={100} height={100} layoutMode="grid">
       {boards.map((pos, i) => (
-        <board
-          width={boardWidth}
-          height={boardHeight}
-          key={i}
-          pcbX={pos.pcbX - 50 + 3 + 2}
-          pcbY={pos.pcbY - 50 + 1 + 2}
-        >
-          <resistor
-            name="R1"
-            footprint="0603"
-            resistance="1k"
-            pcbX={0}
-            pcbY={0}
-          />
+        <board width={boardWidth} height={boardHeight} key={i}>
+          <resistor name="R1" footprint="0603" resistance="1k" />
         </board>
       ))}
     </panel>,
   )
 
-  // Use useEffect for side effects after render
-  useEffect(() => {
-    circuit.renderUntilSettled().then(() => {
-      setCircuitJson(circuit.getCircuitJson() as any)
-    })
-  }, [circuit])
+  const circuitJson = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black" }}>
