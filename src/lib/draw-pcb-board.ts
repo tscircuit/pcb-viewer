@@ -3,7 +3,7 @@ import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import type { Matrix } from "transformation-matrix"
 
 export function isPcbBoardElement(element: AnyCircuitElement) {
-  return element.type === "pcb_board"
+  return element.type === "pcb_board" || element.type === "pcb_panel"
 }
 
 export function drawPcbBoardElements({
@@ -25,5 +25,7 @@ export function drawPcbBoardElements({
 
   const pcbBoardElements = elements.filter(isPcbBoardElement)
 
-  drawer.drawElements(pcbBoardElements, { layers, drawSoldermask })
+  for (const element of pcbBoardElements) {
+    drawer.drawElements([element], { layers, drawSoldermask })
+  }
 }

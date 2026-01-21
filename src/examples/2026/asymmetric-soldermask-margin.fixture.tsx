@@ -1,4 +1,4 @@
-import { PCBViewer } from "../PCBViewer"
+import { PCBViewer } from "../../PCBViewer"
 import type { AnyCircuitElement } from "circuit-json"
 
 export const AsymmetricSoldermaskMargin = () => {
