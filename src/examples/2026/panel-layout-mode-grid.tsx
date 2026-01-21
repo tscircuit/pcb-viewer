@@ -1,6 +1,5 @@
 import { PCBViewer } from "../../PCBViewer"
 import { Circuit } from "@tscircuit/core"
-import { AnyCircuitElement } from "circuit-json"
 
 const boardWidth = 6
 const boardHeight = 2
@@ -34,7 +33,7 @@ export const PanelLayoutModeGrid: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={circuitJson as any} />
+      <PCBViewer circuitJson={circuitJson} />
     </div>
   )
 }
