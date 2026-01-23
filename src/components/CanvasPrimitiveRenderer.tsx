@@ -18,6 +18,7 @@ import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
+import { drawPcbPanelElements } from "lib/draw-pcb-panel"
 
 interface Props {
   primitives: Primitive[]
@@ -340,6 +341,13 @@ export const CanvasPrimitiveRenderer = ({
       // Draw board outline using circuit-to-canvas
       const boardCanvas = canvasRefs.current.board
       if (boardCanvas) {
+        drawPcbPanelElements({
+          canvas: boardCanvas,
+          elements,
+          layers: [],
+          realToCanvasMat: transform,
+          drawSoldermask: isShowingSolderMask,
+        })
         drawPcbBoardElements({
           canvas: boardCanvas,
           elements,
