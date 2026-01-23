@@ -2,11 +2,11 @@ import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import type { Matrix } from "transformation-matrix"
 
-export function isPcbBoardElement(element: AnyCircuitElement) {
-  return element.type === "pcb_board"
+export function isPcbPanelElement(element: AnyCircuitElement) {
+  return element.type === "pcb_panel"
 }
 
-export function drawPcbBoardElements({
+export function drawPcbPanelElements({
   canvas,
   elements,
   layers,
@@ -23,9 +23,9 @@ export function drawPcbBoardElements({
 
   drawer.realToCanvasMat = realToCanvasMat
 
-  const pcbBoardElements = elements.filter(isPcbBoardElement)
+  const pcbPanelElements = elements.filter(isPcbPanelElement)
 
-  for (const element of pcbBoardElements) {
+  for (const element of pcbPanelElements) {
     drawer.drawElements([element], { layers, drawSoldermask })
   }
 }

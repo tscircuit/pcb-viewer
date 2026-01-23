@@ -1,13 +1,4 @@
-import type {
-  AnyCircuitElement,
-  PcbNoteLine,
-  PcbNoteRect,
-  PcbNotePath,
-  PcbNoteText,
-  PcbNoteDimension,
-  PcbSmtPadRotatedPill,
-  PcbPanel,
-} from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
@@ -74,66 +65,6 @@ export const convertElementToPrimitives = (
     : undefined
 
   switch (element.type) {
-    case "pcb_panel": {
-      const { width, height, center } = element as PcbPanel
-      const cx = center?.x ?? 0
-      const cy = center?.y ?? 0
-      return [
-        // Bottom line
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: cx - width / 2,
-          y1: cy - height / 2,
-          x2: cx + width / 2,
-          y2: cy - height / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-        // Top line
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: cx - width / 2,
-          y1: cy + height / 2,
-          x2: cx + width / 2,
-          y2: cy + height / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-        // Left line
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: cx - width / 2,
-          y1: cy - height / 2,
-          x2: cx - width / 2,
-          y2: cy + height / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-        // Right line
-        {
-          _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-          pcb_drawing_type: "line",
-          x1: cx + width / 2,
-          y1: cy - height / 2,
-          x2: cx + width / 2,
-          y2: cy + height / 2,
-          width: 1,
-          zoomIndependent: true,
-          layer: "board",
-          _element: element,
-        },
-      ]
-    }
-
     case "pcb_smtpad": {
       const metadata: MetaData = {
         _parent_pcb_component,
