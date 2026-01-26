@@ -111,7 +111,7 @@ export class Drawer {
   // @ts-ignore this.equip({}) handles constructor assignment
   aperture: Aperture
   transform: Matrix
-  foregroundLayer: string = "top"
+  foregroundLayer = "top"
   lastPoint: { x: number; y: number }
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
@@ -155,7 +155,7 @@ export class Drawer {
     width: number,
     height: number,
     spacing: number,
-    angle: number = 45,
+    angle = 45,
   ) {
     const ctx = this.getLayerCtx()
     const [x1, y1] = applyToPoint(this.transform, [x, y])
@@ -169,7 +169,7 @@ export class Drawer {
     const drawLines = (angle: number) => {
       const sin = Math.sin(angle)
       const cos = Math.cos(angle)
-      const diag = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+      const diag = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
       for (let i = -diag; i <= diag; i += spacing$) {
         ctx.beginPath()
@@ -469,7 +469,7 @@ export class Drawer {
     this.applyAperture()
     const ctx = this.getLayerCtx()
 
-    ctx.font = `10px sans-serif`
+    ctx.font = "10px sans-serif"
     ctx.fillText(text, x$, y$)
   }
 
@@ -525,11 +525,11 @@ export class Drawer {
 
     const order = [
       ...DEFAULT_DRAW_ORDER.filter((l) => !layersToShiftToTop.includes(l)),
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       foregroundLayer,
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
+      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       "drill",
     ]
 
@@ -583,7 +583,7 @@ export class Drawer {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     const { size, shape, mode } = this.aperture
     const size$ = scaleOnly(this.transform, size)
-    let { lastPoint } = this
+    const { lastPoint } = this
     const lastPoint$ = applyToPoint(this.transform, lastPoint)
 
     this.applyAperture()

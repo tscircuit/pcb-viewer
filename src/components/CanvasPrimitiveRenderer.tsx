@@ -8,7 +8,9 @@ import { drawPcbBoardElements } from "lib/draw-pcb-board"
 import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
 import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
+import { drawPcbPanelElements } from "lib/draw-pcb-panel"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
+import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
@@ -18,7 +20,6 @@ import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
-import { drawPcbPanelElements } from "lib/draw-pcb-panel"
 
 interface Props {
   primitives: Primitive[]
@@ -32,14 +33,12 @@ interface Props {
 
 const orderedLayers = [
   "board",
-  "bottom_silkscreen",
   "bottom",
   "soldermask_bottom",
   "top",
   "soldermask_top",
   "soldermask_with_copper_bottom",
   "soldermask_with_copper_top",
-  "top_silkscreen",
   "top_fabrication",
   "bottom_fabrication",
   "inner1",
@@ -52,6 +51,8 @@ const orderedLayers = [
   "edge_cuts",
   "bottom_notes",
   "top_notes",
+  "top_silkscreen",
+  "bottom_silkscreen",
   "other",
 ]
 
@@ -97,6 +98,7 @@ export const CanvasPrimitiveRenderer = ({
       .filter((p) => p._element?.type !== "pcb_smtpad")
       .filter((p) => p._element?.type !== "pcb_plated_hole")
       .filter((p) => p._element?.type !== "pcb_via")
+      .filter((p) => p._element?.type !== "pcb_trace")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -130,6 +132,106 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
+        })
+      }
+
+      // Draw copper pour elements using circuit-to-canvas (on copper layers)
+      if (topCanvas) {
+        drawCopperPourElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
+        })
+      }
+
+      if (bottomCanvas) {
+        drawCopperPourElementsForLayer({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+        })
+      }
+
+      // Draw PCB traces using circuit-to-canvas (on copper layers)
+      if (topCanvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (bottomCanvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (inner1Canvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: inner1Canvas,
+          elements,
+          layers: ["inner1_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (inner2Canvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: inner2Canvas,
+          elements,
+          layers: ["inner2_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (inner3Canvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: inner3Canvas,
+          elements,
+          layers: ["inner3_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (inner4Canvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: inner4Canvas,
+          elements,
+          layers: ["inner4_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (inner5Canvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: inner5Canvas,
+          elements,
+          layers: ["inner5_copper"],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
+
+      if (inner6Canvas) {
+        drawPcbTraceElementsForLayer({
+          canvas: inner6Canvas,
+          elements,
+          layers: ["inner6_copper"],
+          realToCanvasMat: transform,
+          primitives,
         })
       }
 
@@ -240,25 +342,6 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["bottom_copper"],
           realToCanvasMat: transform,
           primitives,
-        })
-      }
-
-      // Draw copper pour elements using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
-        drawCopperPourElementsForLayer({
-          canvas: topCanvas,
-          elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawCopperPourElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
-          realToCanvasMat: transform,
         })
       }
 
