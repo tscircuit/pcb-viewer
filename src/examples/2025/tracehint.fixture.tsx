@@ -1,3 +1,4 @@
+import { AnyCircuitElement } from "circuit-json"
 import { PCBViewer } from "../../PCBViewer"
 
 export const TraceHintExample = () => {
@@ -242,7 +243,7 @@ export const TraceHintExample = () => {
                 },
               ],
             },
-          ] as any
+          ] as AnyCircuitElement[]
         }
       />
     </div>
