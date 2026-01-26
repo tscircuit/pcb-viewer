@@ -154,170 +154,39 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
+      const copperLayers: Array<{
+        canvas?: HTMLCanvasElement
+        copperLayer: PcbRenderLayer
+      }> = [
+        { canvas: topCanvas, copperLayer: "top_copper" },
+        { canvas: bottomCanvas, copperLayer: "bottom_copper" },
+        { canvas: inner1Canvas, copperLayer: "inner1_copper" },
+        { canvas: inner2Canvas, copperLayer: "inner2_copper" },
+        { canvas: inner3Canvas, copperLayer: "inner3_copper" },
+        { canvas: inner4Canvas, copperLayer: "inner4_copper" },
+        { canvas: inner5Canvas, copperLayer: "inner5_copper" },
+        { canvas: inner6Canvas, copperLayer: "inner6_copper" },
+      ]
+
       // Draw PCB traces using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
         drawPcbTraceElementsForLayer({
-          canvas: topCanvas,
+          canvas,
           elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-          primitives,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPcbTraceElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
-          realToCanvasMat: transform,
-          primitives,
-        })
-      }
-
-      if (inner1Canvas) {
-        drawPcbTraceElementsForLayer({
-          canvas: inner1Canvas,
-          elements,
-          layers: ["inner1_copper"],
-          realToCanvasMat: transform,
-          primitives,
-        })
-      }
-
-      if (inner2Canvas) {
-        drawPcbTraceElementsForLayer({
-          canvas: inner2Canvas,
-          elements,
-          layers: ["inner2_copper"],
-          realToCanvasMat: transform,
-          primitives,
-        })
-      }
-
-      if (inner3Canvas) {
-        drawPcbTraceElementsForLayer({
-          canvas: inner3Canvas,
-          elements,
-          layers: ["inner3_copper"],
-          realToCanvasMat: transform,
-          primitives,
-        })
-      }
-
-      if (inner4Canvas) {
-        drawPcbTraceElementsForLayer({
-          canvas: inner4Canvas,
-          elements,
-          layers: ["inner4_copper"],
-          realToCanvasMat: transform,
-          primitives,
-        })
-      }
-
-      if (inner5Canvas) {
-        drawPcbTraceElementsForLayer({
-          canvas: inner5Canvas,
-          elements,
-          layers: ["inner5_copper"],
-          realToCanvasMat: transform,
-          primitives,
-        })
-      }
-
-      if (inner6Canvas) {
-        drawPcbTraceElementsForLayer({
-          canvas: inner6Canvas,
-          elements,
-          layers: ["inner6_copper"],
+          layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
         })
       }
 
       // Draw SMT pads using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
         drawPcbSmtPadElementsForLayer({
-          canvas: topCanvas,
+          canvas,
           elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPcbSmtPadElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (inner1Canvas) {
-        drawPcbSmtPadElementsForLayer({
-          canvas: inner1Canvas,
-          elements,
-          layers: ["inner1_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (inner2Canvas) {
-        drawPcbSmtPadElementsForLayer({
-          canvas: inner2Canvas,
-          elements,
-          layers: ["inner2_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (inner3Canvas) {
-        drawPcbSmtPadElementsForLayer({
-          canvas: inner3Canvas,
-          elements,
-          layers: ["inner3_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (inner4Canvas) {
-        drawPcbSmtPadElementsForLayer({
-          canvas: inner4Canvas,
-          elements,
-          layers: ["inner4_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (inner5Canvas) {
-        drawPcbSmtPadElementsForLayer({
-          canvas: inner5Canvas,
-          elements,
-          layers: ["inner5_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (inner6Canvas) {
-        drawPcbSmtPadElementsForLayer({
-          canvas: inner6Canvas,
-          elements,
-          layers: ["inner6_copper"],
+          layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
@@ -452,20 +321,17 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw keepouts using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
-        drawPcbKeepoutElementsForLayer({
-          canvas: topCanvas,
-          elements,
-          layers: ["top"],
-          realToCanvasMat: transform,
-        })
-      }
+      const keepoutLayers = [
+        { canvas: topCanvas, layer: "top" },
+        { canvas: bottomCanvas, layer: "bottom" },
+      ]
 
-      if (bottomCanvas) {
+      for (const { canvas, layer } of keepoutLayers) {
+        if (!canvas) continue
         drawPcbKeepoutElementsForLayer({
-          canvas: bottomCanvas,
+          canvas,
           elements,
-          layers: ["bottom"],
+          layers: [layer],
           realToCanvasMat: transform,
         })
       }
