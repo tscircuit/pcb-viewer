@@ -201,6 +201,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["top_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
       }
 
@@ -211,6 +212,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["bottom_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
       }
 
