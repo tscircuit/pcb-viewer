@@ -525,11 +525,11 @@ export class Drawer {
 
     const order = [
       ...DEFAULT_DRAW_ORDER.filter((l) => !layersToShiftToTop.includes(l)),
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       foregroundLayer,
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
+      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       "drill",
     ]
 
