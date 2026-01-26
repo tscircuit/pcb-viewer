@@ -80,9 +80,9 @@ export const DEFAULT_DRAW_ORDER = [
   "bottom_silkscreen",
   "top",
   "soldermask_top",
-  "top_silkscreen",
   "soldermask_with_copper_bottom",
   "soldermask_with_copper_top",
+  "top_silkscreen",
   "board",
 ] as const
 

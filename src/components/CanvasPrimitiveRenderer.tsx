@@ -33,9 +33,9 @@ interface Props {
 
 const orderedLayers = [
   "board",
-  "bottom_silkscreen",
   "bottom",
   "soldermask_bottom",
+  "bottom_silkscreen",
   "top",
   "soldermask_top",
   "soldermask_with_copper_bottom",
@@ -399,7 +399,6 @@ export const CanvasPrimitiveRenderer = ({
           elements,
           layers: ["drill"],
           realToCanvasMat: transform,
-          drawSoldermask: isShowingSolderMask,
         })
       }
       // Draw board outline using circuit-to-canvas
