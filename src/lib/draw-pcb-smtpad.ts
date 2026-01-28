@@ -87,7 +87,7 @@ export function drawPcbSmtPadElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, { layers: [], drawSoldermask })
+    drawer.drawElements(nonHighlightedElements, { layers, drawSoldermask })
   }
 
   // Draw highlighted elements with lighter colors
@@ -96,7 +96,7 @@ export function drawPcbSmtPadElementsForLayer({
     highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
     highlightDrawer.realToCanvasMat = realToCanvasMat
     highlightDrawer.drawElements(highlightedElements, {
-      layers: [],
+      layers,
       drawSoldermask,
     })
   }

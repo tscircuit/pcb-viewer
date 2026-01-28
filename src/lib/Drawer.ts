@@ -9,8 +9,8 @@ import {
 import colors from "./colors"
 import { scaleOnly } from "./util/scale-only"
 import { zIndexMap } from "./util/z-index-map"
-import { Rotation } from "circuit-json"
-import { BRepShape, Ring } from "lib/types"
+import type { Rotation } from "circuit-json"
+import type { BRepShape, Ring } from "lib/types"
 import colorParser from "color"
 
 export interface Aperture {
@@ -80,9 +80,9 @@ export const DEFAULT_DRAW_ORDER = [
   "bottom_silkscreen",
   "top",
   "soldermask_top",
-  "top_silkscreen",
   "soldermask_with_copper_bottom",
   "soldermask_with_copper_top",
+  "top_silkscreen",
   "board",
 ] as const
 
@@ -529,8 +529,8 @@ export class Drawer {
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       "drill",
+      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
     ]
 
     order.forEach((layer, i) => {

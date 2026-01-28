@@ -29,12 +29,14 @@ export function drawPcbViaElementsForLayer({
   layers,
   realToCanvasMat,
   primitives,
+  drawSoldermask,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
   primitives?: Primitive[]
+  drawSoldermask?: boolean
 }) {
   // Filter vias to only those on the specified layers
   const viaElements = elements.filter(isPcbVia).filter((element) => {
@@ -69,7 +71,7 @@ export function drawPcbViaElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, { layers })
+    drawer.drawElements(nonHighlightedElements, { layers, drawSoldermask })
   }
 
   // Draw highlighted elements with lighter colors
@@ -77,6 +79,9 @@ export function drawPcbViaElementsForLayer({
     const highlightDrawer = new CircuitToCanvasDrawer(canvas)
     highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
     highlightDrawer.realToCanvasMat = realToCanvasMat
-    highlightDrawer.drawElements(highlightedElements, { layers })
+    highlightDrawer.drawElements(highlightedElements, {
+      layers,
+      drawSoldermask,
+    })
   }
 }
