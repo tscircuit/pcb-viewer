@@ -1,3 +1,6 @@
+import type { Rotation } from "circuit-json"
+import colorParser from "color"
+import type { BRepShape, Ring } from "lib/types"
 import {
   type Matrix,
   applyToPoint,
@@ -9,9 +12,6 @@ import {
 import colors from "./colors"
 import { scaleOnly } from "./util/scale-only"
 import { zIndexMap } from "./util/z-index-map"
-import type { Rotation } from "circuit-json"
-import type { BRepShape, Ring } from "lib/types"
-import colorParser from "color"
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -495,6 +495,12 @@ export class Drawer {
         : foregroundLayer === "bottom"
           ? "bottom_silkscreen"
           : undefined
+    const associatedNotes =
+      foregroundLayer === "top"
+        ? "top_notes"
+        : foregroundLayer === "bottom"
+          ? "bottom_notes"
+          : undefined
 
     // Ensure soldermask-with-copper for the active side is rendered above copper
     const maskWithCopperLayerForForeground =
@@ -510,6 +516,7 @@ export class Drawer {
       "other",
       "board",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+      ...(associatedNotes ? [associatedNotes] : []),
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
@@ -518,6 +525,7 @@ export class Drawer {
     const layersToShiftToTop = [
       foregroundLayer,
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+      ...(associatedNotes ? [associatedNotes] : []),
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
@@ -531,6 +539,7 @@ export class Drawer {
         : []),
       "drill",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
+      ...(associatedNotes ? [associatedNotes] : []),
     ]
 
     order.forEach((layer, i) => {
