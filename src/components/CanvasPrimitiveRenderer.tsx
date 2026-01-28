@@ -13,6 +13,7 @@ import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
+import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import type { GridConfig, Primitive } from "lib/types"
@@ -35,6 +36,7 @@ const orderedLayers = [
   "board",
   "bottom",
   "soldermask_bottom",
+  "bottom_silkscreen",
   "top",
   "soldermask_top",
   "soldermask_with_copper_bottom",
@@ -191,6 +193,15 @@ export const CanvasPrimitiveRenderer = ({
           primitives,
           drawSoldermask: isShowingSolderMask,
         })
+        if (isShowingSolderMask) {
+          drawSoldermaskElementsForLayer({
+            canvas,
+            elements,
+            layers: [copperLayer],
+            realToCanvasMat: transform,
+            primitives,
+          })
+        }
       }
 
       // Draw vias using circuit-to-canvas (on copper layers)
@@ -201,6 +212,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["top_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
       }
 
@@ -211,7 +223,71 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["bottom_copper"],
           realToCanvasMat: transform,
           primitives,
+          drawSoldermask: isShowingSolderMask,
         })
+      }
+
+      if (isShowingSolderMask) {
+        const topSoldermaskCanvas = canvasRefs.current.soldermask_top
+        if (topSoldermaskCanvas) {
+          drawSoldermaskElementsForLayer({
+            canvas: topSoldermaskCanvas,
+            elements,
+            layers: ["top_soldermask"],
+            realToCanvasMat: transform,
+            primitives,
+          })
+        }
+
+        const bottomSoldermaskCanvas = canvasRefs.current.soldermask_bottom
+        if (bottomSoldermaskCanvas) {
+          drawSoldermaskElementsForLayer({
+            canvas: bottomSoldermaskCanvas,
+            elements,
+            layers: ["bottom_soldermask"],
+            realToCanvasMat: transform,
+            primitives,
+          })
+        }
+      }
+
+      // Draw copper pour elements using circuit-to-canvas (on copper layers)
+      if (topCanvas) {
+        drawCopperPourElementsForLayer({
+          canvas: topCanvas,
+          elements,
+          layers: ["top_copper"],
+          realToCanvasMat: transform,
+        })
+      }
+
+      if (bottomCanvas) {
+        drawCopperPourElementsForLayer({
+          canvas: bottomCanvas,
+          elements,
+          layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+        })
+      }
+
+      // Draw PCB holes
+      const drillCanvas = canvasRefs.current.drill
+      if (drillCanvas) {
+        drawPcbHoleElementsForLayer({
+          canvas: drillCanvas,
+          elements,
+          layers: ["drill"],
+          realToCanvasMat: transform,
+        })
+        if (isShowingSolderMask) {
+          drawSoldermaskElementsForLayer({
+            canvas: drillCanvas,
+            elements,
+            layers: ["drill"],
+            realToCanvasMat: transform,
+            primitives,
+          })
+        }
       }
 
       // Draw top silkscreen
@@ -277,17 +353,6 @@ export const CanvasPrimitiveRenderer = ({
           elements,
           layers: ["top_user_note"],
           realToCanvasMat: transform,
-        })
-      }
-      // Draw PCB holes
-      const drillCanvas = canvasRefs.current.drill
-      if (drillCanvas) {
-        drawPcbHoleElementsForLayer({
-          canvas: drillCanvas,
-          elements,
-          layers: ["drill"],
-          realToCanvasMat: transform,
-          drawSoldermask: isShowingSolderMask,
         })
       }
       // Draw board outline using circuit-to-canvas
