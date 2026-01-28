@@ -34,12 +34,6 @@ export const PanelLayoutModeNone: React.FC = () => {
           <cutout width={1} height={1} shape="rect" />
           <resistor name="R1" resistance={1000} footprint={"0402"} />
           <pcbnotetext text="R1" pcbX={0} pcbY={0} fontSize={1} />
-          {/* <silkscreentext
-            text="R1"
-            pcbX={0}
-            pcbY={0}
-            fontSize={1}
-          /> */}
         </board>
       ))}
     </panel>,
