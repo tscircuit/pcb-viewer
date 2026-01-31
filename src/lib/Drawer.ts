@@ -82,6 +82,7 @@ export const DEFAULT_DRAW_ORDER = [
   "soldermask_top",
   "soldermask_with_copper_bottom",
   "soldermask_with_copper_top",
+  "edge_cuts",
   "top_silkscreen",
   "board",
 ] as const
@@ -513,6 +514,7 @@ export class Drawer {
     const opaqueLayers = new Set<string>([
       foregroundLayer,
       "drill",
+      "edge_cuts",
       "other",
       "board",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
@@ -524,6 +526,7 @@ export class Drawer {
 
     const layersToShiftToTop = [
       foregroundLayer,
+      "edge_cuts",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(maskWithCopperLayerForForeground
@@ -537,6 +540,7 @@ export class Drawer {
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
+      "edge_cuts",
       "drill",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
