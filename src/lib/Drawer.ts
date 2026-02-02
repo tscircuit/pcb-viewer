@@ -82,6 +82,8 @@ export const DEFAULT_DRAW_ORDER = [
   "soldermask_top",
   "soldermask_with_copper_bottom",
   "soldermask_with_copper_top",
+  "bottom_fabrication",
+  "top_fabrication",
   "edge_cuts",
   "top_silkscreen",
   "board",
@@ -502,6 +504,12 @@ export class Drawer {
         : foregroundLayer === "bottom"
           ? "bottom_notes"
           : undefined
+    const associatedFabrication =
+      foregroundLayer === "top"
+        ? "top_fabrication"
+        : foregroundLayer === "bottom"
+          ? "bottom_fabrication"
+          : undefined
 
     // Ensure soldermask-with-copper for the active side is rendered above copper
     const maskWithCopperLayerForForeground =
@@ -519,6 +527,7 @@ export class Drawer {
       "board",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
+      ...(associatedFabrication ? [associatedFabrication] : []),
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
@@ -529,6 +538,7 @@ export class Drawer {
       "edge_cuts",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
+      ...(associatedFabrication ? [associatedFabrication] : []),
       ...(maskWithCopperLayerForForeground
         ? [maskWithCopperLayerForForeground]
         : []),
@@ -544,6 +554,7 @@ export class Drawer {
       "drill",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
+      ...(associatedFabrication ? [associatedFabrication] : []),
     ]
 
     order.forEach((layer, i) => {
