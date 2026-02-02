@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
-    "@tscircuit/alphabet": "^0.0.9",
+    "@tscircuit/alphabet": "^0.0.20",
     "@tscircuit/math-utils": "^0.0.29",
     "@vitejs/plugin-react": "^5.0.2",
     "circuit-json": "^0.0.356",
