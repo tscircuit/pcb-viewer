@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test"
+import { lineAlphabet } from "../../src/assets/alphabet"
 import {
   LETTER_HEIGHT_TO_SPACE_RATIO,
   LETTER_HEIGHT_TO_WIDTH_RATIO,
@@ -37,16 +38,44 @@ describe("convertTextToLines", () => {
     const lines = convertTextToLines(text)
     const yValues = lines.flatMap((line) => [line.y1, line.y2])
 
+    const getLineGlyphBounds = (lineText: string) => {
+      const bounds = { minY: Infinity, maxY: -Infinity }
+
+      for (const letter of lineText) {
+        const letterLines =
+          lineAlphabet[letter] ?? lineAlphabet[letter.toUpperCase()]
+        if (!letterLines) continue
+
+        for (const { y1, y2 } of letterLines) {
+          bounds.minY = Math.min(bounds.minY, y1, y2)
+          bounds.maxY = Math.max(bounds.maxY, y1, y2)
+        }
+      }
+
+      if (!Number.isFinite(bounds.minY)) {
+        return { minY: 0, maxY: 0 }
+      }
+
+      return bounds
+    }
+
     // First line (top) should be at text.y, second line should be below (lower Y)
     // With 2 lines, total offset is (lineCount - 1) * (height + spacing)
     const totalOffset = expectedTargetHeight + expectedSpacing
 
-    // Maximum Y should be near text.y + expectedTargetHeight (top of first line)
-    const maxY = Math.max(...yValues)
-    expect(maxY).toBeCloseTo(text.y + expectedTargetHeight)
+    const firstLineBounds = getLineGlyphBounds("A")
+    const secondLineBounds = getLineGlyphBounds("BC")
 
-    // Minimum Y should be at text.y - totalOffset (bottom of last line)
+    // Maximum Y should align with the top of the first line glyphs
+    const maxY = Math.max(...yValues)
+    expect(maxY).toBeCloseTo(
+      text.y + expectedTargetHeight * firstLineBounds.maxY,
+    )
+
+    // Minimum Y should align with the bottom of the last line glyphs
     const minY = Math.min(...yValues)
-    expect(minY).toBeCloseTo(text.y - totalOffset)
+    expect(minY).toBeCloseTo(
+      text.y - totalOffset + expectedTargetHeight * secondLineBounds.minY,
+    )
   })
 })
