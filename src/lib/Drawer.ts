@@ -49,6 +49,9 @@ export const LAYER_NAME_TO_COLOR = {
   tkeepout: colors.board.b_crtyd,
   tplace: colors.board.b_silks,
 
+  top_courtyard: colors.board.f_crtyd,
+  bottom_courtyard: colors.board.b_crtyd,
+
   top_silkscreen: colors.board.f_silks,
   bottom_silkscreen: colors.board.b_silks,
 
@@ -82,7 +85,9 @@ export const DEFAULT_DRAW_ORDER = [
   "soldermask_top",
   "soldermask_with_copper_bottom",
   "soldermask_with_copper_top",
+  "bottom_courtyard",
   "bottom_fabrication",
+  "top_courtyard",
   "top_fabrication",
   "edge_cuts",
   "top_silkscreen",
