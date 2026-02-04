@@ -309,13 +309,7 @@ export const drawCircle = (drawer: Drawer, circle: Circle) => {
     color: getColor(circle),
     layer: circle.layer,
   })
-  drawer.circle(
-    circle.x,
-    circle.y,
-    circle.r,
-    circle.mesh_fill,
-    circle.is_filled,
-  )
+  drawer.circle(circle.x, circle.y, circle.r, circle.mesh_fill)
 }
 
 export const drawOval = (drawer: Drawer, oval: Oval) => {

@@ -9,6 +9,15 @@ export const CourtyardCircleExample: React.FC = () => {
         circuitJson={
           [
             {
+              type: "pcb_board",
+              pcb_board_id: "board_1",
+              center: { x: 0, y: 0 },
+              width: 20,
+              height: 20,
+              thickness: 1.6,
+              num_layers: 2,
+            },
+            {
               type: "pcb_courtyard_circle",
               pcb_courtyard_circle_id: "courtyard_1",
               pcb_component_id: "component_1",
