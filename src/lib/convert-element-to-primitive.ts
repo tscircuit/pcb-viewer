@@ -10,6 +10,7 @@ import {
   convertSmtpadPill,
   convertSmtpadRotatedPill,
 } from "./element-to-primitive-converters/convert-smtpad-pill"
+
 import { convertPcbCopperTextToPrimitive } from "./element-to-primitive/convert-pcb-copper-text-to-primitive"
 
 type MetaData = {

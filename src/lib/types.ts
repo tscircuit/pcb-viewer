@@ -102,6 +102,7 @@ export interface Circle extends PCBDrawingObject {
   y: number
   r: number
   mesh_fill?: boolean
+  is_filled?: boolean
 }
 
 export interface Oval extends PCBDrawingObject {
