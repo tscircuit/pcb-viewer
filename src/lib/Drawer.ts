@@ -370,11 +370,26 @@ export class Drawer {
     ctx.restore()
   }
 
-  circle(x: number, y: number, r: number, mesh_fill?: boolean) {
+  circle(
+    x: number,
+    y: number,
+    r: number,
+    mesh_fill?: boolean,
+    is_filled = true,
+  ) {
     const r$ = scaleOnly(this.transform, r)
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
     const ctx = this.getLayerCtx()
+
+    // Ensure we have a stroke if not filled
+    if (!is_filled) {
+      const originalLineWidth = ctx.lineWidth
+      // Set a minimum visible stroke width if calculated width is 0 or too small
+      // or rely on what applyAperture set.
+      // If the aperture size was 0, we might want a hairline.
+      // But typically applyAperture sets lineWidth based on aperture.size.
+    }
 
     if (mesh_fill) {
       ctx.save()
@@ -395,7 +410,11 @@ export class Drawer {
     } else {
       ctx.beginPath()
       ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
-      ctx.fill()
+      if (is_filled !== false) {
+        ctx.fill()
+      } else {
+        ctx.stroke()
+      }
     }
   }
 

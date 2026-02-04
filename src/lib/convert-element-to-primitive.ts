@@ -10,6 +10,7 @@ import {
   convertSmtpadPill,
   convertSmtpadRotatedPill,
 } from "./element-to-primitive-converters/convert-smtpad-pill"
+import { convertPcbCourtyardCircle } from "./element-to-primitive-converters/convert-pcb-courtyard-circle"
 import { convertPcbCopperTextToPrimitive } from "./element-to-primitive/convert-pcb-copper-text-to-primitive"
 
 type MetaData = {
@@ -557,6 +558,15 @@ export const convertElementToPrimitives = (
         _parent_pcb_component,
         _parent_source_component,
       })
+    }
+    case "pcb_courtyard_circle": {
+      return [
+        convertPcbCourtyardCircle(element, {
+          _parent_pcb_component,
+          _parent_source_component,
+          _source_port,
+        }),
+      ]
     }
   }
 
