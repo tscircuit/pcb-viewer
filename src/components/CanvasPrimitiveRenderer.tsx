@@ -118,6 +118,31 @@ export const CanvasPrimitiveRenderer = ({
       const inner4Canvas = canvasRefs.current.inner4
       const inner5Canvas = canvasRefs.current.inner5
       const inner6Canvas = canvasRefs.current.inner6
+      const copperLayers: Array<{
+        canvas?: HTMLCanvasElement
+        copperLayer: PcbRenderLayer
+      }> = [
+        { canvas: topCanvas, copperLayer: "top_copper" },
+        { canvas: bottomCanvas, copperLayer: "bottom_copper" },
+        { canvas: inner1Canvas, copperLayer: "inner1_copper" },
+        { canvas: inner2Canvas, copperLayer: "inner2_copper" },
+        { canvas: inner3Canvas, copperLayer: "inner3_copper" },
+        { canvas: inner4Canvas, copperLayer: "inner4_copper" },
+        { canvas: inner5Canvas, copperLayer: "inner5_copper" },
+        { canvas: inner6Canvas, copperLayer: "inner6_copper" },
+      ]
+
+      // Draw PCB traces using circuit-to-canvas (on copper layers)
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
+        drawPcbTraceElementsForLayer({
+          canvas,
+          elements,
+          layers: [copperLayer],
+          realToCanvasMat: transform,
+          primitives,
+        })
+      }
       if (topCanvas) {
         drawPlatedHolePads({
           canvas: topCanvas,
@@ -156,32 +181,6 @@ export const CanvasPrimitiveRenderer = ({
           elements,
           layers: ["bottom_copper"],
           realToCanvasMat: transform,
-        })
-      }
-
-      const copperLayers: Array<{
-        canvas?: HTMLCanvasElement
-        copperLayer: PcbRenderLayer
-      }> = [
-        { canvas: topCanvas, copperLayer: "top_copper" },
-        { canvas: bottomCanvas, copperLayer: "bottom_copper" },
-        { canvas: inner1Canvas, copperLayer: "inner1_copper" },
-        { canvas: inner2Canvas, copperLayer: "inner2_copper" },
-        { canvas: inner3Canvas, copperLayer: "inner3_copper" },
-        { canvas: inner4Canvas, copperLayer: "inner4_copper" },
-        { canvas: inner5Canvas, copperLayer: "inner5_copper" },
-        { canvas: inner6Canvas, copperLayer: "inner6_copper" },
-      ]
-
-      // Draw PCB traces using circuit-to-canvas (on copper layers)
-      for (const { canvas, copperLayer } of copperLayers) {
-        if (!canvas) continue
-        drawPcbTraceElementsForLayer({
-          canvas,
-          elements,
-          layers: [copperLayer],
-          realToCanvasMat: transform,
-          primitives,
         })
       }
 
