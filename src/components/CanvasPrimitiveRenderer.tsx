@@ -16,6 +16,7 @@ import { drawPrimitives } from "lib/draw-primitives"
 import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
+import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
 import type { GridConfig, Primitive } from "lib/types"
 import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
@@ -55,6 +56,8 @@ const orderedLayers = [
   "top_notes",
   "top_silkscreen",
   "bottom_silkscreen",
+  "top_courtyard",
+  "bottom_courtyard",
   "other",
 ]
 
@@ -355,6 +358,29 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
         })
       }
+
+      // Draw top courtyard
+      const topCourtyardCanvas = canvasRefs.current.top_courtyard
+      if (topCourtyardCanvas) {
+        drawCourtyardElementsForLayer({
+          canvas: topCourtyardCanvas,
+          elements,
+          layers: ["top_courtyard" as PcbRenderLayer],
+          realToCanvasMat: transform,
+        })
+      }
+
+      // Draw bottom courtyard
+      const bottomCourtyardCanvas = canvasRefs.current.bottom_courtyard
+      if (bottomCourtyardCanvas) {
+        drawCourtyardElementsForLayer({
+          canvas: bottomCourtyardCanvas,
+          elements,
+          layers: ["bottom_courtyard" as PcbRenderLayer],
+          realToCanvasMat: transform,
+        })
+      }
+
       // Draw board outline using circuit-to-canvas
       const boardCanvas = canvasRefs.current.board
       if (boardCanvas) {

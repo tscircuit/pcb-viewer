@@ -16,7 +16,7 @@ export default {
     anchor: "rgb(255, 38, 226)",
     aux_items: "rgb(255, 255, 255)",
     b_adhes: "rgb(0, 0, 132)",
-    b_crtyd: "rgb(255, 38, 226)",
+    b_crtyd: "rgb(38, 233, 255)",
     b_fab: "rgb(88, 93, 132)",
     b_mask: "rgba(2, 255, 238, 0.400)",
     b_paste: "rgb(0, 194, 194)",
