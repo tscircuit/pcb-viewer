@@ -6,6 +6,9 @@ import {
 } from "circuit-to-canvas"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
+import { convertPcbSilkscreenTextToPrimitive } from "./element-to-primitive/convert-pcb-silkscreen-text-to-primitive"
+import { Drawer } from "./Drawer"
+import { drawPrimitives } from "./draw-primitives"
 
 // Create a color map that uses pcb-viewer's existing colors for silkscreen
 // while using defaults from circuit-to-canvas for other elements
