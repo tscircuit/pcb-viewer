@@ -75,57 +75,16 @@ export function applyEditEventsWithSilkscreenFix({
 
       if (dx === 0 && dy === 0) continue
 
-      // Capture positions before this specific edit
-      const beforeEditPositions = new Map<string, any>()
-      for (const element of result as any[]) {
-        if (element.pcb_component_id === editEvent.pcb_component_id) {
-          if (element.type === "pcb_silkscreen_line") {
-            beforeEditPositions.set(element.pcb_silkscreen_line_id, {
-              x1: element.x1,
-              y1: element.y1,
-            })
-          } else if (
-            element.type === "pcb_silkscreen_path" &&
-            element.route?.length
-          ) {
-            beforeEditPositions.set(element.pcb_silkscreen_path_id, {
-              route: [{ x: element.route[0].x }],
-            })
-          } else if (element.type === "pcb_silkscreen_circle") {
-            beforeEditPositions.set(element.pcb_silkscreen_circle_id, {
-              cx: element.center.x,
-            })
-          } else if (element.type === "pcb_silkscreen_rect") {
-            beforeEditPositions.set(element.pcb_silkscreen_rect_id, {
-              cx: element.center.x,
-            })
-          } else if (element.type === "pcb_silkscreen_oval") {
-            beforeEditPositions.set(element.pcb_silkscreen_oval_id, {
-              cx: element.center.x,
-            })
-          } else if (element.type === "pcb_silkscreen_pill") {
-            beforeEditPositions.set(element.pcb_silkscreen_pill_id, {
-              cx: element.center.x,
-            })
-          } else if (
-            element.type === "pcb_silkscreen_text" &&
-            element.anchor_position
-          ) {
-            beforeEditPositions.set(element.pcb_silkscreen_text_id, {
-              ax: element.anchor_position.x,
-            })
-          }
-        }
-      }
-
       result = result.map((element: any) => {
         if (element.pcb_component_id !== editEvent.pcb_component_id) {
           return element
         }
 
         if (element.type === "pcb_silkscreen_line") {
-          const before = beforeEditPositions.get(element.pcb_silkscreen_line_id)
-          if (!before || element.x1 !== before.x1 || element.y1 !== before.y1) {
+          const original = originalPositions.get(element.pcb_silkscreen_line_id)
+          if (!original) return element
+          // Check if applyEditEvents already moved the element
+          if (element.x1 !== original.x1 || element.y1 !== original.y1) {
             return element
           }
           return {
@@ -138,12 +97,10 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_path") {
-          const before = beforeEditPositions.get(element.pcb_silkscreen_path_id)
-          if (
-            !before ||
-            !element.route?.length ||
-            element.route[0].x !== before.route?.[0]?.x
-          ) {
+          const original = originalPositions.get(element.pcb_silkscreen_path_id)
+          if (!original || !element.route?.length) return element
+          // Check if applyEditEvents already moved the element
+          if (element.route[0].x !== original.route?.[0]?.x) {
             return element
           }
           return {
@@ -156,10 +113,12 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_circle") {
-          const before = beforeEditPositions.get(
+          const original = originalPositions.get(
             element.pcb_silkscreen_circle_id,
           )
-          if (!before || element.center.x !== before.cx) {
+          if (!original) return element
+          // Check if applyEditEvents already moved the element
+          if (element.center.x !== original.cx) {
             return element
           }
           return {
@@ -172,8 +131,10 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_rect") {
-          const before = beforeEditPositions.get(element.pcb_silkscreen_rect_id)
-          if (!before || element.center.x !== before.cx) {
+          const original = originalPositions.get(element.pcb_silkscreen_rect_id)
+          if (!original) return element
+          // Check if applyEditEvents already moved the element
+          if (element.center.x !== original.cx) {
             return element
           }
           return {
@@ -186,8 +147,10 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_oval") {
-          const before = beforeEditPositions.get(element.pcb_silkscreen_oval_id)
-          if (!before || element.center.x !== before.cx) {
+          const original = originalPositions.get(element.pcb_silkscreen_oval_id)
+          if (!original) return element
+          // Check if applyEditEvents already moved the element
+          if (element.center.x !== original.cx) {
             return element
           }
           return {
@@ -200,8 +163,10 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_pill") {
-          const before = beforeEditPositions.get(element.pcb_silkscreen_pill_id)
-          if (!before || element.center.x !== before.cx) {
+          const original = originalPositions.get(element.pcb_silkscreen_pill_id)
+          if (!original) return element
+          // Check if applyEditEvents already moved the element
+          if (element.center.x !== original.cx) {
             return element
           }
           return {
@@ -214,8 +179,10 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_text") {
-          const before = beforeEditPositions.get(element.pcb_silkscreen_text_id)
-          if (!before || element.anchor_position?.x !== before.ax) {
+          const original = originalPositions.get(element.pcb_silkscreen_text_id)
+          if (!original) return element
+          // Check if applyEditEvents already moved the element
+          if (element.anchor_position?.x !== original.ax) {
             return element
           }
           return {
