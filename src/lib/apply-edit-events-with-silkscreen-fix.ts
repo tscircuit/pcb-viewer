@@ -75,14 +75,57 @@ export function applyEditEventsWithSilkscreenFix({
 
       if (dx === 0 && dy === 0) continue
 
+      // Capture positions before this specific edit
+      const beforeEditPositions = new Map<string, any>()
+      for (const element of result as any[]) {
+        if (element.pcb_component_id === editEvent.pcb_component_id) {
+          if (element.type === "pcb_silkscreen_line") {
+            beforeEditPositions.set(element.pcb_silkscreen_line_id, {
+              x1: element.x1,
+              y1: element.y1,
+            })
+          } else if (
+            element.type === "pcb_silkscreen_path" &&
+            element.route?.length
+          ) {
+            beforeEditPositions.set(element.pcb_silkscreen_path_id, {
+              route: [{ x: element.route[0].x }],
+            })
+          } else if (element.type === "pcb_silkscreen_circle") {
+            beforeEditPositions.set(element.pcb_silkscreen_circle_id, {
+              cx: element.center.x,
+            })
+          } else if (element.type === "pcb_silkscreen_rect") {
+            beforeEditPositions.set(element.pcb_silkscreen_rect_id, {
+              cx: element.center.x,
+            })
+          } else if (element.type === "pcb_silkscreen_oval") {
+            beforeEditPositions.set(element.pcb_silkscreen_oval_id, {
+              cx: element.center.x,
+            })
+          } else if (element.type === "pcb_silkscreen_pill") {
+            beforeEditPositions.set(element.pcb_silkscreen_pill_id, {
+              cx: element.center.x,
+            })
+          } else if (
+            element.type === "pcb_silkscreen_text" &&
+            element.anchor_position
+          ) {
+            beforeEditPositions.set(element.pcb_silkscreen_text_id, {
+              ax: element.anchor_position.x,
+            })
+          }
+        }
+      }
+
       result = result.map((element: any) => {
         if (element.pcb_component_id !== editEvent.pcb_component_id) {
           return element
         }
 
         if (element.type === "pcb_silkscreen_line") {
-          const orig = originalPositions.get(element.pcb_silkscreen_line_id)
-          if (!orig || element.x1 !== orig.x1 || element.y1 !== orig.y1) {
+          const before = beforeEditPositions.get(element.pcb_silkscreen_line_id)
+          if (!before || element.x1 !== before.x1 || element.y1 !== before.y1) {
             return element
           }
           return {
@@ -95,11 +138,11 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_path") {
-          const orig = originalPositions.get(element.pcb_silkscreen_path_id)
+          const before = beforeEditPositions.get(element.pcb_silkscreen_path_id)
           if (
-            !orig ||
+            !before ||
             !element.route?.length ||
-            element.route[0].x !== orig.route?.[0]?.x
+            element.route[0].x !== before.route?.[0]?.x
           ) {
             return element
           }
@@ -113,8 +156,10 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_circle") {
-          const orig = originalPositions.get(element.pcb_silkscreen_circle_id)
-          if (!orig || element.center.x !== orig.cx) {
+          const before = beforeEditPositions.get(
+            element.pcb_silkscreen_circle_id,
+          )
+          if (!before || element.center.x !== before.cx) {
             return element
           }
           return {
@@ -127,8 +172,8 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_rect") {
-          const orig = originalPositions.get(element.pcb_silkscreen_rect_id)
-          if (!orig || element.center.x !== orig.cx) {
+          const before = beforeEditPositions.get(element.pcb_silkscreen_rect_id)
+          if (!before || element.center.x !== before.cx) {
             return element
           }
           return {
@@ -141,8 +186,8 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_oval") {
-          const orig = originalPositions.get(element.pcb_silkscreen_oval_id)
-          if (!orig || element.center.x !== orig.cx) {
+          const before = beforeEditPositions.get(element.pcb_silkscreen_oval_id)
+          if (!before || element.center.x !== before.cx) {
             return element
           }
           return {
@@ -155,8 +200,8 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_pill") {
-          const orig = originalPositions.get(element.pcb_silkscreen_pill_id)
-          if (!orig || element.center.x !== orig.cx) {
+          const before = beforeEditPositions.get(element.pcb_silkscreen_pill_id)
+          if (!before || element.center.x !== before.cx) {
             return element
           }
           return {
@@ -169,8 +214,8 @@ export function applyEditEventsWithSilkscreenFix({
         }
 
         if (element.type === "pcb_silkscreen_text") {
-          const orig = originalPositions.get(element.pcb_silkscreen_text_id)
-          if (!orig || element.anchor_position?.x !== orig.ax) {
+          const before = beforeEditPositions.get(element.pcb_silkscreen_text_id)
+          if (!before || element.anchor_position?.x !== before.ax) {
             return element
           }
           return {
