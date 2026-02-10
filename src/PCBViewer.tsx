@@ -1,4 +1,3 @@
-import { applyEditEvents } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
@@ -14,6 +13,7 @@ import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
+import { applyEditEventsWithSilkscreenFix } from "lib/apply-edit-events-with-silkscreen-fix"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -121,7 +121,7 @@ export const PCBViewer = ({
   }, [circuitJsonKey])
 
   const elements = useMemo(() => {
-    return applyEditEvents({
+    return applyEditEventsWithSilkscreenFix({
       circuitJson: pcbElmsPreEdit as any,
       editEvents,
     })
