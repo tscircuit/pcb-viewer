@@ -13,14 +13,57 @@ export function applyEditEventsWithSilkscreenFix({
   circuitJson: AnyCircuitElement[]
   editEvents: ManualEditEvent[]
 }): AnyCircuitElement[] {
-  // First apply the standard edit events
+  // Index original silkscreen positions before applying edit events
+  const originalPositions = new Map<string, any>()
+  for (const element of circuitJson as any[]) {
+    if (!element.pcb_component_id) continue
+    if (element.type === "pcb_silkscreen_line") {
+      originalPositions.set(element.pcb_silkscreen_line_id, {
+        x1: element.x1,
+        y1: element.y1,
+        x2: element.x2,
+        y2: element.y2,
+      })
+    } else if (element.type === "pcb_silkscreen_path") {
+      originalPositions.set(element.pcb_silkscreen_path_id, {
+        route: element.route?.map((p: any) => ({ x: p.x, y: p.y })),
+      })
+    } else if (element.type === "pcb_silkscreen_circle") {
+      originalPositions.set(element.pcb_silkscreen_circle_id, {
+        cx: element.center.x,
+        cy: element.center.y,
+      })
+    } else if (element.type === "pcb_silkscreen_text") {
+      originalPositions.set(element.pcb_silkscreen_text_id, {
+        ax: element.anchor_position?.x,
+        ay: element.anchor_position?.y,
+      })
+    } else if (element.type === "pcb_silkscreen_rect") {
+      originalPositions.set(element.pcb_silkscreen_rect_id, {
+        cx: element.center.x,
+        cy: element.center.y,
+      })
+    } else if (element.type === "pcb_silkscreen_oval") {
+      originalPositions.set(element.pcb_silkscreen_oval_id, {
+        cx: element.center.x,
+        cy: element.center.y,
+      })
+    } else if (element.type === "pcb_silkscreen_pill") {
+      originalPositions.set(element.pcb_silkscreen_pill_id, {
+        cx: element.center.x,
+        cy: element.center.y,
+      })
+    }
+  }
+
+  // Apply the standard edit events
   let result = applyEditEvents({
     circuitJson: circuitJson as any,
     editEvents,
   })
 
-  // For each component location edit event, calculate the translation
-  // and apply it to silkscreen elements that weren't transformed
+  // For each component location edit, apply translation only to silkscreen
+  // elements that were NOT already moved by applyEditEvents
   for (const editEvent of editEvents) {
     if (
       editEvent.edit_event_type === "edit_pcb_component_location" &&
@@ -30,17 +73,18 @@ export function applyEditEventsWithSilkscreenFix({
       const dx = editEvent.new_center.x - editEvent.original_center.x
       const dy = editEvent.new_center.y - editEvent.original_center.y
 
-      // Only proceed if there's actual movement
       if (dx === 0 && dy === 0) continue
 
       result = result.map((element: any) => {
-        // Check if this element belongs to the moved component
         if (element.pcb_component_id !== editEvent.pcb_component_id) {
           return element
         }
 
-        // Transform silkscreen line elements
         if (element.type === "pcb_silkscreen_line") {
+          const orig = originalPositions.get(element.pcb_silkscreen_line_id)
+          if (!orig || element.x1 !== orig.x1 || element.y1 !== orig.y1) {
+            return element
+          }
           return {
             ...element,
             x1: element.x1 + dx,
@@ -50,19 +94,29 @@ export function applyEditEventsWithSilkscreenFix({
           }
         }
 
-        // Transform silkscreen path elements
         if (element.type === "pcb_silkscreen_path") {
+          const orig = originalPositions.get(element.pcb_silkscreen_path_id)
+          if (
+            !orig ||
+            !element.route?.length ||
+            element.route[0].x !== orig.route?.[0]?.x
+          ) {
+            return element
+          }
           return {
             ...element,
-            route: element.route?.map((point: { x: number; y: number }) => ({
+            route: element.route.map((point: { x: number; y: number }) => ({
               x: point.x + dx,
               y: point.y + dy,
             })),
           }
         }
 
-        // Transform silkscreen circle elements
         if (element.type === "pcb_silkscreen_circle") {
+          const orig = originalPositions.get(element.pcb_silkscreen_circle_id)
+          if (!orig || element.center.x !== orig.cx) {
+            return element
+          }
           return {
             ...element,
             center: {
@@ -72,8 +126,11 @@ export function applyEditEventsWithSilkscreenFix({
           }
         }
 
-        // Transform silkscreen rect elements
         if (element.type === "pcb_silkscreen_rect") {
+          const orig = originalPositions.get(element.pcb_silkscreen_rect_id)
+          if (!orig || element.center.x !== orig.cx) {
+            return element
+          }
           return {
             ...element,
             center: {
@@ -83,8 +140,11 @@ export function applyEditEventsWithSilkscreenFix({
           }
         }
 
-        // Transform silkscreen oval elements
         if (element.type === "pcb_silkscreen_oval") {
+          const orig = originalPositions.get(element.pcb_silkscreen_oval_id)
+          if (!orig || element.center.x !== orig.cx) {
+            return element
+          }
           return {
             ...element,
             center: {
@@ -94,8 +154,11 @@ export function applyEditEventsWithSilkscreenFix({
           }
         }
 
-        // Transform silkscreen pill elements
         if (element.type === "pcb_silkscreen_pill") {
+          const orig = originalPositions.get(element.pcb_silkscreen_pill_id)
+          if (!orig || element.center.x !== orig.cx) {
+            return element
+          }
           return {
             ...element,
             center: {
@@ -105,16 +168,17 @@ export function applyEditEventsWithSilkscreenFix({
           }
         }
 
-        // Transform silkscreen text elements
         if (element.type === "pcb_silkscreen_text") {
+          const orig = originalPositions.get(element.pcb_silkscreen_text_id)
+          if (!orig || element.anchor_position?.x !== orig.ax) {
+            return element
+          }
           return {
             ...element,
-            anchor_position: element.anchor_position
-              ? {
-                  x: element.anchor_position.x + dx,
-                  y: element.anchor_position.y + dy,
-                }
-              : element.anchor_position,
+            anchor_position: {
+              x: element.anchor_position.x + dx,
+              y: element.anchor_position.y + dy,
+            },
           }
         }
 
