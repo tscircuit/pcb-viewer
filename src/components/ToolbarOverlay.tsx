@@ -1,19 +1,21 @@
-import {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useLayoutEffect,
-} from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
-import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
-import { useGlobalStore } from "../global-store"
-import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
-import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
+import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
+import { zIndexMap } from "lib/util/z-index-map"
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
+import { useCopyToClipboard } from "react-use"
+import packageJson from "../../package.json"
+import { useGlobalStore } from "../global-store"
 
 interface Props {
   children?: React.ReactNode
@@ -241,6 +243,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
+  const [copiedErrorIndex, setCopiedErrorIndex] = useState<number | null>(null)
+
+  const [, copyToClipboard] = useCopyToClipboard()
 
   const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
   const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
@@ -520,7 +525,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
               return (
                 <div
-                  key={i}
+                  key={errorId}
                   style={{
                     borderBottom:
                       i < errorElements.length - 1 ? "1px solid #444" : "none",
@@ -637,6 +642,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                       padding: "12px 16px",
                       backgroundColor: "#1a1a1a",
                       borderTop: "1px solid #444",
+                      position: "relative",
                     }}
                   >
                     <div
@@ -648,11 +654,45 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         overflowWrap: "break-word",
                         hyphens: "auto",
                         userSelect: "text",
+                        paddingRight: 30, // Space for the copy icon
                       }}
                       onMouseDown={(event) => event.stopPropagation()}
                       onClick={(event) => event.stopPropagation()}
                     >
                       {e.message}
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 12,
+                        right: 16,
+                        cursor: "pointer",
+                        color: "#888",
+                        fontSize: 16,
+                      }}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (e.message) {
+                          copyToClipboard(e.message)
+                          setCopiedErrorIndex(i)
+                          setTimeout(() => setCopiedErrorIndex(null), 2000)
+                        }
+                      }}
+                    >
+                      {copiedErrorIndex === i ? (
+                        <span style={{ color: "#4caf50", fontSize: 12 }}>
+                          Copied!
+                        </span>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                        </svg>
+                      )}
                     </div>
                   </div>
                 </div>
