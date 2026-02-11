@@ -1,21 +1,20 @@
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useLayoutEffect,
+} from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
-import { useHotKey } from "hooks/useHotKey"
-import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
-import { zIndexMap } from "lib/util/z-index-map"
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react"
-import { useCopyToClipboard } from "react-use"
-import packageJson from "../../package.json"
 import { useGlobalStore } from "../global-store"
+import packageJson from "../../package.json"
+import { useHotKey } from "hooks/useHotKey"
+import { zIndexMap } from "lib/util/z-index-map"
+import { useIsSmallScreen } from "hooks/useIsSmallScreen"
+import { useCopyToClipboard } from "react-use"
 
 interface Props {
   children?: React.ReactNode
