@@ -242,7 +242,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
-  const [copiedErrorIndex, setCopiedErrorIndex] = useState<number | null>(null)
+  const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null)
 
   const [, copyToClipboard] = useCopyToClipboard()
 
@@ -660,7 +660,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     >
                       {e.message}
                     </div>
-                    <div
+                    <button
+                      type="button"
+                      aria-label={
+                        copiedErrorId === errorId
+                          ? "Error message copied"
+                          : "Copy error message"
+                      }
                       style={{
                         position: "absolute",
                         top: 12,
@@ -668,17 +674,22 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         cursor: "pointer",
                         color: "#888",
                         fontSize: 16,
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        display: "flex",
+                        alignItems: "center",
                       }}
                       onClick={(event) => {
                         event.stopPropagation()
                         if (e.message) {
                           copyToClipboard(e.message)
-                          setCopiedErrorIndex(i)
-                          setTimeout(() => setCopiedErrorIndex(null), 2000)
+                          setCopiedErrorId(errorId)
+                          setTimeout(() => setCopiedErrorId(null), 2000)
                         }
                       }}
                     >
-                      {copiedErrorIndex === i ? (
+                      {copiedErrorId === errorId ? (
                         <span style={{ color: "#4caf50", fontSize: 12 }}>
                           Copied!
                         </span>
@@ -692,7 +703,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                         </svg>
                       )}
-                    </div>
+                    </button>
                   </div>
                 </div>
               )
