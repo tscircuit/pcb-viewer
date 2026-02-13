@@ -206,7 +206,7 @@ export const ErrorOverlay = ({
             y: port2.y,
           })
 
-          if (!isHighlighted && !isShowingDRCErrors) {
+          if (!isShowingDRCErrors) {
             return null
           }
 
