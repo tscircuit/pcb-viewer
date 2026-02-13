@@ -195,15 +195,6 @@ export const CanvasPrimitiveRenderer = ({
           primitives,
           drawSoldermask: isShowingSolderMask,
         })
-        if (isShowingSolderMask) {
-          drawSoldermaskElementsForLayer({
-            canvas,
-            elements,
-            layers: [copperLayer],
-            realToCanvasMat: transform,
-            primitives,
-          })
-        }
       }
 
       // Draw vias using circuit-to-canvas (on copper layers)
@@ -281,15 +272,6 @@ export const CanvasPrimitiveRenderer = ({
           layers: ["drill"],
           realToCanvasMat: transform,
         })
-        if (isShowingSolderMask) {
-          drawSoldermaskElementsForLayer({
-            canvas: drillCanvas,
-            elements,
-            layers: ["drill"],
-            realToCanvasMat: transform,
-            primitives,
-          })
-        }
       }
 
       // Draw top silkscreen

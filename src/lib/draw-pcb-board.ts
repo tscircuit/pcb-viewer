@@ -28,7 +28,8 @@ export function drawPcbBoardElements({
   for (const element of pcbBoardElements) {
     drawer.drawElements([element], {
       layers,
-      drawSoldermask,
+      drawSoldermask: false,
+      drawBoardMaterial: drawSoldermask ?? false,
       minBoardOutlineStrokePx: 2,
     })
   }
