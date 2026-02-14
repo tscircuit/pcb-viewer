@@ -25,15 +25,19 @@ interface Props {
 interface LayerButtonProps {
   name: string
   selected?: boolean
-  onClick: (e: React.MouseEvent<HTMLDivElement>) => void
+  onClick: (
+    e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+  ) => void
 }
 
 interface ToolbarButtonProps {
   children: React.ReactNode
   isSmallScreen: boolean
-  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onClick?: (
+    e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+  ) => void
   style?: React.CSSProperties
-  onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onMouseLeave?: (e: React.MouseEvent<HTMLElement>) => void
 }
 
 interface CheckboxMenuItemProps {
