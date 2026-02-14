@@ -1,17 +1,23 @@
-import { useCallback, useRef } from "react"
+import {
+  useCallback,
+  useRef,
+  type MouseEvent,
+  type TouchEvent,
+  type CSSProperties,
+} from "react"
 
 /**
  * A hook to handle mobile touch events and prevent "ghost clicks" or double-firing
  * when using both click and touch handlers.
  */
-export const useMobileTouch = (
-  onClick?: (e: any) => void,
+export const useMobileTouch = <T extends HTMLElement = HTMLElement>(
+  onClick?: (e: MouseEvent<T> | TouchEvent<T>) => void,
   options: { stopPropagation?: boolean } = { stopPropagation: true },
 ) => {
   const lastInteractionRef = useRef(0)
 
   const handleInteraction = useCallback(
-    (e: any) => {
+    (e: MouseEvent<T> | TouchEvent<T>) => {
       if (options.stopPropagation) {
         e.stopPropagation()
       }
@@ -26,16 +32,18 @@ export const useMobileTouch = (
   )
 
   const onTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
+    (e: TouchEvent<T>) => {
       e.preventDefault()
       handleInteraction(e)
     },
     [handleInteraction],
   )
 
+  const style: CSSProperties = { touchAction: "manipulation" }
+
   return {
     onClick: handleInteraction,
     onTouchEnd,
-    style: { touchAction: "manipulation" as const },
+    style,
   }
 }

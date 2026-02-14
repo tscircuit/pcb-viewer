@@ -190,7 +190,9 @@ const CopyErrorButton = ({
     <button
       type="button"
       aria-label={
-        copiedErrorId === errorId ? "Error message copied" : "Copy error message"
+        copiedErrorId === errorId
+          ? "Error message copied"
+          : "Copy error message"
       }
       style={{
         position: "absolute",
