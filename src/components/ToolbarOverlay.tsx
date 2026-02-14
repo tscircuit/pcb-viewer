@@ -245,6 +245,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null)
 
   const [, copyToClipboard] = useCopyToClipboard()
+  const lastCopyInteractionAtRef = useRef(0)
 
   const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
   const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
@@ -282,6 +283,28 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         ]
 
   const processedLayers = availableLayers
+
+  const handleCopyErrorMessage = useCallback(
+    (
+      event:
+        | React.MouseEvent<HTMLButtonElement>
+        | React.TouchEvent<HTMLButtonElement>,
+      errorMessage: string,
+      errorId: string,
+    ) => {
+      event.stopPropagation()
+
+      const now = Date.now()
+      if (now - lastCopyInteractionAtRef.current < 300) return
+      lastCopyInteractionAtRef.current = now
+
+      if (!errorMessage) return
+      copyToClipboard(errorMessage)
+      setCopiedErrorId(errorId)
+      setTimeout(() => setCopiedErrorId(null), 2000)
+    },
+    [copyToClipboard],
+  )
 
   const hasRunInitialMouseCheck = useRef(false)
   const hotkeyBoundaryRef = useRef<HTMLDivElement>(null)
@@ -679,14 +702,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         padding: 0,
                         display: "flex",
                         alignItems: "center",
+                        touchAction: "manipulation",
                       }}
                       onClick={(event) => {
-                        event.stopPropagation()
-                        if (e.message) {
-                          copyToClipboard(e.message)
-                          setCopiedErrorId(errorId)
-                          setTimeout(() => setCopiedErrorId(null), 2000)
-                        }
+                        handleCopyErrorMessage(event, e.message, errorId)
+                      }}
+                      onTouchEnd={(event) => {
+                        event.preventDefault()
+                        handleCopyErrorMessage(event, e.message, errorId)
                       }}
                     >
                       {copiedErrorId === errorId ? (
