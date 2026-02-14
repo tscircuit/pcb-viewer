@@ -14,6 +14,8 @@ import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
+import { useCopyToClipboard } from "react-use"
+import { useMobileTouch } from "hooks/useMobileTouch"
 
 interface Props {
   children?: React.ReactNode
@@ -23,15 +25,19 @@ interface Props {
 interface LayerButtonProps {
   name: string
   selected?: boolean
-  onClick: (e: React.MouseEvent<HTMLDivElement>) => void
+  onClick: (
+    e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+  ) => void
 }
 
 interface ToolbarButtonProps {
   children: React.ReactNode
   isSmallScreen: boolean
-  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onClick?: (
+    e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
+  ) => void
   style?: React.CSSProperties
-  onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onMouseLeave?: (e: React.MouseEvent<HTMLElement>) => void
 }
 
 interface CheckboxMenuItemProps {
@@ -47,6 +53,7 @@ interface RadioMenuItemProps {
 }
 
 export const LayerButton = ({ name, selected, onClick }: LayerButtonProps) => {
+  const { style: touchStyle, ...touchHandlers } = useMobileTouch(onClick)
   return (
     <div
       className={css`
@@ -60,7 +67,8 @@ export const LayerButton = ({ name, selected, onClick }: LayerButtonProps) => {
           background-color: rgba(255, 255, 255, 0.1);
         }
       `}
-      onClick={onClick}
+      {...touchHandlers}
+      style={touchStyle}
     >
       <span style={{ marginRight: 2, opacity: selected ? 1 : 0 }}>•</span>
       <span
@@ -81,43 +89,40 @@ export const ToolbarButton = ({
   isSmallScreen,
   onClick,
   ...props
-}: ToolbarButtonProps) => (
-  <div
-    {...props}
-    onClick={onClick}
-    onTouchEnd={(e: React.TouchEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (onClick) {
-        onClick(e as any)
-      }
-    }}
-    style={{
-      backgroundColor: "#1F1F1F",
-      border: "1px solid #666",
-      margin: 0,
-      padding: 4,
-      paddingLeft: isSmallScreen ? 8 : 6,
-      paddingRight: isSmallScreen ? 8 : 6,
-      borderRadius: 2,
-      color: "#eee",
-      cursor: "pointer",
-      fontSize: 12,
-      height: "fit-content",
-      touchAction: "manipulation",
-      userSelect: "none",
-      whiteSpace: "nowrap",
-      ...props.style,
-    }}
-  >
-    {children}
-  </div>
-)
+}: ToolbarButtonProps) => {
+  const { style: touchStyle, ...touchHandlers } = useMobileTouch(onClick)
+  return (
+    <div
+      {...props}
+      {...touchHandlers}
+      style={{
+        backgroundColor: "#1F1F1F",
+        border: "1px solid #666",
+        margin: 0,
+        padding: 4,
+        paddingLeft: isSmallScreen ? 8 : 6,
+        paddingRight: isSmallScreen ? 8 : 6,
+        borderRadius: 2,
+        color: "#eee",
+        cursor: "pointer",
+        fontSize: 12,
+        height: "fit-content",
+        userSelect: "none",
+        whiteSpace: "nowrap",
+        ...touchStyle,
+        ...props.style,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
 const CheckboxMenuItem = ({
   label,
   checked,
   onClick,
 }: CheckboxMenuItemProps) => {
+  const { style: touchStyle, ...touchHandlers } = useMobileTouch(onClick)
   return (
     <div
       className={css`
@@ -134,15 +139,8 @@ const CheckboxMenuItem = ({
           background-color: rgba(255, 255, 255, 0.1);
         }
       `}
-      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-        e.stopPropagation()
-        onClick()
-      }}
-      onTouchEnd={(e: React.TouchEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
-        onClick()
-      }}
+      {...touchHandlers}
+      style={touchStyle}
     >
       <input type="checkbox" checked={checked} onChange={() => {}} readOnly />
       <span style={{ color: "#eee" }}>{label}</span>
@@ -151,6 +149,7 @@ const CheckboxMenuItem = ({
 }
 
 const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
+  const { style: touchStyle, ...touchHandlers } = useMobileTouch(onClick)
   return (
     <div
       className={css`
@@ -167,19 +166,62 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
           background-color: rgba(255, 255, 255, 0.1);
         }
       `}
-      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-        e.stopPropagation()
-        onClick()
-      }}
-      onTouchEnd={(e: React.TouchEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
-        onClick()
-      }}
+      {...touchHandlers}
+      style={touchStyle}
     >
       <input type="radio" checked={checked} onChange={() => {}} readOnly />
       <span style={{ color: "#eee" }}>{label}</span>
     </div>
+  )
+}
+
+const CopyErrorButton = ({
+  errorId,
+  errorMessage,
+  copiedErrorId,
+  onCopy,
+}: {
+  errorId: string
+  errorMessage: string
+  copiedErrorId: string | null
+  onCopy: (errorMessage: string, errorId: string) => void
+}) => {
+  const { style: touchStyle, ...touchHandlers } = useMobileTouch(() =>
+    onCopy(errorMessage, errorId),
+  )
+
+  return (
+    <button
+      type="button"
+      aria-label={
+        copiedErrorId === errorId
+          ? "Error message copied"
+          : "Copy error message"
+      }
+      style={{
+        position: "absolute",
+        top: 12,
+        right: 16,
+        cursor: "pointer",
+        color: "#888",
+        fontSize: 16,
+        background: "none",
+        border: "none",
+        padding: 0,
+        display: "flex",
+        alignItems: "center",
+        ...touchStyle,
+      }}
+      {...touchHandlers}
+    >
+      {copiedErrorId === errorId ? (
+        <span style={{ color: "#4caf50", fontSize: 12 }}>Copied!</span>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+        </svg>
+      )}
+    </button>
   )
 }
 
@@ -241,6 +283,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
+  const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null)
+
+  const [, copyToClipboard] = useCopyToClipboard()
 
   const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
   const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
@@ -520,7 +565,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
               return (
                 <div
-                  key={i}
+                  key={errorId}
                   style={{
                     borderBottom:
                       i < errorElements.length - 1 ? "1px solid #444" : "none",
@@ -637,6 +682,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                       padding: "12px 16px",
                       backgroundColor: "#1a1a1a",
                       borderTop: "1px solid #444",
+                      position: "relative",
                     }}
                   >
                     <div
@@ -648,12 +694,23 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                         overflowWrap: "break-word",
                         hyphens: "auto",
                         userSelect: "text",
+                        paddingRight: 30, // Space for the copy icon
                       }}
                       onMouseDown={(event) => event.stopPropagation()}
                       onClick={(event) => event.stopPropagation()}
                     >
                       {e.message}
                     </div>
+                    <CopyErrorButton
+                      errorId={errorId}
+                      errorMessage={e.message}
+                      copiedErrorId={copiedErrorId}
+                      onCopy={(msg, id) => {
+                        copyToClipboard(msg)
+                        setCopiedErrorId(id)
+                        setTimeout(() => setCopiedErrorId(null), 2000)
+                      }}
+                    />
                   </div>
                 </div>
               )
