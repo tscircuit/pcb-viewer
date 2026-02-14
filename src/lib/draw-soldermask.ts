@@ -34,12 +34,16 @@ export function drawSoldermaskElementsForLayer({
   elements,
   layers,
   realToCanvasMat,
+  drawSoldermaskTop,
+  drawSoldermaskBottom,
   primitives,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
+  drawSoldermaskTop?: boolean
+  drawSoldermaskBottom?: boolean
   primitives?: Primitive[]
 }) {
   const drawer = new CircuitToCanvasDrawer(canvas)
@@ -49,6 +53,8 @@ export function drawSoldermaskElementsForLayer({
     drawer.drawElements(elements, {
       layers,
       drawSoldermask: true,
+      drawSoldermaskTop,
+      drawSoldermaskBottom,
       drawBoardMaterial: false,
     })
   } else {
@@ -59,6 +65,8 @@ export function drawSoldermaskElementsForLayer({
       drawer.drawElements([board, ...nonBoardElements], {
         layers,
         drawSoldermask: true,
+        drawSoldermaskTop,
+        drawSoldermaskBottom,
         drawBoardMaterial: false,
       })
     }
@@ -102,6 +110,8 @@ export function drawSoldermaskElementsForLayer({
   hoverDrawer.drawElements(hoveredElements, {
     layers,
     drawSoldermask: true,
+    drawSoldermaskTop,
+    drawSoldermaskBottom,
     drawBoardMaterial: false,
   })
 }

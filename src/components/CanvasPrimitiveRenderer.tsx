@@ -221,24 +221,32 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       if (isShowingSolderMask) {
+        const soldermaskLayer = selectedLayer === "bottom" ? "bottom" : "top"
+        const drawSoldermaskTop = soldermaskLayer === "top"
+        const drawSoldermaskBottom = soldermaskLayer === "bottom"
+
         const topSoldermaskCanvas = canvasRefs.current.soldermask_top
-        if (topSoldermaskCanvas) {
+        if (topSoldermaskCanvas && soldermaskLayer === "top") {
           drawSoldermaskElementsForLayer({
             canvas: topSoldermaskCanvas,
             elements,
             layers: ["top_soldermask"],
             realToCanvasMat: transform,
+            drawSoldermaskTop,
+            drawSoldermaskBottom,
             primitives,
           })
         }
 
         const bottomSoldermaskCanvas = canvasRefs.current.soldermask_bottom
-        if (bottomSoldermaskCanvas) {
+        if (bottomSoldermaskCanvas && soldermaskLayer === "bottom") {
           drawSoldermaskElementsForLayer({
             canvas: bottomSoldermaskCanvas,
             elements,
             layers: ["bottom_soldermask"],
             realToCanvasMat: transform,
+            drawSoldermaskTop,
+            drawSoldermaskBottom,
             primitives,
           })
         }
