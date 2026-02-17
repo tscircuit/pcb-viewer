@@ -3,6 +3,7 @@ import { useGlobalStore } from "../global-store"
 import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, inverse } from "transformation-matrix"
+import type { BoardSizeEdit } from "../PCBViewer"
 
 type DragHandle =
   | "top"
@@ -20,12 +21,6 @@ interface DragState {
   originalWidth: number
   originalHeight: number
   originalCenter: { x: number; y: number }
-}
-
-interface BoardSizeEdit {
-  width: number
-  height: number
-  center: { x: number; y: number }
 }
 
 interface Props {
@@ -68,13 +63,15 @@ export const EditBoardOverlay = ({
   const disabled = !in_edit_board_size_mode
 
   const pcbBoard = elements.find((e): e is PcbBoard => e.type === "pcb_board")
+  const pcbBoardRef = useRef(pcbBoard)
+  pcbBoardRef.current = pcbBoard
 
   // When dragging, attach window-level mouse listeners so we don't lose the drag
   useEffect(() => {
     if (!dragState || !transform) return
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current || !pcbBoard) return
+      if (!containerRef.current || !pcbBoardRef.current) return
 
       const rect = containerRef.current.getBoundingClientRect()
       const screenX = e.clientX - rect.left
@@ -146,7 +143,7 @@ export const EditBoardOverlay = ({
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [dragState, transform, pcbBoard, onBoardSizeEdit, setIsEditingBoardSize])
+  }, [dragState, transform, onBoardSizeEdit, setIsEditingBoardSize])
 
   const startDrag = (e: React.MouseEvent, handle: DragHandle) => {
     if (!transform || !pcbBoard || !containerRef.current) return
