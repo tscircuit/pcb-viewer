@@ -1,9 +1,9 @@
+import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
-import { useGlobalStore } from "../global-store"
 import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
-import type { ManualEditEvent } from "@tscircuit/props"
+import { useGlobalStore } from "../global-store"
 
 interface Props {
   transform?: Matrix
@@ -50,6 +50,12 @@ export const EditPlacementOverlay = ({
     originalCenter: { x: number; y: number }
     dragEnd: { x: number; y: number }
     edit_event_id: string
+  } | null>(null)
+  const [rotationState, setRotationState] = useState<{
+    pcb_component_id: string
+    edit_event_id: string
+    original_rotation: number
+    startAngle: number
   } | null>(null)
   const isPcbComponentActive = activePcbComponentId !== null
   const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
@@ -115,6 +121,29 @@ export const EditPlacementOverlay = ({
         }
       }}
       onMouseMove={(e) => {
+        if (rotationState) {
+          const rect = e.currentTarget.getBoundingClientRect()
+          const x = e.clientX - rect.left
+          const y = e.clientY - rect.top
+          if (Number.isNaN(x) || Number.isNaN(y)) return
+          const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+          const component = soup.find(
+            (c) =>
+              c.type === "pcb_component" &&
+              c.pcb_component_id === rotationState.pcb_component_id,
+          ) as PcbComponent | undefined
+          if (!component) return
+          const currentAngle = Math.atan2(
+            rwMousePoint.y - component.center.y,
+            rwMousePoint.x - component.center.x,
+          )
+          const deltaAngle = currentAngle - rotationState.startAngle
+          onModifyEditEvent({
+            edit_event_id: rotationState.edit_event_id,
+            new_rotation: rotationState.original_rotation + deltaAngle,
+          } as any)
+          return
+        }
         if (!activePcbComponentId || !dragState) return
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
@@ -140,6 +169,14 @@ export const EditPlacementOverlay = ({
         })
       }}
       onMouseUp={(e) => {
+        if (rotationState) {
+          onModifyEditEvent({
+            edit_event_id: rotationState.edit_event_id,
+            in_progress: false,
+          })
+          setRotationState(null)
+          return
+        }
         if (!activePcbComponentId) return
         setActivePcbComponent(null)
         setIsMovingComponent(false)
@@ -159,6 +196,11 @@ export const EditPlacementOverlay = ({
           .map((e) => {
             if (!e?.center) return null
             const projectedCenter = applyToPoint(transform, e.center)
+            const isSelected =
+              isPcbComponentActive &&
+              activePcbComponentId === e.pcb_component_id
+            const componentWidth = e.width * transform.a + 20
+            const componentHeight = e.height * transform.a + 20
 
             return (
               <div
@@ -169,16 +211,71 @@ export const EditPlacementOverlay = ({
                   // b/c of transform, this is actually center not left/top
                   left: projectedCenter.x,
                   top: projectedCenter.y,
-                  width: e.width * transform.a + 20,
-                  height: e.height * transform.a + 20,
-                  transform: "translate(-50%, -50%)",
-                  background:
-                    isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
-                      ? "rgba(255, 0, 0, 0.2)"
-                      : "",
+                  width: componentWidth,
+                  height: componentHeight,
+                  transform: `translate(-50%, -50%) rotate(${
+                    typeof e.rotation === "number" ? -e.rotation : 0
+                  }rad)`,
+                  background: isSelected ? "rgba(255, 0, 0, 0.2)" : "",
                 }}
-              />
+              >
+                {isSelected && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -5,
+                      right: -5,
+                      width: 12,
+                      height: 12,
+                      background: "#4a9eff",
+                      borderRadius: "50%",
+                      border: "1px solid #fff",
+                      cursor: "grab",
+                      pointerEvents: "all",
+                    }}
+                    onMouseDown={(mouseEvent) => {
+                      mouseEvent.stopPropagation()
+                      cancelPanDrag()
+                      const edit_event_id = Math.random().toString()
+                      const component = soup.find(
+                        (c) =>
+                          c.type === "pcb_component" &&
+                          c.pcb_component_id === activePcbComponentId,
+                      ) as PcbComponent | undefined
+                      const original_rotation =
+                        typeof component?.rotation === "number"
+                          ? component.rotation
+                          : 0
+                      const rect = containerRef.current!.getBoundingClientRect()
+                      const x = mouseEvent.clientX - rect.left
+                      const y = mouseEvent.clientY - rect.top
+                      const rwMousePoint = applyToPoint(inverse(transform!), {
+                        x,
+                        y,
+                      })
+                      const startAngle = Math.atan2(
+                        rwMousePoint.y - (component?.center.y ?? 0),
+                        rwMousePoint.x - (component?.center.x ?? 0),
+                      )
+                      setRotationState({
+                        pcb_component_id: activePcbComponentId!,
+                        edit_event_id,
+                        original_rotation,
+                        startAngle,
+                      })
+                      onCreateEditEvent({
+                        edit_event_id,
+                        edit_event_type: "edit_pcb_component_rotation",
+                        pcb_component_id: activePcbComponentId!,
+                        original_rotation,
+                        new_rotation: original_rotation,
+                        in_progress: true,
+                        created_at: Date.now(),
+                      } as any)
+                    }}
+                  />
+                )}
+              </div>
             )
           })}
     </div>
