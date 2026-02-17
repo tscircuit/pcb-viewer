@@ -18,7 +18,8 @@ const PCB_VIEWER_COLOR_MAP: PcbColorMap = {
 export function isCourtyardElement(element: AnyCircuitElement) {
   return (
     element.type === "pcb_courtyard_circle" ||
-    element.type === "pcb_courtyard_rect"
+    element.type === "pcb_courtyard_rect" ||
+    element.type === "pcb_courtyard_outline"
   )
 }
 
