@@ -72,6 +72,7 @@ export const LAYER_NAME_TO_COLOR = {
 export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
 
 export const DEFAULT_DRAW_ORDER = [
+  "board",
   "inner6",
   "inner5",
   "inner4",
@@ -83,15 +84,12 @@ export const DEFAULT_DRAW_ORDER = [
   "bottom_silkscreen",
   "top",
   "soldermask_top",
-  "soldermask_with_copper_bottom",
-  "soldermask_with_copper_top",
   "bottom_courtyard",
   "bottom_fabrication",
   "top_courtyard",
   "top_fabrication",
   "edge_cuts",
   "top_silkscreen",
-  "board",
 ] as const
 
 export const FILL_TYPES = {
@@ -503,6 +501,12 @@ export class Drawer {
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
+    const associatedSoldermask =
+      foregroundLayer === "top"
+        ? "soldermask_top"
+        : foregroundLayer === "bottom"
+          ? "soldermask_bottom"
+          : undefined
     const associatedSilkscreen =
       foregroundLayer === "top"
         ? "top_silkscreen"
@@ -522,47 +526,37 @@ export class Drawer {
           ? "bottom_fabrication"
           : undefined
 
-    // Ensure soldermask-with-copper for the active side is rendered above copper
-    const maskWithCopperLayerForForeground =
-      foregroundLayer === "top"
-        ? "soldermask_with_copper_top"
-        : foregroundLayer === "bottom"
-          ? "soldermask_with_copper_bottom"
-          : undefined
-
     const opaqueLayers = new Set<string>([
       foregroundLayer,
       "drill",
       "edge_cuts",
       "other",
       "board",
+      ...(associatedSoldermask ? [associatedSoldermask] : []),
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(maskWithCopperLayerForForeground
-        ? [maskWithCopperLayerForForeground]
-        : []),
     ])
 
     const layersToShiftToTop = [
       foregroundLayer,
       "edge_cuts",
+      ...(associatedSoldermask ? [associatedSoldermask] : []),
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(maskWithCopperLayerForForeground
-        ? [maskWithCopperLayerForForeground]
-        : []),
     ]
+
+    const drillBeforeForeground = foregroundLayer === "drill" ? [] : ["drill"]
+    const drillAfterForeground = foregroundLayer === "drill" ? ["drill"] : []
 
     const order = [
       ...DEFAULT_DRAW_ORDER.filter((l) => !layersToShiftToTop.includes(l)),
+      ...drillBeforeForeground,
       foregroundLayer,
-      ...(maskWithCopperLayerForForeground
-        ? [maskWithCopperLayerForForeground]
-        : []),
+      ...(associatedSoldermask ? [associatedSoldermask] : []),
+      ...drillAfterForeground,
       "edge_cuts",
-      "drill",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),

@@ -206,6 +206,10 @@ export const ErrorOverlay = ({
             y: port2.y,
           })
 
+          if (!isShowingDRCErrors) {
+            return null
+          }
+
           const canLineBeDrawn = !(
             isNaN(screenPort1.x) ||
             isNaN(screenPort1.y) ||

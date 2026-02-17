@@ -26,6 +26,6 @@ export function drawPcbPanelElements({
   const pcbPanelElements = elements.filter(isPcbPanelElement)
 
   for (const element of pcbPanelElements) {
-    drawer.drawElements([element], { layers, drawSoldermask })
+    drawer.drawElements([element], { layers })
   }
 }

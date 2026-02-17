@@ -34,17 +34,43 @@ export function drawSoldermaskElementsForLayer({
   elements,
   layers,
   realToCanvasMat,
+  drawSoldermaskTop,
+  drawSoldermaskBottom,
   primitives,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
+  drawSoldermaskTop?: boolean
+  drawSoldermaskBottom?: boolean
   primitives?: Primitive[]
 }) {
   const drawer = new CircuitToCanvasDrawer(canvas)
   drawer.realToCanvasMat = realToCanvasMat
-  drawer.drawElements(elements, { layers, drawSoldermask: true })
+  const boards = elements.filter((element) => element.type === "pcb_board")
+  if (boards.length <= 1) {
+    drawer.drawElements(elements, {
+      layers,
+      drawSoldermask: true,
+      drawSoldermaskTop,
+      drawSoldermaskBottom,
+      drawBoardMaterial: false,
+    })
+  } else {
+    const nonBoardElements = elements.filter(
+      (element) => element.type !== "pcb_board",
+    )
+    for (const board of boards) {
+      drawer.drawElements([board, ...nonBoardElements], {
+        layers,
+        drawSoldermask: true,
+        drawSoldermaskTop,
+        drawSoldermaskBottom,
+        drawBoardMaterial: false,
+      })
+    }
+  }
 
   if (!primitives) return
 
@@ -81,5 +107,11 @@ export function drawSoldermaskElementsForLayer({
   const hoverDrawer = new CircuitToCanvasDrawer(canvas)
   hoverDrawer.configure({ colorOverrides: HOVER_SOLDERMASK_COLOR_MAP })
   hoverDrawer.realToCanvasMat = realToCanvasMat
-  hoverDrawer.drawElements(hoveredElements, { layers, drawSoldermask: true })
+  hoverDrawer.drawElements(hoveredElements, {
+    layers,
+    drawSoldermask: true,
+    drawSoldermaskTop,
+    drawSoldermaskBottom,
+    drawBoardMaterial: false,
+  })
 }
