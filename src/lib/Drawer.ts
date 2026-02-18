@@ -525,6 +525,12 @@ export class Drawer {
         : foregroundLayer === "bottom"
           ? "bottom_fabrication"
           : undefined
+    const associatedCourtyard =
+      foregroundLayer === "top"
+        ? "top_courtyard"
+        : foregroundLayer === "bottom"
+          ? "bottom_courtyard"
+          : undefined
 
     const opaqueLayers = new Set<string>([
       foregroundLayer,
@@ -536,6 +542,7 @@ export class Drawer {
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
+      ...(associatedCourtyard ? [associatedCourtyard] : []),
     ])
 
     const layersToShiftToTop = [
@@ -545,6 +552,7 @@ export class Drawer {
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
+      ...(associatedCourtyard ? [associatedCourtyard] : []),
     ]
 
     const drillBeforeForeground = foregroundLayer === "drill" ? [] : ["drill"]
@@ -560,6 +568,7 @@ export class Drawer {
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
+      ...(associatedCourtyard ? [associatedCourtyard] : []),
     ]
 
     order.forEach((layer, i) => {
