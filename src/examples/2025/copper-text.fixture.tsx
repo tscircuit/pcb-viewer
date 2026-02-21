@@ -14,26 +14,6 @@ export const CopperText: React.FC = () => {
       material: "fr4",
       thickness: 1.6,
     },
-    // === TRACES UNDERNEATH KNOCKOUT TEXT TO VERIFY SEE-THROUGH ===
-    // Diagonal trace under "KNOCKOUT" text on top layer
-    {
-      type: "pcb_trace",
-      pcb_trace_id: "trace_under_knockout_bottom",
-      route: [
-        { route_type: "wire", x: -8, y: 13, width: 0.5, layer: "bottom" },
-        { route_type: "wire", x: 8, y: 17, width: 0.5, layer: "bottom" },
-      ],
-    },
-    // Horizontal trace under "ROT+KO TOP" text
-    {
-      type: "pcb_trace",
-      pcb_trace_id: "trace_under_rotko_bottom",
-      route: [
-        { route_type: "wire", x: -6, y: 3, width: 0.4, layer: "bottom" },
-        { route_type: "wire", x: 6, y: 3, width: 0.4, layer: "bottom" },
-      ],
-    },
-    // Trace under "BOTTOM KO" on bottom layer
 
     // Top layer basic text
     {
