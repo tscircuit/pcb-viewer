@@ -104,7 +104,6 @@ export const CanvasPrimitiveRenderer = ({
       .filter((p) => p._element?.type !== "pcb_plated_hole")
       .filter((p) => p._element?.type !== "pcb_via")
       .filter((p) => p._element?.type !== "pcb_trace")
-      .filter((p) => p._element?.type !== "pcb_copper_text")
 
     drawPrimitives(drawer, filteredPrimitives)
 
