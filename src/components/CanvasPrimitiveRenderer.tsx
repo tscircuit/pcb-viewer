@@ -185,17 +185,6 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      // Draw copper text elements using circuit-to-canvas (on copper layers)
-      for (const { canvas, copperLayer } of copperLayers) {
-        if (!canvas) continue
-        drawCopperTextElementsForLayer({
-          canvas,
-          elements,
-          layers: [copperLayer],
-          realToCanvasMat: transform,
-        })
-      }
-
       // Draw SMT pads using circuit-to-canvas (on copper layers)
       for (const { canvas, copperLayer } of copperLayers) {
         if (!canvas) continue
@@ -424,6 +413,17 @@ export const CanvasPrimitiveRenderer = ({
           canvas,
           elements,
           layers: [layer],
+          realToCanvasMat: transform,
+        })
+      }
+
+      // Draw copper text elements last so knockout text stays visible
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
+        drawCopperTextElementsForLayer({
+          canvas,
+          elements,
+          layers: [copperLayer],
           realToCanvasMat: transform,
         })
       }

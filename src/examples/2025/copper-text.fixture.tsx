@@ -58,6 +58,7 @@ export const CopperText: React.FC = () => {
       layer: "bottom",
       anchor_position: { x: -15, y: 10 },
       anchor_alignment: "center",
+      is_mirrored: true,
     },
     {
       type: "pcb_silkscreen_text",
@@ -80,6 +81,7 @@ export const CopperText: React.FC = () => {
       anchor_position: { x: -15, y: 8 },
       anchor_alignment: "center",
       text: "BOTTOM LAYER",
+      is_mirrored: true,
     },
     // Text with knockout on top layer (using default padding)
     {
@@ -106,6 +108,7 @@ export const CopperText: React.FC = () => {
       anchor_position: { x: 0, y: 10 },
       anchor_alignment: "center",
       is_knockout: true,
+      is_mirrored: true,
     },
     // Rotated text 45° on top layer
     {
@@ -132,6 +135,7 @@ export const CopperText: React.FC = () => {
       anchor_position: { x: 15, y: 10 },
       anchor_alignment: "center",
       ccw_rotation: 90,
+      is_mirrored: true,
     },
     // Rotated text with knockout on top layer (using default padding)
     {
@@ -160,6 +164,7 @@ export const CopperText: React.FC = () => {
       anchor_alignment: "center",
       ccw_rotation: -15,
       is_knockout: true,
+      is_mirrored: true,
     },
     // Mirrored text on top layer
     {
@@ -185,6 +190,7 @@ export const CopperText: React.FC = () => {
       layer: "bottom",
       anchor_position: { x: 15, y: -4 },
       anchor_alignment: "center",
+      is_mirrored: true,
     },
     // Different anchor alignments on top layer
     {
@@ -208,6 +214,7 @@ export const CopperText: React.FC = () => {
       layer: "bottom",
       anchor_position: { x: -10, y: -12 },
       anchor_alignment: "bottom_right",
+      is_mirrored: true,
     },
     // Combined: bottom + rotation + knockout + multiline (using default padding)
     {
@@ -222,6 +229,7 @@ export const CopperText: React.FC = () => {
       anchor_alignment: "center",
       ccw_rotation: 25,
       is_knockout: true,
+      is_mirrored: true,
     },
   ]
   return (
