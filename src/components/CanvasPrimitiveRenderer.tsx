@@ -22,6 +22,7 @@ import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
+import { drawCopperTextElementsForLayer } from "lib/draw-copper-text"
 
 interface Props {
   primitives: Primitive[]
@@ -103,6 +104,7 @@ export const CanvasPrimitiveRenderer = ({
       .filter((p) => p._element?.type !== "pcb_plated_hole")
       .filter((p) => p._element?.type !== "pcb_via")
       .filter((p) => p._element?.type !== "pcb_trace")
+      .filter((p) => p._element?.type !== "pcb_copper_text")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -179,6 +181,17 @@ export const CanvasPrimitiveRenderer = ({
           canvas: bottomCanvas,
           elements,
           layers: ["bottom_copper"],
+          realToCanvasMat: transform,
+        })
+      }
+
+      // Draw copper text elements using circuit-to-canvas (on copper layers)
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
+        drawCopperTextElementsForLayer({
+          canvas,
+          elements,
+          layers: [copperLayer],
           realToCanvasMat: transform,
         })
       }
