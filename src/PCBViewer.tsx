@@ -23,7 +23,6 @@ type Props = {
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
-  stateOverrides?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
@@ -36,7 +35,6 @@ export const PCBViewer = ({
   debugGraphics,
   height = 600,
   initialState,
-  stateOverrides,
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
@@ -160,7 +158,6 @@ export const PCBViewer = ({
       <div ref={ref as any}>
         <ContextProviders
           initialState={mergedInitialState}
-          controlledState={stateOverrides}
           disablePcbGroups={disablePcbGroups}
         >
           <CanvasElementsRenderer

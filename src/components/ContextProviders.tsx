@@ -6,12 +6,10 @@ export const StoreContext = createContext(null)
 export const ContextProviders = ({
   children,
   initialState,
-  controlledState,
   disablePcbGroups,
 }: {
   children?: any
   initialState?: Partial<StateProps>
-  controlledState?: Partial<StateProps>
   disablePcbGroups?: boolean
 }) => {
   const store = useMemo(
@@ -20,14 +18,14 @@ export const ContextProviders = ({
   )
 
   useEffect(() => {
-    if (!controlledState) return
+    if (!initialState) return
     try {
       // apply controlled boolean overrides dynamically to the store
-      store.setState(controlledState as any)
+      store.setState(initialState as Partial<StateProps>)
     } catch (err) {
       // swallow — controlled updates are best-effort
     }
-  }, [controlledState, store])
+  }, [initialState, store])
 
   return (
     <StoreContext.Provider value={store as any}>

@@ -132,7 +132,7 @@ export const ViewSettingsToggle = () => {
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
         circuitJson={soupWithCopperPours as any}
-        stateOverrides={{
+        initialState={{
           is_showing_rats_nest: showRatsNest,
           is_showing_multiple_traces_length: showMultipleTracesLength,
           is_showing_autorouting: showAutorouting,
