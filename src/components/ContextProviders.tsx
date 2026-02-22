@@ -1,33 +1,18 @@
-import { useEffect, useMemo } from "react"
-import { createContext, useContext } from "react"
-import { type StateProps, createStore } from "../global-store"
+import { useMemo, useEffect, createContext, useContext } from "react"
+import { createStore, type StateProps } from "../global-store"
 
 export const StoreContext = createContext(null)
 
 export const ContextProviders = ({
   children,
   initialState,
+  controlledState,
   disablePcbGroups,
-  showGroupAnchorOffsets,
-  showSolderMask,
-  showRatsNest,
-  showMultipleTracesLength,
-  showAutorouting,
-  showDrcErrors,
-  showCopperPours,
-  showPcbGroups,
 }: {
   children?: any
   initialState?: Partial<StateProps>
+  controlledState?: Partial<StateProps>
   disablePcbGroups?: boolean
-  showGroupAnchorOffsets?: boolean
-  showSolderMask?: boolean
-  showRatsNest?: boolean
-  showMultipleTracesLength?: boolean
-  showAutorouting?: boolean
-  showDrcErrors?: boolean
-  showCopperPours?: boolean
-  showPcbGroups?: boolean
 }) => {
   const store = useMemo(
     () => createStore(initialState, disablePcbGroups),
@@ -35,57 +20,14 @@ export const ContextProviders = ({
   )
 
   useEffect(() => {
-    if (typeof showGroupAnchorOffsets === "boolean") {
-      store.setState({
-        is_showing_group_anchor_offsets: showGroupAnchorOffsets,
-      })
+    if (!controlledState) return
+    try {
+      // apply controlled boolean overrides dynamically to the store
+      store.setState(controlledState as any)
+    } catch (err) {
+      // swallow — controlled updates are best-effort
     }
-  }, [store, showGroupAnchorOffsets])
-
-  useEffect(() => {
-    if (typeof showSolderMask === "boolean") {
-      store.setState({ is_showing_solder_mask: showSolderMask })
-    }
-  }, [store, showSolderMask])
-
-  useEffect(() => {
-    if (typeof showRatsNest === "boolean") {
-      store.setState({ is_showing_rats_nest: showRatsNest })
-    }
-  }, [store, showRatsNest])
-
-  useEffect(() => {
-    if (typeof showMultipleTracesLength === "boolean") {
-      store.setState({
-        is_showing_multiple_traces_length: showMultipleTracesLength,
-      })
-    }
-  }, [store, showMultipleTracesLength])
-
-  useEffect(() => {
-    if (typeof showAutorouting === "boolean") {
-      store.setState({ is_showing_autorouting: showAutorouting })
-    }
-  }, [store, showAutorouting])
-
-  useEffect(() => {
-    if (typeof showDrcErrors === "boolean") {
-      store.setState({ is_showing_drc_errors: showDrcErrors })
-    }
-  }, [store, showDrcErrors])
-
-  useEffect(() => {
-    if (typeof showCopperPours === "boolean") {
-      store.setState({ is_showing_copper_pours: showCopperPours })
-    }
-  }, [store, showCopperPours])
-
-  useEffect(() => {
-    if (typeof showPcbGroups === "boolean") {
-      if (disablePcbGroups) return
-      store.setState({ is_showing_pcb_groups: showPcbGroups })
-    }
-  }, [store, showPcbGroups, disablePcbGroups])
+  }, [controlledState, store])
 
   return (
     <StoreContext.Provider value={store as any}>

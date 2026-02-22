@@ -4,15 +4,6 @@ import { useState } from "react"
 import { PCBViewer } from "../../PCBViewer"
 
 export const ViewSettingsToggle = () => {
-  const [showRatsNest, setShowRatsNest] = useState(true)
-  const [showMultipleTracesLength, setShowMultipleTracesLength] = useState(true)
-  const [showAutorouting, setShowAutorouting] = useState(true)
-  const [showDrcErrors, setShowDrcErrors] = useState(true)
-  const [showCopperPours, setShowCopperPours] = useState(true)
-  const [showPcbGroups, setShowPcbGroups] = useState(true)
-  const [showGroupAnchorOffsets, setShowGroupAnchorOffsets] = useState(false)
-  const [showSolderMask, setShowSolderMask] = useState(false)
-
   const circuit = new Circuit()
 
   circuit.add(
@@ -127,18 +118,30 @@ export const ViewSettingsToggle = () => {
 
   const soupWithCopperPours = [...soup, ...copperPours]
 
+  const [showRatsNest, setShowRatsNest] = useState(false)
+  const [showMultipleTracesLength, setShowMultipleTracesLength] =
+    useState(false)
+  const [showAutorouting, setShowAutorouting] = useState(true)
+  const [showDrcErrors, setShowDrcErrors] = useState(true)
+  const [showCopperPours, setShowCopperPours] = useState(true)
+  const [showPcbGroups, setShowPcbGroups] = useState(true)
+  const [showGroupAnchorOffsets, setShowGroupAnchorOffsets] = useState(false)
+  const [showSolderMask, setShowSolderMask] = useState(false)
+
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
         circuitJson={soupWithCopperPours as any}
-        showRatsNest={showRatsNest}
-        showMultipleTracesLength={showMultipleTracesLength}
-        showAutorouting={showAutorouting}
-        showDrcErrors={showDrcErrors}
-        showCopperPours={showCopperPours}
-        showPcbGroups={showPcbGroups}
-        showGroupAnchorOffsets={showGroupAnchorOffsets}
-        showSolderMask={showSolderMask}
+        stateOverrides={{
+          is_showing_rats_nest: showRatsNest,
+          is_showing_multiple_traces_length: showMultipleTracesLength,
+          is_showing_autorouting: showAutorouting,
+          is_showing_drc_errors: showDrcErrors,
+          is_showing_copper_pours: showCopperPours,
+          is_showing_pcb_groups: showPcbGroups,
+          is_showing_group_anchor_offsets: showGroupAnchorOffsets,
+          is_showing_solder_mask: showSolderMask,
+        }}
       />
       <div
         style={{

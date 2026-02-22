@@ -23,19 +23,12 @@ type Props = {
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
+  stateOverrides?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
   disablePcbGroups?: boolean
-  showGroupAnchorOffsets?: boolean
-  showSolderMask?: boolean
-  showRatsNest?: boolean
-  showMultipleTracesLength?: boolean
-  showAutorouting?: boolean
-  showDrcErrors?: boolean
-  showCopperPours?: boolean
-  showPcbGroups?: boolean
 }
 
 export const PCBViewer = ({
@@ -43,20 +36,13 @@ export const PCBViewer = ({
   debugGraphics,
   height = 600,
   initialState,
+  stateOverrides,
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
-  showGroupAnchorOffsets,
-  showSolderMask,
-  showRatsNest,
-  showMultipleTracesLength,
-  showAutorouting,
-  showDrcErrors,
-  showCopperPours,
-  showPcbGroups,
 }: Props) => {
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
@@ -157,50 +143,13 @@ export const PCBViewer = ({
     onEditEventsChanged?.(newEditEvents)
   }
 
-  const mergedInitialState = useMemo(() => {
-    const nextState = {
+  const mergedInitialState = useMemo(
+    () => ({
       ...initialState,
-      ...(showGroupAnchorOffsets !== undefined && {
-        is_showing_group_anchor_offsets: showGroupAnchorOffsets,
-      }),
-      ...(showSolderMask !== undefined && {
-        is_showing_solder_mask: showSolderMask,
-      }),
-      ...(showRatsNest !== undefined && { is_showing_rats_nest: showRatsNest }),
-      ...(showMultipleTracesLength !== undefined && {
-        is_showing_multiple_traces_length: showMultipleTracesLength,
-      }),
-      ...(showAutorouting !== undefined && {
-        is_showing_autorouting: showAutorouting,
-      }),
-      ...(showDrcErrors !== undefined && {
-        is_showing_drc_errors: showDrcErrors,
-      }),
-      ...(showCopperPours !== undefined && {
-        is_showing_copper_pours: showCopperPours,
-      }),
-      ...(!disablePcbGroups && showPcbGroups !== undefined
-        ? { is_showing_pcb_groups: showPcbGroups }
-        : {}),
-    }
-
-    if (disablePcbGroups) {
-      nextState.is_showing_pcb_groups = false
-    }
-
-    return nextState
-  }, [
-    initialState,
-    disablePcbGroups,
-    showGroupAnchorOffsets,
-    showSolderMask,
-    showRatsNest,
-    showMultipleTracesLength,
-    showAutorouting,
-    showDrcErrors,
-    showCopperPours,
-    showPcbGroups,
-  ])
+      ...(disablePcbGroups && { is_showing_pcb_groups: false }),
+    }),
+    [initialState, disablePcbGroups],
+  )
 
   return (
     <div
@@ -211,15 +160,8 @@ export const PCBViewer = ({
       <div ref={ref as any}>
         <ContextProviders
           initialState={mergedInitialState}
+          controlledState={stateOverrides}
           disablePcbGroups={disablePcbGroups}
-          showGroupAnchorOffsets={showGroupAnchorOffsets}
-          showSolderMask={showSolderMask}
-          showRatsNest={showRatsNest}
-          showMultipleTracesLength={showMultipleTracesLength}
-          showAutorouting={showAutorouting}
-          showDrcErrors={showDrcErrors}
-          showCopperPours={showCopperPours}
-          showPcbGroups={showPcbGroups}
         >
           <CanvasElementsRenderer
             key={refDimensions.width}
