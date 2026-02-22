@@ -28,6 +28,14 @@ type Props = {
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
   disablePcbGroups?: boolean
+  showGroupAnchorOffsets?: boolean
+  showSolderMask?: boolean
+  showRatsNest?: boolean
+  showMultipleTracesLength?: boolean
+  showAutorouting?: boolean
+  showDrCErrors?: boolean
+  showCopperPours?: boolean
+  showPcbGroups?: boolean
 }
 
 export const PCBViewer = ({
@@ -41,6 +49,14 @@ export const PCBViewer = ({
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
+  showGroupAnchorOffsets,
+  showSolderMask,
+  showRatsNest,
+  showMultipleTracesLength,
+  showAutorouting,
+  showDrCErrors,
+  showCopperPours,
+  showPcbGroups,
 }: Props) => {
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
@@ -145,8 +161,41 @@ export const PCBViewer = ({
     () => ({
       ...initialState,
       ...(disablePcbGroups && { is_showing_pcb_groups: false }),
+      ...(showGroupAnchorOffsets !== undefined && {
+        is_showing_group_anchor_offsets: showGroupAnchorOffsets,
+      }),
+      ...(showSolderMask !== undefined && {
+        is_showing_solder_mask: showSolderMask,
+      }),
+      ...(showRatsNest !== undefined && { is_showing_rats_nest: showRatsNest }),
+      ...(showMultipleTracesLength !== undefined && {
+        is_showing_multiple_traces_length: showMultipleTracesLength,
+      }),
+      ...(showAutorouting !== undefined && {
+        is_showing_autorouting: showAutorouting,
+      }),
+      ...(showDrCErrors !== undefined && {
+        is_showing_drc_errors: showDrCErrors,
+      }),
+      ...(showCopperPours !== undefined && {
+        is_showing_copper_pours: showCopperPours,
+      }),
+      ...(showPcbGroups !== undefined && {
+        is_showing_pcb_groups: showPcbGroups,
+      }),
     }),
-    [initialState, disablePcbGroups],
+    [
+      initialState,
+      disablePcbGroups,
+      showGroupAnchorOffsets,
+      showSolderMask,
+      showRatsNest,
+      showMultipleTracesLength,
+      showAutorouting,
+      showDrCErrors,
+      showCopperPours,
+      showPcbGroups,
+    ],
   )
 
   return (
@@ -159,6 +208,14 @@ export const PCBViewer = ({
         <ContextProviders
           initialState={mergedInitialState}
           disablePcbGroups={disablePcbGroups}
+          showGroupAnchorOffsets={showGroupAnchorOffsets}
+          showSolderMask={showSolderMask}
+          showRatsNest={showRatsNest}
+          showMultipleTracesLength={showMultipleTracesLength}
+          showAutorouting={showAutorouting}
+          showDrCErrors={showDrCErrors}
+          showCopperPours={showCopperPours}
+          showPcbGroups={showPcbGroups}
         >
           <CanvasElementsRenderer
             key={refDimensions.width}
