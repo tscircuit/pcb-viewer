@@ -13,7 +13,7 @@ export const ContextProviders = ({
   showRatsNest,
   showMultipleTracesLength,
   showAutorouting,
-  showDrCErrors,
+  showDrcErrors,
   showCopperPours,
   showPcbGroups,
 }: {
@@ -25,7 +25,7 @@ export const ContextProviders = ({
   showRatsNest?: boolean
   showMultipleTracesLength?: boolean
   showAutorouting?: boolean
-  showDrCErrors?: boolean
+  showDrcErrors?: boolean
   showCopperPours?: boolean
   showPcbGroups?: boolean
 }) => {
@@ -36,53 +36,54 @@ export const ContextProviders = ({
 
   useEffect(() => {
     if (typeof showGroupAnchorOffsets === "boolean") {
-      store.getState().setIsShowingGroupAnchorOffsets(showGroupAnchorOffsets)
+      store.setState({ is_showing_group_anchor_offsets: showGroupAnchorOffsets })
     }
   }, [store, showGroupAnchorOffsets])
 
   useEffect(() => {
     if (typeof showSolderMask === "boolean") {
-      store.getState().setIsShowingSolderMask(showSolderMask)
+      store.setState({ is_showing_solder_mask: showSolderMask })
     }
   }, [store, showSolderMask])
 
   useEffect(() => {
     if (typeof showRatsNest === "boolean") {
-      store.getState().setIsShowingRatsNest(showRatsNest)
+      store.setState({ is_showing_rats_nest: showRatsNest })
     }
   }, [store, showRatsNest])
 
   useEffect(() => {
     if (typeof showMultipleTracesLength === "boolean") {
-      store
-        .getState()
-        .setIsShowingMultipleTracesLength(showMultipleTracesLength)
+      store.setState({
+        is_showing_multiple_traces_length: showMultipleTracesLength,
+      })
     }
   }, [store, showMultipleTracesLength])
 
   useEffect(() => {
     if (typeof showAutorouting === "boolean") {
-      store.getState().setIsShowingAutorouting(showAutorouting)
+      store.setState({ is_showing_autorouting: showAutorouting })
     }
   }, [store, showAutorouting])
 
   useEffect(() => {
-    if (typeof showDrCErrors === "boolean") {
-      store.getState().setIsShowingDrcErrors(showDrCErrors)
+    if (typeof showDrcErrors === "boolean") {
+      store.setState({ is_showing_drc_errors: showDrcErrors })
     }
-  }, [store, showDrCErrors])
+  }, [store, showDrcErrors])
 
   useEffect(() => {
     if (typeof showCopperPours === "boolean") {
-      store.getState().setIsShowingCopperPours(showCopperPours)
+      store.setState({ is_showing_copper_pours: showCopperPours })
     }
   }, [store, showCopperPours])
 
   useEffect(() => {
     if (typeof showPcbGroups === "boolean") {
-      store.getState().setIsShowingPcbGroups(showPcbGroups)
+      if (disablePcbGroups) return
+      store.setState({ is_showing_pcb_groups: showPcbGroups })
     }
-  }, [store, showPcbGroups])
+  }, [store, showPcbGroups, disablePcbGroups])
 
   return (
     <StoreContext.Provider value={store as any}>

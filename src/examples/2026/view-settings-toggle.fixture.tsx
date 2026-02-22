@@ -7,7 +7,7 @@ export const ViewSettingsToggle = () => {
   const [showRatsNest, setShowRatsNest] = useState(true)
   const [showMultipleTracesLength, setShowMultipleTracesLength] = useState(true)
   const [showAutorouting, setShowAutorouting] = useState(true)
-  const [showDrCErrors, setShowDrCErrors] = useState(true)
+  const [showDrcErrors, setShowDrcErrors] = useState(true)
   const [showCopperPours, setShowCopperPours] = useState(true)
   const [showPcbGroups, setShowPcbGroups] = useState(true)
   const [showGroupAnchorOffsets, setShowGroupAnchorOffsets] = useState(false)
@@ -134,7 +134,7 @@ export const ViewSettingsToggle = () => {
         showRatsNest={showRatsNest}
         showMultipleTracesLength={showMultipleTracesLength}
         showAutorouting={showAutorouting}
-        showDrCErrors={showDrCErrors}
+        showDrcErrors={showDrcErrors}
         showCopperPours={showCopperPours}
         showPcbGroups={showPcbGroups}
         showGroupAnchorOffsets={showGroupAnchorOffsets}
@@ -142,9 +142,6 @@ export const ViewSettingsToggle = () => {
       />
       <div
         style={{
-          top: 10,
-          left: 10,
-          zIndex: 1000,
           display: "flex",
           flexDirection: "column",
           gap: 8,
@@ -177,8 +174,8 @@ export const ViewSettingsToggle = () => {
         <label style={{ color: "white", display: "flex", gap: 8 }}>
           <input
             type="checkbox"
-            checked={showDrCErrors}
-            onChange={(e) => setShowDrCErrors(e.target.checked)}
+            checked={showDrcErrors}
+            onChange={(e) => setShowDrcErrors(e.target.checked)}
           />
           Show DRC Errors
         </label>

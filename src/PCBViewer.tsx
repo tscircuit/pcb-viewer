@@ -33,7 +33,7 @@ type Props = {
   showRatsNest?: boolean
   showMultipleTracesLength?: boolean
   showAutorouting?: boolean
-  showDrCErrors?: boolean
+  showDrcErrors?: boolean
   showCopperPours?: boolean
   showPcbGroups?: boolean
 }
@@ -54,7 +54,7 @@ export const PCBViewer = ({
   showRatsNest,
   showMultipleTracesLength,
   showAutorouting,
-  showDrCErrors,
+  showDrcErrors,
   showCopperPours,
   showPcbGroups,
 }: Props) => {
@@ -157,10 +157,9 @@ export const PCBViewer = ({
     onEditEventsChanged?.(newEditEvents)
   }
 
-  const mergedInitialState = useMemo(
-    () => ({
+  const mergedInitialState = useMemo(() => {
+    const nextState = {
       ...initialState,
-      ...(disablePcbGroups && { is_showing_pcb_groups: false }),
       ...(showGroupAnchorOffsets !== undefined && {
         is_showing_group_anchor_offsets: showGroupAnchorOffsets,
       }),
@@ -174,29 +173,34 @@ export const PCBViewer = ({
       ...(showAutorouting !== undefined && {
         is_showing_autorouting: showAutorouting,
       }),
-      ...(showDrCErrors !== undefined && {
-        is_showing_drc_errors: showDrCErrors,
+      ...(showDrcErrors !== undefined && {
+        is_showing_drc_errors: showDrcErrors,
       }),
       ...(showCopperPours !== undefined && {
         is_showing_copper_pours: showCopperPours,
       }),
-      ...(showPcbGroups !== undefined && {
-        is_showing_pcb_groups: showPcbGroups,
-      }),
-    }),
-    [
-      initialState,
-      disablePcbGroups,
-      showGroupAnchorOffsets,
-      showSolderMask,
-      showRatsNest,
-      showMultipleTracesLength,
-      showAutorouting,
-      showDrCErrors,
-      showCopperPours,
-      showPcbGroups,
-    ],
-  )
+      ...(!disablePcbGroups && showPcbGroups !== undefined
+        ? { is_showing_pcb_groups: showPcbGroups }
+        : {}),
+    }
+
+    if (disablePcbGroups) {
+      nextState.is_showing_pcb_groups = false
+    }
+
+    return nextState
+  }, [
+    initialState,
+    disablePcbGroups,
+    showGroupAnchorOffsets,
+    showSolderMask,
+    showRatsNest,
+    showMultipleTracesLength,
+    showAutorouting,
+    showDrcErrors,
+    showCopperPours,
+    showPcbGroups,
+  ])
 
   return (
     <div
@@ -213,7 +217,7 @@ export const PCBViewer = ({
           showRatsNest={showRatsNest}
           showMultipleTracesLength={showMultipleTracesLength}
           showAutorouting={showAutorouting}
-          showDrCErrors={showDrCErrors}
+          showDrcErrors={showDrcErrors}
           showCopperPours={showCopperPours}
           showPcbGroups={showPcbGroups}
         >
