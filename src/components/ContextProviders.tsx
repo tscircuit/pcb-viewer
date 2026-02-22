@@ -36,7 +36,9 @@ export const ContextProviders = ({
 
   useEffect(() => {
     if (typeof showGroupAnchorOffsets === "boolean") {
-      store.setState({ is_showing_group_anchor_offsets: showGroupAnchorOffsets })
+      store.setState({
+        is_showing_group_anchor_offsets: showGroupAnchorOffsets,
+      })
     }
   }, [store, showGroupAnchorOffsets])
 
