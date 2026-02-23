@@ -11,6 +11,7 @@ import { useGlobalStore } from "../global-store"
 import { useRef, useEffect } from "react"
 import { useMeasure } from "react-use"
 import { zIndexMap } from "../lib/util/z-index-map"
+import { getGroupAnchorPosition } from "../lib/util/get-group-anchor-position"
 
 interface Props {
   transform?: Matrix
@@ -275,18 +276,19 @@ export const PcbGroupOverlay = ({
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelPadding, labelY - labelHeight / 2)
 
+      const resolvedAnchor = getGroupAnchorPosition(group)
       const shouldShowAnchorMarker =
         is_showing_group_anchor_offsets &&
         hoveredGroupIds.has(group.pcb_group_id) &&
-        Boolean(group.anchor_position)
+        Boolean(resolvedAnchor)
 
-      if (shouldShowAnchorMarker && group.anchor_position) {
-        const anchorPositionValue = Array.isArray(group.anchor_position)
+      if (shouldShowAnchorMarker && resolvedAnchor) {
+        const anchorPositionValue = Array.isArray(resolvedAnchor)
           ? {
-              x: group.anchor_position[0] ?? 0,
-              y: group.anchor_position[1] ?? 0,
+              x: resolvedAnchor[0] ?? 0,
+              y: resolvedAnchor[1] ?? 0,
             }
-          : { x: group.anchor_position.x, y: group.anchor_position.y }
+          : { x: resolvedAnchor.x, y: resolvedAnchor.y }
         const anchorScreenPos = applyToPoint(transform, anchorPositionValue)
 
         // Draw a simple "+" symbol

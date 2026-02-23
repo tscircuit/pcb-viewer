@@ -6,6 +6,7 @@ import type {
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../../global-store"
+import { getGroupAnchorPosition } from "../../lib/util/get-group-anchor-position"
 import type { HighlightedPrimitive } from "../MouseElementTracker"
 import { isPcbBoard, isPcbComponent, isPcbGroup } from "./common/guards"
 import {
@@ -136,15 +137,12 @@ export const BoardAnchorOffsetOverlay = ({
           display_offset_y: target.component.display_offset_y,
         }
       }
-      // group
+      const groupAnchor = getGroupAnchorPosition(target.group)
       return {
         id: `${target.board.pcb_board_id}-${target.group.pcb_group_id}-${target.type}`,
         anchor: target.board.center,
         anchor_id: target.board.pcb_board_id,
-        target: {
-          x: target.group.anchor_position?.x ?? target.group.center.x,
-          y: target.group.anchor_position?.y ?? target.group.center.y,
-        },
+        target: groupAnchor ?? target.group.center,
         type: "group",
         display_offset_x: target.group.display_offset_x,
         display_offset_y: target.group.display_offset_y,

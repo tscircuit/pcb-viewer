@@ -1,6 +1,7 @@
 import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../../global-store"
+import { getGroupAnchorPosition } from "../../lib/util/get-group-anchor-position"
 import type { HighlightedPrimitive } from "../MouseElementTracker"
 import { isPcbComponent, isPcbGroup } from "./common/guards"
 import {
@@ -109,7 +110,7 @@ export const GroupAnchorOffsetOverlay = ({
             group.pcb_group_id ===
             component.positioned_relative_to_pcb_group_id,
         )
-        return parentGroup && parentGroup.anchor_position
+        return parentGroup && getGroupAnchorPosition(parentGroup)
           ? { component, parentGroup, type: "component" as const }
           : null
       }
@@ -118,7 +119,7 @@ export const GroupAnchorOffsetOverlay = ({
         const parentGroup = groups.find(
           (group) => group.pcb_group_id === component.pcb_group_id,
         )
-        return parentGroup && parentGroup.anchor_position
+        return parentGroup && getGroupAnchorPosition(parentGroup)
           ? { component, parentGroup, type: "component" as const }
           : null
       }
@@ -147,8 +148,8 @@ export const GroupAnchorOffsetOverlay = ({
         )
         if (
           parentGroup &&
-          parentGroup.anchor_position &&
-          group.anchor_position
+          getGroupAnchorPosition(parentGroup) &&
+          getGroupAnchorPosition(group)
         ) {
           return { group, parentGroup, type: "group" as const }
         }
@@ -192,7 +193,7 @@ export const GroupAnchorOffsetOverlay = ({
 
   const sharedTargets: AnchorOffsetTarget[] = targetEntries
     .map((target): AnchorOffsetTarget | null => {
-      const anchor = target.parentGroup.anchor_position
+      const anchor = getGroupAnchorPosition(target.parentGroup)
       if (!anchor) return null
 
       if (target.type === "component") {
@@ -207,13 +208,13 @@ export const GroupAnchorOffsetOverlay = ({
           display_offset_y: target.component.display_offset_y,
         }
       }
-      // group - use anchor_position for anchor-to-anchor offsets
-      if (!target.group.anchor_position) return null
+      const groupAnchor = getGroupAnchorPosition(target.group)
+      if (!groupAnchor) return null
       return {
         id: `${target.parentGroup.pcb_group_id}-${target.group.pcb_group_id}-${target.type}`,
         anchor,
         anchor_id: target.parentGroup.pcb_group_id,
-        target: target.group.anchor_position,
+        target: groupAnchor,
         type: "group",
         display_offset_x: target.group.display_offset_x,
         display_offset_y: target.group.display_offset_y,
