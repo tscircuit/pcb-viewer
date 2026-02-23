@@ -1,11 +1,8 @@
 import {
   createStore as createZustandStore,
   useStore as useZustandStore,
-  UseBoundStore,
 } from "zustand"
-import { StoreContext } from "./components/ContextProviders"
 import type { LayerRef } from "circuit-json"
-import { useContext } from "react"
 import {
   getStoredBoolean,
   getStoredString,
@@ -162,8 +159,12 @@ export const createStore = (
       }) as const,
   )
 
-export const useGlobalStore = <T = State>(s?: (state: State) => T): T => {
-  const store = useContext(StoreContext)
+const globalStore = createStore()
 
-  return useZustandStore(store as any, s as any)
-}
+export const useGlobalPcbViewerStore = <T = State>(
+  selector?: (state: State) => T,
+): T => useZustandStore(globalStore, selector as any)
+
+export const getGlobalPcbViewerStore = () => globalStore
+
+export const useGlobalStore = useGlobalPcbViewerStore
