@@ -1,5 +1,5 @@
-import { useMemo, useEffect, createContext, useContext } from "react"
-import { createStore, type StateProps } from "../global-store"
+import { createContext, useContext, useMemo } from "react"
+import { type StateProps, createStore } from "../global-store"
 
 export const StoreContext = createContext(null)
 
@@ -14,18 +14,8 @@ export const ContextProviders = ({
 }) => {
   const store = useMemo(
     () => createStore(initialState, disablePcbGroups),
-    [disablePcbGroups],
+    [initialState, disablePcbGroups],
   )
-
-  useEffect(() => {
-    if (!initialState) return
-    try {
-      // apply controlled boolean overrides dynamically to the store
-      store.setState(initialState as Partial<StateProps>)
-    } catch (err) {
-      // swallow — controlled updates are best-effort
-    }
-  }, [initialState, store])
 
   return (
     <StoreContext.Provider value={store as any}>
