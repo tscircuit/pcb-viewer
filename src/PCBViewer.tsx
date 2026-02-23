@@ -3,6 +3,7 @@ import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
 import type { StateProps } from "./global-store"
+import type { ViewPropOverrides } from "./lib/ViewPropOverrides"
 import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -28,6 +29,7 @@ type Props = {
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
   disablePcbGroups?: boolean
+  viewOverrides?: ViewPropOverrides
 }
 
 export const PCBViewer = ({
@@ -41,6 +43,7 @@ export const PCBViewer = ({
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
+  viewOverrides,
 }: Props) => {
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
@@ -159,6 +162,7 @@ export const PCBViewer = ({
         <ContextProviders
           initialState={mergedInitialState}
           disablePcbGroups={disablePcbGroups}
+          viewOverrides={viewOverrides}
         >
           <CanvasElementsRenderer
             key={refDimensions.width}
