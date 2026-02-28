@@ -55,8 +55,8 @@ const orderedLayers = [
   "bottom_notes",
   "top_notes",
   "top_silkscreen",
-  "top_courtyard",
   "bottom_courtyard",
+  "top_courtyard",
   "other",
 ]
 
