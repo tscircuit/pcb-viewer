@@ -10,6 +10,7 @@ import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
 import { DimensionOverlay } from "./DimensionOverlay"
+import { EditBoardOverlay } from "./EditBoardOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
@@ -18,6 +19,7 @@ import { PcbGroupOverlay } from "./PcbGroupOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import type { ManualEditEvent } from "@tscircuit/props"
+import type { BoardSizeEdit } from "../PCBViewer"
 import { useGlobalStore } from "../global-store"
 
 export interface CanvasElementsRendererProps {
@@ -32,6 +34,7 @@ export interface CanvasElementsRendererProps {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  onBoardSizeEdit?: (edit: BoardSizeEdit) => void
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
@@ -165,60 +168,67 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       primitives={primitivesWithoutInteractionMetadata}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
     >
-      <EditPlacementOverlay
-        disabled={!props.allowEditing}
+      <EditBoardOverlay
         transform={transform}
-        soup={elements}
+        elements={elements}
         cancelPanDrag={props.cancelPanDrag}
-        onCreateEditEvent={props.onCreateEditEvent}
-        onModifyEditEvent={props.onModifyEditEvent}
+        onBoardSizeEdit={props.onBoardSizeEdit}
       >
-        <EditTraceHintOverlay
+        <EditPlacementOverlay
           disabled={!props.allowEditing}
           transform={transform}
           soup={elements}
           cancelPanDrag={props.cancelPanDrag}
-          onCreateEditEvent={props.onCreateEditEvent as any}
-          onModifyEditEvent={props.onModifyEditEvent as any}
+          onCreateEditEvent={props.onCreateEditEvent}
+          onModifyEditEvent={props.onModifyEditEvent}
         >
-          <DimensionOverlay
-            transform={transform!}
-            focusOnHover={props.focusOnHover}
-            primitives={primitivesWithoutInteractionMetadata}
+          <EditTraceHintOverlay
+            disabled={!props.allowEditing}
+            transform={transform}
+            soup={elements}
+            cancelPanDrag={props.cancelPanDrag}
+            onCreateEditEvent={props.onCreateEditEvent as any}
+            onModifyEditEvent={props.onModifyEditEvent as any}
           >
-            <ToolbarOverlay elements={elements}>
-              <ErrorOverlay transform={transform} elements={elements}>
-                <RatsNestOverlay transform={transform} soup={elements}>
-                  <PcbGroupOverlay
-                    transform={transform}
-                    elements={elements}
-                    hoveredComponentIds={hoveredComponentIds}
-                  >
-                    <DebugGraphicsOverlay
+            <DimensionOverlay
+              transform={transform!}
+              focusOnHover={props.focusOnHover}
+              primitives={primitivesWithoutInteractionMetadata}
+            >
+              <ToolbarOverlay elements={elements}>
+                <ErrorOverlay transform={transform} elements={elements}>
+                  <RatsNestOverlay transform={transform} soup={elements}>
+                    <PcbGroupOverlay
                       transform={transform}
-                      debugGraphics={props.debugGraphics}
+                      elements={elements}
+                      hoveredComponentIds={hoveredComponentIds}
                     >
-                      <WarningGraphicsOverlay
+                      <DebugGraphicsOverlay
                         transform={transform}
-                        elements={elements}
+                        debugGraphics={props.debugGraphics}
                       >
-                        <CanvasPrimitiveRenderer
+                        <WarningGraphicsOverlay
                           transform={transform}
-                          primitives={primitives}
-                          elements={elementsToRender}
-                          width={props.width}
-                          height={props.height}
-                          grid={props.grid}
-                        />
-                      </WarningGraphicsOverlay>
-                    </DebugGraphicsOverlay>
-                  </PcbGroupOverlay>
-                </RatsNestOverlay>
-              </ErrorOverlay>
-            </ToolbarOverlay>
-          </DimensionOverlay>
-        </EditTraceHintOverlay>
-      </EditPlacementOverlay>
+                          elements={elements}
+                        >
+                          <CanvasPrimitiveRenderer
+                            transform={transform}
+                            primitives={primitives}
+                            elements={elementsToRender}
+                            width={props.width}
+                            height={props.height}
+                            grid={props.grid}
+                          />
+                        </WarningGraphicsOverlay>
+                      </DebugGraphicsOverlay>
+                    </PcbGroupOverlay>
+                  </RatsNestOverlay>
+                </ErrorOverlay>
+              </ToolbarOverlay>
+            </DimensionOverlay>
+          </EditTraceHintOverlay>
+        </EditPlacementOverlay>
+      </EditBoardOverlay>
     </MouseElementTracker>
   )
 }
