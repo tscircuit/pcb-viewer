@@ -11,8 +11,6 @@ import {
   convertSmtpadRotatedPill,
 } from "./element-to-primitive-converters/convert-smtpad-pill"
 
-import { convertPcbCopperTextToPrimitive } from "./element-to-primitive/convert-pcb-copper-text-to-primitive"
-
 type MetaData = {
   _parent_pcb_component?: any
   _parent_source_component?: any
@@ -553,13 +551,8 @@ export const convertElementToPrimitives = (
       }
     }
 
-    case "pcb_copper_text": {
-      return convertPcbCopperTextToPrimitive(element, {
-        _parent_pcb_component,
-        _parent_source_component,
-      })
+    default: {
+      return []
     }
   }
-
-  return []
 }
