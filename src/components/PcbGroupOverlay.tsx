@@ -40,15 +40,11 @@ export const PcbGroupOverlay = ({
 }: Props) => {
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const {
-    is_showing_pcb_groups,
-    pcb_group_view_mode,
-    is_showing_group_anchor_offsets,
-  } = useGlobalStore((s) => ({
-    is_showing_pcb_groups: s.is_showing_pcb_groups,
-    pcb_group_view_mode: s.pcb_group_view_mode,
-    is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
-  }))
+  const pcb_group_view_mode = useGlobalStore((s) => s.pcb_group_view_mode)
+  const is_showing_pcb_groups = useGlobalStore((s) => s.is_showing_pcb_groups)
+  const is_showing_group_anchor_offsets = useGlobalStore(
+    (s) => s.is_showing_group_anchor_offsets,
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current

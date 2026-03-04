@@ -430,10 +430,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setEditMode(editModes.in_move_footprint_mode ? "off" : "move_footprint")
   }, [editModes.in_move_footprint_mode, setEditMode])
 
-  const handleRatsNestToggle = useCallback(() => {
-    setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
-  }, [viewSettings.is_showing_rats_nest, setIsShowingRatsNest])
-
   const handleMeasureToolClick = useCallback(() => {
     setMeasureToolArmed(true)
     window.dispatchEvent(new Event("arm-dimension-tool"))
@@ -739,17 +735,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         </ToolbarButton>
         <ToolbarButton
           isSmallScreen={isSmallScreen}
-          style={{}}
-          onClick={handleRatsNestToggle}
-        >
-          <div>
-            {viewSettings.is_showing_rats_nest ? "✖ " : ""}
-            Rats Nest
-          </div>
-        </ToolbarButton>
-
-        <ToolbarButton
-          isSmallScreen={isSmallScreen}
           style={measureToolArmed ? { backgroundColor: "#444" } : {}}
           onClick={handleMeasureToolClick}
         >
@@ -781,7 +766,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               </span>
             </div>
             {isViewMenuOpen && (
-              <div style={{ marginTop: 4, minWidth: 120 }}>
+              <div style={{ marginTop: 4, minWidth: 180 }}>
+                <CheckboxMenuItem
+                  label="Show Rats Nest"
+                  checked={viewSettings.is_showing_rats_nest}
+                  onClick={() => {
+                    setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
+                  }}
+                />
                 <CheckboxMenuItem
                   label="Show All Trace Lengths"
                   checked={viewSettings.is_showing_multiple_traces_length}
