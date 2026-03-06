@@ -1,4 +1,4 @@
-import { applyEditEvents } from "@tscircuit/core"
+import { applyEditEventsWithSilkscreenFix } from "./lib/apply-edit-events-with-silkscreen-fix"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
@@ -121,7 +121,7 @@ export const PCBViewer = ({
   }, [circuitJsonKey])
 
   const elements = useMemo(() => {
-    return applyEditEvents({
+    return applyEditEventsWithSilkscreenFix({
       circuitJson: pcbElmsPreEdit as any,
       editEvents,
     })
