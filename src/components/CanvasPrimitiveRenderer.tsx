@@ -71,25 +71,25 @@ export const CanvasPrimitiveRenderer = ({
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const isShowingSolderMask = useGlobalStore((s) => s.is_showing_solder_mask)
+  const isShowingFabricationNotes = useGlobalStore(
+    (s) => s.is_showing_fabrication_notes,
+  )
 
   useEffect(() => {
     if (!canvasRefs.current) return
     if (Object.keys(canvasRefs.current).length === 0) return
 
-    // Filter out null canvas refs and solder mask layers when disabled
-    const filteredCanvasRefs = Object.fromEntries(
+    // Keep all non-null canvas refs so hidden layers are still cleared.
+    const availableCanvasRefs = Object.fromEntries(
       Object.entries(canvasRefs.current).filter(([layer, canvas]) => {
         if (!canvas) return false
-        if (!isShowingSolderMask && layer.includes("soldermask")) {
-          return false
-        }
         return true
       }),
     )
 
-    if (Object.keys(filteredCanvasRefs).length === 0) return
+    if (Object.keys(availableCanvasRefs).length === 0) return
 
-    const drawer = new Drawer(filteredCanvasRefs)
+    const drawer = new Drawer(availableCanvasRefs)
     if (transform) drawer.transform = transform
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
@@ -98,6 +98,9 @@ export const CanvasPrimitiveRenderer = ({
     // Also filter out SMT pad primitives since they're drawn with circuit-to-canvas
     const filteredPrimitives = primitives
       .filter((p) => isShowingSolderMask || !p.layer?.includes("soldermask"))
+      .filter(
+        (p) => isShowingFabricationNotes || !p.layer?.includes("fabrication"),
+      )
       .filter((p) => p.layer !== "board")
       .filter((p) => p._element?.type !== "pcb_smtpad")
       .filter((p) => p._element?.type !== "pcb_plated_hole")
@@ -304,25 +307,27 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw top fabrication
-      const topFabCanvas = canvasRefs.current.top_fabrication
-      if (topFabCanvas) {
-        drawFabricationNoteElementsForLayer({
-          canvas: topFabCanvas,
-          elements,
-          layers: ["top_fabrication_note"],
-          realToCanvasMat: transform,
-        })
-      }
+      if (isShowingFabricationNotes) {
+        const topFabCanvas = canvasRefs.current.top_fabrication
+        if (topFabCanvas) {
+          drawFabricationNoteElementsForLayer({
+            canvas: topFabCanvas,
+            elements,
+            layers: ["top_fabrication_note"],
+            realToCanvasMat: transform,
+          })
+        }
 
-      // Draw bottom fabrication
-      const bottomFabCanvas = canvasRefs.current.bottom_fabrication
-      if (bottomFabCanvas) {
-        drawFabricationNoteElementsForLayer({
-          canvas: bottomFabCanvas,
-          elements,
-          layers: ["bottom_fabrication_note"],
-          realToCanvasMat: transform,
-        })
+        // Draw bottom fabrication
+        const bottomFabCanvas = canvasRefs.current.bottom_fabrication
+        if (bottomFabCanvas) {
+          drawFabricationNoteElementsForLayer({
+            canvas: bottomFabCanvas,
+            elements,
+            layers: ["bottom_fabrication_note"],
+            realToCanvasMat: transform,
+          })
+        }
       }
 
       // Draw bottom notes
@@ -417,7 +422,14 @@ export const CanvasPrimitiveRenderer = ({
     }
 
     drawer.orderAndFadeLayers()
-  }, [primitives, elements, transform, selectedLayer, isShowingSolderMask])
+  }, [
+    primitives,
+    elements,
+    transform,
+    selectedLayer,
+    isShowingSolderMask,
+    isShowingFabricationNotes,
+  ])
 
   return (
     <div
