@@ -244,6 +244,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask,
+    setIsShowingFabricationNotes,
     setPcbGroupViewMode,
     setHoveredErrorId,
   } = useGlobalStore((s) => ({
@@ -264,6 +265,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_pcb_groups: s.is_showing_pcb_groups,
       is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
       is_showing_solder_mask: s.is_showing_solder_mask,
+      is_showing_fabrication_notes: s.is_showing_fabrication_notes,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setEditMode: s.setEditMode,
@@ -275,6 +277,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask: s.setIsShowingSolderMask,
+    setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
   }))
@@ -821,6 +824,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={viewSettings.is_showing_solder_mask}
                   onClick={() => {
                     setIsShowingSolderMask(!viewSettings.is_showing_solder_mask)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Fabrication Notes"
+                  checked={viewSettings.is_showing_fabrication_notes}
+                  onClick={() => {
+                    setIsShowingFabricationNotes(
+                      !viewSettings.is_showing_fabrication_notes,
+                    )
                   }}
                 />
                 <CheckboxMenuItem
