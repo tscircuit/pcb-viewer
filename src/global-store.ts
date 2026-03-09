@@ -3,6 +3,7 @@ import {
   useStore as useZustandStore,
 } from "zustand"
 import type { LayerRef } from "circuit-json"
+import { createContext, useContext } from "react"
 import {
   getStoredBoolean,
   getStoredString,
@@ -57,6 +58,8 @@ export interface State {
 export type StateProps = {
   [key in keyof State]: State[key] extends boolean ? boolean : never
 }
+
+export type PcbViewerStore = ReturnType<typeof createStore>
 
 const DEFAULT_PCB_GROUP_VIEW_MODE: "all" | "named_only" =
   process.env.NODE_ENV !== "production" ? "named_only" : "all"
@@ -172,12 +175,29 @@ export const createStore = (
       }) as const,
   )
 
-const globalStore = createStore()
+export const StoreContext = createContext<PcbViewerStore | null>(null)
+
+let globalStoreRef: PcbViewerStore | null = null
+
+export const getGlobalPcbViewerStore = (): PcbViewerStore => {
+  if (!globalStoreRef) {
+    globalStoreRef = createStore()
+  }
+  return globalStoreRef
+}
+
+export const setGlobalPcbViewerStore = (store: PcbViewerStore) => {
+  globalStoreRef = store
+}
 
 export const useGlobalPcbViewerStore = <T = State>(
   selector?: (state: State) => T,
-): T => useZustandStore(globalStore, selector as any)
+): T => useZustandStore(getGlobalPcbViewerStore(), selector as any)
 
-export const getGlobalPcbViewerStore = () => globalStore
-
-export const useGlobalStore = useGlobalPcbViewerStore
+export const useGlobalStore = <T = State>(
+  selector?: (state: State) => T,
+): T => {
+  const contextStore = useContext(StoreContext)
+  const store = contextStore ?? getGlobalPcbViewerStore()
+  return useZustandStore(store, selector as any)
+}

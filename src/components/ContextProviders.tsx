@@ -1,6 +1,10 @@
-import { useEffect } from "react"
-import type { StateProps } from "../global-store"
-import { getGlobalPcbViewerStore } from "../global-store"
+import { useEffect, useMemo } from "react"
+import {
+  createStore,
+  StoreContext,
+  setGlobalPcbViewerStore,
+  type StateProps,
+} from "../global-store"
 
 export const ContextProviders = ({
   children,
@@ -11,18 +15,14 @@ export const ContextProviders = ({
   initialState?: Partial<StateProps>
   disablePcbGroups?: boolean
 }) => {
-  useEffect(() => {
-    if (!initialState) return
-    const store = getGlobalPcbViewerStore()
-    store.setState(initialState as any)
-  }, [initialState])
+  const store = useMemo(
+    () => createStore(initialState, disablePcbGroups),
+    [disablePcbGroups],
+  )
 
   useEffect(() => {
-    if (disablePcbGroups) {
-      const store = getGlobalPcbViewerStore()
-      store.getState().setIsShowingPcbGroups(false)
-    }
-  }, [disablePcbGroups])
+    setGlobalPcbViewerStore(store)
+  }, [store])
 
-  return <>{children}</>
+  return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>
 }
