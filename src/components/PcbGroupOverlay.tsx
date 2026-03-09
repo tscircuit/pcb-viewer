@@ -76,6 +76,10 @@ export const PcbGroupOverlay = ({
     )
 
     const visiblePcbGroups = pcbGroups.filter((group) => {
+      if (group.name?.toLowerCase().includes("subpanel")) {
+        return false
+      }
+
       if (pcb_group_view_mode === "all") return true
       if (!group.source_group_id) return false
       const sourceGroup = sourceGroupById.get(group.source_group_id)
