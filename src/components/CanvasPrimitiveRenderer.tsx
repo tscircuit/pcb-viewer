@@ -1,6 +1,7 @@
 import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import { drawCopperPourElementsForLayer } from "lib/draw-copper-pour"
+import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawGrid } from "lib/draw-grid"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
@@ -13,10 +14,9 @@ import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
-import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
+import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
-import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
 import type { GridConfig, Primitive } from "lib/types"
 import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
@@ -153,6 +153,7 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
+          selectedLayer,
         })
       }
 
@@ -164,6 +165,7 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
+          selectedLayer,
         })
       }
 

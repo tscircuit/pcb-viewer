@@ -6,7 +6,6 @@ import {
 } from "circuit-to-canvas"
 import color from "color"
 import type { Matrix } from "transformation-matrix"
-import { useGlobalStore } from "../global-store"
 import colors from "./colors"
 import type { Primitive } from "./types"
 
@@ -17,6 +16,13 @@ const HOVER_COLOR_MAP: PcbColorMap = {
     ...DEFAULT_PCB_COLOR_MAP.copper,
     top: color(colors.board.pad_front).lighten(0.5).toString(),
     bottom: color(colors.board.pad_back).lighten(0.5).toString(),
+  },
+}
+const BOTTOM_COPPER_COLOR_MAP: PcbColorMap = {
+  ...DEFAULT_PCB_COLOR_MAP,
+  copper: {
+    ...DEFAULT_PCB_COLOR_MAP.copper,
+    top: DEFAULT_PCB_COLOR_MAP.copper.bottom,
   },
 }
 
@@ -31,6 +37,7 @@ export function drawPlatedHolePads({
   realToCanvasMat,
   primitives,
   drawSoldermask,
+  selectedLayer,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
@@ -38,6 +45,7 @@ export function drawPlatedHolePads({
   realToCanvasMat: Matrix
   primitives?: Primitive[]
   drawSoldermask?: boolean
+  selectedLayer?: string
 }) {
   const platedHoleElements = elements.filter(isPlatedHole)
 
@@ -68,13 +76,28 @@ export function drawPlatedHolePads({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
+    if (selectedLayer === "bottom") {
+      drawer.configure({ colorOverrides: BOTTOM_COPPER_COLOR_MAP })
+    }
     drawer.drawElements(nonHighlightedElements, { layers, drawSoldermask })
   }
 
   // Draw highlighted elements with lighter colors
   if (highlightedElements.length > 0) {
     const highlightDrawer = new CircuitToCanvasDrawer(canvas)
-    highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
+    if (selectedLayer === "bottom") {
+      highlightDrawer.configure({
+        colorOverrides: {
+          ...HOVER_COLOR_MAP,
+          copper: {
+            ...HOVER_COLOR_MAP.copper,
+            top: HOVER_COLOR_MAP.copper.bottom,
+          },
+        },
+      })
+    } else {
+      highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
+    }
     highlightDrawer.realToCanvasMat = realToCanvasMat
     highlightDrawer.drawElements(highlightedElements, {
       layers,
