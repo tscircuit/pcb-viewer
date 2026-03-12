@@ -54,9 +54,9 @@ export const getTextForHighlightedPrimitive = (
         .sort((a, b) => b.localeCompare(a))
       const parentName =
         _parent_source_component &&
-          "name" in _parent_source_component &&
-          _parent_source_component.name &&
-          !_parent_source_component.name.includes("unnamed_")
+        "name" in _parent_source_component &&
+        _parent_source_component.name &&
+        !_parent_source_component.name.includes("unnamed_")
           ? _parent_source_component.name
           : null
 
@@ -115,8 +115,8 @@ export const HighlightedPrimitiveBoxWithText = ({
 
   const color: string =
     layerColorHightlightMap[
-    (primitive as any)?._element
-      ?.layer as keyof typeof layerColorHightlightMap
+      (primitive as any)?._element
+        ?.layer as keyof typeof layerColorHightlightMap
     ] ?? "red"
 
   // Check for rotation on the parent PCB component
