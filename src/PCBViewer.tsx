@@ -1,8 +1,8 @@
 import { applyEditEvents } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
-import type { AnyCircuitElement, SourceTrace } from "circuit-json"
+import type { AnyCircuitElement, LayerRef, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
-import type { StateProps } from "./global-store"
+import type { ControlledViewState, StateProps } from "./global-store"
 import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -17,11 +17,95 @@ import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
+export type PCBViewerViewState = {
+  selectedLayer: LayerRef
+  isShowingRatsNest: boolean
+  isShowingMultipleTracesLength: boolean
+  isShowingAutorouting: boolean
+  isShowingDrcErrors: boolean
+  isShowingCopperPours: boolean
+  isShowingPcbGroups: boolean
+  isShowingGroupAnchorOffsets: boolean
+  isShowingSolderMask: boolean
+  isShowingFabricationNotes: boolean
+  pcbGroupViewMode: "all" | "named_only"
+}
+
+const VIEW_STATE_KEY_MAP: Record<
+  keyof PCBViewerViewState,
+  keyof ControlledViewState
+> = {
+  selectedLayer: "selected_layer",
+  isShowingRatsNest: "is_showing_rats_nest",
+  isShowingMultipleTracesLength: "is_showing_multiple_traces_length",
+  isShowingAutorouting: "is_showing_autorouting",
+  isShowingDrcErrors: "is_showing_drc_errors",
+  isShowingCopperPours: "is_showing_copper_pours",
+  isShowingPcbGroups: "is_showing_pcb_groups",
+  isShowingGroupAnchorOffsets: "is_showing_group_anchor_offsets",
+  isShowingSolderMask: "is_showing_solder_mask",
+  isShowingFabricationNotes: "is_showing_fabrication_notes",
+  pcbGroupViewMode: "pcb_group_view_mode",
+}
+
+const VIEW_STATE_MAPPINGS = Object.entries(VIEW_STATE_KEY_MAP) as Array<
+  [keyof PCBViewerViewState, keyof ControlledViewState]
+>
+
+const mapViewStateToControlledState = (
+  viewState?: Partial<PCBViewerViewState>,
+): Partial<ControlledViewState> | undefined => {
+  if (!viewState) return undefined
+
+  const controlledState: Partial<ControlledViewState> = {}
+
+  for (const [publicKey, controlledKey] of VIEW_STATE_MAPPINGS) {
+    const value = viewState[publicKey]
+    if (value !== undefined) {
+      controlledState[controlledKey] = value as never
+    }
+  }
+
+  return controlledState
+}
+
+const mapControlledStateToViewState = (
+  controlledViewState: ControlledViewState,
+): PCBViewerViewState => {
+  const viewState = {} as PCBViewerViewState
+
+  for (const [publicKey, controlledKey] of VIEW_STATE_MAPPINGS) {
+    viewState[publicKey] = controlledViewState[controlledKey] as never
+  }
+
+  return viewState
+}
+
+const mapViewStateToInitialState = (
+  viewState?: Partial<PCBViewerViewState>,
+): Partial<StateProps> => {
+  const controlledState = mapViewStateToControlledState(viewState)
+  if (!controlledState) return {}
+
+  const {
+    selected_layer: _selectedLayer,
+    pcb_group_view_mode: _pcbGroupViewMode,
+    ...booleanState
+  } = controlledState
+
+  return booleanState as Partial<StateProps>
+}
+
 type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
+  viewState?: Partial<PCBViewerViewState>
+  onViewStateChange?: (viewState: PCBViewerViewState) => void
+  /**
+   * @deprecated Use `viewState` (and optionally `onViewStateChange`) instead.
+   */
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
   focusOnHover?: boolean
@@ -35,6 +119,8 @@ export const PCBViewer = ({
   debugGraphics,
   height = 600,
   initialState,
+  viewState,
+  onViewStateChange,
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
@@ -42,6 +128,7 @@ export const PCBViewer = ({
   clickToInteractEnabled = false,
   disablePcbGroups = false,
 }: Props) => {
+  const hasWarnedDeprecatedInitialState = useRef(false)
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
@@ -74,9 +161,7 @@ export const PCBViewer = ({
     const { center, width, height } = elements.some((e) =>
       e.type.startsWith("pcb_"),
     )
-      ? findBoundsAndCenter(
-          elements.filter((e) => e.type.startsWith("pcb_")) as any,
-        )
+      ? findBoundsAndCenter(elements.filter((e) => e.type.startsWith("pcb_")))
       : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
     const scaleFactor =
       Math.min(
@@ -94,6 +179,17 @@ export const PCBViewer = ({
     setTransform(targetTransform)
     return
   }
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return
+    if (!initialState) return
+    if (hasWarnedDeprecatedInitialState.current) return
+
+    hasWarnedDeprecatedInitialState.current = true
+    console.warn(
+      "[PCBViewer] `initialState` is deprecated. Use `viewState` and `onViewStateChange` instead.",
+    )
+  }, [initialState])
 
   useEffect(() => {
     if (!refDimensions?.width) return
@@ -115,14 +211,14 @@ export const PCBViewer = ({
   const pcbElmsPreEdit = useMemo(() => {
     return (
       circuitJson?.filter(
-        (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
+        (e) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
       ) ?? []
     )
   }, [circuitJsonKey])
 
   const elements = useMemo(() => {
     return applyEditEvents({
-      circuitJson: pcbElmsPreEdit as any,
+      circuitJson: pcbElmsPreEdit,
       editEvents,
     })
   }, [pcbElmsPreEdit, editEvents])
@@ -144,21 +240,40 @@ export const PCBViewer = ({
   const mergedInitialState = useMemo(
     () => ({
       ...initialState,
+      ...mapViewStateToInitialState(viewState),
       ...(disablePcbGroups && { is_showing_pcb_groups: false }),
     }),
-    [initialState, disablePcbGroups],
+    [initialState, viewState, disablePcbGroups],
+  )
+
+  const controlledViewState = useMemo(
+    () => mapViewStateToControlledState(viewState),
+    [viewState],
   )
 
   return (
     <div
-      ref={transformRef as any}
+      ref={transformRef}
       style={{ position: "relative" }}
       onContextMenu={(event) => event.preventDefault()}
     >
-      <div ref={ref as any}>
+      <div
+        ref={(element) => {
+          if (element) ref(element)
+        }}
+      >
         <ContextProviders
           initialState={mergedInitialState}
           disablePcbGroups={disablePcbGroups}
+          controlledViewState={controlledViewState}
+          onControlledViewStateChange={
+            onViewStateChange
+              ? (nextControlledViewState) =>
+                  onViewStateChange(
+                    mapControlledStateToViewState(nextControlledViewState),
+                  )
+              : undefined
+          }
         >
           <CanvasElementsRenderer
             key={refDimensions.width}
