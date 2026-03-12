@@ -1,5 +1,5 @@
 import { Circuit } from "@tscircuit/core"
-import { PCBViewer } from "../PCBViewer"
+import { PCBViewer } from "../../PCBViewer"
 
 export const PlatedHoleHoverFix = () => {
   const circuit = new Circuit()
