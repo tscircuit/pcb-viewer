@@ -52,7 +52,6 @@ export const getTextForHighlightedPrimitive = (
         .filter((ph) => !ph.includes("unnamed_"))
         // reverse alphabetical order
         .sort((a, b) => b.localeCompare(a))
-      console.log("port_hints", port_hints)
       const parentName =
         _parent_source_component &&
         "name" in _parent_source_component &&
@@ -146,7 +145,6 @@ export const HighlightedPrimitiveBoxWithText = ({
   if (primitiveElement.type === "pcb_trace") {
     const traceTextContext = { primitiveElement, elements }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
-    console.log(overlayInfo?.text)
     if (!overlayInfo) return null
 
     const yOffset = mousePos.y - 35
