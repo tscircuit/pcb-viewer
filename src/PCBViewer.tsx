@@ -103,9 +103,6 @@ type Props = {
   editEvents?: ManualEditEvent[]
   viewState?: Partial<PCBViewerViewState>
   onViewStateChange?: (viewState: PCBViewerViewState) => void
-  /**
-   * @deprecated Use `viewState` (and optionally `onViewStateChange`) instead.
-   */
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
   focusOnHover?: boolean
@@ -128,7 +125,6 @@ export const PCBViewer = ({
   clickToInteractEnabled = false,
   disablePcbGroups = false,
 }: Props) => {
-  const hasWarnedDeprecatedInitialState = useRef(false)
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
@@ -179,17 +175,6 @@ export const PCBViewer = ({
     setTransform(targetTransform)
     return
   }
-
-  useEffect(() => {
-    if (process.env.NODE_ENV === "production") return
-    if (!initialState) return
-    if (hasWarnedDeprecatedInitialState.current) return
-
-    hasWarnedDeprecatedInitialState.current = true
-    console.warn(
-      "[PCBViewer] `initialState` is deprecated. Use `viewState` and `onViewStateChange` instead.",
-    )
-  }, [initialState])
 
   useEffect(() => {
     if (!refDimensions?.width) return

@@ -77,7 +77,7 @@ The PCBViewer component accepts these props:
 - `onEditEventsChanged`: Callback when edit events change
 - `viewState`: Controlled subset of view options (layer + visibility toggles)
 - `onViewStateChange`: Callback when controlled view state changes
-- `initialState` (deprecated): Initial boolean state for the viewer. Prefer `viewState` and `onViewStateChange`.
+- `initialState`: Initial boolean state for the viewer.
 
 ### Features
 

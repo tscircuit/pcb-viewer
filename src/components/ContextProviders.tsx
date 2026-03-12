@@ -56,10 +56,11 @@ export const ContextProviders = ({
     if (Object.keys(nextPartialState).length === 0) return
 
     isSyncingFromPropsRef.current = true
-    store.setState(nextPartialState)
-    queueMicrotask(() => {
+    try {
+      store.setState(nextPartialState)
+    } finally {
       isSyncingFromPropsRef.current = false
-    })
+    }
   }, [controlledViewState, store])
 
   useEffect(() => {
