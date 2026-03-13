@@ -1,4 +1,4 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer, PcbTrace } from "circuit-json"
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
@@ -25,7 +25,7 @@ const HOVER_COLOR_MAP: PcbColorMap = {
   },
 }
 
-export function isPcbTrace(element: AnyCircuitElement) {
+export function isPcbTrace(element: AnyCircuitElement): element is PcbTrace {
   return element.type === "pcb_trace"
 }
 
@@ -33,6 +33,25 @@ const normalizeCopperLayers = (layers: PcbRenderLayer[]) =>
   layers.map((layer) =>
     layer.endsWith("_copper") ? layer.replace("_copper", "") : layer,
   )
+
+const filterTraceByLayers = (
+  trace: PcbTrace,
+  targetLayers: Set<string>,
+): PcbTrace | null => {
+  const filteredRoute = trace.route.filter(
+    (segment) =>
+      segment.route_type === "wire" &&
+      "layer" in segment &&
+      targetLayers.has(segment.layer),
+  )
+
+  if (filteredRoute.length === 0) return null
+
+  return {
+    ...trace,
+    route: filteredRoute,
+  }
+}
 
 export function drawPcbTraceElementsForLayer({
   canvas,
@@ -48,16 +67,11 @@ export function drawPcbTraceElementsForLayer({
   primitives?: Primitive[]
 }) {
   const targetLayers = new Set(normalizeCopperLayers(layers))
+
   const traceElements = elements
     .filter(isPcbTrace)
-    .filter((element) =>
-      element.route.some(
-        (segment) =>
-          segment.route_type === "wire" &&
-          "layer" in segment &&
-          targetLayers.has(segment.layer),
-      ),
-    )
+    .map((trace) => filterTraceByLayers(trace, targetLayers))
+    .filter((trace): trace is PcbTrace => trace !== null)
 
   if (traceElements.length === 0) return
 
@@ -73,12 +87,15 @@ export function drawPcbTraceElementsForLayer({
     }
   }
 
-  const highlightedElements = traceElements.filter((element) =>
-    highlightedElementIds.has(element.pcb_trace_id),
-  )
-  const nonHighlightedElements = traceElements.filter(
-    (element) => !highlightedElementIds.has(element.pcb_trace_id),
-  )
+  const highlightedElements: PcbTrace[] = []
+  const nonHighlightedElements: PcbTrace[] = []
+  for (const element of traceElements) {
+    if (highlightedElementIds.has(element.pcb_trace_id)) {
+      highlightedElements.push(element)
+    } else {
+      nonHighlightedElements.push(element)
+    }
+  }
 
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
