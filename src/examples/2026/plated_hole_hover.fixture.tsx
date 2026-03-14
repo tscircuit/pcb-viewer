@@ -15,11 +15,11 @@ export const PlatedHoleHoverFix = () => {
     </board>,
   )
 
-  const soup = circuit.getCircuitJson()
+  const circuitJson = circuit.getCircuitJson()
 
   return (
     <div style={{ backgroundColor: "black", width: "100%", height: "100vh" }}>
-      <PCBViewer circuitJson={soup as any} />
+      <PCBViewer circuitJson={circuitJson as any} />
     </div>
   )
 }
