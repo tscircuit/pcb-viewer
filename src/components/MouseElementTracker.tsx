@@ -189,28 +189,12 @@ export const MouseElementTracker = ({
 
   const highlightedPrimitives = useMemo(() => {
     const highlightedPrimitives: HighlightedPrimitive[] = []
-    const seenElementIds = new Set<string>()
 
     for (const primitive of mousedPrimitives) {
       if (primitive._element?.type === "pcb_via") continue
       if (primitive._element?.type === "pcb_component") continue
       if (primitive?.layer === "drill") continue
-
-      if (primitive._element) {
-        let elementId = ""
-        if ("pcb_plated_hole_id" in primitive._element) {
-          elementId = primitive._element.pcb_plated_hole_id as string
-        } else if ("pcb_smtpad_id" in primitive._element) {
-          elementId = primitive._element.pcb_smtpad_id as string
-        } else if ("pcb_trace_id" in primitive._element) {
-          elementId = primitive._element.pcb_trace_id as string
-        }
-
-        if (elementId) {
-          if (seenElementIds.has(elementId)) continue
-          seenElementIds.add(elementId)
-        }
-      }
+      if (primitive?.nonehoverable) continue
 
       let basePoint: { x: number; y: number } | null = null
       let w = 0
