@@ -194,7 +194,7 @@ export const MouseElementTracker = ({
       if (primitive._element?.type === "pcb_via") continue
       if (primitive._element?.type === "pcb_component") continue
       if (primitive?.layer === "drill") continue
-      if (primitive?.nonehoverable) continue
+      if (primitive?.is_hoverable) continue
 
       let basePoint: { x: number; y: number } | null = null
       let w = 0

@@ -342,7 +342,7 @@ export const convertElementToPrimitives = (
             _parent_source_component,
             _source_port,
             roundness: rect_border_radius,
-            nonehoverable: true,
+            is_hoverable: true,
           },
           {
             _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
@@ -352,7 +352,7 @@ export const convertElementToPrimitives = (
             y: y + parsed_hole_offset_y,
             r: hole_diameter / 2,
             layer: "drill",
-            nonehoverable: true,
+            is_hoverable: true,
           },
         ]
       } else if (element.shape === "pill_hole_with_rect_pad") {
@@ -394,7 +394,7 @@ export const convertElementToPrimitives = (
             _parent_source_component,
             _source_port,
             roundness: rect_border_radius,
-            nonehoverable: true,
+            is_hoverable: true,
           },
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
@@ -405,7 +405,7 @@ export const convertElementToPrimitives = (
             w: hole_width,
             h: hole_height,
             layer: "drill",
-            nonehoverable: true,
+            is_hoverable: true,
           },
         ]
       } else if (element.shape === "rotated_pill_hole_with_rect_pad") {
@@ -451,7 +451,7 @@ export const convertElementToPrimitives = (
             _source_port,
             ccw_rotation: rect_ccw_rotation,
             roundness: rect_border_radius,
-            nonehoverable: true,
+            is_hoverable: true,
           },
           {
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
@@ -463,7 +463,7 @@ export const convertElementToPrimitives = (
             h: hole_height,
             layer: "drill",
             ccw_rotation: hole_ccw_rotation,
-            nonehoverable: true,
+            is_hoverable: true,
           },
         ]
       } else if (element.shape === "hole_with_polygon_pad") {
