@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   IS_SHOWING_PCB_GROUPS: "pcb_viewer_is_showing_pcb_groups",
   PCB_GROUP_VIEW_MODE: "pcb_viewer_group_view_mode",
   IS_SHOWING_COPPER_POURS: "pcb_viewer_is_showing_copper_pours",
+  IS_SHOWING_COURTYARDS: "pcb_viewer_is_showing_courtyards",
   IS_SHOWING_GROUP_ANCHOR_OFFSETS: "pcb_viewer_is_showing_group_anchor_offsets",
   IS_SHOWING_SOLDER_MASK: "pcb_viewer_is_showing_solder_mask",
   IS_SHOWING_FABRICATION_NOTES: "pcb_viewer_is_showing_fabrication_notes",

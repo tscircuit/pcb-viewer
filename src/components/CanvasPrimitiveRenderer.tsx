@@ -74,6 +74,9 @@ export const CanvasPrimitiveRenderer = ({
   const isShowingFabricationNotes = useGlobalStore(
     (s) => s.is_showing_fabrication_notes,
   )
+  const isShowingCourtyards = useGlobalStore(
+    (s) => s.is_showing_courtyards,
+  )
 
   useEffect(() => {
     if (!canvasRefs.current) return
@@ -353,25 +356,27 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw top courtyard
-      const topCourtyardCanvas = canvasRefs.current.top_courtyard
-      if (topCourtyardCanvas) {
-        drawCourtyardElementsForLayer({
-          canvas: topCourtyardCanvas,
-          elements,
-          layers: ["top_courtyard" as PcbRenderLayer],
-          realToCanvasMat: transform,
-        })
-      }
+      if (isShowingCourtyards) {
+        const topCourtyardCanvas = canvasRefs.current.top_courtyard
+        if (topCourtyardCanvas) {
+          drawCourtyardElementsForLayer({
+            canvas: topCourtyardCanvas,
+            elements,
+            layers: ["top_courtyard" as PcbRenderLayer],
+            realToCanvasMat: transform,
+          })
+        }
 
-      // Draw bottom courtyard
-      const bottomCourtyardCanvas = canvasRefs.current.bottom_courtyard
-      if (bottomCourtyardCanvas) {
-        drawCourtyardElementsForLayer({
-          canvas: bottomCourtyardCanvas,
-          elements,
-          layers: ["bottom_courtyard" as PcbRenderLayer],
-          realToCanvasMat: transform,
-        })
+        // Draw bottom courtyard
+        const bottomCourtyardCanvas = canvasRefs.current.bottom_courtyard
+        if (bottomCourtyardCanvas) {
+          drawCourtyardElementsForLayer({
+            canvas: bottomCourtyardCanvas,
+            elements,
+            layers: ["bottom_courtyard" as PcbRenderLayer],
+            realToCanvasMat: transform,
+          })
+        }
       }
 
       // Draw board outline using circuit-to-canvas
