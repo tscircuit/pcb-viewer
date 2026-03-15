@@ -94,7 +94,7 @@ export const createStore = (
         ),
         is_showing_courtyards: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_COURTYARDS,
-          false,
+          true,
         ),
         is_showing_pcb_groups: disablePcbGroups
           ? false
