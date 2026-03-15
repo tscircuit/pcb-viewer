@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "@tscircuit/pcb-viewer",
@@ -10,7 +9,7 @@
         "@tscircuit/math-utils": "^0.0.29",
         "@vitejs/plugin-react": "^5.0.2",
         "circuit-json": "^0.0.387",
-        "circuit-to-canvas": "^0.0.91",
+        "circuit-to-canvas": "^0.0.92",
         "circuit-to-svg": "^0.0.323",
         "color": "^4.2.3",
         "react-supergrid": "^1.0.10",
@@ -640,7 +639,7 @@
 
     "circuit-json-to-spice": ["circuit-json-to-spice@0.0.34", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "typescript": "^5.0.0" } }, "sha512-59XyRHATq455875XlEiAfycIvxkOjaKnX4nzzlvY88UJyFcjkHSQCB9HCnbHJGsRxVBEmrTcELLyVIFmB+c4LA=="],
 
-    "circuit-to-canvas": ["circuit-to-canvas@0.0.91", "", { "dependencies": { "transformation-matrix": "^3.1.0" }, "peerDependencies": { "@tscircuit/alphabet": "*", "typescript": "^5" } }, "sha512-aw0WIXRe4jlhOqvq+z0rlONC0ana6MSGYdgQcd9xLkZOE6SafutqxOxe5ziiRDcrEAntNJfHgkUUGf56YKHfOg=="],
+    "circuit-to-canvas": ["circuit-to-canvas@0.0.92", "", { "dependencies": { "transformation-matrix": "^3.1.0" }, "peerDependencies": { "@tscircuit/alphabet": "*", "typescript": "^5" } }, "sha512-siz3zUwIyKsgvoaLvT2vc0GOeUCXqPCg3lMv1NLNaw7zEp4SrYpKnn4L6BOUrN4Z5mn0+5rWDy0mA/xA4172yw=="],
 
     "circuit-to-svg": ["circuit-to-svg@0.0.323", "", { "dependencies": { "@types/node": "^22.5.5", "bun-types": "^1.1.40", "calculate-elbow": "0.0.12", "debug": "^4.4.3", "svg-path-commander": "^2.1.11", "svgson": "^5.3.1", "transformation-matrix": "^2.16.1" }, "peerDependencies": { "@tscircuit/alphabet": "*" } }, "sha512-KtJJnvp75aTBPZZHqyFRTKciPDqEhJvFBqEg1ZvBrZy+TqPv+anUnJqWP4hg+2pW7lK/fYs9v4M6qsUiiBke0Q=="],
 
