@@ -434,6 +434,7 @@ export const CanvasPrimitiveRenderer = ({
     selectedLayer,
     isShowingSolderMask,
     isShowingFabricationNotes,
+    isShowingCourtyards,
   ])
 
   return (
