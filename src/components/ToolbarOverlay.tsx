@@ -241,6 +241,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
     setIsShowingCopperPours,
+    setIsShowingCourtyards,
     setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask,
@@ -262,6 +263,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_copper_pours: s.is_showing_copper_pours,
+      is_showing_courtyards: s.is_showing_courtyards,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
       is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
       is_showing_solder_mask: s.is_showing_solder_mask,
@@ -274,6 +276,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingCopperPours: s.setIsShowingCopperPours,
+    setIsShowingCourtyards: s.setIsShowingCourtyards,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask: s.setIsShowingSolderMask,
@@ -817,6 +820,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     setIsShowingCopperPours(
                       !viewSettings.is_showing_copper_pours,
                     )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Courtyards"
+                  checked={viewSettings.is_showing_courtyards}
+                  onClick={() => {
+                    setIsShowingCourtyards(!viewSettings.is_showing_courtyards)
                   }}
                 />
                 <CheckboxMenuItem
