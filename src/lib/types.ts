@@ -45,7 +45,7 @@ export interface PCBDrawingObject {
 
   is_mouse_over?: boolean
   is_in_highlighted_net?: boolean
-  is_unhoverable?: boolean
+  is_hoverable?: boolean
 }
 
 export interface Line extends PCBDrawingObject {
