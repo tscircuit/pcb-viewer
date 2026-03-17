@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   IS_SHOWING_GROUP_ANCHOR_OFFSETS: "pcb_viewer_is_showing_group_anchor_offsets",
   IS_SHOWING_SOLDER_MASK: "pcb_viewer_is_showing_solder_mask",
   IS_SHOWING_FABRICATION_NOTES: "pcb_viewer_is_showing_fabrication_notes",
+  IS_SHOWING_SILKSCREEN: "pcb_viewer_is_showing_silkscreen",
 } as const
 
 export const getStoredBoolean = (

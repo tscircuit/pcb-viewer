@@ -34,6 +34,7 @@ export interface State {
   is_showing_pcb_groups: boolean
   is_showing_group_anchor_offsets: boolean
   is_showing_solder_mask: boolean
+  is_showing_silkscreen: boolean
   is_showing_fabrication_notes: boolean
   pcb_group_view_mode: "all" | "named_only"
 
@@ -53,6 +54,7 @@ export interface State {
   setIsShowingPcbGroups: (is_showing: boolean) => void
   setIsShowingGroupAnchorOffsets: (is_showing: boolean) => void
   setIsShowingSolderMask: (is_showing: boolean) => void
+  setIsShowingSilkscreen: (is_showing: boolean) => void
   setIsShowingFabricationNotes: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
@@ -106,6 +108,10 @@ export const createStore = (
         is_showing_solder_mask: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_SOLDER_MASK,
           false,
+        ),
+        is_showing_silkscreen: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_SILKSCREEN,
+          true,
         ),
         is_showing_fabrication_notes: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_FABRICATION_NOTES,
@@ -167,6 +173,10 @@ export const createStore = (
         setIsShowingSolderMask: (is_showing) => {
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_SOLDER_MASK, is_showing)
           set({ is_showing_solder_mask: is_showing })
+        },
+        setIsShowingSilkscreen: (is_showing) => {
+          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_SILKSCREEN, is_showing)
+          set({ is_showing_silkscreen: is_showing })
         },
         setIsShowingFabricationNotes: (is_showing) => {
           setStoredBoolean(
