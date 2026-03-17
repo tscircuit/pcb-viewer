@@ -74,9 +74,7 @@ export const CanvasPrimitiveRenderer = ({
   const isShowingFabricationNotes = useGlobalStore(
     (s) => s.is_showing_fabrication_notes,
   )
-  const isShowingCourtyards = useGlobalStore(
-    (s) => s.is_showing_courtyards,
-  )
+  const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
   useEffect(() => {
