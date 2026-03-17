@@ -77,6 +77,7 @@ export const CanvasPrimitiveRenderer = ({
   const isShowingCourtyards = useGlobalStore(
     (s) => s.is_showing_courtyards,
   )
+  const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
   useEffect(() => {
     if (!canvasRefs.current) return
@@ -97,10 +98,11 @@ export const CanvasPrimitiveRenderer = ({
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
 
-    // Filter out solder mask primitives when solder mask is disabled
+    // Filter out solder mask and silkscreen primitives when disabled
     // Also filter out SMT pad primitives since they're drawn with circuit-to-canvas
     const filteredPrimitives = primitives
       .filter((p) => isShowingSolderMask || !p.layer?.includes("soldermask"))
+      .filter((p) => isShowingSilkscreen || !p.layer?.includes("silkscreen"))
       .filter(
         (p) => isShowingFabricationNotes || !p.layer?.includes("fabrication"),
       )
@@ -287,26 +289,27 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      // Draw top silkscreen
-      const topSilkscreenCanvas = canvasRefs.current.top_silkscreen
-      if (topSilkscreenCanvas) {
-        drawSilkscreenElementsForLayer({
-          canvas: topSilkscreenCanvas,
-          elements,
-          layers: ["top_silkscreen"],
-          realToCanvasMat: transform,
-        })
-      }
+      // Draw silkscreen if enabled
+      if (isShowingSilkscreen) {
+        const topSilkscreenCanvas = canvasRefs.current.top_silkscreen
+        if (topSilkscreenCanvas) {
+          drawSilkscreenElementsForLayer({
+            canvas: topSilkscreenCanvas,
+            elements,
+            layers: ["top_silkscreen"],
+            realToCanvasMat: transform,
+          })
+        }
 
-      // Draw bottom silkscreen
-      const bottomSilkscreenCanvas = canvasRefs.current.bottom_silkscreen
-      if (bottomSilkscreenCanvas) {
-        drawSilkscreenElementsForLayer({
-          canvas: bottomSilkscreenCanvas,
-          elements,
-          layers: ["bottom_silkscreen"],
-          realToCanvasMat: transform,
-        })
+        const bottomSilkscreenCanvas = canvasRefs.current.bottom_silkscreen
+        if (bottomSilkscreenCanvas) {
+          drawSilkscreenElementsForLayer({
+            canvas: bottomSilkscreenCanvas,
+            elements,
+            layers: ["bottom_silkscreen"],
+            realToCanvasMat: transform,
+          })
+        }
       }
 
       // Draw top fabrication
@@ -435,6 +438,7 @@ export const CanvasPrimitiveRenderer = ({
     isShowingSolderMask,
     isShowingFabricationNotes,
     isShowingCourtyards,
+    isShowingSilkscreen,
   ])
 
   return (
@@ -458,10 +462,8 @@ export const CanvasPrimitiveRenderer = ({
       />
       {orderedLayers
         .filter((layer) => {
-          if (!isShowingSolderMask) {
-            // Filter out solder mask layers when disabled
-            return !layer.includes("soldermask")
-          }
+          if (!isShowingSolderMask && layer.includes("soldermask")) return false
+          if (!isShowingSilkscreen && layer.includes("silkscreen")) return false
           return true
         })
         .map((l) => l.replace(/-/g, ""))

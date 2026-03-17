@@ -245,6 +245,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask,
+    setIsShowingSilkscreen,
     setIsShowingFabricationNotes,
     setPcbGroupViewMode,
     setHoveredErrorId,
@@ -267,6 +268,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_pcb_groups: s.is_showing_pcb_groups,
       is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
       is_showing_solder_mask: s.is_showing_solder_mask,
+      is_showing_silkscreen: s.is_showing_silkscreen,
       is_showing_fabrication_notes: s.is_showing_fabrication_notes,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
@@ -280,6 +282,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask: s.setIsShowingSolderMask,
+    setIsShowingSilkscreen: s.setIsShowingSilkscreen,
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
@@ -834,6 +837,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={viewSettings.is_showing_solder_mask}
                   onClick={() => {
                     setIsShowingSolderMask(!viewSettings.is_showing_solder_mask)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Silkscreen"
+                  checked={viewSettings.is_showing_silkscreen}
+                  onClick={() => {
+                    setIsShowingSilkscreen(!viewSettings.is_showing_silkscreen)
                   }}
                 />
                 <CheckboxMenuItem
