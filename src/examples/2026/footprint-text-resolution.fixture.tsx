@@ -92,7 +92,7 @@ export const FootprintTextResolution: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={circuitJson as any} />
+      <PCBViewer circuitJson={circuitJson} />
     </div>
   )
 }
