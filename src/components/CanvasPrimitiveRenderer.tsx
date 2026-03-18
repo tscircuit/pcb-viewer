@@ -148,22 +148,19 @@ export const CanvasPrimitiveRenderer = ({
           primitives,
         })
       }
-      if (topCanvas) {
+      // Only draw plated holes on the selected (foreground) layer canvas.
+      // Plated holes are through-hole components that span all layers, but
+      // drawing them on non-foreground layer canvases causes the bottom layer
+      // color to bleed through at reduced opacity (see issue #696).
+      const platedHoleCanvas =
+        selectedLayer === "bottom" ? bottomCanvas : topCanvas
+      const platedHoleCopperLayer: PcbRenderLayer =
+        selectedLayer === "bottom" ? "bottom_copper" : "top_copper"
+      if (platedHoleCanvas) {
         drawPlatedHolePads({
-          canvas: topCanvas,
+          canvas: platedHoleCanvas,
           elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPlatedHolePads({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
+          layers: [platedHoleCopperLayer],
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
@@ -202,23 +199,17 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      // Draw vias using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
+      // Only draw vias on the selected (foreground) layer canvas.
+      // Like plated holes, vias span multiple layers but should only render
+      // on the foreground canvas to avoid bottom-layer bleed-through.
+      const viaCanvas = selectedLayer === "bottom" ? bottomCanvas : topCanvas
+      const viaCopperLayer: PcbRenderLayer =
+        selectedLayer === "bottom" ? "bottom_copper" : "top_copper"
+      if (viaCanvas) {
         drawPcbViaElementsForLayer({
-          canvas: topCanvas,
+          canvas: viaCanvas,
           elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPcbViaElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
+          layers: [viaCopperLayer],
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
