@@ -14,6 +14,12 @@ import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
+import {
+  applyEditableBoard,
+  type EditableBoard,
+  getEditableBoard,
+  getEditableBoardKey,
+} from "lib/board-editing"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -24,6 +30,10 @@ type Props = {
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  onBoardChanged?: (
+    board: EditableBoard,
+    options: { inProgress: boolean },
+  ) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
@@ -38,6 +48,7 @@ export const PCBViewer = ({
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
+  onBoardChanged,
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
@@ -58,6 +69,8 @@ export const PCBViewer = ({
   })
 
   let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
+  const [editableBoardOverride, setEditableBoardOverride] =
+    useState<EditableBoard | null>(null)
   editEvents = editEventsProp ?? editEvents
 
   const initialRenderCompleted = useRef(false)
@@ -120,12 +133,30 @@ export const PCBViewer = ({
     )
   }, [circuitJsonKey])
 
+  const editableBoardKey = useMemo(
+    () => getEditableBoardKey(getEditableBoard(pcbElmsPreEdit)),
+    [pcbElmsPreEdit],
+  )
+
+  useEffect(() => {
+    setEditableBoardOverride(null)
+  }, [editableBoardKey])
+
   const elements = useMemo(() => {
-    return applyEditEvents({
+    const manualEditedElements = applyEditEvents({
       circuitJson: pcbElmsPreEdit as any,
       editEvents,
     })
-  }, [pcbElmsPreEdit, editEvents])
+
+    if (!editableBoardOverride) {
+      return manualEditedElements
+    }
+
+    return applyEditableBoard({
+      circuitJson: manualEditedElements as AnyCircuitElement[],
+      board: editableBoardOverride,
+    })
+  }, [pcbElmsPreEdit, editEvents, editableBoardOverride])
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
@@ -139,6 +170,14 @@ export const PCBViewer = ({
     )
     setEditEvents(newEditEvents)
     onEditEventsChanged?.(newEditEvents)
+  }
+
+  const handleBoardChanged = (
+    board: EditableBoard,
+    options: { inProgress: boolean },
+  ) => {
+    setEditableBoardOverride(board)
+    onBoardChanged?.(board, options)
   }
 
   const mergedInitialState = useMemo(
@@ -170,6 +209,7 @@ export const PCBViewer = ({
             cancelPanDrag={cancelPanDrag}
             onCreateEditEvent={onCreateEditEvent}
             onModifyEditEvent={onModifyEditEvent}
+            onBoardChanged={handleBoardChanged}
             grid={{
               spacing: 1,
               view_window: {

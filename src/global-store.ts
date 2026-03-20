@@ -21,6 +21,7 @@ export interface State {
   in_edit_mode: boolean
   in_move_footprint_mode: boolean
   in_draw_trace_mode: boolean
+  in_edit_board_mode: boolean
   is_mouse_over_container: boolean
   is_moving_component: boolean
   is_drawing_trace: boolean
@@ -41,7 +42,9 @@ export interface State {
   hovered_error_id: string | null
 
   selectLayer: (layer: LayerRef) => void
-  setEditMode: (mode: "off" | "move_footprint" | "draw_trace") => void
+  setEditMode: (
+    mode: "off" | "move_footprint" | "draw_trace" | "edit_board",
+  ) => void
   setIsMovingComponent: (is_moving: boolean) => void
   setIsDrawingTrace: (is_drawing: boolean) => void
   setIsShowingRatsNest: (is_showing: boolean) => void
@@ -81,6 +84,7 @@ export const createStore = (
         in_edit_mode: false,
         in_move_footprint_mode: false,
         in_draw_trace_mode: false,
+        in_edit_board_mode: false,
 
         is_moving_component: false,
         is_drawing_trace: false,
@@ -133,6 +137,7 @@ export const createStore = (
             in_edit_mode: mode !== "off",
             in_move_footprint_mode: mode === "move_footprint",
             in_draw_trace_mode: mode === "draw_trace",
+            in_edit_board_mode: mode === "edit_board",
             is_moving_component: false,
             is_drawing_trace: false,
           }),
