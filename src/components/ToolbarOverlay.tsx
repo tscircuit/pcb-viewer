@@ -257,6 +257,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     editModes: {
       in_move_footprint_mode: s.in_move_footprint_mode,
       in_draw_trace_mode: s.in_draw_trace_mode,
+      in_edit_board_mode: s.in_edit_board_mode,
     },
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
@@ -320,6 +321,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   // Find the PCB board to get the number of layers
   const pcbBoard = elements?.find((el) => el.type === "pcb_board") as any
   const numLayers = pcbBoard?.num_layers || 2
+  const hasEditableBoard =
+    Number.isFinite(pcbBoard?.width) && Number.isFinite(pcbBoard?.height)
 
   // Filter layers based on PCB layer count
   const availableLayers =
@@ -438,6 +441,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const handleMoveComponentToggle = useCallback(() => {
     setEditMode(editModes.in_move_footprint_mode ? "off" : "move_footprint")
   }, [editModes.in_move_footprint_mode, setEditMode])
+
+  const handleEditBoardToggle = useCallback(() => {
+    setEditMode(editModes.in_edit_board_mode ? "off" : "edit_board")
+  }, [editModes.in_edit_board_mode, setEditMode])
 
   const handleRatsNestToggle = useCallback(() => {
     setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
@@ -746,6 +753,20 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             Move Components
           </div>
         </ToolbarButton>
+        {hasEditableBoard && (
+          <ToolbarButton
+            isSmallScreen={isSmallScreen}
+            style={
+              editModes.in_edit_board_mode ? { backgroundColor: "#444" } : {}
+            }
+            onClick={handleEditBoardToggle}
+          >
+            <div>
+              {editModes.in_edit_board_mode ? "✖ " : ""}
+              Edit Board
+            </div>
+          </ToolbarButton>
+        )}
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}

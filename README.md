@@ -75,6 +75,7 @@ The PCBViewer component accepts these props:
 - `allowEditing`: Enable/disable editing capabilities (default: true)
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
+- `onBoardChanged`: Callback fired while the board is dragged or resized in `Edit Board` mode
 - `initialState`: Initial state for the viewer
 
 ### Features
@@ -82,6 +83,7 @@ The PCBViewer component accepts these props:
 - Interactive PCB viewing with pan and zoom
 - Multiple layer support (top, bottom, inner layers)
 - Component placement editing
+- Rectangular board dragging and resizing for boards with explicit `width`/`height`
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
