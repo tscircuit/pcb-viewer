@@ -189,10 +189,13 @@ export const MouseElementTracker = ({
 
   const highlightedPrimitives = useMemo(() => {
     const highlightedPrimitives: HighlightedPrimitive[] = []
+
     for (const primitive of mousedPrimitives) {
       if (primitive._element?.type === "pcb_via") continue
       if (primitive._element?.type === "pcb_component") continue
       if (primitive?.layer === "drill") continue
+      if (primitive?.is_hoverable === false) continue
+
       let basePoint: { x: number; y: number } | null = null
       let w = 0
       let h = 0
