@@ -5,6 +5,7 @@ import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawGrid } from "lib/draw-grid"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
+import { drawPcbCopperTextElementsForLayer } from "lib/draw-pcb-copper-text"
 import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
 import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
@@ -109,6 +110,7 @@ export const CanvasPrimitiveRenderer = ({
       .filter((p) => p._element?.type !== "pcb_plated_hole")
       .filter((p) => p._element?.type !== "pcb_via")
       .filter((p) => p._element?.type !== "pcb_trace")
+      .filter((p) => p._element?.type !== "pcb_copper_text")
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -148,6 +150,17 @@ export const CanvasPrimitiveRenderer = ({
           primitives,
         })
       }
+
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
+        drawPcbCopperTextElementsForLayer({
+          canvas,
+          elements,
+          layers: [copperLayer],
+          realToCanvasMat: transform,
+        })
+      }
+
       if (topCanvas) {
         drawPlatedHolePads({
           canvas: topCanvas,

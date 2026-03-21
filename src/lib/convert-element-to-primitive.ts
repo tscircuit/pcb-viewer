@@ -558,13 +558,6 @@ export const convertElementToPrimitives = (
         return []
       }
     }
-
-    case "pcb_copper_text": {
-      return convertPcbCopperTextToPrimitive(element, {
-        _parent_pcb_component,
-        _parent_source_component,
-      })
-    }
   }
 
   return []
