@@ -22,6 +22,7 @@ import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
+import { drawCopperTextElementsForLayer } from "lib/draw-copper-text"
 
 interface Props {
   primitives: Primitive[]
@@ -422,6 +423,17 @@ export const CanvasPrimitiveRenderer = ({
           canvas,
           elements,
           layers: [layer],
+          realToCanvasMat: transform,
+        })
+      }
+
+      // Draw copper text elements last so knockout text stays visible
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
+        drawCopperTextElementsForLayer({
+          canvas,
+          elements,
+          layers: [copperLayer],
           realToCanvasMat: transform,
         })
       }
