@@ -1,6 +1,7 @@
 import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import { drawCopperPourElementsForLayer } from "lib/draw-copper-pour"
+import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawGrid } from "lib/draw-grid"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
@@ -13,10 +14,9 @@ import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
-import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
+import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
-import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
 import type { GridConfig, Primitive } from "lib/types"
 import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
@@ -148,22 +148,17 @@ export const CanvasPrimitiveRenderer = ({
           primitives,
         })
       }
-      if (topCanvas) {
+      // Draw plated holes on every copper layer canvas.
+      // Plated holes are through-hole components that span all layers.
+      // circuit-to-canvas >=0.0.91 uses the `layers` param to pick the
+      // correct copper color per layer, so no manual color selection needed.
+      // orderAndFadeLayers() handles fading non-foreground canvases to 0.5.
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
         drawPlatedHolePads({
-          canvas: topCanvas,
+          canvas,
           elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPlatedHolePads({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
+          layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
@@ -202,23 +197,13 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      // Draw vias using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
+      // Draw vias on every copper layer canvas (same rationale as plated holes).
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
         drawPcbViaElementsForLayer({
-          canvas: topCanvas,
+          canvas,
           elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPcbViaElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
+          layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
           drawSoldermask: isShowingSolderMask,
