@@ -19,7 +19,7 @@ export const PlatedHoleHoverFix = () => {
 
   return (
     <div style={{ backgroundColor: "black", width: "100%", height: "100vh" }}>
-      <PCBViewer circuitJson={circuitJson as any} />
+      <PCBViewer circuitJson={circuitJson} />
     </div>
   )
 }
