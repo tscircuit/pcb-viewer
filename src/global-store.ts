@@ -60,6 +60,35 @@ export interface State {
   setHoveredErrorId: (errorId: string | null) => void
 }
 
+export type ControlledViewState = Pick<
+  State,
+  | "selected_layer"
+  | "is_showing_rats_nest"
+  | "is_showing_multiple_traces_length"
+  | "is_showing_autorouting"
+  | "is_showing_drc_errors"
+  | "is_showing_copper_pours"
+  | "is_showing_pcb_groups"
+  | "is_showing_group_anchor_offsets"
+  | "is_showing_solder_mask"
+  | "is_showing_fabrication_notes"
+  | "pcb_group_view_mode"
+>
+
+export const getControlledViewState = (state: State): ControlledViewState => ({
+  selected_layer: state.selected_layer,
+  is_showing_rats_nest: state.is_showing_rats_nest,
+  is_showing_multiple_traces_length: state.is_showing_multiple_traces_length,
+  is_showing_autorouting: state.is_showing_autorouting,
+  is_showing_drc_errors: state.is_showing_drc_errors,
+  is_showing_copper_pours: state.is_showing_copper_pours,
+  is_showing_pcb_groups: state.is_showing_pcb_groups,
+  is_showing_group_anchor_offsets: state.is_showing_group_anchor_offsets,
+  is_showing_solder_mask: state.is_showing_solder_mask,
+  is_showing_fabrication_notes: state.is_showing_fabrication_notes,
+  pcb_group_view_mode: state.pcb_group_view_mode,
+})
+
 export type StateProps = {
   [key in keyof State]: State[key] extends boolean ? boolean : never
 }
@@ -197,5 +226,9 @@ export const createStore = (
 export const useGlobalStore = <T = State>(s?: (state: State) => T): T => {
   const store = useContext(StoreContext)
 
-  return useZustandStore(store as any, s as any)
+  if (!store) {
+    throw new Error("useGlobalStore must be used within ContextProviders")
+  }
+
+  return s ? useZustandStore(store, s) : (useZustandStore(store) as T)
 }
