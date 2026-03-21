@@ -52,7 +52,6 @@ export const getTextForHighlightedPrimitive = (
         .filter((ph) => !ph.includes("unnamed_"))
         // reverse alphabetical order
         .sort((a, b) => b.localeCompare(a))
-
       const parentName =
         _parent_source_component &&
         "name" in _parent_source_component &&
@@ -259,15 +258,32 @@ export const ElementOverlayBox = ({
       s.is_moving_component,
       s.is_showing_multiple_traces_length,
     ])
-  const hasSmtPadAndTrace =
-    highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
-    highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
+  const hasSmtPadOrPlatedHoleAndTrace =
+    highlightedPrimitives.some(
+      (p) =>
+        p._element.type === "pcb_smtpad" ||
+        p._element.type === "pcb_plated_hole",
+    ) && highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
 
   let primitives = highlightedPrimitives
-  // If both smtpad and trace are present, only return smtpads
-  if (hasSmtPadAndTrace) {
-    primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
+  // If both a pad (smtpad or plated hole) and a trace are present, only return pads
+  if (hasSmtPadOrPlatedHoleAndTrace) {
+    primitives = primitives.filter(
+      (p) =>
+        p._element.type === "pcb_smtpad" ||
+        p._element.type === "pcb_plated_hole",
+    )
   }
+
+  // Deduplicate primitives by element to avoid multiple boxes for the same element
+  // (e.g. plated hole has a copper pad primitive and a drill hole primitive)
+  const seenElements = new Set<AnyCircuitElement>()
+  primitives = primitives.filter((p) => {
+    if (seenElements.has(p._element)) return false
+    seenElements.add(p._element)
+    return true
+  })
+
   // When having multiple traces filter traces to get only the shortest one
   primitives = filterTracesIfMultiple({
     primitives,
