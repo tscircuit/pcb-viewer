@@ -5,7 +5,7 @@ import { ContextProviders } from "./components/ContextProviders"
 import type { StateProps } from "./global-store"
 import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
@@ -17,6 +17,12 @@ import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
+export interface BoardSizeEdit {
+  width: number
+  height: number
+  center: { x: number; y: number }
+}
+
 type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
@@ -24,6 +30,7 @@ type Props = {
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  onBoardSizeChanged?: (boardSize: BoardSizeEdit) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
@@ -38,6 +45,7 @@ export const PCBViewer = ({
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
+  onBoardSizeChanged,
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
@@ -67,6 +75,47 @@ export const PCBViewer = ({
     [circuitJson],
   )
   const boardSizeKey = calculateBoardSizeKey(circuitJson)
+
+  // Board size override state (viewer-local, applied on top of edit events)
+  const [boardSizeOverride, setBoardSizeOverride] =
+    useState<BoardSizeEdit | null>(null)
+
+  // Reset board size override when circuit JSON changes
+  useEffect(() => {
+    setBoardSizeOverride(null)
+  }, [circuitJsonKey])
+
+  const pcbElmsPreEdit = useMemo(() => {
+    return (
+      circuitJson?.filter(
+        (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
+      ) ?? []
+    )
+  }, [circuitJsonKey])
+
+  const elementsAfterEditEvents = useMemo(() => {
+    return applyEditEvents({
+      circuitJson: pcbElmsPreEdit as any,
+      editEvents,
+    })
+  }, [pcbElmsPreEdit, editEvents])
+
+  // Apply board size override on top of the core edit events
+  const elements = useMemo(() => {
+    if (!boardSizeOverride)
+      return elementsAfterEditEvents as AnyCircuitElement[]
+    return (elementsAfterEditEvents as AnyCircuitElement[]).map((el) => {
+      if (el.type === "pcb_board") {
+        return {
+          ...el,
+          width: boardSizeOverride.width,
+          height: boardSizeOverride.height,
+          center: boardSizeOverride.center,
+        }
+      }
+      return el
+    })
+  }, [elementsAfterEditEvents, boardSizeOverride])
 
   const resetTransform = () => {
     const elmBounds =
@@ -112,21 +161,6 @@ export const PCBViewer = ({
     }
   }, [boardSizeKey])
 
-  const pcbElmsPreEdit = useMemo(() => {
-    return (
-      circuitJson?.filter(
-        (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
-      ) ?? []
-    )
-  }, [circuitJsonKey])
-
-  const elements = useMemo(() => {
-    return applyEditEvents({
-      circuitJson: pcbElmsPreEdit as any,
-      editEvents,
-    })
-  }, [pcbElmsPreEdit, editEvents])
-
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
     onEditEventsChanged?.([...editEvents, event])
@@ -140,6 +174,14 @@ export const PCBViewer = ({
     setEditEvents(newEditEvents)
     onEditEventsChanged?.(newEditEvents)
   }
+
+  const handleBoardSizeEdit = useCallback(
+    (edit: BoardSizeEdit) => {
+      setBoardSizeOverride(edit)
+      onBoardSizeChanged?.(edit)
+    },
+    [onBoardSizeChanged],
+  )
 
   const mergedInitialState = useMemo(
     () => ({
@@ -170,6 +212,7 @@ export const PCBViewer = ({
             cancelPanDrag={cancelPanDrag}
             onCreateEditEvent={onCreateEditEvent}
             onModifyEditEvent={onModifyEditEvent}
+            onBoardSizeEdit={handleBoardSizeEdit}
             grid={{
               spacing: 1,
               view_window: {
