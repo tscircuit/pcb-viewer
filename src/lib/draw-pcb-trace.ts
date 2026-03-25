@@ -34,18 +34,34 @@ const normalizeCopperLayers = (layers: PcbRenderLayer[]) =>
     layer.endsWith("_copper") ? layer.replace("_copper", "") : layer,
   )
 
-const filterTraceByLayers = (
+export const filterTraceByLayers = (
   trace: PcbTrace,
   targetLayers: Set<string>,
 ): PcbTrace | null => {
-  const filteredRoute = trace.route.filter(
-    (segment) =>
+  const filteredRoute = trace.route.filter((segment) => {
+    if (
       segment.route_type === "wire" &&
       "layer" in segment &&
-      targetLayers.has(segment.layer),
-  )
+      targetLayers.has(segment.layer)
+    ) {
+      return true
+    }
 
-  if (filteredRoute.length === 0) return null
+    if (segment.route_type === "via") {
+      return (
+        targetLayers.has(segment.from_layer) ||
+        targetLayers.has(segment.to_layer)
+      )
+    }
+
+    return false
+  })
+
+  const wireCount = filteredRoute.filter(
+    (segment) => segment.route_type === "wire",
+  ).length
+
+  if (wireCount < 2) return null
 
   return {
     ...trace,
