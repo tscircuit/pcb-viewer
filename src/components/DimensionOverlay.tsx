@@ -22,6 +22,22 @@ interface Props {
 
 const SNAP_THRESHOLD_PX = 16
 const SNAP_MARKER_SIZE = 5
+const SNAP_SEARCH_RADIUS_PX = 220
+
+const isPointNearBoundingBox = (
+  point: { x: number; y: number } | null,
+  bounds: BoundingBox,
+  radius: number,
+) => {
+  if (!point) return true
+
+  return (
+    point.x >= bounds.minX - radius &&
+    point.x <= bounds.maxX + radius &&
+    point.y >= bounds.minY - radius &&
+    point.y <= bounds.maxY + radius
+  )
+}
 
 const shouldExcludePrimitiveFromSnapping = (primitive: Primitive) => {
   if (primitive.pcb_drawing_type === "text") return true
@@ -76,72 +92,84 @@ export const DimensionOverlay = ({
   const [dStart, setDStart] = useState({ x: 0, y: 0 })
   // End of dimension tool line in real-world coordinates (not screen)
   const [dEnd, setDEnd] = useState({ x: 0, y: 0 })
+  const [cursorRwPoint, setCursorRwPoint] = useState<{
+    x: number
+    y: number
+  } | null>(null)
   const mousePosRef = useRef({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement | null>(null)
   const container = containerRef.current!
   const containerBounds = container?.getBoundingClientRect()
 
-  const elementBoundingBoxes = useMemo(() => {
-    const boundingBoxes = new Map<object, BoundingBox>()
+  const elementSnapData = useMemo(() => {
+    const data = new Map<
+      object,
+      {
+        bounds?: BoundingBox
+        points: {
+          anchor: NinePointAnchor | string
+          point: { x: number; y: number }
+          element: object
+        }[]
+      }
+    >()
 
     for (const primitive of primitives) {
       if (!primitive._element) continue
       if (shouldExcludePrimitiveFromSnapping(primitive)) continue
-      if (primitive.pcb_drawing_type === "pill") continue
-      if (
-        primitive.pcb_drawing_type === "rect" &&
-        primitive.ccw_rotation &&
-        primitive.ccw_rotation !== 0
-      )
-        continue
-      const bbox = getPrimitiveBoundingBox(primitive)
-      if (!bbox) continue
 
-      const existing = boundingBoxes.get(primitive._element as object)
-      boundingBoxes.set(
-        primitive._element as object,
-        mergeBoundingBoxes(existing ?? undefined, bbox),
-      )
-    }
+      const element = primitive._element as object
+      const existing = data.get(element)
+      const entry = existing ?? { bounds: undefined, points: [] }
 
-    return boundingBoxes
-  }, [primitives])
-
-  const primitiveSnappingPoints = useMemo(() => {
-    const snapPoints: {
-      anchor: NinePointAnchor | string
-      point: { x: number; y: number }
-      element: object
-    }[] = []
-
-    for (const primitive of primitives) {
-      if (!primitive._element) continue
-      if (shouldExcludePrimitiveFromSnapping(primitive)) continue
+      if (primitive.pcb_drawing_type !== "pill") {
+        if (
+          !(
+            primitive.pcb_drawing_type === "rect" &&
+            primitive.ccw_rotation &&
+            primitive.ccw_rotation !== 0
+          )
+        ) {
+          const bbox = getPrimitiveBoundingBox(primitive)
+          if (bbox) {
+            entry.bounds = mergeBoundingBoxes(entry.bounds, bbox)
+          }
+        }
+      }
 
       const primitivePoints = getPrimitiveSnapPoints(primitive)
-      if (primitivePoints.length === 0) continue
-
       for (const snap of primitivePoints) {
-        snapPoints.push({
+        entry.points.push({
           anchor: snap.anchor,
           point: snap.point,
-          element: primitive._element as object,
+          element,
         })
       }
+
+      data.set(element, entry)
     }
 
-    return snapPoints
+    return data
   }, [primitives])
 
   const snappingPoints = useMemo(() => {
+    const scaleX = Math.hypot(transform.a, transform.b)
+    const scaleY = Math.hypot(transform.c, transform.d)
+    const maxScale = Math.max(scaleX, scaleY, Number.EPSILON)
+    const searchRadiusInWorld = SNAP_SEARCH_RADIUS_PX / maxScale
+
     const points: {
       anchor: NinePointAnchor | "origin" | string
       point: { x: number; y: number }
       element: object | null
     }[] = []
 
-    elementBoundingBoxes.forEach((bounds, element) => {
+    elementSnapData.forEach((entry, element) => {
+      const bounds = entry.bounds
       if (!bounds) return
+      if (!isPointNearBoundingBox(cursorRwPoint, bounds, searchRadiusInWorld)) {
+        return
+      }
 
       const centerX = (bounds.minX + bounds.maxX) / 2
       const centerY = (bounds.minY + bounds.maxY) / 2
@@ -168,11 +196,8 @@ export const DimensionOverlay = ({
           element,
         })
       }
+      points.push(...entry.points)
     })
-
-    for (const snap of primitiveSnappingPoints) {
-      points.push(snap)
-    }
 
     points.push({
       anchor: "origin",
@@ -181,7 +206,7 @@ export const DimensionOverlay = ({
     })
 
     return points
-  }, [elementBoundingBoxes, primitiveSnappingPoints])
+  }, [cursorRwPoint, elementSnapData, transform])
 
   const snappingPointsWithScreen = useMemo(() => {
     return snappingPoints.map((snap, index) => ({
@@ -340,6 +365,7 @@ export const DimensionOverlay = ({
         const rwPoint = applyToPoint(inverse(transform!), { x, y })
         mousePosRef.current.x = rwPoint.x
         mousePosRef.current.y = rwPoint.y
+        setCursorRwPoint({ x: rwPoint.x, y: rwPoint.y })
 
         if (dimensionToolStretching) {
           const snap = findSnap(rwPoint)
