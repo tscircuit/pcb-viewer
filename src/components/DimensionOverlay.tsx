@@ -24,18 +24,44 @@ const SNAP_THRESHOLD_PX = 16
 const SNAP_MARKER_SIZE = 5
 const SNAP_SEARCH_RADIUS_PX = 220
 
-const isPointNearBoundingBox = (
+const isCursorNearBoundingBoxInPx = (
   point: { x: number; y: number } | null,
   bounds: BoundingBox,
-  radius: number,
+  transform: Matrix,
+  radiusPx: number,
 ) => {
   if (!point) return true
 
+  const cursorInScreen = applyToPoint(transform, point)
+  const boundsTopLeftInScreen = applyToPoint(transform, {
+    x: bounds.minX,
+    y: bounds.minY,
+  })
+  const boundsBottomRightInScreen = applyToPoint(transform, {
+    x: bounds.maxX,
+    y: bounds.maxY,
+  })
+
+  const minX = Math.min(boundsTopLeftInScreen.x, boundsBottomRightInScreen.x)
+  const maxX = Math.max(boundsTopLeftInScreen.x, boundsBottomRightInScreen.x)
+  const minY = Math.min(boundsTopLeftInScreen.y, boundsBottomRightInScreen.y)
+  const maxY = Math.max(boundsTopLeftInScreen.y, boundsBottomRightInScreen.y)
+
+  const closestX = Math.max(minX, Math.min(cursorInScreen.x, maxX))
+  const closestY = Math.max(minY, Math.min(cursorInScreen.y, maxY))
+
+  const distancePx = Math.hypot(
+    cursorInScreen.x - closestX,
+    cursorInScreen.y - closestY,
+  )
+
+  if (distancePx <= radiusPx) return true
+
   return (
-    point.x >= bounds.minX - radius &&
-    point.x <= bounds.maxX + radius &&
-    point.y >= bounds.minY - radius &&
-    point.y <= bounds.maxY + radius
+    cursorInScreen.x >= minX - radiusPx &&
+    cursorInScreen.x <= maxX + radiusPx &&
+    cursorInScreen.y >= minY - radiusPx &&
+    cursorInScreen.y <= maxY + radiusPx
   )
 }
 
@@ -153,11 +179,6 @@ export const DimensionOverlay = ({
   }, [primitives])
 
   const snappingPoints = useMemo(() => {
-    const scaleX = Math.hypot(transform.a, transform.b)
-    const scaleY = Math.hypot(transform.c, transform.d)
-    const maxScale = Math.max(scaleX, scaleY, Number.EPSILON)
-    const searchRadiusInWorld = SNAP_SEARCH_RADIUS_PX / maxScale
-
     const points: {
       anchor: NinePointAnchor | "origin" | string
       point: { x: number; y: number }
@@ -167,7 +188,14 @@ export const DimensionOverlay = ({
     elementSnapData.forEach((entry, element) => {
       const bounds = entry.bounds
       if (!bounds) return
-      if (!isPointNearBoundingBox(cursorRwPoint, bounds, searchRadiusInWorld)) {
+      if (
+        !isCursorNearBoundingBoxInPx(
+          cursorRwPoint,
+          bounds,
+          transform!,
+          SNAP_SEARCH_RADIUS_PX,
+        )
+      ) {
         return
       }
 
