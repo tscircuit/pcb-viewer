@@ -1,47 +1,71 @@
-import { useEffect, useRef, useState } from "react"
-import { SuperGrid } from "react-supergrid"
+import { useRef, useState, useCallback } from "react"
+import { PCBViewerWithoutInteraction } from "./PCBViewerWithoutInteraction"
 import type { AnyCircuitElement } from "circuit-json"
-import type { EditEvent } from "./edit-events"
-import { PCBRender } from "./PCBRender"
-import { useMouseMatrixTransform } from "use-mouse-matrix-transform"
 
 export interface InteractiveGraphicsProps {
   circuitJson: AnyCircuitElement[]
-  onEditEventsChanged?: (editEvents: EditEvent[]) => void
-  editEvents?: EditEvent[]
-  /** When true (default), the viewer will auto-focus when hovered. */
+  height?: number | string
+  width?: number | string
   focusOnHover?: boolean
   allowEditing?: boolean
+  editEvents?: any[]
+  onEditEventsChanged?: (editEvents: any[]) => void
 }
 
 export const InteractiveGraphics = ({
   circuitJson,
-  onEditEventsChanged,
-  editEvents,
+  height = 600,
+  width = "100%",
   focusOnHover = true,
-  allowEditing = true,
+  allowEditing,
+  editEvents,
+  onEditEventsChanged,
 }: InteractiveGraphicsProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     if (focusOnHover && containerRef.current) {
       containerRef.current.focus()
+      setIsFocused(true)
     }
-  }
+  }, [focusOnHover])
+
+  const handleMouseLeave = useCallback(() => {
+    if (focusOnHover) {
+      setIsFocused(false)
+    }
+  }, [focusOnHover])
+
+  const handleFocus = useCallback(() => {
+    setIsFocused(true)
+  }, [])
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false)
+  }, [])
 
   return (
     <div
       ref={containerRef}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: PCB viewer requires keyboard focus for zoom/pan
       tabIndex={0}
+      style={{ width, outline: isFocused ? undefined : "none" }}
       onMouseEnter={handleMouseEnter}
-      style={{ outline: "none" }}
+      onMouseLeave={handleMouseLeave}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
     >
-      <PCBRender
+      <PCBViewerWithoutInteraction
         circuitJson={circuitJson}
-        onEditEventsChanged={onEditEventsChanged}
-        editEvents={editEvents}
+        height={height}
+        width={width}
         allowEditing={allowEditing}
+        editEvents={editEvents}
+        onEditEventsChanged={onEditEventsChanged}
       />
     </div>
   )
 }
+
+export default InteractiveGraphics
