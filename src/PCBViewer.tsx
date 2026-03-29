@@ -1,44 +1,58 @@
 import { InteractiveGraphics } from "./InteractiveGraphics"
 import type { AnyCircuitElement } from "circuit-json"
-import type { EditEvent } from "./edit-events"
-import { useEffect, useRef, useState } from "react"
 
 export interface PCBViewerProps {
-  children?: any
   soup?: AnyCircuitElement[]
   circuitJson?: AnyCircuitElement[]
-  onEditEventsChanged?: (editEvents: EditEvent[]) => void
-  editEvents?: EditEvent[]
-  /** @deprecated Use focusOnHover={false} instead */
+  height?: number | string
+  width?: number | string
+  /**
+   * @deprecated Use `focusOnHover` instead.
+   */
   disableAutoFocus?: boolean
-  /** When true (default), the viewer will auto-focus when hovered. Set to false to disable. */
   focusOnHover?: boolean
   allowEditing?: boolean
+  editEvents?: any[]
+  onEditEventsChanged?: (editEvents: any[]) => void
 }
 
 export const PCBViewer = ({
-  children,
   soup,
   circuitJson,
-  onEditEventsChanged,
-  editEvents,
+  height = 600,
+  width = "100%",
   disableAutoFocus,
   focusOnHover = true,
-  allowEditing = true,
+  allowEditing,
+  editEvents,
+  onEditEventsChanged,
 }: PCBViewerProps) => {
-  // Support deprecated disableAutoFocus: if it's true, treat focusOnHover as false
-  const resolvedFocusOnHover =
-    disableAutoFocus !== undefined ? !disableAutoFocus : focusOnHover
+  // Resolve focusOnHover: explicit focusOnHover prop takes precedence over
+  // deprecated disableAutoFocus. Only fall back to disableAutoFocus when
+  // focusOnHover has not been explicitly provided (i.e. still at default true).
+  const resolvedFocusOnHover = (() => {
+    if (disableAutoFocus !== undefined && focusOnHover !== true) {
+      console.warn(
+        "Both disableAutoFocus and focusOnHover are set. Using focusOnHover. disableAutoFocus is deprecated.",
+      )
+      return focusOnHover
+    }
+    return disableAutoFocus !== undefined ? !disableAutoFocus : focusOnHover
+  })()
 
   const elements = circuitJson ?? soup ?? []
 
   return (
     <InteractiveGraphics
       circuitJson={elements}
-      onEditEventsChanged={onEditEventsChanged}
-      editEvents={editEvents}
+      height={height}
+      width={width}
       focusOnHover={resolvedFocusOnHover}
       allowEditing={allowEditing}
+      editEvents={editEvents}
+      onEditEventsChanged={onEditEventsChanged}
     />
   )
 }
+
+export default PCBViewer
