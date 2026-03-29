@@ -1,35 +1,42 @@
+import { Circuit } from "@tscircuit/core"
+import type React from "react"
 import { InteractiveGraphics } from "./InteractiveGraphics"
 import type { AnyCircuitElement } from "circuit-json"
 
 export interface PCBViewerProps {
+  children?: React.ReactNode
   soup?: AnyCircuitElement[]
   circuitJson?: AnyCircuitElement[]
+  circuit?: Circuit
   height?: number | string
   width?: number | string
   /**
-   * @deprecated Use `focusOnHover` instead.
+   * When true (default), the viewer will auto-focus on hover.
+   * @default true
+   */
+  focusOnHover?: boolean
+  /**
+   * @deprecated Use `focusOnHover={false}` instead.
    */
   disableAutoFocus?: boolean
-  focusOnHover?: boolean
   allowEditing?: boolean
-  editEvents?: any[]
+  editingEnabled?: boolean
   onEditEventsChanged?: (editEvents: any[]) => void
 }
 
 export const PCBViewer = ({
   soup,
   circuitJson,
+  circuit,
   height = 600,
   width = "100%",
-  disableAutoFocus,
   focusOnHover = true,
+  disableAutoFocus,
   allowEditing,
-  editEvents,
+  editingEnabled,
   onEditEventsChanged,
+  children,
 }: PCBViewerProps) => {
-  // Resolve focusOnHover: explicit focusOnHover prop takes precedence over
-  // deprecated disableAutoFocus. Only fall back to disableAutoFocus when
-  // focusOnHover has not been explicitly provided (i.e. still at default true).
   const resolvedFocusOnHover = (() => {
     if (disableAutoFocus !== undefined && focusOnHover !== true) {
       console.warn(
@@ -48,10 +55,11 @@ export const PCBViewer = ({
       height={height}
       width={width}
       focusOnHover={resolvedFocusOnHover}
-      allowEditing={allowEditing}
-      editEvents={editEvents}
+      allowEditing={allowEditing ?? editingEnabled ?? false}
       onEditEventsChanged={onEditEventsChanged}
-    />
+    >
+      {children}
+    </InteractiveGraphics>
   )
 }
 
