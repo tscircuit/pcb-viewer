@@ -5,7 +5,7 @@ import { ContextProviders } from "./components/ContextProviders"
 import type { StateProps } from "./global-store"
 import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
@@ -47,6 +47,16 @@ export const PCBViewer = ({
   )
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
+  const shouldAllowCanvasInteraction = useCallback(
+    (event: MouseEvent | TouchEvent | WheelEvent) => {
+      const target = event.target
+      if (!(target instanceof Element)) return true
+
+      return !target.closest("[data-toolbar-overlay]")
+    },
+    [],
+  )
+
   const {
     ref: transformRef,
     setTransform,
@@ -55,6 +65,7 @@ export const PCBViewer = ({
     transform,
     onSetTransform: setTransformInternal,
     enabled: isInteractionEnabled,
+    shouldDrag: shouldAllowCanvasInteraction,
   })
 
   let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
