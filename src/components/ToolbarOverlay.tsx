@@ -455,6 +455,20 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       setErrorsOpen(false)
     }
   }, [isViewMenuOpen])
+
+  const stopCanvasInteractionPropagation = useCallback(
+    (
+      event:
+        | React.MouseEvent<HTMLElement>
+        | React.TouchEvent<HTMLElement>
+        | React.WheelEvent<HTMLElement>
+        | React.PointerEvent<HTMLElement>,
+    ) => {
+      event.stopPropagation()
+    },
+    [],
+  )
+
   return (
     <div
       ref={hotkeyBoundaryRef}
@@ -485,6 +499,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
+        onMouseDown={stopCanvasInteractionPropagation}
+        onMouseMove={stopCanvasInteractionPropagation}
+        onMouseUp={stopCanvasInteractionPropagation}
+        onPointerDown={stopCanvasInteractionPropagation}
+        onPointerMove={stopCanvasInteractionPropagation}
+        onPointerUp={stopCanvasInteractionPropagation}
+        onWheel={stopCanvasInteractionPropagation}
         style={{
           position: "absolute",
           opacity: isSmallScreen ? 1 : isMouseOverContainer ? 1 : 0,
