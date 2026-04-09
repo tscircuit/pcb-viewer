@@ -10,7 +10,7 @@
         "@tscircuit/math-utils": "^0.0.29",
         "@vitejs/plugin-react": "^5.0.2",
         "circuit-json": "^0.0.403",
-        "circuit-to-canvas": "^0.0.94",
+        "circuit-to-canvas": "^0.0.95",
         "circuit-to-svg": "^0.0.337",
         "color": "^4.2.3",
         "react-supergrid": "^1.0.10",
@@ -642,7 +642,7 @@
 
     "circuit-json-to-spice": ["circuit-json-to-spice@0.0.34", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "typescript": "^5.0.0" } }, "sha512-59XyRHATq455875XlEiAfycIvxkOjaKnX4nzzlvY88UJyFcjkHSQCB9HCnbHJGsRxVBEmrTcELLyVIFmB+c4LA=="],
 
-    "circuit-to-canvas": ["circuit-to-canvas@0.0.94", "", { "dependencies": { "transformation-matrix": "^3.1.0" }, "peerDependencies": { "@tscircuit/alphabet": "*", "typescript": "^5" } }, "sha512-w7myuLYDmPs8C5qGHR3zRXx0pzlshYvbxyRbfasDjroOu1pNmlhLUHWGUTjRWGMf3iThlZLTI46dGoMc1Tbyjg=="],
+    "circuit-to-canvas": ["circuit-to-canvas@0.0.95", "", { "dependencies": { "transformation-matrix": "^3.1.0" }, "peerDependencies": { "@tscircuit/alphabet": "*", "typescript": "^5" } }, "sha512-ajNRz3kEaYo3kiz9FvRqtd2r0SqHzSpCPUBDIvi4VGjhUv2+hpz3aLLrVlMbCItXRSCyetvwxY1jNVRj5XwmTw=="],
 
     "circuit-to-svg": ["circuit-to-svg@0.0.337", "", { "dependencies": { "@types/node": "^22.5.5", "bun-types": "^1.1.40", "calculate-elbow": "0.0.12", "debug": "^4.4.3", "svg-path-commander": "^2.1.11", "svgson": "^5.3.1", "transformation-matrix": "^2.16.1" }, "peerDependencies": { "@tscircuit/alphabet": "*" } }, "sha512-wNuAGSJVkd/M3BH0u+uBw+dUIowUDF05UwfvxkkmMzmj90y6nQ+bE3QSZLJ+ODua7jtwjzuT5g4r0fMNtDvAuQ=="],
 
