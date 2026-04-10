@@ -555,20 +555,16 @@ export class Drawer {
       ...(associatedCourtyard ? [associatedCourtyard] : []),
     ]
 
-    const drillBeforeForeground = foregroundLayer === "drill" ? [] : ["drill"]
-    const drillAfterForeground = foregroundLayer === "drill" ? ["drill"] : []
-
     const order = [
       ...DEFAULT_DRAW_ORDER.filter((l) => !layersToShiftToTop.includes(l)),
-      ...drillBeforeForeground,
-      foregroundLayer,
+      ...(foregroundLayer === "drill" ? [] : [foregroundLayer]),
       ...(associatedSoldermask ? [associatedSoldermask] : []),
-      ...drillAfterForeground,
       "edge_cuts",
       ...(associatedSilkscreen ? [associatedSilkscreen] : []),
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
       ...(associatedCourtyard ? [associatedCourtyard] : []),
+      "drill",
     ]
 
     order.forEach((layer, i) => {
