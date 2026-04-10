@@ -2,6 +2,25 @@ import React from "react"
 import type { AnyCircuitElement, PcbTraceError } from "circuit-json"
 import { PCBViewer } from "../../../PCBViewer"
 
+const errorVariants = [
+  {
+    errorType: "pcb_trace_error",
+    summary: "trace clearance violation",
+  },
+  {
+    errorType: "pcb_via_clearance_error",
+    summary: "via clearance violation",
+  },
+  {
+    errorType: "pcb_component_outside_board_error",
+    summary: "component outside board boundary",
+  },
+  {
+    errorType: "pcb_placement_error",
+    summary: "placement overlap conflict",
+  },
+] as const
+
 const buildErrorsDropdownScrollCircuitJson = (): AnyCircuitElement[] => {
   const circuitJson: AnyCircuitElement[] = [
     {
@@ -26,6 +45,7 @@ const buildErrorsDropdownScrollCircuitJson = (): AnyCircuitElement[] => {
       const startY = -24 + row * 7
       const endX = startX + 8
       const endY = startY + 3
+      const { errorType, summary } = errorVariants[index % errorVariants.length]
 
       circuitJson.push(
         {
@@ -75,18 +95,18 @@ const buildErrorsDropdownScrollCircuitJson = (): AnyCircuitElement[] => {
         },
         {
           type: "pcb_trace_error",
-          pcb_trace_error_id: `pcb_trace_error_${index}`,
+          pcb_trace_error_id: `${errorType}_${index}`,
           pcb_trace_id: `pcb_trace_${index}`,
           source_trace_id: `source_trace_${index}`,
           pcb_port_ids: [`pcb_port_start_${index}`, `pcb_port_end_${index}`],
           pcb_component_ids: [],
-          error_type: "pcb_trace_error",
+          error_type: errorType,
           center: { x: (startX + endX) / 2, y: (startY + endY) / 2 },
-          message: `Dense dropdown repro ${index + 1}: trace clearance violation between row ${
+          message: `Dense dropdown repro ${index + 1}: ${summary} between row ${
             row + 1
           } and column ${
             col + 1
-          }, with an intentionally long message so the toolbar dropdown has enough content to force scrolling and wrapped detail expansion.`,
+          }, with an intentionally long message so the toolbar dropdown shows multiple grouped sections with enough content to force scrolling and wrapped detail expansion.`,
         } as PcbTraceError,
       )
     }

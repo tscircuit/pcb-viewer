@@ -6,7 +6,7 @@ import {
   useLayoutEffect,
 } from "react"
 import { css } from "@emotion/css"
-import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
+import { type LayerRef } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "../global-store"
@@ -14,8 +14,9 @@ import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
-import { useCopyToClipboard } from "react-use"
 import { useMobileTouch } from "hooks/useMobileTouch"
+import { ToolbarButton } from "./ToolbarButton"
+import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
 interface Props {
   children?: React.ReactNode
@@ -28,16 +29,6 @@ interface LayerButtonProps {
   onClick: (
     e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
   ) => void
-}
-
-interface ToolbarButtonProps {
-  children: React.ReactNode
-  isSmallScreen: boolean
-  onClick?: (
-    e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
-  ) => void
-  style?: React.CSSProperties
-  onMouseLeave?: (e: React.MouseEvent<HTMLElement>) => void
 }
 
 interface CheckboxMenuItemProps {
@@ -84,39 +75,6 @@ export const LayerButton = ({ name, selected, onClick }: LayerButtonProps) => {
   )
 }
 
-export const ToolbarButton = ({
-  children,
-  isSmallScreen,
-  onClick,
-  ...props
-}: ToolbarButtonProps) => {
-  const { style: touchStyle, ...touchHandlers } = useMobileTouch(onClick)
-  return (
-    <div
-      {...props}
-      {...touchHandlers}
-      style={{
-        backgroundColor: "#1F1F1F",
-        border: "1px solid #666",
-        margin: 0,
-        padding: 4,
-        paddingLeft: isSmallScreen ? 8 : 6,
-        paddingRight: isSmallScreen ? 8 : 6,
-        borderRadius: 2,
-        color: "#eee",
-        cursor: "pointer",
-        fontSize: 12,
-        height: "fit-content",
-        userSelect: "none",
-        whiteSpace: "nowrap",
-        ...touchStyle,
-        ...props.style,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
 const CheckboxMenuItem = ({
   label,
   checked,
@@ -172,56 +130,6 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
       <input type="radio" checked={checked} onChange={() => {}} readOnly />
       <span style={{ color: "#eee" }}>{label}</span>
     </div>
-  )
-}
-
-const CopyErrorButton = ({
-  errorId,
-  errorMessage,
-  copiedErrorId,
-  onCopy,
-}: {
-  errorId: string
-  errorMessage: string
-  copiedErrorId: string | null
-  onCopy: (errorMessage: string, errorId: string) => void
-}) => {
-  const { style: touchStyle, ...touchHandlers } = useMobileTouch(() =>
-    onCopy(errorMessage, errorId),
-  )
-
-  return (
-    <button
-      type="button"
-      aria-label={
-        copiedErrorId === errorId
-          ? "Error message copied"
-          : "Copy error message"
-      }
-      style={{
-        position: "absolute",
-        top: 12,
-        right: 16,
-        cursor: "pointer",
-        color: "#888",
-        fontSize: 16,
-        background: "none",
-        border: "none",
-        padding: 0,
-        display: "flex",
-        alignItems: "center",
-        ...touchStyle,
-      }}
-      {...touchHandlers}
-    >
-      {copiedErrorId === errorId ? (
-        <span style={{ color: "#4caf50", fontSize: 12 }}>Copied!</span>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-        </svg>
-      )}
-    </button>
   )
 }
 
@@ -292,12 +200,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
-  const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null)
-
-  const [, copyToClipboard] = useCopyToClipboard()
-
-  const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
-  const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
 
   useEffect(() => {
     const arm = () => setMeasureToolArmed(true)
@@ -309,13 +211,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       window.removeEventListener("disarm-dimension-tool", disarm)
     }
   }, [])
-
-  const errorCount =
-    elements?.filter((e) => e.type.includes("error")).length ?? 0
-
-  const errorElements =
-    elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
-    []
 
   // Find the PCB board to get the number of layers
   const pcbBoard = elements?.find((el) => el.type === "pcb_board") as any
@@ -560,193 +455,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             </div>
           )}
         </ToolbarButton>
-        <ToolbarButton
+        <ToolbarErrorDropdown
+          elements={elements}
+          isOpen={isErrorsOpen}
           isSmallScreen={isSmallScreen}
-          style={{
-            position: "relative",
-            ...(errorCount > 0 ? { color: "red" } : {}),
-          }}
-          onClick={handleErrorsToggle}
-        >
-          <div>{errorCount} errors</div>
-        </ToolbarButton>
-        {isErrorsOpen && errorCount > 0 && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              backgroundColor: "#2a2a2a",
-              border: "1px solid #666",
-              borderRadius: 4,
-              marginTop: 4,
-              zIndex: 1000,
-              minWidth: isSmallScreen ? "280px" : "400px",
-              maxWidth: isSmallScreen ? "90vw" : "600px",
-              maxHeight: "400px",
-              overflow: "auto",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-            }}
-          >
-            {errorElements.map((e, i) => {
-              const errorId =
-                e.pcb_trace_error_id ||
-                `error_${i}_${e.error_type}_${e.message?.slice(0, 20)}`
-
-              return (
-                <div
-                  key={errorId}
-                  style={{
-                    borderBottom:
-                      i < errorElements.length - 1 ? "1px solid #444" : "none",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 16px",
-                      cursor: "pointer",
-                      backgroundColor: "#2a2a2a",
-                      transition: "background-color 0.2s ease",
-                      touchAction: "manipulation",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "#333"
-                      setHoveredErrorId(errorId)
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "#2a2a2a"
-                      setHoveredErrorId(null)
-                    }}
-                    onTouchStart={(e) => {
-                      e.stopPropagation()
-                      e.currentTarget.style.backgroundColor = "#333"
-                      setHoveredErrorId(errorId)
-                    }}
-                    onTouchEnd={(e) => {
-                      e.stopPropagation()
-                      e.preventDefault()
-                      e.currentTarget.style.backgroundColor = "#2a2a2a"
-                      setHoveredErrorId(null)
-
-                      const errorElement = errorElementsRef.current.get(i)
-                      const arrow = arrowElementsRef.current.get(i)
-                      if (errorElement && arrow) {
-                        const isVisible = errorElement.style.display !== "none"
-                        errorElement.style.display = isVisible
-                          ? "none"
-                          : "block"
-                        arrow.style.transform = isVisible
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)"
-                      }
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      const errorElement = errorElementsRef.current.get(i)
-                      const arrow = arrowElementsRef.current.get(i)
-                      if (errorElement && arrow) {
-                        const isVisible = errorElement.style.display !== "none"
-                        errorElement.style.display = isVisible
-                          ? "none"
-                          : "block"
-                        arrow.style.transform = isVisible
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)"
-                      }
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: isSmallScreen ? "12px" : "13px",
-                        whiteSpace: "nowrap",
-                        flexShrink: 0,
-                        color: "#ff6b6b",
-                        display: isSmallScreen ? "none" : "block",
-                      }}
-                    >
-                      {e.error_type}
-                    </div>
-                    <div
-                      style={{
-                        flex: 1,
-                        fontSize: isSmallScreen ? "12px" : "13px",
-                        color: "#ddd",
-                        lineHeight: 1.4,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        userSelect: "text",
-                      }}
-                      onMouseDown={(event) => event.stopPropagation()}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {e.message}
-                    </div>
-                    <div
-                      ref={(el) => {
-                        if (el) arrowElementsRef.current.set(i, el)
-                      }}
-                      data-arrow-id={i}
-                      style={{
-                        color: "#888",
-                        fontSize: "16px",
-                        transform: "rotate(90deg)",
-                        transition: "transform 0.2s ease",
-                        flexShrink: 0,
-                      }}
-                    >
-                      ›
-                    </div>
-                  </div>
-                  <div
-                    ref={(el) => {
-                      if (el) errorElementsRef.current.set(i, el)
-                    }}
-                    data-error-id={i}
-                    style={{
-                      display: "none",
-                      padding: "12px 16px",
-                      backgroundColor: "#1a1a1a",
-                      borderTop: "1px solid #444",
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: isSmallScreen ? "11px" : "12px",
-                        color: "#ccc",
-                        lineHeight: 1.5,
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        hyphens: "auto",
-                        userSelect: "text",
-                        paddingRight: 30, // Space for the copy icon
-                      }}
-                      onMouseDown={(event) => event.stopPropagation()}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {e.message}
-                    </div>
-                    <CopyErrorButton
-                      errorId={errorId}
-                      errorMessage={e.message}
-                      copiedErrorId={copiedErrorId}
-                      onCopy={(msg, id) => {
-                        copyToClipboard(msg)
-                        setCopiedErrorId(id)
-                        setTimeout(() => setCopiedErrorId(null), 2000)
-                      }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+          onToggle={handleErrorsToggle}
+          setHoveredErrorId={setHoveredErrorId}
+        />
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
