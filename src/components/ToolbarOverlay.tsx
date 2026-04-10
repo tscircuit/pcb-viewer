@@ -4,6 +4,7 @@ import {
   useCallback,
   useRef,
   useLayoutEffect,
+  useMemo,
 } from "react"
 import { css } from "@emotion/css"
 import { type LayerRef, type PcbTraceError, all_layers } from "circuit-json"
@@ -293,11 +294,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
   const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null)
+  const [collapsedErrorGroups, setCollapsedErrorGroups] = useState<Set<string>>(
+    new Set(),
+  )
+  const [expandedErrorIds, setExpandedErrorIds] = useState<Set<string>>(
+    new Set(),
+  )
 
   const [, copyToClipboard] = useCopyToClipboard()
-
-  const errorElementsRef = useRef<Map<number, HTMLElement>>(new Map())
-  const arrowElementsRef = useRef<Map<number, HTMLElement>>(new Map())
 
   useEffect(() => {
     const arm = () => setMeasureToolArmed(true)
@@ -316,6 +320,36 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const errorElements =
     elements?.filter((el): el is PcbTraceError => el.type.includes("error")) ||
     []
+
+  const getErrorId = useCallback((error: PcbTraceError, index: number) => {
+    return (
+      error.pcb_trace_error_id ||
+      `error_${index}_${error.error_type}_${error.message?.slice(0, 20)}`
+    )
+  }, [])
+
+  const groupedErrorElements = useMemo(() => {
+    const groups = new Map<
+      string,
+      { error: PcbTraceError; index: number; errorId: string }[]
+    >()
+
+    errorElements.forEach((error, index) => {
+      const errorType = error.error_type || "unknown_error"
+      const existingGroup = groups.get(errorType) || []
+      existingGroup.push({
+        error,
+        index,
+        errorId: getErrorId(error, index),
+      })
+      groups.set(errorType, existingGroup)
+    })
+
+    return Array.from(groups.entries()).map(([errorType, errors]) => ({
+      errorType,
+      errors,
+    }))
+  }, [errorElements, getErrorId])
 
   // Find the PCB board to get the number of layers
   const pcbBoard = elements?.find((el) => el.type === "pcb_board") as any
@@ -430,6 +464,30 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       setHoveredErrorId(null)
     }
   }, [isErrorsOpen, setHoveredErrorId])
+
+  const toggleErrorGroup = useCallback((errorType: string) => {
+    setCollapsedErrorGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(errorType)) {
+        next.delete(errorType)
+      } else {
+        next.add(errorType)
+      }
+      return next
+    })
+  }, [])
+
+  const toggleExpandedError = useCallback((errorId: string) => {
+    setExpandedErrorIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(errorId)) {
+        next.delete(errorId)
+      } else {
+        next.add(errorId)
+      }
+      return next
+    })
+  }, [])
 
   const handleEditTraceToggle = useCallback(() => {
     setEditMode(editModes.in_draw_trace_mode ? "off" : "draw_trace")
@@ -588,160 +646,213 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
             }}
           >
-            {errorElements.map((e, i) => {
-              const errorId =
-                e.pcb_trace_error_id ||
-                `error_${i}_${e.error_type}_${e.message?.slice(0, 20)}`
-
+            {groupedErrorElements.map(({ errorType, errors }, groupIndex) => {
+              const isGroupCollapsed = collapsedErrorGroups.has(errorType)
               return (
                 <div
-                  key={errorId}
+                  key={errorType}
                   style={{
                     borderBottom:
-                      i < errorElements.length - 1 ? "1px solid #444" : "none",
+                      groupIndex < groupedErrorElements.length - 1
+                        ? "1px solid #444"
+                        : "none",
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 12,
+                      justifyContent: "space-between",
                       padding: "12px 16px",
                       cursor: "pointer",
-                      backgroundColor: "#2a2a2a",
+                      backgroundColor: "#232323",
                       transition: "background-color 0.2s ease",
                       touchAction: "manipulation",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "#333"
-                      setHoveredErrorId(errorId)
+                      e.currentTarget.style.backgroundColor = "#303030"
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "#2a2a2a"
-                      setHoveredErrorId(null)
+                      e.currentTarget.style.backgroundColor = "#232323"
                     }}
                     onTouchStart={(e) => {
                       e.stopPropagation()
-                      e.currentTarget.style.backgroundColor = "#333"
-                      setHoveredErrorId(errorId)
+                      e.currentTarget.style.backgroundColor = "#303030"
                     }}
                     onTouchEnd={(e) => {
                       e.stopPropagation()
                       e.preventDefault()
-                      e.currentTarget.style.backgroundColor = "#2a2a2a"
-                      setHoveredErrorId(null)
-
-                      const errorElement = errorElementsRef.current.get(i)
-                      const arrow = arrowElementsRef.current.get(i)
-                      if (errorElement && arrow) {
-                        const isVisible = errorElement.style.display !== "none"
-                        errorElement.style.display = isVisible
-                          ? "none"
-                          : "block"
-                        arrow.style.transform = isVisible
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)"
-                      }
+                      e.currentTarget.style.backgroundColor = "#232323"
+                      toggleErrorGroup(errorType)
                     }}
                     onClick={(e) => {
                       e.stopPropagation()
-                      const errorElement = errorElementsRef.current.get(i)
-                      const arrow = arrowElementsRef.current.get(i)
-                      if (errorElement && arrow) {
-                        const isVisible = errorElement.style.display !== "none"
-                        errorElement.style.display = isVisible
-                          ? "none"
-                          : "block"
-                        arrow.style.transform = isVisible
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)"
-                      }
+                      toggleErrorGroup(errorType)
                     }}
                   >
                     <div
                       style={{
-                        fontWeight: "bold",
-                        fontSize: isSmallScreen ? "12px" : "13px",
-                        whiteSpace: "nowrap",
-                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
                         color: "#ff6b6b",
-                        display: isSmallScreen ? "none" : "block",
                       }}
                     >
-                      {e.error_type}
+                      <div
+                        style={{
+                          color: "#888",
+                          fontSize: "16px",
+                          transform: isGroupCollapsed
+                            ? "rotate(90deg)"
+                            : "rotate(0deg)",
+                          transition: "transform 0.2s ease",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ›
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: isSmallScreen ? "12px" : "13px",
+                        }}
+                      >
+                        {errorType}
+                      </div>
                     </div>
                     <div
                       style={{
-                        flex: 1,
                         fontSize: isSmallScreen ? "12px" : "13px",
-                        color: "#ddd",
-                        lineHeight: 1.4,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        color: "#aaa",
                         whiteSpace: "nowrap",
-                        userSelect: "text",
-                      }}
-                      onMouseDown={(event) => event.stopPropagation()}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {e.message}
-                    </div>
-                    <div
-                      ref={(el) => {
-                        if (el) arrowElementsRef.current.set(i, el)
-                      }}
-                      data-arrow-id={i}
-                      style={{
-                        color: "#888",
-                        fontSize: "16px",
-                        transform: "rotate(90deg)",
-                        transition: "transform 0.2s ease",
-                        flexShrink: 0,
+                        marginLeft: 12,
                       }}
                     >
-                      ›
+                      {errors.length}
                     </div>
                   </div>
-                  <div
-                    ref={(el) => {
-                      if (el) errorElementsRef.current.set(i, el)
-                    }}
-                    data-error-id={i}
-                    style={{
-                      display: "none",
-                      padding: "12px 16px",
-                      backgroundColor: "#1a1a1a",
-                      borderTop: "1px solid #444",
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: isSmallScreen ? "11px" : "12px",
-                        color: "#ccc",
-                        lineHeight: 1.5,
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        hyphens: "auto",
-                        userSelect: "text",
-                        paddingRight: 30, // Space for the copy icon
-                      }}
-                      onMouseDown={(event) => event.stopPropagation()}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {e.message}
-                    </div>
-                    <CopyErrorButton
-                      errorId={errorId}
-                      errorMessage={e.message}
-                      copiedErrorId={copiedErrorId}
-                      onCopy={(msg, id) => {
-                        copyToClipboard(msg)
-                        setCopiedErrorId(id)
-                        setTimeout(() => setCopiedErrorId(null), 2000)
-                      }}
-                    />
-                  </div>
+                  {!isGroupCollapsed &&
+                    errors.map(({ error, index, errorId }) => {
+                      const isExpanded = expandedErrorIds.has(errorId)
+
+                      return (
+                        <div
+                          key={errorId}
+                          style={{
+                            borderTop: "1px solid #3a3a3a",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
+                              padding: "12px 16px 12px 24px",
+                              cursor: "pointer",
+                              backgroundColor: "#2a2a2a",
+                              transition: "background-color 0.2s ease",
+                              touchAction: "manipulation",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "#333"
+                              setHoveredErrorId(errorId)
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = "#2a2a2a"
+                              setHoveredErrorId(null)
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation()
+                              e.currentTarget.style.backgroundColor = "#333"
+                              setHoveredErrorId(errorId)
+                            }}
+                            onTouchEnd={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                              e.currentTarget.style.backgroundColor = "#2a2a2a"
+                              setHoveredErrorId(null)
+                              toggleExpandedError(errorId)
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleExpandedError(errorId)
+                            }}
+                          >
+                            <div
+                              style={{
+                                flex: 1,
+                                fontSize: isSmallScreen ? "12px" : "13px",
+                                color: "#ddd",
+                                lineHeight: 1.4,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                userSelect: "text",
+                              }}
+                              onMouseDown={(event) => event.stopPropagation()}
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              {error.message}
+                            </div>
+                            <div
+                              style={{
+                                color: "#888",
+                                fontSize: "16px",
+                                transform: isExpanded
+                                  ? "rotate(0deg)"
+                                  : "rotate(90deg)",
+                                transition: "transform 0.2s ease",
+                                flexShrink: 0,
+                              }}
+                            >
+                              ›
+                            </div>
+                          </div>
+                          {isExpanded && (
+                            <div
+                              data-error-id={index}
+                              style={{
+                                display: "block",
+                                padding: "12px 16px 12px 24px",
+                                backgroundColor: "#1a1a1a",
+                                borderTop: "1px solid #444",
+                                position: "relative",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: isSmallScreen ? "11px" : "12px",
+                                  color: "#ccc",
+                                  lineHeight: 1.5,
+                                  wordWrap: "break-word",
+                                  overflowWrap: "break-word",
+                                  hyphens: "auto",
+                                  userSelect: "text",
+                                  paddingRight: 30,
+                                }}
+                                onMouseDown={(event) => event.stopPropagation()}
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {error.message}
+                              </div>
+                              <CopyErrorButton
+                                errorId={errorId}
+                                errorMessage={error.message}
+                                copiedErrorId={copiedErrorId}
+                                onCopy={(msg, id) => {
+                                  copyToClipboard(msg)
+                                  setCopiedErrorId(id)
+                                  setTimeout(() => setCopiedErrorId(null), 2000)
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                 </div>
               )
             })}
