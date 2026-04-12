@@ -183,21 +183,13 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      // Draw copper pour elements using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
+      // Draw copper pours on every supported copper layer, including inners.
+      for (const { canvas, copperLayer } of copperLayers) {
+        if (!canvas) continue
         drawCopperPourElementsForLayer({
-          canvas: topCanvas,
+          canvas,
           elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawCopperPourElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
+          layers: [copperLayer],
           realToCanvasMat: transform,
         })
       }
@@ -268,25 +260,6 @@ export const CanvasPrimitiveRenderer = ({
             primitives,
           })
         }
-      }
-
-      // Draw copper pour elements using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
-        drawCopperPourElementsForLayer({
-          canvas: topCanvas,
-          elements,
-          layers: ["top_copper"],
-          realToCanvasMat: transform,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawCopperPourElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
-          realToCanvasMat: transform,
-        })
       }
 
       // Draw PCB holes
