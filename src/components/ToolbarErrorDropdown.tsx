@@ -94,16 +94,6 @@ export const ToolbarErrorDropdown = ({
 
   const errorCount = errorElements.length
 
-  const getErrorId = useCallback(
-    (error: ToolbarErrorElement, index: number) => {
-      return (
-        error.pcb_trace_error_id ||
-        `error_${index}_${error.error_type}_${error.message?.slice(0, 20)}`
-      )
-    },
-    [],
-  )
-
   const groupedErrorElements = useMemo(() => {
     const groups = new Map<
       string,
@@ -116,7 +106,7 @@ export const ToolbarErrorDropdown = ({
       existingGroup.push({
         error,
         index,
-        errorId: getErrorId(error, index),
+        errorId: error.pcb_trace_error_id!,
       })
       groups.set(errorType, existingGroup)
     })
@@ -125,7 +115,7 @@ export const ToolbarErrorDropdown = ({
       errorType,
       errors,
     }))
-  }, [errorElements, getErrorId])
+  }, [errorElements])
 
   const toggleErrorGroup = useCallback((errorType: string) => {
     setCollapsedErrorGroups((prev) => {
