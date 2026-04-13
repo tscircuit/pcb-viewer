@@ -106,7 +106,7 @@ export const ToolbarErrorDropdown = ({
       existingGroup.push({
         error,
         index,
-        errorId: error.error_id,
+        errorId: error.pcb_trace_error_id!,
       })
       groups.set(errorType, existingGroup)
     })
