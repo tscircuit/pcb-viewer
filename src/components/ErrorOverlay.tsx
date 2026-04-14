@@ -6,6 +6,7 @@ import { zIndexMap } from "lib/util/z-index-map"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import { getPopupPosition } from "lib/util/getPopupPosition"
+import type { PcbViaClearanceError } from "circuit-json"
 
 interface Props {
   transform?: Matrix
@@ -162,6 +163,9 @@ export const ErrorOverlay = ({
   const traceErrors = elements.filter(
     (el): el is PcbTraceError => el.type === "pcb_trace_error",
   )
+  const viaClearanceErrors = elements.filter(
+    (el): el is PcbViaClearanceError => el.type === "pcb_via_clearance_error",
+  )
 
   const componentErrors = elements.filter(
     (el): el is PcbTraceError =>
@@ -191,9 +195,7 @@ export const ErrorOverlay = ({
           ? su(elements).pcb_trace.get(pcb_trace_id)
           : undefined
 
-        const errorId =
-          el.pcb_trace_error_id ||
-          `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
+        const errorId = el.pcb_trace_error_id
         const isHighlighted = hoveredErrorId === errorId
 
         if (port1 && port2) {
@@ -211,10 +213,10 @@ export const ErrorOverlay = ({
           }
 
           const canLineBeDrawn = !(
-            isNaN(screenPort1.x) ||
-            isNaN(screenPort1.y) ||
-            isNaN(screenPort2.x) ||
-            isNaN(screenPort2.y)
+            Number.isNaN(screenPort1.x) ||
+            Number.isNaN(screenPort1.y) ||
+            Number.isNaN(screenPort2.x) ||
+            Number.isNaN(screenPort2.y)
           )
 
           const errorCenter = {
@@ -222,7 +224,7 @@ export const ErrorOverlay = ({
             y: (screenPort1.y + screenPort2.y) / 2,
           }
 
-          if (isNaN(errorCenter.x) || isNaN(errorCenter.y)) {
+          if (Number.isNaN(errorCenter.x) || Number.isNaN(errorCenter.y)) {
             return null
           }
 
@@ -306,7 +308,10 @@ export const ErrorOverlay = ({
           const screenPoints = trace.route.map((pt) =>
             applyToPoint(transform, { x: pt.x, y: pt.y }),
           )
-          if (screenPoints.some((pt) => isNaN(pt.x) || isNaN(pt.y))) return null
+          if (
+            screenPoints.some((pt) => Number.isNaN(pt.x) || Number.isNaN(pt.y))
+          )
+            return null
           const mid = Math.floor(screenPoints.length / 2)
           const errorCenter = screenPoints[mid]
           const popupPosition = getPopupPosition(errorCenter, containerRef)
@@ -387,6 +392,98 @@ export const ErrorOverlay = ({
 
         return null
       })}
+      {viaClearanceErrors.map((el, index) => {
+        if (!el.pcb_center) return null
+
+        const errorId = el.pcb_via_ids
+        const isHighlighted = hoveredErrorId === errorId[0]
+
+        if (!isHighlighted && !isShowingDRCErrors) return null
+
+        const errorCenter = applyToPoint(transform, {
+          x: el.pcb_center.x!,
+          y: el.pcb_center.y!,
+        })
+        if (Number.isNaN(errorCenter.x) || Number.isNaN(errorCenter.y))
+          return null
+
+        const popupPosition = getPopupPosition(
+          { x: errorCenter.x, y: errorCenter.y },
+          containerRef,
+        )
+
+        return (
+          <Fragment key={errorId[0]}>
+            <RouteSVG
+              points={[]}
+              errorCenter={errorCenter}
+              isHighlighted={isHighlighted}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: errorCenter.x - 15,
+                top: errorCenter.y - 15,
+                width: 30,
+                height: 30,
+                zIndex: zIndexMap.errorOverlay + 5,
+                cursor: "pointer",
+                borderRadius: "50%",
+              }}
+              onMouseEnter={(e) => {
+                const popup = e.currentTarget.nextElementSibling as HTMLElement
+                if (popup) {
+                  const msg = popup.querySelector(
+                    ".error-message",
+                  ) as HTMLElement
+                  if (msg) msg.style.opacity = "1"
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isHighlighted) {
+                  const popup = e.currentTarget
+                    .nextElementSibling as HTMLElement
+                  if (popup) {
+                    const msg = popup.querySelector(
+                      ".error-message",
+                    ) as HTMLElement
+                    if (msg) msg.style.opacity = "0"
+                  }
+                }
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                zIndex: isHighlighted
+                  ? zIndexMap.errorOverlay + 10
+                  : zIndexMap.errorOverlay + 1,
+                left: popupPosition.left,
+                top: popupPosition.top,
+                color: isHighlighted ? "#ff4444" : "red",
+                textAlign: "center",
+                fontFamily: "sans-serif",
+                fontSize: 12,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                pointerEvents: "none",
+                transform: popupPosition.transform,
+              }}
+            >
+              <div
+                className={`error-message ${errorMessageStyles}`}
+                style={{
+                  opacity: isHighlighted ? 1 : 0,
+                  border: `1px solid ${isHighlighted ? "#ff4444" : "red"}`,
+                }}
+              >
+                {el.message}
+              </div>
+            </div>
+          </Fragment>
+        )
+      })}
       {componentErrors.map((el: any, index) => {
         const componentName =
           el.component_name || el.message?.match(/name "([^"]+)"/)?.[1]
@@ -406,9 +503,7 @@ export const ErrorOverlay = ({
                 )),
           ) || []
 
-        const errorId =
-          el.pcb_trace_error_id ||
-          `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
+        const errorId = el.error_id
         const isHighlighted = hoveredErrorId === errorId
 
         if (!isHighlighted && !isShowingDRCErrors) return null
@@ -429,7 +524,8 @@ export const ErrorOverlay = ({
           }
 
           const screenCenter = applyToPoint(transform, center)
-          if (isNaN(screenCenter.x) || isNaN(screenCenter.y)) return null
+          if (Number.isNaN(screenCenter.x) || Number.isNaN(screenCenter.y))
+            return null
 
           const scale = Math.abs(transform.a)
           const baseRadius = 0.5
@@ -443,7 +539,7 @@ export const ErrorOverlay = ({
           const popupPosition = getPopupPosition(screenCenter, containerRef)
 
           return (
-            <Fragment key={`${errorId}_${compIndex}`}>
+            <Fragment key={errorId}>
               <svg
                 style={{
                   position: "absolute",

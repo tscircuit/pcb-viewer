@@ -73,11 +73,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       el.type.includes("error"),
     )
 
-    const hoveredError = errorElements.find((el, index) => {
-      const errorId =
-        el.pcb_trace_error_id ||
-        `error_${index}_${el.error_type}_${el.message?.slice(0, 20)}`
-      return errorId === hoveredErrorId
+    const hoveredError = errorElements.find((el) => {
+      return el.error_id === hoveredErrorId
     })
 
     if (!hoveredError) return []
@@ -90,6 +87,9 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
     if (hoveredError.pcb_port_ids) {
       relatedIds.push(...hoveredError.pcb_port_ids)
+    }
+    if (hoveredError.pcb_via_ids) {
+      relatedIds.push(...hoveredError.pcb_via_ids)
     }
 
     return relatedIds
