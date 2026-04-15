@@ -7,6 +7,7 @@ import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import { getPopupPosition } from "lib/util/getPopupPosition"
 import type { PcbViaClearanceError } from "circuit-json"
+import { getErrorId } from "lib/util/get-error-id"
 
 interface Props {
   transform?: Matrix
@@ -27,6 +28,68 @@ interface RouteSVGProps {
   errorCenter: { x: number; y: number }
   isHighlighted?: boolean
 }
+
+const FocusMarkerSVG = ({
+  center,
+}: {
+  center: { x: number; y: number }
+}) => (
+  <svg
+    style={{
+      position: "absolute",
+      left: 0,
+      top: 0,
+      pointerEvents: "none",
+      mixBlendMode: "difference",
+      zIndex: zIndexMap.errorOverlay + 30,
+    }}
+    width="100%"
+    height="100%"
+  >
+    <circle
+      cx={center.x}
+      cy={center.y}
+      r={11}
+      fill="none"
+      stroke="#ff6b6b"
+      strokeWidth={2.5}
+      opacity={0.95}
+    />
+    <circle cx={center.x} cy={center.y} r={4.5} fill="#ff6b6b" opacity={0.95} />
+    <line
+      x1={center.x - 18}
+      y1={center.y}
+      x2={center.x - 8}
+      y2={center.y}
+      stroke="#ff6b6b"
+      strokeWidth={2}
+    />
+    <line
+      x1={center.x + 8}
+      y1={center.y}
+      x2={center.x + 18}
+      y2={center.y}
+      stroke="#ff6b6b"
+      strokeWidth={2}
+    />
+    <line
+      x1={center.x}
+      y1={center.y - 18}
+      x2={center.x}
+      y2={center.y - 8}
+      stroke="#ff6b6b"
+      strokeWidth={2}
+    />
+    <line
+      x1={center.x}
+      y1={center.y + 8}
+      x2={center.x}
+      y2={center.y + 18}
+      stroke="#ff6b6b"
+      strokeWidth={2}
+    />
+  </svg>
+)
 
 const ErrorSVG = ({
   screenPort1,
@@ -147,10 +210,14 @@ export const ErrorOverlay = ({
 }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
 
-  const { isShowingDRCErrors, hoveredErrorId } = useGlobalStore((state) => ({
-    isShowingDRCErrors: state.is_showing_drc_errors,
-    hoveredErrorId: state.hovered_error_id,
-  }))
+  const { isShowingDRCErrors, hoveredErrorId, focusedErrorId } = useGlobalStore(
+    (state) => ({
+      isShowingDRCErrors: state.is_showing_drc_errors,
+      hoveredErrorId: state.hovered_error_id,
+      focusedErrorId: state.focused_error_id,
+    }),
+  )
+  const activeErrorId = focusedErrorId ?? hoveredErrorId
 
   if (!elements) {
     return (
@@ -174,11 +241,92 @@ export const ErrorOverlay = ({
   )
 
   const portsMap = new Map<string, PcbPort>()
+  const viasMap = new Map<string, any>()
+  const componentsMap = new Map<string, any>()
+  const tracesMap = new Map<string, any>()
   elements.forEach((el) => {
     if (el.type === "pcb_port") {
       portsMap.set(el.pcb_port_id, el as PcbPort)
+    } else if (el.type === "pcb_via") {
+      viasMap.set(el.pcb_via_id, el)
+    } else if (el.type === "pcb_component") {
+      componentsMap.set(el.pcb_component_id, el)
+    } else if (el.type === "pcb_trace") {
+      tracesMap.set(el.pcb_trace_id, el)
     }
   })
+
+  const focusedErrorElement = elements.find((el, index) => {
+    if (!el.type.includes("error")) return false
+    return getErrorId(el, index) === activeErrorId
+  }) as any
+
+  let focusScreenCenter: { x: number; y: number } | null = null
+  if (focusedErrorElement) {
+    let focusCenter =
+      focusedErrorElement.center ||
+      focusedErrorElement.pcb_center ||
+      focusedErrorElement.component_center ||
+      null
+
+    if (!focusCenter && focusedErrorElement.pcb_via_ids?.length) {
+      const vias = focusedErrorElement.pcb_via_ids
+        .map((pcbViaId: string) => viasMap.get(pcbViaId))
+        .filter(Boolean)
+      if (vias.length > 0) {
+        focusCenter = {
+          x:
+            vias.reduce((sum: number, via: any) => sum + via.x, 0) /
+            vias.length,
+          y:
+            vias.reduce((sum: number, via: any) => sum + via.y, 0) /
+            vias.length,
+        }
+      }
+    }
+
+    if (!focusCenter && focusedErrorElement.pcb_component_id) {
+      focusCenter = componentsMap.get(
+        focusedErrorElement.pcb_component_id,
+      )?.center
+    }
+
+    if (!focusCenter && focusedErrorElement.pcb_port_ids?.length) {
+      const ports = focusedErrorElement.pcb_port_ids
+        .map((pcbPortId: string) => portsMap.get(pcbPortId))
+        .filter(Boolean)
+      if (ports.length > 0) {
+        focusCenter = {
+          x:
+            ports.reduce((sum: number, port: any) => sum + port.x, 0) /
+            ports.length,
+          y:
+            ports.reduce((sum: number, port: any) => sum + port.y, 0) /
+            ports.length,
+        }
+      }
+    }
+
+    if (!focusCenter && focusedErrorElement.pcb_trace_id) {
+      const trace = tracesMap.get(focusedErrorElement.pcb_trace_id)
+      if (trace?.route?.length) {
+        const mid = Math.floor(trace.route.length / 2)
+        const routePoint = trace.route[mid] as any
+        focusCenter = { x: routePoint.x, y: routePoint.y }
+      }
+    }
+
+    if (
+      focusCenter &&
+      typeof focusCenter.x === "number" &&
+      typeof focusCenter.y === "number"
+    ) {
+      const screenCenter = applyToPoint(transform, focusCenter as any) as any
+      if (!isNaN(screenCenter.x) && !isNaN(screenCenter.y)) {
+        focusScreenCenter = screenCenter
+      }
+    }
+  }
 
   return (
     <div style={{ position: "relative" }} ref={containerRef}>
@@ -195,8 +343,8 @@ export const ErrorOverlay = ({
           ? su(elements).pcb_trace.get(pcb_trace_id)
           : undefined
 
-        const errorId = el.pcb_trace_error_id
-        const isHighlighted = hoveredErrorId === errorId
+        const errorId = getErrorId(el, index)
+        const isHighlighted = activeErrorId === errorId
 
         if (port1 && port2) {
           const screenPort1 = applyToPoint(transform, {
@@ -395,8 +543,8 @@ export const ErrorOverlay = ({
       {viaClearanceErrors.map((el, index) => {
         if (!el.pcb_center) return null
 
-        const errorId = el.pcb_via_ids
-        const isHighlighted = hoveredErrorId === errorId[0]
+        const errorId = getErrorId(el, index)
+        const isHighlighted = activeErrorId === errorId
 
         if (!isHighlighted && !isShowingDRCErrors) return null
 
@@ -413,7 +561,7 @@ export const ErrorOverlay = ({
         )
 
         return (
-          <Fragment key={errorId[0]}>
+          <Fragment key={errorId}>
             <RouteSVG
               points={[]}
               errorCenter={errorCenter}
@@ -503,8 +651,8 @@ export const ErrorOverlay = ({
                 )),
           ) || []
 
-        const errorId = el.error_id
-        const isHighlighted = hoveredErrorId === errorId
+        const errorId = getErrorId(el, index)
+        const isHighlighted = activeErrorId === errorId
 
         if (!isHighlighted && !isShowingDRCErrors) return null
 
@@ -642,6 +790,7 @@ export const ErrorOverlay = ({
           )
         })
       })}
+      {focusScreenCenter && <FocusMarkerSVG center={focusScreenCenter} />}
     </div>
   )
 }

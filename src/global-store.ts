@@ -39,6 +39,7 @@ export interface State {
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
+  focused_error_id: string | null
 
   selectLayer: (layer: LayerRef) => void
   setEditMode: (mode: "off" | "move_footprint" | "draw_trace") => void
@@ -58,6 +59,7 @@ export interface State {
   setIsShowingFabricationNotes: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
+  setFocusedErrorId: (errorId: string | null) => void
 }
 
 export type StateProps = {
@@ -125,6 +127,7 @@ export const createStore = (
             ) as "all" | "named_only"),
 
         hovered_error_id: null,
+        focused_error_id: null,
         ...initialState,
 
         selectLayer: (layer) => set({ selected_layer: layer }),
@@ -191,6 +194,7 @@ export const createStore = (
           set({ pcb_group_view_mode: mode })
         },
         setHoveredErrorId: (errorId) => set({ hovered_error_id: errorId }),
+        setFocusedErrorId: (errorId) => set({ focused_error_id: errorId }),
       }) as const,
   )
 

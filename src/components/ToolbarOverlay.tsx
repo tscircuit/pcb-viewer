@@ -157,6 +157,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingFabricationNotes,
     setPcbGroupViewMode,
     setHoveredErrorId,
+    setFocusedErrorId,
   } = useGlobalStore((s) => ({
     isMouseOverContainer: s.is_mouse_over_container,
     setIsMouseOverContainer: s.setIsMouseOverContainer,
@@ -194,6 +195,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
+    setFocusedErrorId: s.setFocusedErrorId,
   }))
 
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
@@ -308,8 +310,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setLayerMenuOpen(false)
     setViewMenuOpen(false)
     setErrorsOpen(false)
-    setHoveredErrorId(null)
-  }, [setIsMouseOverContainer, setHoveredErrorId])
+  }, [setIsMouseOverContainer])
 
   const handleLayerMenuToggle = useCallback(() => {
     setLayerMenuOpen(!isLayerMenuOpen)
@@ -325,6 +326,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       setHoveredErrorId(null)
     }
   }, [isErrorsOpen, setHoveredErrorId])
+
+  const closeErrorsMenu = useCallback(() => {
+    setErrorsOpen(false)
+  }, [])
 
   const handleEditTraceToggle = useCallback(() => {
     setEditMode(editModes.in_draw_trace_mode ? "off" : "draw_trace")
@@ -460,7 +465,9 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           isOpen={isErrorsOpen}
           isSmallScreen={isSmallScreen}
           onToggle={handleErrorsToggle}
+          onClose={closeErrorsMenu}
           setHoveredErrorId={setHoveredErrorId}
+          setFocusedErrorId={setFocusedErrorId}
         />
         <ToolbarButton
           isSmallScreen={isSmallScreen}

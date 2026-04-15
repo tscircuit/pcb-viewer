@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useRef, useMemo, useState } from "react"
 import type { AnyCircuitElement } from "circuit-json"
 import { useCopyToClipboard } from "react-use"
 import { useMobileTouch } from "hooks/useMobileTouch"
 import { ToolbarButton } from "./ToolbarButton"
+import { getErrorId } from "lib/util/get-error-id"
 
 type ToolbarErrorElement = AnyCircuitElement & {
   error_type?: string
@@ -65,7 +66,9 @@ interface ToolbarErrorDropdownProps {
   isOpen: boolean
   isSmallScreen: boolean
   onToggle: () => void
+  onClose: () => void
   setHoveredErrorId: (errorId: string | null) => void
+  setFocusedErrorId: (errorId: string | null) => void
 }
 
 export const ToolbarErrorDropdown = ({
@@ -73,7 +76,9 @@ export const ToolbarErrorDropdown = ({
   isOpen,
   isSmallScreen,
   onToggle,
+  onClose,
   setHoveredErrorId,
+  setFocusedErrorId,
 }: ToolbarErrorDropdownProps) => {
   const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null)
   const [collapsedErrorGroups, setCollapsedErrorGroups] = useState<Set<string>>(
@@ -83,6 +88,20 @@ export const ToolbarErrorDropdown = ({
     new Set(),
   )
   const [, copyToClipboard] = useCopyToClipboard()
+  const clearHighlightTimeoutRef = useRef<number | null>(null)
+  const focusRequestRef = useRef<number | null>(null)
+  const selectedErrorIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (clearHighlightTimeoutRef.current !== null) {
+        window.clearTimeout(clearHighlightTimeoutRef.current)
+      }
+      if (focusRequestRef.current !== null) {
+        window.cancelAnimationFrame(focusRequestRef.current)
+      }
+    }
+  }, [])
 
   const errorElements = useMemo(
     () =>
@@ -106,7 +125,7 @@ export const ToolbarErrorDropdown = ({
       existingGroup.push({
         error,
         index,
-        errorId: error.pcb_trace_error_id!,
+        errorId: getErrorId(error, index),
       })
       groups.set(errorType, existingGroup)
     })
@@ -140,6 +159,34 @@ export const ToolbarErrorDropdown = ({
       return next
     })
   }, [])
+
+  const handleErrorSelect = useCallback(
+    (errorId: string) => {
+      if (clearHighlightTimeoutRef.current !== null) {
+        window.clearTimeout(clearHighlightTimeoutRef.current)
+      }
+      if (focusRequestRef.current !== null) {
+        window.cancelAnimationFrame(focusRequestRef.current)
+      }
+
+      selectedErrorIdRef.current = errorId
+      setHoveredErrorId(errorId)
+      setFocusedErrorId(null)
+      focusRequestRef.current = window.requestAnimationFrame(() => {
+        setFocusedErrorId(errorId)
+        focusRequestRef.current = null
+      })
+      onClose()
+
+      clearHighlightTimeoutRef.current = window.setTimeout(() => {
+        selectedErrorIdRef.current = null
+        setHoveredErrorId(null)
+        setFocusedErrorId(null)
+        clearHighlightTimeoutRef.current = null
+      }, 3000)
+    },
+    [onClose, setFocusedErrorId, setHoveredErrorId],
+  )
 
   return (
     <div style={{ position: "relative" }}>
@@ -286,7 +333,9 @@ export const ToolbarErrorDropdown = ({
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = "#2a2a2a"
-                            setHoveredErrorId(null)
+                            if (selectedErrorIdRef.current !== errorId) {
+                              setHoveredErrorId(null)
+                            }
                           }}
                           onTouchStart={(e) => {
                             e.stopPropagation()
@@ -297,12 +346,11 @@ export const ToolbarErrorDropdown = ({
                             e.stopPropagation()
                             e.preventDefault()
                             e.currentTarget.style.backgroundColor = "#2a2a2a"
-                            setHoveredErrorId(null)
-                            toggleExpandedError(errorId)
+                            handleErrorSelect(errorId)
                           }}
                           onClick={(e) => {
                             e.stopPropagation()
-                            toggleExpandedError(errorId)
+                            handleErrorSelect(errorId)
                           }}
                         >
                           <div
@@ -316,12 +364,16 @@ export const ToolbarErrorDropdown = ({
                               whiteSpace: "nowrap",
                               userSelect: "text",
                             }}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            onClick={(event) => event.stopPropagation()}
                           >
                             {errorMessage}
                           </div>
-                          <div
+                          <button
+                            type="button"
+                            aria-label={
+                              isExpanded
+                                ? "Collapse error details"
+                                : "Expand error details"
+                            }
                             style={{
                               color: "#888",
                               fontSize: "16px",
@@ -330,10 +382,24 @@ export const ToolbarErrorDropdown = ({
                                 : "rotate(90deg)",
                               transition: "transform 0.2s ease",
                               flexShrink: 0,
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              cursor: "pointer",
+                            }}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              toggleExpandedError(errorId)
+                            }}
+                            onTouchEnd={(event) => {
+                              event.stopPropagation()
+                              event.preventDefault()
+                              toggleExpandedError(errorId)
                             }}
                           >
                             ›
-                          </div>
+                          </button>
                         </div>
                         {isExpanded && (
                           <div

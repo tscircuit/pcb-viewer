@@ -12,6 +12,8 @@ export function addInteractionMetadataToPrimitives({
   const newPrimitives = []
   for (const primitive of primitivesWithoutInteractionMetadata) {
     const newPrimitive = { ...primitive }
+    const primitiveElement = primitive._element
+    const parentComponent = primitive._parent_pcb_component
     if (primitive?.layer === "drill") {
       newPrimitive.is_in_highlighted_net = false
       newPrimitive.is_mouse_over = false
@@ -20,14 +22,23 @@ export function addInteractionMetadataToPrimitives({
     ) {
       newPrimitive.is_mouse_over = true
     } else if (
-      primitive._element &&
-      (("pcb_trace_id" in primitive._element &&
-        primitiveIdsInMousedOverNet.includes(
-          primitive._element.pcb_trace_id!,
-        )) ||
-        ("pcb_port_id" in primitive._element &&
+      primitiveElement &&
+      (("pcb_trace_id" in primitiveElement &&
+        primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_trace_id!)) ||
+        ("pcb_port_id" in primitiveElement &&
           primitiveIdsInMousedOverNet.includes(
-            primitive._element.pcb_port_id!,
+            primitiveElement.pcb_port_id!,
+          )) ||
+        ("pcb_via_id" in primitiveElement &&
+          primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_via_id!)) ||
+        ("pcb_component_id" in primitiveElement &&
+          primitiveIdsInMousedOverNet.includes(
+            primitiveElement.pcb_component_id!,
+          )) ||
+        (parentComponent &&
+          "pcb_component_id" in parentComponent &&
+          primitiveIdsInMousedOverNet.includes(
+            parentComponent.pcb_component_id!,
           )))
     ) {
       newPrimitive.is_in_highlighted_net = true
