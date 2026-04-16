@@ -3,8 +3,19 @@ import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectiv
 import type { GraphicsObject } from "graphics-debug"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
-import { useCallback, useMemo, useState } from "react"
-import type { Matrix } from "transformation-matrix"
+import { findErrorElementById, getErrorId } from "lib/util/get-error-id"
+import {
+  buildErrorPreviewElementIndexes,
+  createTransformForBounds,
+  getErrorPreviewBounds,
+  getRelatedIdsForError,
+} from "lib/util/error-preview"
+import {
+  animateTransform,
+  cancelTransformAnimation,
+} from "lib/util/transform-animation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type Matrix } from "transformation-matrix"
 import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
@@ -24,6 +35,7 @@ export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
   debugGraphics?: GraphicsObject | null
   transform?: Matrix
+  setTransform?: (transform: Matrix) => void
   width?: number
   height?: number
   grid?: GridConfig
@@ -36,10 +48,13 @@ export interface CanvasElementsRendererProps {
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
-  const hoveredErrorId = useGlobalStore((state) => state.hovered_error_id)
-  const isShowingCopperPours = useGlobalStore(
-    (state) => state.is_showing_copper_pours,
-  )
+  const { hoveredErrorId, focusedErrorId, isShowingCopperPours } =
+    useGlobalStore((state) => ({
+      hoveredErrorId: state.hovered_error_id,
+      focusedErrorId: state.focused_error_id,
+      isShowingCopperPours: state.is_showing_copper_pours,
+    }))
+  const activeErrorId = focusedErrorId ?? hoveredErrorId
 
   const elementsToRender = useMemo(
     () =>
@@ -65,35 +80,88 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     primitiveIdsInMousedOverNet: [] as string[],
   })
   const [hoveredComponentIds, setHoveredComponentIds] = useState<string[]>([])
+  const currentTransformRef = useRef<Matrix | null>(transform ?? null)
+  const zoomAnimationFrameRef = useRef<number | null>(null)
+
+  const elementIndexes = useMemo(
+    () => buildErrorPreviewElementIndexes(elements),
+    [elements],
+  )
 
   const errorRelatedIds = useMemo(() => {
-    if (!hoveredErrorId) return []
+    if (!activeErrorId) return []
 
     const errorElements = elements.filter((el): el is any =>
       el.type.includes("error"),
     )
 
-    const hoveredError = errorElements.find((el) => {
-      return el.error_id === hoveredErrorId
+    const activeError = errorElements.find((el, index) => {
+      return getErrorId(el, index) === activeErrorId
     })
 
-    if (!hoveredError) return []
+    if (!activeError) return []
 
-    const relatedIds: string[] = []
+    return getRelatedIdsForError(activeError)
+  }, [activeErrorId, elements])
 
-    if (hoveredError.pcb_trace_id) {
-      relatedIds.push(hoveredError.pcb_trace_id)
+  useEffect(() => {
+    if (transform) {
+      currentTransformRef.current = transform
     }
+  }, [transform])
 
-    if (hoveredError.pcb_port_ids) {
-      relatedIds.push(...hoveredError.pcb_port_ids)
+  useEffect(() => {
+    return () => {
+      cancelTransformAnimation(zoomAnimationFrameRef.current)
     }
-    if (hoveredError.pcb_via_ids) {
-      relatedIds.push(...hoveredError.pcb_via_ids)
-    }
+  }, [])
 
-    return relatedIds
-  }, [hoveredErrorId, elements])
+  useEffect(() => {
+    if (!props.width || !props.height || !props.setTransform || !focusedErrorId)
+      return
+
+    const focusedError = findErrorElementById(elements, focusedErrorId)
+
+    if (!focusedError) return
+
+    const previewBounds = getErrorPreviewBounds({
+      error: focusedError,
+      indexes: elementIndexes,
+    })
+
+    if (!previewBounds) return
+
+    const startTransform = currentTransformRef.current ?? transform
+    if (!startTransform) return
+
+    const targetTransform = createTransformForBounds({
+      bounds: previewBounds,
+      width: props.width,
+      height: props.height,
+    })
+
+    cancelTransformAnimation(zoomAnimationFrameRef.current)
+
+    animateTransform({
+      startTransform,
+      endTransform: targetTransform,
+      durationMs: 420,
+      setAnimationFrameId: (animationFrameId) => {
+        zoomAnimationFrameRef.current = animationFrameId
+      },
+      onUpdate: (nextTransform) => {
+        currentTransformRef.current = nextTransform
+        props.setTransform?.(nextTransform)
+      },
+    })
+  }, [
+    focusedErrorId,
+    elements,
+    elementIndexes,
+    props.height,
+    props.setTransform,
+    props.width,
+  ])
 
   const primitives = useMemo(() => {
     const combinedPrimitiveIds = [

@@ -3,6 +3,8 @@ import type { AnyCircuitElement } from "circuit-json"
 import { useCopyToClipboard } from "react-use"
 import { useMobileTouch } from "hooks/useMobileTouch"
 import { ToolbarButton } from "./ToolbarButton"
+import { groupErrorsByType } from "lib/util/group-errors-by-type"
+import { useToolbarErrorFocus } from "./useToolbarErrorFocus"
 
 type ToolbarErrorElement = AnyCircuitElement & {
   error_type?: string
@@ -65,7 +67,9 @@ interface ToolbarErrorDropdownProps {
   isOpen: boolean
   isSmallScreen: boolean
   onToggle: () => void
+  onClose: () => void
   setHoveredErrorId: (errorId: string | null) => void
+  setFocusedErrorId: (errorId: string | null) => void
 }
 
 export const ToolbarErrorDropdown = ({
@@ -73,7 +77,9 @@ export const ToolbarErrorDropdown = ({
   isOpen,
   isSmallScreen,
   onToggle,
+  onClose,
   setHoveredErrorId,
+  setFocusedErrorId,
 }: ToolbarErrorDropdownProps) => {
   const [copiedErrorId, setCopiedErrorId] = useState<string | null>(null)
   const [collapsedErrorGroups, setCollapsedErrorGroups] = useState<Set<string>>(
@@ -83,6 +89,11 @@ export const ToolbarErrorDropdown = ({
     new Set(),
   )
   const [, copyToClipboard] = useCopyToClipboard()
+  const { handleErrorSelect, isSelectedError } = useToolbarErrorFocus({
+    onClose,
+    setHoveredErrorId,
+    setFocusedErrorId,
+  })
 
   const errorElements = useMemo(
     () =>
@@ -94,28 +105,10 @@ export const ToolbarErrorDropdown = ({
 
   const errorCount = errorElements.length
 
-  const groupedErrorElements = useMemo(() => {
-    const groups = new Map<
-      string,
-      { error: ToolbarErrorElement; index: number; errorId: string }[]
-    >()
-
-    errorElements.forEach((error, index) => {
-      const errorType = error.error_type || "unknown_error"
-      const existingGroup = groups.get(errorType) || []
-      existingGroup.push({
-        error,
-        index,
-        errorId: error.pcb_trace_error_id!,
-      })
-      groups.set(errorType, existingGroup)
-    })
-
-    return Array.from(groups.entries()).map(([errorType, errors]) => ({
-      errorType,
-      errors,
-    }))
-  }, [errorElements])
+  const groupedErrorElements = useMemo(
+    () => groupErrorsByType(errorElements),
+    [errorElements],
+  )
 
   const toggleErrorGroup = useCallback((errorType: string) => {
     setCollapsedErrorGroups((prev) => {
@@ -286,7 +279,9 @@ export const ToolbarErrorDropdown = ({
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = "#2a2a2a"
-                            setHoveredErrorId(null)
+                            if (!isSelectedError(errorId)) {
+                              setHoveredErrorId(null)
+                            }
                           }}
                           onTouchStart={(e) => {
                             e.stopPropagation()
@@ -297,12 +292,11 @@ export const ToolbarErrorDropdown = ({
                             e.stopPropagation()
                             e.preventDefault()
                             e.currentTarget.style.backgroundColor = "#2a2a2a"
-                            setHoveredErrorId(null)
-                            toggleExpandedError(errorId)
+                            handleErrorSelect(errorId)
                           }}
                           onClick={(e) => {
                             e.stopPropagation()
-                            toggleExpandedError(errorId)
+                            handleErrorSelect(errorId)
                           }}
                         >
                           <div
@@ -316,12 +310,16 @@ export const ToolbarErrorDropdown = ({
                               whiteSpace: "nowrap",
                               userSelect: "text",
                             }}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            onClick={(event) => event.stopPropagation()}
                           >
                             {errorMessage}
                           </div>
-                          <div
+                          <button
+                            type="button"
+                            aria-label={
+                              isExpanded
+                                ? "Collapse error details"
+                                : "Expand error details"
+                            }
                             style={{
                               color: "#888",
                               fontSize: "16px",
@@ -330,10 +328,24 @@ export const ToolbarErrorDropdown = ({
                                 : "rotate(90deg)",
                               transition: "transform 0.2s ease",
                               flexShrink: 0,
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              cursor: "pointer",
+                            }}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              toggleExpandedError(errorId)
+                            }}
+                            onTouchEnd={(event) => {
+                              event.stopPropagation()
+                              event.preventDefault()
+                              toggleExpandedError(errorId)
                             }}
                           >
                             ›
-                          </div>
+                          </button>
                         </div>
                         {isExpanded && (
                           <div

@@ -174,6 +174,7 @@ export const PCBViewer = ({
           <CanvasElementsRenderer
             key={refDimensions.width}
             transform={transform}
+            setTransform={setTransform}
             height={height}
             width={refDimensions.width}
             allowEditing={allowEditing}
