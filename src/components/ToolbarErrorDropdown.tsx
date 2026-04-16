@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import type { AnyCircuitElement } from "circuit-json"
 import { useCopyToClipboard } from "react-use"
 import { useMobileTouch } from "hooks/useMobileTouch"
 import { ToolbarButton } from "./ToolbarButton"
-import { getErrorId } from "lib/util/get-error-id"
+import { groupErrorsByType } from "lib/util/group-errors-by-type"
+import { useToolbarErrorFocus } from "./useToolbarErrorFocus"
 
 type ToolbarErrorElement = AnyCircuitElement & {
   error_type?: string
@@ -88,20 +89,11 @@ export const ToolbarErrorDropdown = ({
     new Set(),
   )
   const [, copyToClipboard] = useCopyToClipboard()
-  const clearHighlightTimeoutRef = useRef<number | null>(null)
-  const focusRequestRef = useRef<number | null>(null)
-  const selectedErrorIdRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (clearHighlightTimeoutRef.current !== null) {
-        window.clearTimeout(clearHighlightTimeoutRef.current)
-      }
-      if (focusRequestRef.current !== null) {
-        window.cancelAnimationFrame(focusRequestRef.current)
-      }
-    }
-  }, [])
+  const { handleErrorSelect, isSelectedError } = useToolbarErrorFocus({
+    onClose,
+    setHoveredErrorId,
+    setFocusedErrorId,
+  })
 
   const errorElements = useMemo(
     () =>
@@ -113,28 +105,10 @@ export const ToolbarErrorDropdown = ({
 
   const errorCount = errorElements.length
 
-  const groupedErrorElements = useMemo(() => {
-    const groups = new Map<
-      string,
-      { error: ToolbarErrorElement; index: number; errorId: string }[]
-    >()
-
-    errorElements.forEach((error, index) => {
-      const errorType = error.error_type || "unknown_error"
-      const existingGroup = groups.get(errorType) || []
-      existingGroup.push({
-        error,
-        index,
-        errorId: getErrorId(error, index),
-      })
-      groups.set(errorType, existingGroup)
-    })
-
-    return Array.from(groups.entries()).map(([errorType, errors]) => ({
-      errorType,
-      errors,
-    }))
-  }, [errorElements])
+  const groupedErrorElements = useMemo(
+    () => groupErrorsByType(errorElements),
+    [errorElements],
+  )
 
   const toggleErrorGroup = useCallback((errorType: string) => {
     setCollapsedErrorGroups((prev) => {
@@ -159,34 +133,6 @@ export const ToolbarErrorDropdown = ({
       return next
     })
   }, [])
-
-  const handleErrorSelect = useCallback(
-    (errorId: string) => {
-      if (clearHighlightTimeoutRef.current !== null) {
-        window.clearTimeout(clearHighlightTimeoutRef.current)
-      }
-      if (focusRequestRef.current !== null) {
-        window.cancelAnimationFrame(focusRequestRef.current)
-      }
-
-      selectedErrorIdRef.current = errorId
-      setHoveredErrorId(errorId)
-      setFocusedErrorId(null)
-      focusRequestRef.current = window.requestAnimationFrame(() => {
-        setFocusedErrorId(errorId)
-        focusRequestRef.current = null
-      })
-      onClose()
-
-      clearHighlightTimeoutRef.current = window.setTimeout(() => {
-        selectedErrorIdRef.current = null
-        setHoveredErrorId(null)
-        setFocusedErrorId(null)
-        clearHighlightTimeoutRef.current = null
-      }, 3000)
-    },
-    [onClose, setFocusedErrorId, setHoveredErrorId],
-  )
 
   return (
     <div style={{ position: "relative" }}>
@@ -333,7 +279,7 @@ export const ToolbarErrorDropdown = ({
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = "#2a2a2a"
-                            if (selectedErrorIdRef.current !== errorId) {
+                            if (!isSelectedError(errorId)) {
                               setHoveredErrorId(null)
                             }
                           }}

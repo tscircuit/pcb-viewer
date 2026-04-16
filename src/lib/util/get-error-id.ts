@@ -25,3 +25,17 @@ export const getErrorId = (error: any, index: number): string => {
 
   return `error_${index}_${error?.error_type}_${error?.message?.slice(0, 20)}`
 }
+
+export const findErrorElementById = (
+  elements: Array<{ type?: string }>,
+  errorId: string | null | undefined,
+) => {
+  if (!errorId) return null
+
+  return (
+    elements.find((element, index) => {
+      if (!element.type?.includes("error")) return false
+      return getErrorId(element, index) === errorId
+    }) ?? null
+  )
+}

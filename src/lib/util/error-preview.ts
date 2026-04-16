@@ -192,6 +192,18 @@ const getErrorFocusCenter = ({
   return null
 }
 
+export const getErrorFocusPoint = ({
+  error,
+  indexes,
+}: {
+  error: any
+  indexes: ErrorPreviewElementIndexes
+}): Point | null =>
+  getErrorFocusCenter({
+    error,
+    ...indexes,
+  })
+
 const getComponentBoundaryViolationBounds = ({
   error,
   boardsById,

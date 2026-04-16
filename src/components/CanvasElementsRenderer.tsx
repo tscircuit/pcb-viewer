@@ -3,13 +3,17 @@ import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectiv
 import type { GraphicsObject } from "graphics-debug"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
-import { getErrorId } from "lib/util/get-error-id"
+import { findErrorElementById, getErrorId } from "lib/util/get-error-id"
 import {
   buildErrorPreviewElementIndexes,
   createTransformForBounds,
   getErrorPreviewBounds,
   getRelatedIdsForError,
 } from "lib/util/error-preview"
+import {
+  animateTransform,
+  cancelTransformAnimation,
+} from "lib/util/transform-animation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { type Matrix } from "transformation-matrix"
 import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
@@ -41,19 +45,6 @@ export interface CanvasElementsRendererProps {
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
 }
-
-const interpolateTransform = (
-  start: Matrix,
-  end: Matrix,
-  progress: number,
-): Matrix => ({
-  a: start.a + (end.a - start.a) * progress,
-  b: start.b + (end.b - start.b) * progress,
-  c: start.c + (end.c - start.c) * progress,
-  d: start.d + (end.d - start.d) * progress,
-  e: start.e + (end.e - start.e) * progress,
-  f: start.f + (end.f - start.f) * progress,
-})
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
@@ -121,9 +112,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   useEffect(() => {
     return () => {
-      if (zoomAnimationFrameRef.current !== null) {
-        window.cancelAnimationFrame(zoomAnimationFrameRef.current)
-      }
+      cancelTransformAnimation(zoomAnimationFrameRef.current)
     }
   }, [])
 
@@ -131,12 +120,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     if (!props.width || !props.height || !props.setTransform || !focusedErrorId)
       return
 
-    const errorElements = elements.filter((el: any) =>
-      el.type.includes("error"),
-    )
-    const focusedError = errorElements.find((el, index) => {
-      return getErrorId(el, index) === focusedErrorId
-    })
+    const focusedError = findErrorElementById(elements, focusedErrorId)
 
     if (!focusedError) return
 
@@ -156,34 +140,20 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       height: props.height,
     })
 
-    if (zoomAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(zoomAnimationFrameRef.current)
-    }
+    cancelTransformAnimation(zoomAnimationFrameRef.current)
 
-    const startTime = performance.now()
-    const durationMs = 420
-
-    const animate = (timestamp: number) => {
-      const elapsed = timestamp - startTime
-      const rawProgress = Math.min(1, elapsed / durationMs)
-      const easedProgress = 1 - (1 - rawProgress) ** 3
-      const nextTransform = interpolateTransform(
-        startTransform,
-        targetTransform,
-        easedProgress,
-      )
-
-      currentTransformRef.current = nextTransform
-      props.setTransform?.(nextTransform)
-
-      if (rawProgress < 1) {
-        zoomAnimationFrameRef.current = window.requestAnimationFrame(animate)
-      } else {
-        zoomAnimationFrameRef.current = null
-      }
-    }
-
-    zoomAnimationFrameRef.current = window.requestAnimationFrame(animate)
+    animateTransform({
+      startTransform,
+      endTransform: targetTransform,
+      durationMs: 420,
+      setAnimationFrameId: (animationFrameId) => {
+        zoomAnimationFrameRef.current = animationFrameId
+      },
+      onUpdate: (nextTransform) => {
+        currentTransformRef.current = nextTransform
+        props.setTransform?.(nextTransform)
+      },
+    })
   }, [
     focusedErrorId,
     elements,
