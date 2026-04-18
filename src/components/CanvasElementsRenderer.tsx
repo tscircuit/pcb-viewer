@@ -22,6 +22,7 @@ import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
 import { DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
+import { EditBoardOverlay } from "./EditBoardOverlay"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { MouseElementTracker } from "./MouseElementTracker"
@@ -233,7 +234,15 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       primitives={primitivesWithoutInteractionMetadata}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
     >
-      <EditPlacementOverlay
+      <EditBoardOverlay
+        disabled={!props.allowEditing}
+        transform={transform}
+        soup={elements}
+        cancelPanDrag={props.cancelPanDrag}
+        onCreateEditEvent={props.onCreateEditEvent}
+        onModifyEditEvent={props.onModifyEditEvent}
+      >
+        <EditPlacementOverlay
         disabled={!props.allowEditing}
         transform={transform}
         soup={elements}
@@ -286,7 +295,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             </ToolbarOverlay>
           </DimensionOverlay>
         </EditTraceHintOverlay>
-      </EditPlacementOverlay>
+        </EditPlacementOverlay>
+      </EditBoardOverlay>
     </MouseElementTracker>
   )
 }

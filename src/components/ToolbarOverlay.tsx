@@ -166,6 +166,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     editModes: {
       in_move_footprint_mode: s.in_move_footprint_mode,
       in_draw_trace_mode: s.in_draw_trace_mode,
+      in_edit_board_mode: s.in_edit_board_mode,
     },
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
@@ -339,6 +340,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setEditMode(editModes.in_move_footprint_mode ? "off" : "move_footprint")
   }, [editModes.in_move_footprint_mode, setEditMode])
 
+  const handleEditBoardToggle = useCallback(() => {
+    setEditMode(editModes.in_edit_board_mode ? "off" : "edit_board")
+  }, [editModes.in_edit_board_mode, setEditMode])
+
   const handleRatsNestToggle = useCallback(() => {
     setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
   }, [viewSettings.is_showing_rats_nest, setIsShowingRatsNest])
@@ -487,6 +492,16 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           <div>
             {editModes.in_move_footprint_mode ? "✖ " : ""}
             Move Components
+          </div>
+        </ToolbarButton>
+        <ToolbarButton
+          isSmallScreen={isSmallScreen}
+          style={{}}
+          onClick={handleEditBoardToggle}
+        >
+          <div>
+            {editModes.in_edit_board_mode ? "✖ " : ""}
+            Edit Board
           </div>
         </ToolbarButton>
         <ToolbarButton
