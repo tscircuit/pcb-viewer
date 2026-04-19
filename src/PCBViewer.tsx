@@ -132,9 +132,34 @@ export const PCBViewer = ({
   }, [circuitJsonKey])
 
   const elements = useMemo(() => {
+    let json = pcbElmsPreEdit as AnyCircuitElement[]
+    const standardEditEvents: ManualEditEvent[] = []
+
+    for (const event of editEvents) {
+      if ((event as any).edit_event_type === "edit_pcb_board_size") {
+        const boardEvt = event as any
+        json = json.map((e) => {
+          if (
+            e.type === "pcb_board" &&
+            (e as any).pcb_board_id === boardEvt.pcb_board_id
+          ) {
+            return {
+              ...e,
+              center: boardEvt.new_center,
+              width: boardEvt.new_width,
+              height: boardEvt.new_height,
+            }
+          }
+          return e
+        })
+      } else {
+        standardEditEvents.push(event)
+      }
+    }
+
     return applyEditEvents({
-      circuitJson: pcbElmsPreEdit as any,
-      editEvents,
+      circuitJson: json as any,
+      editEvents: standardEditEvents,
     })
   }, [pcbElmsPreEdit, editEvents])
 
