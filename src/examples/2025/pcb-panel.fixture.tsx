@@ -9,6 +9,7 @@ export const PcbPanelExample = () => {
           {
             type: "pcb_panel",
             pcb_panel_id: "pcb_panel_0",
+            thickness: 1.6,
             width: 80,
             height: 60,
             covered_with_solder_mask: false,
