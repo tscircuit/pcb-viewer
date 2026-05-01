@@ -3,7 +3,7 @@ import {
   type PcbColorMap,
   CircuitToCanvasDrawer,
 } from "circuit-to-canvas"
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
 import color from "color"
@@ -19,7 +19,7 @@ const HOVER_COLOR_MAP: PcbColorMap = {
   },
 }
 
-export function isPcbVia(element: AnyCircuitElement) {
+export function isPcbVia(element: AnyCircuitElement): element is PcbVia {
   return element.type === "pcb_via"
 }
 
@@ -38,10 +38,22 @@ export function drawPcbViaElementsForLayer({
   primitives?: Primitive[]
   drawSoldermask?: boolean
 }) {
-  // Filter vias to only those on the specified layers
+  // Convert render layers (e.g. "top_copper") to bare layer refs (e.g. "top")
+  // to match against pcb_via.layers which uses bare layer refs.
+  const targetLayerRefs = new Set(
+    layers.map((l) => (l.endsWith("_copper") ? l.replace("_copper", "") : l)),
+  )
+
+  // Filter vias to only those that include the target layer.
+  // This prevents via copper rings from appearing on non-foreground canvases
+  // (which are shown at 0.5 opacity), causing visible bleed-through.
   const viaElements = elements.filter(isPcbVia).filter((element) => {
-    // Vias are typically drawn on copper layers
-    return layers.some((layer) => layer.includes("copper"))
+    const viaLayers = element.layers ?? []
+    if (viaLayers.length === 0) {
+      // Fallback: draw on any copper layer canvas (legacy behaviour)
+      return layers.some((layer) => layer.includes("copper"))
+    }
+    return viaLayers.some((l) => targetLayerRefs.has(l))
   })
 
   if (viaElements.length === 0) return
