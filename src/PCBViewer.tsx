@@ -24,7 +24,16 @@ type Props = {
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  /**
+   * When true, the viewer will focus (grab keyboard events) when the mouse
+   * hovers over it. Defaults to false.
+   */
   focusOnHover?: boolean
+  /**
+   * @deprecated Use `focusOnHover={false}` instead. This prop will be removed
+   * in a future release.
+   */
+  disableAutoFocus?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
   disablePcbGroups?: boolean
@@ -38,10 +47,18 @@ export const PCBViewer = ({
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
-  focusOnHover = false,
+  focusOnHover: focusOnHoverProp,
+  disableAutoFocus,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
 }: Props) => {
+  // disableAutoFocus is a deprecated alias for !focusOnHover
+  const focusOnHover =
+    focusOnHoverProp !== undefined
+      ? focusOnHoverProp
+      : disableAutoFocus !== undefined
+        ? !disableAutoFocus
+        : false
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
