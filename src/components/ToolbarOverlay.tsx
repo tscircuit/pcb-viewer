@@ -1,20 +1,20 @@
-import {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useLayoutEffect,
-} from "react"
 import { css } from "@emotion/css"
-import { type LayerRef } from "circuit-json"
+import type { LayerRef } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
-import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
-import { useGlobalStore } from "../global-store"
-import packageJson from "../../package.json"
 import { useHotKey } from "hooks/useHotKey"
-import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { useMobileTouch } from "hooks/useMobileTouch"
+import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
+import { zIndexMap } from "lib/util/z-index-map"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
+import packageJson from "../../package.json"
+import { useGlobalStore } from "../global-store"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
@@ -155,6 +155,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingSolderMask,
     setIsShowingSilkscreen,
     setIsShowingFabricationNotes,
+    setIsShowingTopComponents,
+    setIsShowingBottomComponents,
     setPcbGroupViewMode,
     setHoveredErrorId,
     setFocusedErrorId,
@@ -179,6 +181,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_solder_mask: s.is_showing_solder_mask,
       is_showing_silkscreen: s.is_showing_silkscreen,
       is_showing_fabrication_notes: s.is_showing_fabrication_notes,
+      is_showing_top_components: s.is_showing_top_components,
+      is_showing_bottom_components: s.is_showing_bottom_components,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setEditMode: s.setEditMode,
@@ -193,6 +197,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingSolderMask: s.setIsShowingSolderMask,
     setIsShowingSilkscreen: s.setIsShowingSilkscreen,
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
+    setIsShowingTopComponents: s.setIsShowingTopComponents,
+    setIsShowingBottomComponents: s.setIsShowingBottomComponents,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
     setFocusedErrorId: s.setFocusedErrorId,
@@ -587,6 +593,24 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={viewSettings.is_showing_silkscreen}
                   onClick={() => {
                     setIsShowingSilkscreen(!viewSettings.is_showing_silkscreen)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Top Components"
+                  checked={viewSettings.is_showing_top_components}
+                  onClick={() => {
+                    setIsShowingTopComponents(
+                      !viewSettings.is_showing_top_components,
+                    )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Bottom Components"
+                  checked={viewSettings.is_showing_bottom_components}
+                  onClick={() => {
+                    setIsShowingBottomComponents(
+                      !viewSettings.is_showing_bottom_components,
+                    )
                   }}
                 />
                 <CheckboxMenuItem
