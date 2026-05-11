@@ -76,6 +76,7 @@ The PCBViewer component accepts these props:
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
 - `initialState`: Initial state for the viewer
+- `focusOnHover`: Focus the viewer when the cursor enters it (default: false)
 
 ### Features
 
