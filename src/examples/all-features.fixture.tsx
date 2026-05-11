@@ -1,8 +1,8 @@
 import { Circuit } from "@tscircuit/core"
 import { PCBViewer } from "../PCBViewer"
-import { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 
-export const AllFeaturesExample = () => {
+export const getAllFeaturesCircuitJson = (): AnyCircuitElement[] => {
   const circuit = new Circuit()
 
   circuit.add(
@@ -303,12 +303,16 @@ export const AllFeaturesExample = () => {
     </board>,
   )
 
-  const circuitJson = circuit.getCircuitJson()
-  console.log(JSON.stringify(circuitJson, null, 2))
+  return circuit.getCircuitJson() as AnyCircuitElement[]
+}
+
+export const AllFeaturesExample = () => {
+  const circuitJson = getAllFeaturesCircuitJson()
+
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer
-        circuitJson={circuitJson as AnyCircuitElement[]}
+        circuitJson={circuitJson}
         height={800}
         initialState={{
           is_showing_copper_pours: true,
