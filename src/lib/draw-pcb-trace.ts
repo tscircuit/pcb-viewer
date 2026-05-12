@@ -14,8 +14,8 @@ const HOVER_COLOR_MAP: PcbColorMap = {
   ...DEFAULT_PCB_COLOR_MAP,
   copper: {
     ...DEFAULT_PCB_COLOR_MAP.copper,
-    top: color(colors.board.pad_front).lighten(0.5).toString(),
-    bottom: color(colors.board.pad_back).lighten(0.5).toString(),
+    top: color(colors.board.copper.f).lighten(0.5).toString(),
+    bottom: color(colors.board.copper.b).lighten(0.5).toString(),
     inner1: color(colors.board.copper.in1).lighten(0.5).toString(),
     inner2: color(colors.board.copper.in2).lighten(0.5).toString(),
     inner3: color(colors.board.copper.in3).lighten(0.5).toString(),
