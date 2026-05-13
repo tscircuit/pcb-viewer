@@ -20,7 +20,7 @@ import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
-import { DimensionOverlay } from "./DimensionOverlay"
+import { type BoundsSelection, DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
@@ -41,6 +41,7 @@ export interface CanvasElementsRendererProps {
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
+  onBoundsSelected?: (bounds: BoundsSelection) => void
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
@@ -253,6 +254,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             transform={transform!}
             focusOnHover={props.focusOnHover}
             primitives={primitivesWithoutInteractionMetadata}
+            onBoundsSelected={props.onBoundsSelected}
+            cancelPanDrag={props.cancelPanDrag}
           >
             <ToolbarOverlay elements={elements}>
               <ErrorOverlay transform={transform} elements={elements}>

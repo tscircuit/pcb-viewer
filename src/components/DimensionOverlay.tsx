@@ -18,10 +18,19 @@ interface Props {
   children: any
   focusOnHover?: boolean
   primitives?: Primitive[]
+  onBoundsSelected?: (bounds: BoundsSelection) => void
+  cancelPanDrag?: () => void
 }
 
 const SNAP_THRESHOLD_PX = 16
 const SNAP_MARKER_SIZE = 5
+
+export interface BoundsSelection {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
 
 const shouldExcludePrimitiveFromSnapping = (primitive: Primitive) => {
   if (primitive.pcb_drawing_type === "text") return true
@@ -54,11 +63,16 @@ export const DimensionOverlay = ({
   transform,
   focusOnHover = false,
   primitives = [],
+  onBoundsSelected,
+  cancelPanDrag,
 }: Props) => {
   if (!transform) transform = identity()
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
+  const [boundsToolArmed, setBoundsToolArmed] = useState(false)
+  const [boundsToolVisible, setBoundsToolVisible] = useState(false)
+  const [boundsToolDragging, setBoundsToolDragging] = useState(false)
   const [activeSnapIds, setActiveSnapIds] = useState({
     start: null as string | null,
     end: null as string | null,
@@ -72,10 +86,18 @@ export const DimensionOverlay = ({
       window.dispatchEvent(new Event("disarm-dimension-tool"))
     }
   }, [measureToolArmed])
+  const disarmBounds = useCallback(() => {
+    if (boundsToolArmed) {
+      setBoundsToolArmed(false)
+      window.dispatchEvent(new Event("disarm-bounds-tool"))
+    }
+  }, [boundsToolArmed])
   // Start of dimension tool line in real-world coordinates (not screen)
   const [dStart, setDStart] = useState({ x: 0, y: 0 })
   // End of dimension tool line in real-world coordinates (not screen)
   const [dEnd, setDEnd] = useState({ x: 0, y: 0 })
+  const [boundsStart, setBoundsStart] = useState({ x: 0, y: 0 })
+  const [boundsEnd, setBoundsEnd] = useState({ x: 0, y: 0 })
   const mousePosRef = useRef({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement | null>(null)
   const container = containerRef.current!
@@ -268,26 +290,83 @@ export const DimensionOverlay = ({
         setDimensionToolVisible(false)
         setDimensionToolStretching(false)
         setActiveSnapIds({ start: null, end: null })
+        setBoundsToolVisible(false)
+        setBoundsToolDragging(false)
         disarmMeasure()
+        disarmBounds()
       }
     }
 
     const armMeasure = () => {
       setMeasureToolArmed(true)
+      setBoundsToolArmed(false)
+      window.dispatchEvent(new Event("disarm-bounds-tool"))
+    }
+
+    const armBounds = () => {
+      setBoundsToolArmed(true)
+      setMeasureToolArmed(false)
+      setDimensionToolVisible(false)
+      setDimensionToolStretching(false)
+      window.dispatchEvent(new Event("disarm-dimension-tool"))
     }
 
     window.addEventListener("keydown", down)
     window.addEventListener("arm-dimension-tool", armMeasure)
+    window.addEventListener("arm-bounds-tool", armBounds)
 
     return () => {
       window.removeEventListener("keydown", down)
       window.removeEventListener("arm-dimension-tool", armMeasure)
+      window.removeEventListener("arm-bounds-tool", armBounds)
       disarmMeasure()
+      disarmBounds()
     }
-  }, [isMouseOverContainer, dimensionToolVisible, disarmMeasure, findSnap])
+  }, [
+    isMouseOverContainer,
+    dimensionToolVisible,
+    disarmMeasure,
+    disarmBounds,
+    findSnap,
+  ])
 
   const screenDStart = applyToPoint(transform, dStart)
   const screenDEnd = applyToPoint(transform, dEnd)
+  const screenBoundsStart = applyToPoint(transform, boundsStart)
+  const screenBoundsEnd = applyToPoint(transform, boundsEnd)
+
+  const selectedBounds = {
+    minX: Math.min(boundsStart.x, boundsEnd.x),
+    minY: Math.min(boundsStart.y, boundsEnd.y),
+    maxX: Math.max(boundsStart.x, boundsEnd.x),
+    maxY: Math.max(boundsStart.y, boundsEnd.y),
+  }
+
+  const boundsScreenRect = {
+    left: Math.min(screenBoundsStart.x, screenBoundsEnd.x),
+    top: Math.min(screenBoundsStart.y, screenBoundsEnd.y),
+    width: Math.abs(screenBoundsStart.x - screenBoundsEnd.x),
+    height: Math.abs(screenBoundsStart.y - screenBoundsEnd.y),
+  }
+
+  const emitBounds = useCallback(
+    (start: { x: number; y: number }, end: { x: number; y: number }) => {
+      const bounds = {
+        minX: Math.min(start.x, end.x),
+        minY: Math.min(start.y, end.y),
+        maxX: Math.max(start.x, end.x),
+        maxY: Math.max(start.y, end.y),
+      }
+
+      onBoundsSelected?.(bounds)
+      window.dispatchEvent(
+        new CustomEvent("pcb-viewer:bounds-selected", {
+          detail: bounds,
+        }),
+      )
+    },
+    [onBoundsSelected],
+  )
 
   const arrowScreenBounds = {
     left: Math.min(screenDStart.x, screenDEnd.x),
@@ -346,6 +425,10 @@ export const DimensionOverlay = ({
           setDEnd({ x: snap.point.x, y: snap.point.y })
           setActiveSnapIds((prev) => ({ ...prev, end: snap.id }))
         }
+        if (boundsToolDragging) {
+          cancelPanDrag?.()
+          setBoundsEnd({ x: rwPoint.x, y: rwPoint.y })
+        }
       }}
       onMouseDown={(e) => {
         const rect = e.currentTarget.getBoundingClientRect()
@@ -353,7 +436,16 @@ export const DimensionOverlay = ({
         const y = e.clientY - rect.top
         const rwPoint = applyToPoint(inverse(transform!), { x, y })
 
-        if (measureToolArmed && !dimensionToolVisible) {
+        if (boundsToolArmed) {
+          e.preventDefault()
+          e.stopPropagation()
+          cancelPanDrag?.()
+          setBoundsStart({ x: rwPoint.x, y: rwPoint.y })
+          setBoundsEnd({ x: rwPoint.x, y: rwPoint.y })
+          setBoundsToolVisible(true)
+          setBoundsToolDragging(true)
+          disarmBounds()
+        } else if (measureToolArmed && !dimensionToolVisible) {
           const snap = findSnap(rwPoint)
           setDStart({ x: snap.point.x, y: snap.point.y })
           setDEnd({ x: snap.point.x, y: snap.point.y })
@@ -369,8 +461,72 @@ export const DimensionOverlay = ({
           setActiveSnapIds({ start: null, end: null })
         }
       }}
+      onMouseUp={(e) => {
+        if (!boundsToolDragging) return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        const rwPoint = applyToPoint(inverse(transform!), { x, y })
+        const end = { x: rwPoint.x, y: rwPoint.y }
+
+        e.preventDefault()
+        e.stopPropagation()
+        cancelPanDrag?.()
+        setBoundsEnd(end)
+        setBoundsToolDragging(false)
+        emitBounds(boundsStart, end)
+      }}
     >
       {children}
+      {boundsToolVisible && (
+        <>
+          {/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
+          <svg
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              pointerEvents: "none",
+              mixBlendMode: "difference",
+              zIndex: zIndexMap.dimensionOverlay,
+            }}
+            width={containerBounds.width}
+            height={containerBounds.height}
+          >
+            <rect
+              x={boundsScreenRect.left}
+              y={boundsScreenRect.top}
+              width={boundsScreenRect.width}
+              height={boundsScreenRect.height}
+              stroke="red"
+              strokeWidth={1.5}
+              strokeDasharray="4,3"
+              fill="rgba(255, 0, 0, 0.12)"
+            />
+          </svg>
+          <div
+            style={{
+              left: 0,
+              bottom: dimensionToolVisible ? 58 : 0,
+              position: "absolute",
+              color: "red",
+              fontFamily: "sans-serif",
+              fontSize: 12,
+              margin: 4,
+              pointerEvents: "none",
+              mixBlendMode: "difference",
+              zIndex: zIndexMap.dimensionOverlay,
+            }}
+          >
+            minX: {selectedBounds.minX.toFixed(2)}, minY:{" "}
+            {selectedBounds.minY.toFixed(2)}
+            <br />
+            maxX: {selectedBounds.maxX.toFixed(2)}, maxY:{" "}
+            {selectedBounds.maxY.toFixed(2)}
+          </div>
+        </>
+      )}
       {dimensionToolVisible && (
         <>
           {diagonalLabel.show && (

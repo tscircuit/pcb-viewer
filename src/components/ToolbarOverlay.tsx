@@ -202,15 +202,22 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
+  const [boundsToolArmed, setBoundsToolArmed] = useState(false)
 
   useEffect(() => {
     const arm = () => setMeasureToolArmed(true)
     const disarm = () => setMeasureToolArmed(false)
+    const armBounds = () => setBoundsToolArmed(true)
+    const disarmBounds = () => setBoundsToolArmed(false)
     window.addEventListener("arm-dimension-tool", arm)
     window.addEventListener("disarm-dimension-tool", disarm)
+    window.addEventListener("arm-bounds-tool", armBounds)
+    window.addEventListener("disarm-bounds-tool", disarmBounds)
     return () => {
       window.removeEventListener("arm-dimension-tool", arm)
       window.removeEventListener("disarm-dimension-tool", disarm)
+      window.removeEventListener("arm-bounds-tool", armBounds)
+      window.removeEventListener("disarm-bounds-tool", disarmBounds)
     }
   }, [])
 
@@ -345,7 +352,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
 
   const handleMeasureToolClick = useCallback(() => {
     setMeasureToolArmed(true)
+    setBoundsToolArmed(false)
     window.dispatchEvent(new Event("arm-dimension-tool"))
+  }, [])
+
+  const handleBoundsToolClick = useCallback(() => {
+    setBoundsToolArmed(true)
+    setMeasureToolArmed(false)
+    window.dispatchEvent(new Event("arm-bounds-tool"))
   }, [])
 
   const handleViewMenuToggle = useCallback(() => {
@@ -506,6 +520,14 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           onClick={handleMeasureToolClick}
         >
           <div>📏</div>
+        </ToolbarButton>
+
+        <ToolbarButton
+          isSmallScreen={isSmallScreen}
+          style={boundsToolArmed ? { backgroundColor: "#444" } : {}}
+          onClick={handleBoundsToolClick}
+        >
+          <div>Bounds</div>
         </ToolbarButton>
 
         <ToolbarButton
