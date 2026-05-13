@@ -10,6 +10,7 @@ import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
+import type { BoundsSelection } from "./components/DimensionOverlay"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
@@ -24,6 +25,7 @@ type Props = {
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  onBoundsSelected?: (bounds: BoundsSelection) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
@@ -38,6 +40,7 @@ export const PCBViewer = ({
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
+  onBoundsSelected,
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
@@ -179,6 +182,7 @@ export const PCBViewer = ({
             width={refDimensions.width}
             allowEditing={allowEditing}
             focusOnHover={focusOnHover}
+            onBoundsSelected={onBoundsSelected}
             cancelPanDrag={cancelPanDrag}
             onCreateEditEvent={onCreateEditEvent}
             onModifyEditEvent={onModifyEditEvent}

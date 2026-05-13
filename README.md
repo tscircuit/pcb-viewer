@@ -75,6 +75,7 @@ The PCBViewer component accepts these props:
 - `allowEditing`: Enable/disable editing capabilities (default: true)
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
+- `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `initialState`: Initial state for the viewer
 
 ### Features
