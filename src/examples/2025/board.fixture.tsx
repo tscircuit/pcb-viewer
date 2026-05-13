@@ -4,13 +4,13 @@ import { PCBViewer } from "../../PCBViewer"
 export const BasicRectangleBoard = () => {
   const circuit = new Circuit()
 
-  circuit.add(<board pcbX={0} pcbY={0} width="50mm" height="50mm" />)
+  circuit.add(<board width="10mm" height="10mm" />)
 
   const soup = circuit.getCircuitJson()
 
   return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
+    <div>
+      <PCBViewer soup={soup} />
     </div>
   )
 }
@@ -19,24 +19,18 @@ export const TriangleBoard = () => {
   const circuit = new Circuit()
 
   circuit.add(
-    <board
-      pcbX={0}
-      pcbY={0}
-      width="50mm"
-      height="50mm"
-      outline={[
-        { x: -25, y: 0 },
-        { x: 25, y: 0 },
-        { x: 0, y: 25 },
-      ]}
-    />,
+    <board width="10mm" height="10mm" outline={[
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 5, y: 10 },
+    ]} />,
   )
 
   const soup = circuit.getCircuitJson()
 
   return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
+    <div>
+      <PCBViewer soup={soup} />
     </div>
   )
 }
@@ -45,29 +39,23 @@ export const OctagonBoard = () => {
   const circuit = new Circuit()
 
   circuit.add(
-    <board
-      pcbX={0}
-      pcbY={0}
-      width="50mm"
-      height="50mm"
-      outline={[
-        { x: 8.28, y: 20 },
-        { x: 20, y: 8.28 },
-        { x: 20, y: -8.28 },
-        { x: 8.28, y: -20 },
-        { x: -8.28, y: -20 },
-        { x: -20, y: -8.28 },
-        { x: -20, y: 8.28 },
-        { x: -8.28, y: 20 },
-      ]}
-    />,
+    <board width="10mm" height="10mm" outline={[
+      { x: 3, y: 0 },
+      { x: 7, y: 0 },
+      { x: 10, y: 3 },
+      { x: 10, y: 7 },
+      { x: 7, y: 10 },
+      { x: 3, y: 10 },
+      { x: 0, y: 7 },
+      { x: 0, y: 3 },
+    ]} />,
   )
 
   const soup = circuit.getCircuitJson()
 
   return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
+    <div>
+      <PCBViewer soup={soup} />
     </div>
   )
 }
@@ -76,52 +64,37 @@ export const AtariBoard = () => {
   const circuit = new Circuit()
 
   circuit.add(
-    <board
-      pcbX={0}
-      pcbY={0}
-      width="50mm"
-      height="50mm"
-      outline={[
-        { x: -22.5, y: 24.5 },
-        { x: 22.5, y: 24.5 },
-        { x: 22.5, y: 16.5 },
-        { x: 20.5, y: 16.5 },
-        { x: 20.5, y: 12.5 },
-        { x: 22.5, y: 12.5 },
-        { x: 22.5, y: 2.5 },
-        { x: 18, y: -1.5 },
-        { x: 18, y: -18 },
-        { x: -18, y: -18 },
-        { x: -18, y: -1.5 },
-        { x: -22.5, y: 2.5 },
-        { x: -22.5, y: 12.5 },
-        { x: -20.5, y: 12.5 },
-        { x: -20.5, y: 16.5 },
-        { x: -22.5, y: 16.5 },
-        { x: -22.5, y: 24.5 },
-      ]}
-    />,
+    <board width="10mm" height="10mm" outline={[
+      { x: 0, y: 2 },
+      { x: 2, y: 0 },
+      { x: 8, y: 0 },
+      { x: 10, y: 2 },
+      { x: 10, y: 8 },
+      { x: 8, y: 10 },
+      { x: 2, y: 10 },
+      { x: 0, y: 8 },
+    ]} />,
   )
 
   const soup = circuit.getCircuitJson()
 
   return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
+    <div>
+      <PCBViewer soup={soup} />
     </div>
   )
 }
 
-export const DisabledAutoFocus = () => {
+export const BoardWithFocusOnHoverDisabled = () => {
   const circuit = new Circuit()
 
-  circuit.add(<board pcbX={0} pcbY={0} width="50mm" height="50mm" />)
+  circuit.add(<board width="10mm" height="10mm" />)
 
   const soup = circuit.getCircuitJson()
 
   return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
+    <div>
+      <PCBViewer soup={soup} focusOnHover={false} />
     </div>
   )
 }
@@ -131,4 +104,5 @@ export default {
   TriangleBoard,
   OctagonBoard,
   AtariBoard,
+  BoardWithFocusOnHoverDisabled,
 }
