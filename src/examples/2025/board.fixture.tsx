@@ -10,7 +10,7 @@ export const BasicRectangleBoard = () => {
 
   return (
     <div>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup} />
     </div>
   )
 }
@@ -30,7 +30,7 @@ export const TriangleBoard = () => {
 
   return (
     <div>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup} />
     </div>
   )
 }
@@ -55,7 +55,7 @@ export const OctagonBoard = () => {
 
   return (
     <div>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup} />
     </div>
   )
 }
@@ -80,7 +80,7 @@ export const AtariBoard = () => {
 
   return (
     <div>
-      <PCBViewer soup={soup} />
+      <PCBViewer circuitJson={soup} />
     </div>
   )
 }
@@ -94,7 +94,7 @@ export const BoardWithFocusOnHoverDisabled = () => {
 
   return (
     <div>
-      <PCBViewer soup={soup} focusOnHover={false} />
+      <PCBViewer circuitJson={soup} focusOnHover={false} />
     </div>
   )
 }
