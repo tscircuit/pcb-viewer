@@ -50,8 +50,10 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@tscircuit/alphabet": "^0.0.23",
     "@tscircuit/math-utils": "^0.0.29",
+    "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^5.0.2",
     "circuit-json": "^0.0.421",
     "circuit-to-canvas": "^0.0.98",
@@ -59,6 +61,7 @@
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",
+    "three": "^0.184.0",
     "transformation-matrix": "^2.13.0",
     "zustand": "^4.5.2"
   }
