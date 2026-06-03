@@ -51,7 +51,7 @@
   "dependencies": {
     "@emotion/css": "^11.11.2",
     "@tscircuit/alphabet": "^0.0.23",
-    "@tscircuit/math-utils": "^0.0.29",
+    "@tscircuit/math-utils": "^0.0.36",
     "@vitejs/plugin-react": "^5.0.2",
     "circuit-json": "^0.0.421",
     "circuit-to-canvas": "^0.0.98",
