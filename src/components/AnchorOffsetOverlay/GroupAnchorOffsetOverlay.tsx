@@ -51,16 +51,16 @@ export const GroupAnchorOffsetOverlay = ({
     .filter((id): id is string => Boolean(id))
 
   // Helper function to traverse up the group hierarchy and collect all parent groups
+  // Handles both relative_to_group_anchor and relative_to_pcb_group position modes
   const collectParentGroups = (groupId: string, collected: Set<string>) => {
     if (collected.has(groupId)) return // Avoid infinite loops
     collected.add(groupId)
 
     const group = groups.find((g) => g.pcb_group_id === groupId)
-    if (
-      group?.position_mode === "relative_to_group_anchor" &&
-      group.positioned_relative_to_pcb_group_id
-    ) {
-      // This group is positioned relative to another group, so add that parent too
+    if (!group) return
+
+    // Check if positioned relative to another group (either position_mode)
+    if (group.positioned_relative_to_pcb_group_id) {
       collectParentGroups(group.positioned_relative_to_pcb_group_id, collected)
     }
   }
@@ -72,11 +72,8 @@ export const GroupAnchorOffsetOverlay = ({
     const component = components.find((c) => c.pcb_component_id === componentId)
     if (!component) return
 
-    // If component is directly positioned relative to a group anchor
-    if (
-      component.position_mode === "relative_to_group_anchor" &&
-      component.positioned_relative_to_pcb_group_id
-    ) {
+    // If component is directly positioned relative to a group anchor (either mode)
+    if (component.positioned_relative_to_pcb_group_id) {
       collectParentGroups(
         component.positioned_relative_to_pcb_group_id,
         hoveredGroupIds,
@@ -98,12 +95,11 @@ export const GroupAnchorOffsetOverlay = ({
   }
 
   // Component-to-group targets
+  // Handles components positioned relative to groups via either position_mode
   const componentTargets = components
     .map((component) => {
-      if (
-        component.position_mode === "relative_to_group_anchor" &&
-        component.positioned_relative_to_pcb_group_id
-      ) {
+      // Check positioned_relative_to_pcb_group_id for group-relative positioning
+      if (component.positioned_relative_to_pcb_group_id) {
         const parentGroup = groups.find(
           (group) =>
             group.pcb_group_id ===
@@ -114,6 +110,7 @@ export const GroupAnchorOffsetOverlay = ({
           : null
       }
 
+      // Fallback to pcb_group_id for non-positioned components
       if (component.pcb_group_id) {
         const parentGroup = groups.find(
           (group) => group.pcb_group_id === component.pcb_group_id,
@@ -136,12 +133,10 @@ export const GroupAnchorOffsetOverlay = ({
     )
 
   // Group-to-group targets (anchor-to-anchor offsets)
+  // Handles groups positioned relative to other groups via positioned_relative_to_pcb_group_id
   const groupTargets = groups
     .map((group) => {
-      if (
-        group.position_mode === "relative_to_group_anchor" &&
-        group.positioned_relative_to_pcb_group_id
-      ) {
+      if (group.positioned_relative_to_pcb_group_id) {
         const parentGroup = groups.find(
           (g) => g.pcb_group_id === group.positioned_relative_to_pcb_group_id,
         )
