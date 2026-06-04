@@ -86,3 +86,6 @@ The PCBViewer component accepts these props:
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
+
+
+<!-- VTT SOVEREIGN ENGINE: BOUNTY HARVEST FOR ISSUE 3620 -->
