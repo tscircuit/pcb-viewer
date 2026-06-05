@@ -1,16 +1,16 @@
+import type { LayerRef } from "circuit-json"
+import { useContext } from "react"
 import {
   createStore as createZustandStore,
   useStore as useZustandStore,
 } from "zustand"
 import { StoreContext } from "./components/ContextProviders"
-import type { LayerRef } from "circuit-json"
-import { useContext } from "react"
 import {
+  STORAGE_KEYS,
   getStoredBoolean,
   getStoredString,
   setStoredBoolean,
   setStoredString,
-  STORAGE_KEYS,
 } from "./hooks/useLocalStorage"
 
 export interface State {
@@ -36,6 +36,8 @@ export interface State {
   is_showing_solder_mask: boolean
   is_showing_silkscreen: boolean
   is_showing_fabrication_notes: boolean
+  is_showing_top_components: boolean
+  is_showing_bottom_components: boolean
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
@@ -57,6 +59,8 @@ export interface State {
   setIsShowingSolderMask: (is_showing: boolean) => void
   setIsShowingSilkscreen: (is_showing: boolean) => void
   setIsShowingFabricationNotes: (is_showing: boolean) => void
+  setIsShowingTopComponents: (is_showing: boolean) => void
+  setIsShowingBottomComponents: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
   setFocusedErrorId: (errorId: string | null) => void
@@ -118,6 +122,14 @@ export const createStore = (
         is_showing_fabrication_notes: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_FABRICATION_NOTES,
           false,
+        ),
+        is_showing_top_components: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_TOP_COMPONENTS,
+          true,
+        ),
+        is_showing_bottom_components: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_BOTTOM_COMPONENTS,
+          true,
         ),
         pcb_group_view_mode: disablePcbGroups
           ? "all"
@@ -187,6 +199,17 @@ export const createStore = (
             is_showing,
           )
           set({ is_showing_fabrication_notes: is_showing })
+        },
+        setIsShowingTopComponents: (is_showing) => {
+          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_TOP_COMPONENTS, is_showing)
+          set({ is_showing_top_components: is_showing })
+        },
+        setIsShowingBottomComponents: (is_showing) => {
+          setStoredBoolean(
+            STORAGE_KEYS.IS_SHOWING_BOTTOM_COMPONENTS,
+            is_showing,
+          )
+          set({ is_showing_bottom_components: is_showing })
         },
         setPcbGroupViewMode: (mode) => {
           if (disablePcbGroups) return
