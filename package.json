@@ -55,7 +55,7 @@
     "@vitejs/plugin-react": "^5.0.2",
     "circuit-json": "^0.0.421",
     "circuit-to-canvas": "^0.0.98",
-    "circuit-to-svg": "^0.0.337",
+    "circuit-to-svg": "^0.0.354",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",
