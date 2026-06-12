@@ -124,7 +124,10 @@ const OverlappingLayersTest = () => {
             Continue testing each layer - the selected layer should ALWAYS be on
             top
           </li>
-          <li>All other layers should be visible at 50% opacity beneath</li>
+          <li>
+            All other layers should remain visible beneath it without dimming or
+            hiding
+          </li>
         </ul>
         <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "10px" }}>
           Use hotkeys 1-8 or the layer dropdown to switch between layers

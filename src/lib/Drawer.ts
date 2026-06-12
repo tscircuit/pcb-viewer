@@ -494,92 +494,40 @@ export class Drawer {
   }
 
   /**
-   * Iterate over each canvas and set the z index based on the layer order, but
-   * always render the foreground layer on top.
+   * Iterate over each canvas and set the z index based on the layer order while
+   * always rendering the foreground layer above every other board layer.
    *
-   * Also: Hide non-active layers while keeping board/drill/edge cuts and
-   * same-side helper layers visible.
+   * All layers remain visible; switching layers only changes stacking order.
+   * Drill holes and edge cuts stay above the selected layer so holes and board
+   * outlines remain readable.
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
-    const associatedSoldermask =
-      foregroundLayer === "top"
-        ? "soldermask_top"
-        : foregroundLayer === "bottom"
-          ? "soldermask_bottom"
-          : undefined
-    const associatedSilkscreen =
-      foregroundLayer === "top"
-        ? "top_silkscreen"
-        : foregroundLayer === "bottom"
-          ? "bottom_silkscreen"
-          : undefined
-    const associatedNotes =
-      foregroundLayer === "top"
-        ? "top_notes"
-        : foregroundLayer === "bottom"
-          ? "bottom_notes"
-          : undefined
-    const associatedFabrication =
-      foregroundLayer === "top"
-        ? "top_fabrication"
-        : foregroundLayer === "bottom"
-          ? "bottom_fabrication"
-          : undefined
-    const associatedCourtyard =
-      foregroundLayer === "top"
-        ? "top_courtyard"
-        : foregroundLayer === "bottom"
-          ? "bottom_courtyard"
-          : undefined
-
-    const visibleLayers = new Set<string>([
-      foregroundLayer,
-      "drill",
-      "edge_cuts",
-      "other",
-      "board",
-      ...(associatedSoldermask ? [associatedSoldermask] : []),
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
-      ...(associatedNotes ? [associatedNotes] : []),
-      ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(associatedCourtyard ? [associatedCourtyard] : []),
-    ])
-
-    const layersToShiftToTop = [
-      foregroundLayer,
-      "edge_cuts",
-      ...(associatedSoldermask ? [associatedSoldermask] : []),
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
-      ...(associatedNotes ? [associatedNotes] : []),
-      ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(associatedCourtyard ? [associatedCourtyard] : []),
+    const fixedTopLayers = ["edge_cuts", "drill"]
+    const baseOrder = [
+      ...DEFAULT_DRAW_ORDER.filter((layer) => layer in canvasLayerMap),
+      ...Object.keys(canvasLayerMap).filter(
+        (layer) => !DEFAULT_DRAW_ORDER.includes(layer as any),
+      ),
     ]
-
+    const activeLayerExists = foregroundLayer in canvasLayerMap
     const order = [
-      ...DEFAULT_DRAW_ORDER.filter((l) => !layersToShiftToTop.includes(l)),
-      ...(foregroundLayer === "drill" ? [] : [foregroundLayer]),
-      ...(associatedSoldermask ? [associatedSoldermask] : []),
-      "edge_cuts",
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
-      ...(associatedNotes ? [associatedNotes] : []),
-      ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(associatedCourtyard ? [associatedCourtyard] : []),
-      "drill",
+      ...baseOrder.filter(
+        (layer) => layer !== foregroundLayer && !fixedTopLayers.includes(layer),
+      ),
+      ...(activeLayerExists ? [foregroundLayer] : []),
+      ...fixedTopLayers.filter(
+        (layer) => layer in canvasLayerMap && layer !== foregroundLayer,
+      ),
     ]
-
-    for (const canvas of Object.values(canvasLayerMap)) {
-      canvas.style.opacity = "0"
-      canvas.style.visibility = "hidden"
-    }
 
     order.forEach((layer, i) => {
       const canvas = canvasLayerMap[layer]
       if (!canvas) return
 
       canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
-      canvas.style.opacity = visibleLayers.has(layer) ? "1" : "0"
-      canvas.style.visibility = visibleLayers.has(layer) ? "visible" : "hidden"
+      canvas.style.opacity = "1"
+      canvas.style.visibility = "visible"
     })
   }
 
