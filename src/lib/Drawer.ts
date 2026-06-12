@@ -497,7 +497,8 @@ export class Drawer {
    * Iterate over each canvas and set the z index based on the layer order, but
    * always render the foreground layer on top.
    *
-   * Also: Set the opacity of every non-foreground layer to 0.5
+   * Also: Hide non-active layers while keeping board/drill/edge cuts and
+   * same-side helper layers visible.
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
@@ -532,7 +533,7 @@ export class Drawer {
           ? "bottom_courtyard"
           : undefined
 
-    const opaqueLayers = new Set<string>([
+    const visibleLayers = new Set<string>([
       foregroundLayer,
       "drill",
       "edge_cuts",
@@ -567,12 +568,18 @@ export class Drawer {
       "drill",
     ]
 
+    for (const canvas of Object.values(canvasLayerMap)) {
+      canvas.style.opacity = "0"
+      canvas.style.visibility = "hidden"
+    }
+
     order.forEach((layer, i) => {
       const canvas = canvasLayerMap[layer]
       if (!canvas) return
 
       canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
-      canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
+      canvas.style.opacity = visibleLayers.has(layer) ? "1" : "0"
+      canvas.style.visibility = visibleLayers.has(layer) ? "visible" : "hidden"
     })
   }
 
