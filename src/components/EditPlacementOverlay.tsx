@@ -1,19 +1,31 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
-import { useGlobalStore } from "../global-store"
-import { useEffect, useRef, useState } from "react"
+import { type State, useGlobalStore } from "../global-store"
+import type { ReactNode } from "react"
+import { useMemo, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
+import { shouldPickPcbComponent } from "../lib/should-pick-pcb-component"
 
 interface Props {
   transform?: Matrix
-  children: any
+  children: ReactNode
   soup: AnyCircuitElement[]
   disabled?: boolean
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
 }
+
+const HIT_PADDING_PX = 10
+
+const selectPlacementPickerState = (state: State) => ({
+  inMoveFootprintMode: state.in_move_footprint_mode,
+  selectedLayer: state.selected_layer,
+  showTopComponents: state.is_showing_top_components,
+  showBottomComponents: state.is_showing_bottom_components,
+  setIsMovingComponent: state.setIsMovingComponent,
+})
 
 const isInsideOf = (
   pcb_component: PcbComponent,
@@ -52,11 +64,30 @@ export const EditPlacementOverlay = ({
     edit_event_id: string
   } | null>(null)
   const isPcbComponentActive = activePcbComponentId !== null
-  const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
-  const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
-  const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
+  const scale = Math.abs(transform.a)
+  const {
+    inMoveFootprintMode,
+    selectedLayer,
+    showTopComponents,
+    showBottomComponents,
+    setIsMovingComponent,
+  } = useGlobalStore(selectPlacementPickerState)
 
-  const disabled = disabledProp || !in_move_footprint_mode
+  const pickablePcbComponents = useMemo(
+    () =>
+      soup.filter(
+        (element): element is PcbComponent =>
+          element.type === "pcb_component" &&
+          shouldPickPcbComponent(element, {
+            selectedLayer,
+            showTopComponents,
+            showBottomComponents,
+          }),
+      ),
+    [soup, selectedLayer, showTopComponents, showBottomComponents],
+  )
+
+  const disabled = disabledProp || !inMoveFootprintMode
 
   return (
     <div
@@ -72,13 +103,11 @@ export const EditPlacementOverlay = ({
         const y = e.clientY - rect.top
         if (Number.isNaN(x) || Number.isNaN(y)) return
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+        const hitPadding = HIT_PADDING_PX / scale
 
         let foundActiveComponent = false
-        for (const e of soup) {
-          if (
-            e.type === "pcb_component" &&
-            isInsideOf(e, rwMousePoint, 10 / transform.a)
-          ) {
+        for (const e of pickablePcbComponents) {
+          if (isInsideOf(e, rwMousePoint, hitPadding)) {
             cancelPanDrag()
             setActivePcbComponent(e.pcb_component_id)
             foundActiveComponent = true
@@ -139,7 +168,7 @@ export const EditPlacementOverlay = ({
           },
         })
       }}
-      onMouseUp={(e) => {
+      onMouseUp={() => {
         if (!activePcbComponentId) return
         setActivePcbComponent(null)
         setIsMovingComponent(false)
@@ -154,33 +183,31 @@ export const EditPlacementOverlay = ({
     >
       {children}
       {!disabled &&
-        soup
-          .filter((e): e is PcbComponent => e.type === "pcb_component")
-          .map((e) => {
-            if (!e?.center) return null
-            const projectedCenter = applyToPoint(transform, e.center)
+        pickablePcbComponents.map((e) => {
+          if (!e?.center) return null
+          const projectedCenter = applyToPoint(transform, e.center)
 
-            return (
-              <div
-                key={e.pcb_component_id}
-                style={{
-                  position: "absolute",
-                  pointerEvents: "none",
-                  // b/c of transform, this is actually center not left/top
-                  left: projectedCenter.x,
-                  top: projectedCenter.y,
-                  width: e.width * transform.a + 20,
-                  height: e.height * transform.a + 20,
-                  transform: "translate(-50%, -50%)",
-                  background:
-                    isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
-                      ? "rgba(255, 0, 0, 0.2)"
-                      : "",
-                }}
-              />
-            )
-          })}
+          return (
+            <div
+              key={e.pcb_component_id}
+              style={{
+                position: "absolute",
+                pointerEvents: "none",
+                // b/c of transform, this is actually center not left/top
+                left: projectedCenter.x,
+                top: projectedCenter.y,
+                width: e.width * scale + HIT_PADDING_PX * 2,
+                height: e.height * scale + HIT_PADDING_PX * 2,
+                transform: "translate(-50%, -50%)",
+                background:
+                  isPcbComponentActive &&
+                  activePcbComponentId === e.pcb_component_id
+                    ? "rgba(255, 0, 0, 0.2)"
+                    : "",
+              }}
+            />
+          )
+        })}
     </div>
   )
 }
