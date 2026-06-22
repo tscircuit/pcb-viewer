@@ -36,6 +36,10 @@ export interface State {
   is_showing_solder_mask: boolean
   is_showing_silkscreen: boolean
   is_showing_fabrication_notes: boolean
+  // These defaults keep component picking aligned with any host app that
+  // exposes side-specific component visibility toggles.
+  is_showing_top_components: boolean
+  is_showing_bottom_components: boolean
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
@@ -62,9 +66,11 @@ export interface State {
   setFocusedErrorId: (errorId: string | null) => void
 }
 
-export type StateProps = {
-  [key in keyof State]: State[key] extends boolean ? boolean : never
-}
+type BooleanStateKeys<T> = {
+  [Key in keyof T]: Exclude<T[Key], undefined> extends boolean ? Key : never
+}[keyof T]
+
+export type StateProps = Pick<State, BooleanStateKeys<State>>
 
 const DEFAULT_PCB_GROUP_VIEW_MODE: "all" | "named_only" =
   process.env.NODE_ENV !== "production" ? "named_only" : "all"
@@ -119,6 +125,8 @@ export const createStore = (
           STORAGE_KEYS.IS_SHOWING_FABRICATION_NOTES,
           false,
         ),
+        is_showing_top_components: true,
+        is_showing_bottom_components: true,
         pcb_group_view_mode: disablePcbGroups
           ? "all"
           : (getStoredString(
