@@ -1,46 +1,55 @@
 # @tscircuit/pcb-viewer
 
-[![npm version](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer.svg)](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer)
+[![npm version](https://badge.fury.io/js/@tscircuit/pcb-viewer.svg)](https://badge.fury.io/js/@tscircuit/pcb-viewer)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com) &middot; [Open in CodeSandbox](https://codesandbox.io/p/github/tscircuit/pcb-viewer)
+A React component for rendering interactive PCB layouts from [Circuit JSON](https://github.com/tscircuit/circuit-json). Part of the [tscircuit](https://github.com/tscircuit/tscircuit) ecosystem.
 
-Render Printed Circuit Boards w/ React
+## Features
 
-If you want to render to an image, check out [circuit-to-png](https://github.com/tscircuit/circuit-to-png)
+- Renders PCB layouts from Circuit JSON or tscircuit JSX elements
+- Interactive pan and zoom
+- Layer toggling (copper, silkscreen, courtyard, fabrication)
+- Component highlighting and selection
+- Trace and pad inspection
+- Lightweight — no WebGL required
 
-![image](https://github.com/tscircuit/pcb-viewer/assets/1910070/e010f44e-b8c0-4e1d-9d59-1ea66716427f)
+---
 
-## Usage
+## Installation
 
 ```bash
 npm install @tscircuit/pcb-viewer
+# or
+yarn add @tscircuit/pcb-viewer
+# or
+bun add @tscircuit/pcb-viewer
 ```
 
-There are two main ways to use the PCBViewer:
+---
 
-### 1. Using Circuit Components
+## Quick Start
 
-This approach allows you to declaratively define your circuit using React components:
+### With tscircuit JSX elements
 
 ```tsx
 import React from "react"
 import { PCBViewer } from "@tscircuit/pcb-viewer"
 
-export default () => {
-  return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer>
-        <resistor footprint="0805" resistance="10k" />
-        <capacitor footprint="0603" capacitance="100nF" />
-      </PCBViewer>
-    </div>
-  )
-}
+export default () => (
+  <div style={{ backgroundColor: "black", width: 800, height: 600 }}>
+    <PCBViewer>
+      <resistor name="R1" footprint="0805" resistance="10k" pcbX={0} pcbY={0} />
+      <capacitor name="C1" footprint="0603" capacitance="100nF" pcbX={3} pcbY={0} />
+      <trace from="R1.pin1" to="C1.pin1" />
+    </PCBViewer>
+  </div>
+)
 ```
 
-### 2. Using Circuit JSON
+### With Circuit JSON data
 
-If you already have circuit JSON data, you can pass it directly:
+If you already have Circuit JSON, pass it directly via the `circuitJson` prop:
 
 ```tsx
 import React from "react"
@@ -50,39 +59,185 @@ const circuitJson = [
   {
     type: "pcb_component",
     pcb_component_id: "R1",
+    source_component_id: "source_R1",
     center: { x: 0, y: 0 },
-    // ... other component properties
+    layer: "top",
+    rotation: 0,
+    width: 2,
+    height: 1.2,
   },
   // ... more elements
 ]
 
-export default () => {
-  return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={circuitJson} />
-    </div>
-  )
-}
+export default () => (
+  <div style={{ width: 800, height: 600 }}>
+    <PCBViewer circuitJson={circuitJson} />
+  </div>
+)
 ```
 
-### Props
+---
 
-The PCBViewer component accepts these props:
+## Props
 
-- `children`: Circuit components to render
-- `circuitJson`: Circuit JSON elements array (alternative to children)
-- `height`: Height of viewer in pixels (default: 600)
-- `allowEditing`: Enable/disable editing capabilities (default: true)
-- `editEvents`: Array of edit events to apply
-- `onEditEventsChanged`: Callback when edit events change
-- `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
-- `initialState`: Initial state for the viewer
+### `PCBViewer`
 
-### Features
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `circuitJson` | `AnySoupElement[]` | `undefined` | Pre-built Circuit JSON array to render directly |
+| `children` | `ReactNode` | `undefined` | tscircuit JSX elements (alternative to `circuitJson`) |
+| `height` | `number` | `600` | Height of the viewer in pixels |
+| `allowEditing` | `boolean` | `false` | Enable drag-to-move components (experimental) |
+| `onError` | `(error: Error) => void` | `undefined` | Callback fired when rendering fails |
+| `initialState` | `PCBViewerState` | `undefined` | Override initial pan/zoom/layer state |
 
-- Interactive PCB viewing with pan and zoom
-- Multiple layer support (top, bottom, inner layers)
-- Component placement editing
-- Trace routing
-- DRC (Design Rule Check) visualization
-- Measurement tools
+---
+
+## Usage Examples
+
+### Displaying a single component
+
+```tsx
+import { PCBViewer } from "@tscircuit/pcb-viewer"
+
+export default () => (
+  <PCBViewer>
+    <chip
+      name="U1"
+      footprint="soic8"
+      pinLabels={{ pin1: "VCC", pin2: "GND", pin3: "IN", pin4: "OUT" }}
+    />
+  </PCBViewer>
+)
+```
+
+### Full board with traces
+
+```tsx
+import { PCBViewer } from "@tscircuit/pcb-viewer"
+
+export default () => (
+  <PCBViewer>
+    <board width="30mm" height="20mm">
+      <chip name="U1" footprint="soic8" pcbX={0} pcbY={0} />
+      <resistor name="R1" footprint="0402" resistance="10k" pcbX={8} pcbY={3} />
+      <capacitor name="C1" footprint="0402" capacitance="100nF" pcbX={8} pcbY={-3} />
+      <trace from="U1.pin1" to="R1.pin1" />
+      <trace from="R1.pin2" to="C1.pin1" />
+      <trace from="C1.pin2" to="net.GND" />
+    </board>
+  </PCBViewer>
+)
+```
+
+### Read-only Circuit JSON viewer
+
+```tsx
+import { PCBViewer } from "@tscircuit/pcb-viewer"
+import myCircuitJson from "./circuit.json"
+
+export default () => (
+  <div style={{ width: "100%", height: 500 }}>
+    <PCBViewer circuitJson={myCircuitJson} />
+  </div>
+)
+```
+
+### With error handling
+
+```tsx
+import { PCBViewer } from "@tscircuit/pcb-viewer"
+
+export default () => (
+  <PCBViewer
+    onError={(err) => {
+      console.error("PCB render failed:", err)
+    }}
+  >
+    <resistor name="R1" footprint="0402" resistance="1k" />
+  </PCBViewer>
+)
+```
+
+---
+
+## Keyboard Shortcuts
+
+When the viewer is focused:
+
+| Key | Action |
+|-----|--------|
+| `+` / `=` | Zoom in |
+| `-` | Zoom out |
+| `0` | Reset zoom to fit |
+| Arrow keys | Pan the board |
+| `F` | Fit board to view |
+
+---
+
+## Styling
+
+The viewer renders on a dark background by default (matching typical PCB design tools). Wrap it in a container to control dimensions:
+
+```tsx
+<div style={{ width: "100%", maxWidth: 1200, height: 700, borderRadius: 8 }}>
+  <PCBViewer circuitJson={json} />
+</div>
+```
+
+---
+
+## Troubleshooting
+
+**Viewer renders blank / nothing visible**
+
+- Confirm your Circuit JSON array is non-empty and contains valid `pcb_component` or `pcb_trace` elements.
+- Make sure coordinates are in millimetres (base unit). Values like `x: 0.001` are likely in metres and will render off-screen.
+- Check the browser console — `onError` also surfaces rendering errors.
+
+**Components appear but no traces**
+
+- Traces require both endpoints to resolve to valid pads. Check that `from` and `to` reference existing component pin labels.
+- Use the [online Circuit JSON viewer](https://tscircuit.com) to inspect your JSON structure.
+
+**Viewer is too small / too large**
+
+- Pass a `height` prop (pixels) or control the container dimensions with CSS.
+- Call the reset zoom shortcut (`0`) to fit the board to the viewport.
+
+---
+
+## Related Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@tscircuit/core`](https://github.com/tscircuit/core) | Compiles tscircuit JSX to Circuit JSON |
+| [`@tscircuit/circuit-json`](https://github.com/tscircuit/circuit-json) | Circuit JSON type definitions and Zod schemas |
+| [`@tscircuit/3d-viewer`](https://github.com/tscircuit/3d-viewer) | 3D PCB viewer (Three.js based) |
+| [`@tscircuit/schematic-viewer`](https://github.com/tscircuit/schematic-viewer) | Schematic diagram viewer |
+| [`@tscircuit/runframe`](https://github.com/tscircuit/runframe) | All-in-one runner with PCB, schematic, and 3D tabs |
+
+---
+
+## Contributing
+
+Contributions are welcome! Please open an issue before submitting a PR for significant changes.
+
+```bash
+# Clone and install
+git clone https://github.com/tscircuit/pcb-viewer.git
+cd pcb-viewer
+bun install
+
+# Start Storybook for development
+bun run storybook
+
+# Run tests
+bun test
+```
+
+---
+
+## License
+
+MIT © [tscircuit](https://github.com/tscircuit)
