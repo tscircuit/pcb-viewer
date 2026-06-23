@@ -9,6 +9,8 @@ export const STORAGE_KEYS = {
   IS_SHOWING_SOLDER_MASK: "pcb_viewer_is_showing_solder_mask",
   IS_SHOWING_FABRICATION_NOTES: "pcb_viewer_is_showing_fabrication_notes",
   IS_SHOWING_SILKSCREEN: "pcb_viewer_is_showing_silkscreen",
+  IS_SHOWING_TOP_COMPONENTS: "pcb_viewer_is_showing_top_components",
+  IS_SHOWING_BOTTOM_COMPONENTS: "pcb_viewer_is_showing_bottom_components",
 } as const
 
 export const getStoredBoolean = (
