@@ -1,6 +1,7 @@
 import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import { drawCopperPourElementsForLayer } from "lib/draw-copper-pour"
+import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
 import { drawFabricationNoteElementsForLayer } from "lib/draw-fabrication-note"
 import { drawGrid } from "lib/draw-grid"
 import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
@@ -14,12 +15,15 @@ import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
-import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
+import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
-import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
 import type { GridConfig, Primitive } from "lib/types"
-import React, { useEffect, useRef } from "react"
+import {
+  filterElementsByVisibility,
+  getHiddenPcbComponentIds,
+} from "lib/util/component-visibility"
+import React, { useEffect, useMemo, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
@@ -77,6 +81,30 @@ export const CanvasPrimitiveRenderer = ({
   )
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
+  const isShowingTopComponents = useGlobalStore(
+    (s) => s.is_showing_top_components,
+  )
+  const isShowingBottomComponents = useGlobalStore(
+    (s) => s.is_showing_bottom_components,
+  )
+
+  // Hide pcb_components whose layer is toggled off. Through-hole
+  // components (any pcb_component that owns at least one
+  // pcb_plated_hole) stay visible regardless — they exist on both
+  // sides of the board.
+  const hiddenPcbComponentIds = useMemo(
+    () =>
+      getHiddenPcbComponentIds(
+        elements,
+        isShowingTopComponents,
+        isShowingBottomComponents,
+      ),
+    [elements, isShowingTopComponents, isShowingBottomComponents],
+  )
+  const visibleElements = useMemo(
+    () => filterElementsByVisibility(elements, hiddenPcbComponentIds),
+    [elements, hiddenPcbComponentIds],
+  )
 
   useEffect(() => {
     if (!canvasRefs.current) return
@@ -111,6 +139,13 @@ export const CanvasPrimitiveRenderer = ({
       .filter((p) => p._element?.type !== "pcb_via")
       .filter((p) => p._element?.type !== "pcb_trace")
       .filter((p) => p._element?.type !== "pcb_copper_text")
+      .filter((p) => {
+        const parentId = (p as any)._parent_pcb_component?.pcb_component_id as
+          | string
+          | undefined
+        if (!parentId) return true
+        return !hiddenPcbComponentIds.has(parentId)
+      })
 
     drawPrimitives(drawer, filteredPrimitives)
 
@@ -155,7 +190,7 @@ export const CanvasPrimitiveRenderer = ({
         if (!canvas) continue
         drawPcbCopperTextElementsForLayer({
           canvas,
-          elements,
+          elements: visibleElements,
           layers: [copperLayer],
           realToCanvasMat: transform,
         })
@@ -199,7 +234,7 @@ export const CanvasPrimitiveRenderer = ({
         if (!canvas) continue
         drawPcbSmtPadElementsForLayer({
           canvas,
-          elements,
+          elements: visibleElements,
           layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
@@ -239,7 +274,7 @@ export const CanvasPrimitiveRenderer = ({
         if (topSoldermaskCanvas && soldermaskLayer === "top") {
           drawSoldermaskElementsForLayer({
             canvas: topSoldermaskCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["top_soldermask"],
             realToCanvasMat: transform,
             drawSoldermaskTop,
@@ -252,7 +287,7 @@ export const CanvasPrimitiveRenderer = ({
         if (bottomSoldermaskCanvas && soldermaskLayer === "bottom") {
           drawSoldermaskElementsForLayer({
             canvas: bottomSoldermaskCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["bottom_soldermask"],
             realToCanvasMat: transform,
             drawSoldermaskTop,
@@ -279,7 +314,7 @@ export const CanvasPrimitiveRenderer = ({
         if (topSilkscreenCanvas) {
           drawSilkscreenElementsForLayer({
             canvas: topSilkscreenCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["top_silkscreen"],
             realToCanvasMat: transform,
           })
@@ -289,7 +324,7 @@ export const CanvasPrimitiveRenderer = ({
         if (bottomSilkscreenCanvas) {
           drawSilkscreenElementsForLayer({
             canvas: bottomSilkscreenCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["bottom_silkscreen"],
             realToCanvasMat: transform,
           })
@@ -302,7 +337,7 @@ export const CanvasPrimitiveRenderer = ({
         if (topFabCanvas) {
           drawFabricationNoteElementsForLayer({
             canvas: topFabCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["top_fabrication_note"],
             realToCanvasMat: transform,
           })
@@ -313,7 +348,7 @@ export const CanvasPrimitiveRenderer = ({
         if (bottomFabCanvas) {
           drawFabricationNoteElementsForLayer({
             canvas: bottomFabCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["bottom_fabrication_note"],
             realToCanvasMat: transform,
           })
@@ -348,7 +383,7 @@ export const CanvasPrimitiveRenderer = ({
         if (topCourtyardCanvas) {
           drawCourtyardElementsForLayer({
             canvas: topCourtyardCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["top_courtyard" as PcbRenderLayer],
             realToCanvasMat: transform,
           })
@@ -359,7 +394,7 @@ export const CanvasPrimitiveRenderer = ({
         if (bottomCourtyardCanvas) {
           drawCourtyardElementsForLayer({
             canvas: bottomCourtyardCanvas,
-            elements,
+            elements: visibleElements,
             layers: ["bottom_courtyard" as PcbRenderLayer],
             realToCanvasMat: transform,
           })
@@ -417,6 +452,8 @@ export const CanvasPrimitiveRenderer = ({
   }, [
     primitives,
     elements,
+    visibleElements,
+    hiddenPcbComponentIds,
     transform,
     selectedLayer,
     isShowingSolderMask,
