@@ -1,25 +1,27 @@
+import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
+import { filterElementsByComponentSideVisibility } from "lib/filter-elements-by-component-side-visibility"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
-import { findErrorElementById, getErrorId } from "lib/util/get-error-id"
 import {
   buildErrorPreviewElementIndexes,
   createTransformForBounds,
   getErrorPreviewBounds,
   getRelatedIdsForError,
 } from "lib/util/error-preview"
+import { findErrorElementById, getErrorId } from "lib/util/get-error-id"
 import {
   animateTransform,
   cancelTransformAnimation,
 } from "lib/util/transform-animation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { type Matrix } from "transformation-matrix"
-import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
+import type { Matrix } from "transformation-matrix"
+import { useGlobalStore } from "../global-store"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
-import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
 import { type BoundsSelection, DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
@@ -28,8 +30,7 @@ import { MouseElementTracker } from "./MouseElementTracker"
 import { PcbGroupOverlay } from "./PcbGroupOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
-import type { ManualEditEvent } from "@tscircuit/props"
-import { useGlobalStore } from "../global-store"
+import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
@@ -49,20 +50,35 @@ export interface CanvasElementsRendererProps {
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
-  const { hoveredErrorId, focusedErrorId, isShowingCopperPours } =
-    useGlobalStore((state) => ({
-      hoveredErrorId: state.hovered_error_id,
-      focusedErrorId: state.focused_error_id,
-      isShowingCopperPours: state.is_showing_copper_pours,
-    }))
+  const {
+    hoveredErrorId,
+    focusedErrorId,
+    isShowingCopperPours,
+    isShowingTopComponents,
+    isShowingBottomComponents,
+  } = useGlobalStore((state) => ({
+    hoveredErrorId: state.hovered_error_id,
+    focusedErrorId: state.focused_error_id,
+    isShowingCopperPours: state.is_showing_copper_pours,
+    isShowingTopComponents: state.is_showing_top_components,
+    isShowingBottomComponents: state.is_showing_bottom_components,
+  }))
   const activeErrorId = focusedErrorId ?? hoveredErrorId
 
   const elementsToRender = useMemo(
     () =>
-      isShowingCopperPours
-        ? elements
-        : elements.filter((elm) => elm.type !== "pcb_copper_pour"),
-    [elements, isShowingCopperPours],
+      filterElementsByComponentSideVisibility(elements, {
+        showTopComponents: isShowingTopComponents,
+        showBottomComponents: isShowingBottomComponents,
+      }).filter(
+        (elm) => isShowingCopperPours || elm.type !== "pcb_copper_pour",
+      ),
+    [
+      elements,
+      isShowingBottomComponents,
+      isShowingCopperPours,
+      isShowingTopComponents,
+    ],
   )
 
   const [primitivesWithoutInteractionMetadata, connectivityMap] =
