@@ -17,7 +17,7 @@ export const KeepoutMultiLayerExample = () => {
     {
       type: "pcb_keepout",
       pcb_keepout_id: "pcb_keepout_top",
-      layer: ["top"],
+      layers: ["top"],
       shape: "rect",
       width: 3,
       height: 2,
@@ -26,7 +26,7 @@ export const KeepoutMultiLayerExample = () => {
     {
       type: "pcb_keepout",
       pcb_keepout_id: "pcb_keepout_inner1",
-      layer: ["top"],
+      layers: ["top"],
       shape: "rect",
       width: 3,
       height: 2,
@@ -35,7 +35,7 @@ export const KeepoutMultiLayerExample = () => {
     {
       type: "pcb_keepout",
       pcb_keepout_id: "pcb_keepout_inner2",
-      layer: ["top"],
+      layers: ["top"],
       shape: "circle",
       radius: 1.5,
       center: { x: 3, y: 0 },
@@ -43,7 +43,7 @@ export const KeepoutMultiLayerExample = () => {
     {
       type: "pcb_keepout",
       pcb_keepout_id: "pcb_keepout_inner3",
-      layer: ["top"],
+      layers: ["top"],
       shape: "rect",
       width: 3,
       height: 2,
@@ -52,7 +52,7 @@ export const KeepoutMultiLayerExample = () => {
     {
       type: "pcb_keepout",
       pcb_keepout_id: "pcb_keepout_bottom",
-      layer: ["top"],
+      layers: ["top"],
       shape: "circle",
       radius: 1.5,
       center: { x: -9, y: -6 },
@@ -60,7 +60,7 @@ export const KeepoutMultiLayerExample = () => {
     {
       type: "pcb_keepout",
       pcb_keepout_id: "pcb_keepout_multi",
-      layer: ["top"],
+      layers: ["top"],
       shape: "rect",
       width: 2,
       height: 2,
