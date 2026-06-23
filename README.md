@@ -77,6 +77,8 @@ The PCBViewer component accepts these props:
 - `onEditEventsChanged`: Callback when edit events change
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `initialState`: Initial state for the viewer
+- `focusOnHover`: Focus the viewer when mouse enters, enabling keyboard shortcuts without clicking first (default: false)
+- `clickToInteractEnabled`: Require a click before pan/zoom interactions are enabled (default: false)
 
 ### Features
 
