@@ -53,7 +53,7 @@
     "@tscircuit/alphabet": "^0.0.23",
     "@tscircuit/math-utils": "^0.0.36",
     "@vitejs/plugin-react": "^5.0.2",
-    "circuit-json": "^0.0.421",
+    "circuit-json": "^0.0.446",
     "circuit-to-canvas": "^0.0.110",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
