@@ -7,6 +7,7 @@ import {
 import color from "color"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
+import { normalizeCopperRenderLayers } from "./copper-layers"
 import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
@@ -22,6 +23,8 @@ const HOVER_COLOR_MAP: PcbColorMap = {
     inner4: color(colors.board.copper.in4).lighten(0.5).toString(),
     inner5: color(colors.board.copper.in5).lighten(0.5).toString(),
     inner6: color(colors.board.copper.in6).lighten(0.5).toString(),
+    inner7: color(colors.board.copper.in7).lighten(0.5).toString(),
+    inner8: color(colors.board.copper.in8).lighten(0.5).toString(),
   },
 }
 
@@ -45,20 +48,10 @@ export function drawPcbSmtPadElementsForLayer({
   drawSoldermask?: boolean
 }) {
   // Filter SMT pads to only those on the specified layers
-  const smtPadElements = elements.filter(isPcbSmtPad).filter((element) => {
-    const elementLayer = element.layer
-    return layers.some((layer) => {
-      if (layer === "top_copper" && elementLayer === "top") return true
-      if (layer === "bottom_copper" && elementLayer === "bottom") return true
-      if (layer === "inner1_copper" && elementLayer === "inner1") return true
-      if (layer === "inner2_copper" && elementLayer === "inner2") return true
-      if (layer === "inner3_copper" && elementLayer === "inner3") return true
-      if (layer === "inner4_copper" && elementLayer === "inner4") return true
-      if (layer === "inner5_copper" && elementLayer === "inner5") return true
-      if (layer === "inner6_copper" && elementLayer === "inner6") return true
-      return false
-    })
-  })
+  const targetLayers = new Set(normalizeCopperRenderLayers(layers))
+  const smtPadElements = elements
+    .filter(isPcbSmtPad)
+    .filter((element) => targetLayers.has(element.layer))
 
   if (smtPadElements.length === 0) return
 

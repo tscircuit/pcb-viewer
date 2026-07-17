@@ -8,6 +8,7 @@ import color from "color"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
 import type { Primitive } from "./types"
+import { normalizeCopperRenderLayers } from "./copper-layers"
 
 // Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
@@ -22,17 +23,14 @@ const HOVER_COLOR_MAP: PcbColorMap = {
     inner4: color(colors.board.copper.in4).lighten(0.5).toString(),
     inner5: color(colors.board.copper.in5).lighten(0.5).toString(),
     inner6: color(colors.board.copper.in6).lighten(0.5).toString(),
+    inner7: color(colors.board.copper.in7).lighten(0.5).toString(),
+    inner8: color(colors.board.copper.in8).lighten(0.5).toString(),
   },
 }
 
 export function isPcbTrace(element: AnyCircuitElement): element is PcbTrace {
   return element.type === "pcb_trace"
 }
-
-const normalizeCopperLayers = (layers: PcbRenderLayer[]) =>
-  layers.map((layer) =>
-    layer.endsWith("_copper") ? layer.replace("_copper", "") : layer,
-  )
 
 export const filterTraceByLayers = (
   trace: PcbTrace,
@@ -82,7 +80,7 @@ export function drawPcbTraceElementsForLayer({
   realToCanvasMat: Matrix
   primitives?: Primitive[]
 }) {
-  const targetLayers = new Set(normalizeCopperLayers(layers))
+  const targetLayers = new Set(normalizeCopperRenderLayers(layers))
 
   const traceElements = elements
     .filter(isPcbTrace)

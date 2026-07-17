@@ -1,4 +1,4 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useEffect, useRef } from "react"
 import { useMeasure } from "react-use"
@@ -17,15 +17,7 @@ interface PcbComponent extends BaseCircuitElement {
   source_component_id: string
   center: { x: number; y: number }
   rotation: number
-  layer:
-    | "top"
-    | "bottom"
-    | "inner1"
-    | "inner2"
-    | "inner3"
-    | "inner4"
-    | "inner5"
-    | "inner6"
+  layer: LayerRef
   obstructs_within_bounds: boolean
 }
 

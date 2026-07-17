@@ -8,6 +8,7 @@ import {
 import { css } from "@emotion/css"
 import { type LayerRef } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
+import { getCopperLayerRefsFromElements } from "lib/copper-layers"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { useGlobalStore } from "../global-store"
 import packageJson from "../../package.json"
@@ -221,19 +222,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     }
   }, [])
 
-  // Find the PCB board to get the number of layers
-  const pcbBoard = elements?.find((el) => el.type === "pcb_board") as any
-  const numLayers = pcbBoard?.num_layers || 2
-
-  // Filter layers based on PCB layer count
-  const availableLayers =
-    numLayers <= 2
-      ? ["top", "bottom"]
-      : [
-          "top",
-          ...Array.from({ length: numLayers - 2 }, (_, i) => `inner${i + 1}`),
-          "bottom",
-        ]
+  const availableLayers = getCopperLayerRefsFromElements(elements ?? [])
 
   const processedLayers = availableLayers
 
@@ -265,6 +254,12 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     "8": availableLayers[7]
       ? () => selectLayer(availableLayers[7] as LayerRef)
       : () => {},
+    "9": availableLayers[8]
+      ? () => selectLayer(availableLayers[8] as LayerRef)
+      : () => {},
+    "0": availableLayers[9]
+      ? () => selectLayer(availableLayers[9] as LayerRef)
+      : () => {},
   }
 
   useHotKey("1", hotKeyCallbacks["1"], hotkeyBoundaryRef)
@@ -275,6 +270,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   useHotKey("6", hotKeyCallbacks["6"], hotkeyBoundaryRef)
   useHotKey("7", hotKeyCallbacks["7"], hotkeyBoundaryRef)
   useHotKey("8", hotKeyCallbacks["8"], hotkeyBoundaryRef)
+  useHotKey("9", hotKeyCallbacks["9"], hotkeyBoundaryRef)
+  useHotKey("0", hotKeyCallbacks["0"], hotkeyBoundaryRef)
 
   useLayoutEffect(() => {
     if (hasRunInitialMouseCheck.current) return

@@ -21,6 +21,8 @@ const HOVER_SOLDERMASK_COLOR_MAP: PcbColorMap = {
     inner4: color(colors.board.copper.in4).lighten(0.5).toString(),
     inner5: color(colors.board.copper.in5).lighten(0.5).toString(),
     inner6: color(colors.board.copper.in6).lighten(0.5).toString(),
+    inner7: color(colors.board.copper.in7).lighten(0.5).toString(),
+    inner8: color(colors.board.copper.in8).lighten(0.5).toString(),
   },
   soldermask: {
     ...DEFAULT_PCB_COLOR_MAP.soldermask,

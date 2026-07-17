@@ -73,12 +73,6 @@ export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
 
 export const DEFAULT_DRAW_ORDER = [
   "board",
-  "inner6",
-  "inner5",
-  "inner4",
-  "inner3",
-  "inner2",
-  "inner1",
   "bottom",
   "soldermask_bottom",
   "bottom_silkscreen",
@@ -501,6 +495,17 @@ export class Drawer {
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
+    const innerLayers = Object.keys(canvasLayerMap)
+      .filter((layer) => /^inner\d+$/.test(layer))
+      .sort(
+        (a, b) =>
+          Number(b.slice("inner".length)) - Number(a.slice("inner".length)),
+      )
+    const defaultDrawOrder = [
+      "board",
+      ...innerLayers,
+      ...DEFAULT_DRAW_ORDER.filter((layer) => layer !== "board"),
+    ]
     const associatedSoldermask =
       foregroundLayer === "top"
         ? "soldermask_top"
@@ -556,7 +561,7 @@ export class Drawer {
     ]
 
     const order = [
-      ...DEFAULT_DRAW_ORDER.filter((l) => !layersToShiftToTop.includes(l)),
+      ...defaultDrawOrder.filter((l) => !layersToShiftToTop.includes(l)),
       ...(foregroundLayer === "drill" ? [] : [foregroundLayer]),
       ...(associatedSoldermask ? [associatedSoldermask] : []),
       "edge_cuts",
