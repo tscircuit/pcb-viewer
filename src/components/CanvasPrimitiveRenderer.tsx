@@ -18,6 +18,11 @@ import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import { drawCourtyardElementsForLayer } from "lib/draw-courtyard"
+import {
+  getCopperLayerRefsFromElements,
+  getCopperRenderLayer,
+  getOrderedCanvasLayers,
+} from "lib/copper-layers"
 import type { GridConfig, Primitive } from "lib/types"
 import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
@@ -33,33 +38,6 @@ interface Props {
   width?: number
   height?: number
 }
-
-const orderedLayers = [
-  "board",
-  "bottom",
-  "soldermask_bottom",
-  "bottom_silkscreen",
-  "top",
-  "soldermask_top",
-  "soldermask_with_copper_bottom",
-  "soldermask_with_copper_top",
-  "top_fabrication",
-  "bottom_fabrication",
-  "inner1",
-  "inner2",
-  "inner3",
-  "inner4",
-  "inner5",
-  "inner6",
-  "drill",
-  "edge_cuts",
-  "bottom_notes",
-  "top_notes",
-  "top_silkscreen",
-  "top_courtyard",
-  "bottom_courtyard",
-  "other",
-]
 
 export const CanvasPrimitiveRenderer = ({
   primitives,
@@ -119,25 +97,15 @@ export const CanvasPrimitiveRenderer = ({
       // Draw plated holes using circuit-to-canvas (pads on copper layers, drills on drill layer)
       const topCanvas = canvasRefs.current.top
       const bottomCanvas = canvasRefs.current.bottom
-      const inner1Canvas = canvasRefs.current.inner1
-      const inner2Canvas = canvasRefs.current.inner2
-      const inner3Canvas = canvasRefs.current.inner3
-      const inner4Canvas = canvasRefs.current.inner4
-      const inner5Canvas = canvasRefs.current.inner5
-      const inner6Canvas = canvasRefs.current.inner6
       const copperLayers: Array<{
         canvas?: HTMLCanvasElement
+        layer: string
         copperLayer: PcbRenderLayer
-      }> = [
-        { canvas: topCanvas, copperLayer: "top_copper" },
-        { canvas: bottomCanvas, copperLayer: "bottom_copper" },
-        { canvas: inner1Canvas, copperLayer: "inner1_copper" },
-        { canvas: inner2Canvas, copperLayer: "inner2_copper" },
-        { canvas: inner3Canvas, copperLayer: "inner3_copper" },
-        { canvas: inner4Canvas, copperLayer: "inner4_copper" },
-        { canvas: inner5Canvas, copperLayer: "inner5_copper" },
-        { canvas: inner6Canvas, copperLayer: "inner6_copper" },
-      ]
+      }> = getCopperLayerRefsFromElements(elements).map((layer) => ({
+        canvas: canvasRefs.current[layer],
+        layer,
+        copperLayer: getCopperRenderLayer(layer),
+      }))
 
       // Draw PCB traces using circuit-to-canvas (on copper layers)
       for (const { canvas, copperLayer } of copperLayers) {
@@ -161,25 +129,16 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      if (topCanvas) {
+      for (const { canvas, copperLayer, layer } of copperLayers) {
+        if (!canvas) continue
         drawPlatedHolePads({
-          canvas: topCanvas,
+          canvas,
           elements,
-          layers: ["top_copper"],
+          layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPlatedHolePads({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
+          drawSoldermask:
+            isShowingSolderMask && (layer === "top" || layer === "bottom"),
         })
       }
 
@@ -208,25 +167,16 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw vias using circuit-to-canvas (on copper layers)
-      if (topCanvas) {
+      for (const { canvas, copperLayer, layer } of copperLayers) {
+        if (!canvas) continue
         drawPcbViaElementsForLayer({
-          canvas: topCanvas,
+          canvas,
           elements,
-          layers: ["top_copper"],
+          layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
-          drawSoldermask: isShowingSolderMask,
-        })
-      }
-
-      if (bottomCanvas) {
-        drawPcbViaElementsForLayer({
-          canvas: bottomCanvas,
-          elements,
-          layers: ["bottom_copper"],
-          realToCanvasMat: transform,
-          primitives,
-          drawSoldermask: isShowingSolderMask,
+          drawSoldermask:
+            isShowingSolderMask && (layer === "top" || layer === "bottom"),
         })
       }
 
@@ -444,7 +394,7 @@ export const CanvasPrimitiveRenderer = ({
         transform={transform!}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
-      {orderedLayers
+      {getOrderedCanvasLayers(elements)
         .filter((layer) => {
           if (!isShowingSolderMask && layer.includes("soldermask")) return false
           if (!isShowingSilkscreen && layer.includes("silkscreen")) return false
