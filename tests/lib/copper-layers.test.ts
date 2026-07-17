@@ -4,6 +4,7 @@ import {
   getCopperLayerRefsFromElements,
   getOrderedCanvasLayers,
 } from "../../src/lib/copper-layers"
+import { zIndexMap } from "../../src/lib/util/z-index-map"
 
 const tenLayerBoard = [
   {
@@ -33,4 +34,5 @@ test("creates canvases for every copper layer on a 10-layer board", () => {
   const orderedLayers = getOrderedCanvasLayers(tenLayerBoard)
   expect(orderedLayers).toContain("inner7")
   expect(orderedLayers).toContain("inner8")
+  expect(orderedLayers.length).toBeLessThanOrEqual(zIndexMap.topLayer)
 })
