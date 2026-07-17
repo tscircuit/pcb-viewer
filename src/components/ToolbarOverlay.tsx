@@ -222,7 +222,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     }
   }, [])
 
-  const availableLayers = getCopperLayerRefsFromElements(elements)
+  const availableLayers = getCopperLayerRefsFromElements(elements ?? [])
 
   const processedLayers = availableLayers
 

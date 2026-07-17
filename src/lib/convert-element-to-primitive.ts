@@ -92,11 +92,29 @@ export const convertElementToPrimitives = (
 
       if (element.route_thickness_mode === "interpolated") {
         // Prepare the stroke input
-        const strokeInput: Point[] = element.route.map((r) => ({
-          x: r.x,
-          y: r.y,
-          trace_width: r.route_type === "wire" ? r.width : 0.5,
-        }))
+        const strokeInput: Point[] = element.route.flatMap((routePoint) => {
+          if (routePoint.route_type === "through_pad") {
+            return [
+              {
+                ...routePoint.start,
+                trace_width: routePoint.width,
+              },
+              {
+                ...routePoint.end,
+                trace_width: routePoint.width,
+              },
+            ]
+          }
+
+          return [
+            {
+              x: routePoint.x,
+              y: routePoint.y,
+              trace_width:
+                routePoint.route_type === "wire" ? routePoint.width : 0.5,
+            },
+          ]
+        })
 
         // Use getExpandedStroke to generate the polygon points
         const expandedStroke = getExpandedStroke(strokeInput, 0.5) // Use 0.5 as default width
