@@ -8,7 +8,10 @@ import type { Matrix } from "transformation-matrix"
 
 const KEEPOUT_COLOR_MAP: PcbColorMap = {
   ...DEFAULT_PCB_COLOR_MAP,
-  keepout: "rgba(255, 255, 255, 0.25)",
+  keepout: {
+    top: "rgba(255, 255, 255, 0.25)",
+    bottom: "rgba(255, 255, 255, 0.25)",
+  },
 }
 
 export function isPcbKeepout(element: AnyCircuitElement) {
