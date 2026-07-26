@@ -182,16 +182,30 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       const primitiveIdsInMousedOverNet: string[] = []
       for (const primitive of primitivesHoveredOver) {
         if (primitive._element) {
-          const connectedPrimitivesList = connectivityMap.getNetConnectedToId(
-            "pcb_port_id" in primitive._element
-              ? primitive._element?.pcb_port_id!
-              : "pcb_trace_id" in primitive._element
-                ? primitive._element?.pcb_trace_id!
-                : "",
-          )
-          primitiveIdsInMousedOverNet.push(
-            ...connectivityMap.getIdsConnectedToNet(connectedPrimitivesList!),
-          )
+          let id = ""
+          if ("pcb_port_id" in primitive._element) {
+            id = primitive._element.pcb_port_id!
+          } else if ("pcb_trace_id" in primitive._element) {
+            id = primitive._element.pcb_trace_id!
+          } else if ("pcb_via_id" in primitive._element) {
+            id = primitive._element.pcb_via_id!
+          } else if ("pcb_smtpad_id" in primitive._element) {
+            id = primitive._element.pcb_smtpad_id!
+          } else if ("pcb_plated_hole_id" in primitive._element) {
+            id = primitive._element.pcb_plated_hole_id!
+          }
+
+          if (id) {
+            const connectedPrimitivesList =
+              connectivityMap.getNetConnectedToId(id)
+            if (connectedPrimitivesList) {
+              primitiveIdsInMousedOverNet.push(
+                ...connectivityMap.getIdsConnectedToNet(
+                  connectedPrimitivesList!,
+                ),
+              )
+            }
+          }
         }
       }
 
