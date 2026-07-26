@@ -1,6 +1,5 @@
-import { useMemo } from "react"
-import { createContext, useContext } from "react"
-import { createStore, type StateProps } from "../global-store"
+import { createContext, useContext, useMemo } from "react"
+import { type StateProps, createStore } from "../global-store"
 
 export const StoreContext = createContext(null)
 
@@ -15,7 +14,7 @@ export const ContextProviders = ({
 }) => {
   const store = useMemo(
     () => createStore(initialState, disablePcbGroups),
-    [disablePcbGroups],
+    [initialState, disablePcbGroups],
   )
 
   return (
