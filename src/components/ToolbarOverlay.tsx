@@ -430,6 +430,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           color: "red",
           display: "flex",
           flexWrap: "wrap",
+          maxWidth: "550px",
           gap: 4,
           fontSize: 12,
           fontFamily: "sans-serif",
@@ -536,7 +537,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               style={{
                 display: "flex",
                 alignItems: "center",
-                maxWidth: "450px",
                 gap: "4px",
               }}
             >
