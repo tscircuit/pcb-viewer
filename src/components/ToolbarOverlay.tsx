@@ -536,6 +536,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
               style={{
                 display: "flex",
                 alignItems: "center",
+                maxWidth: "550px"
                 gap: "4px",
               }}
             >
