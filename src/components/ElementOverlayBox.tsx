@@ -19,6 +19,8 @@ const containerStyle = {
   fontFamily: "sans-serif",
   fontSize: 12,
   textShadow: "0 0 2px black",
+  // Keep hover labels above copper/canvas layers (pads render on canvases)
+  zIndex: zIndexMap.elementOverlay,
 } as const
 
 export const getTextForHighlightedPrimitive = (

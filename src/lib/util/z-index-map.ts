@@ -1,5 +1,6 @@
 export const zIndexMap = {
-  elementOverlay: 40,
+  // Hover labels must sit above all copper/canvas planes so pad text stays readable
+  elementOverlay: 50,
   dimensionOverlay: 40,
   editTraceHintOverlay: 40,
   errorOverlay: 40,
