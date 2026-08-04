@@ -306,7 +306,7 @@ export const KeepoutRectExample = () => {
             {
               type: "pcb_keepout",
               pcb_keepout_id: "pcb_keepout_0",
-              layer: ["top"],
+              layers: ["top"],
               shape: "rect",
               width: 1,
               height: 1,
@@ -682,7 +682,7 @@ export const KeepoutCircleExample = () => {
             {
               type: "pcb_keepout",
               pcb_keepout_id: "pcb_keepout_0",
-              layer: ["top"],
+              layers: ["bottom"],
               shape: "circle",
               radius: 1,
               center: {
