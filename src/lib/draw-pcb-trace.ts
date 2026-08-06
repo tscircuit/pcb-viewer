@@ -114,13 +114,21 @@ export function drawPcbTraceElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, { layers })
+    drawer.drawElements(nonHighlightedElements, {
+      layers,
+      clipTracesInsideSameNetPours: true,
+      clipContextElements: elements,
+    })
   }
 
   if (highlightedElements.length > 0) {
     const highlightDrawer = new CircuitToCanvasDrawer(canvas)
     highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
     highlightDrawer.realToCanvasMat = realToCanvasMat
-    highlightDrawer.drawElements(highlightedElements, { layers })
+    highlightDrawer.drawElements(highlightedElements, {
+      layers,
+      clipTracesInsideSameNetPours: true,
+      clipContextElements: elements,
+    })
   }
 }
