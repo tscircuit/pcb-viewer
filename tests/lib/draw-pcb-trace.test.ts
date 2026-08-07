@@ -1,6 +1,9 @@
 import { describe, expect, it } from "bun:test"
 import type { PcbTrace } from "circuit-json"
-import { filterTraceByLayers } from "../../src/lib/draw-pcb-trace"
+import {
+  filterTraceByLayers,
+  showTraceSegmentsInsideHiddenCopperPours,
+} from "../../src/lib/draw-pcb-trace"
 
 describe("drawPcbTrace layer filtering", () => {
   it("keeps via separators so cross-layer runs do not get stitched together", () => {
@@ -65,5 +68,47 @@ describe("drawPcbTrace layer filtering", () => {
     } as PcbTrace
 
     expect(filterTraceByLayers(trace, new Set(["top"]))).toBeNull()
+  })
+
+  it("shows trace segments marked inside a copper pour when pours are hidden", () => {
+    const trace: PcbTrace = {
+      type: "pcb_trace",
+      pcb_trace_id: "trace_inside_hidden_pour",
+      route: [
+        {
+          route_type: "wire",
+          x: 0,
+          y: 0,
+          width: 0.15,
+          layer: "top",
+          copper_pour_id: "pcb_copper_pour_0",
+          is_inside_copper_pour: true,
+        },
+        {
+          route_type: "wire",
+          x: 1,
+          y: 0,
+          width: 0.15,
+          layer: "top",
+          copper_pour_id: "pcb_copper_pour_0",
+          is_inside_copper_pour: true,
+        },
+      ],
+    }
+
+    const visibleTrace = showTraceSegmentsInsideHiddenCopperPours(trace)
+
+    expect(visibleTrace.route).toEqual([
+      {
+        ...trace.route[0],
+        is_inside_copper_pour: false,
+      },
+      {
+        ...trace.route[1],
+        is_inside_copper_pour: false,
+      },
+    ])
+    expect(trace.route[0]).toHaveProperty("is_inside_copper_pour", true)
+    expect(trace.route[1]).toHaveProperty("is_inside_copper_pour", true)
   })
 })

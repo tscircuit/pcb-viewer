@@ -67,18 +67,39 @@ export const filterTraceByLayers = (
   }
 }
 
+export const showTraceSegmentsInsideHiddenCopperPours = (
+  trace: PcbTrace,
+): PcbTrace => ({
+  ...trace,
+  route: trace.route.map((routePoint) => {
+    if (
+      !("is_inside_copper_pour" in routePoint) ||
+      routePoint.is_inside_copper_pour !== true
+    ) {
+      return routePoint
+    }
+
+    return {
+      ...routePoint,
+      is_inside_copper_pour: false,
+    }
+  }),
+})
+
 export function drawPcbTraceElementsForLayer({
   canvas,
   elements,
   layers,
   realToCanvasMat,
   primitives,
+  showCopperPours,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
   primitives?: Primitive[]
+  showCopperPours: boolean
 }) {
   const targetLayers = new Set(normalizeCopperRenderLayers(layers))
 
@@ -86,6 +107,9 @@ export function drawPcbTraceElementsForLayer({
     .filter(isPcbTrace)
     .map((trace) => filterTraceByLayers(trace, targetLayers))
     .filter((trace): trace is PcbTrace => trace !== null)
+    .map((trace) =>
+      showCopperPours ? trace : showTraceSegmentsInsideHiddenCopperPours(trace),
+    )
 
   if (traceElements.length === 0) return
 
