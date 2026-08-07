@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test"
-import type { PcbTrace } from "circuit-json"
+import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 import {
   filterTraceByLayers,
+  getTraceClipContextElements,
   showTraceSegmentsInsideHiddenCopperPours,
 } from "../../src/lib/draw-pcb-trace"
 
@@ -106,5 +107,17 @@ describe("drawPcbTrace layer filtering", () => {
     }
     expect(trace.route[0]).toHaveProperty("is_inside_copper_pour", true)
     expect(trace.route[1]).toHaveProperty("is_inside_copper_pour", true)
+  })
+
+  it("disables geometric pour clipping when copper pours are hidden", () => {
+    const elements = [
+      {
+        type: "pcb_copper_pour",
+        pcb_copper_pour_id: "pcb_copper_pour_0",
+      },
+    ] as AnyCircuitElement[]
+
+    expect(getTraceClipContextElements(elements, true)).toBe(elements)
+    expect(getTraceClipContextElements(elements, false)).toEqual([])
   })
 })
