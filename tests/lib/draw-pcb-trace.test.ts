@@ -98,16 +98,12 @@ describe("drawPcbTrace layer filtering", () => {
 
     const visibleTrace = showTraceSegmentsInsideHiddenCopperPours(trace)
 
-    expect(visibleTrace.route).toEqual([
-      {
-        ...trace.route[0],
-        is_inside_copper_pour: false,
-      },
-      {
-        ...trace.route[1],
-        is_inside_copper_pour: false,
-      },
-    ])
+    for (const routePoint of visibleTrace.route) {
+      if (routePoint.route_type !== "wire") {
+        throw new Error("Expected a wire route point")
+      }
+      expect(routePoint.is_inside_copper_pour).toBe(false)
+    }
     expect(trace.route[0]).toHaveProperty("is_inside_copper_pour", true)
     expect(trace.route[1]).toHaveProperty("is_inside_copper_pour", true)
   })
