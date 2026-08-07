@@ -86,6 +86,11 @@ export const showTraceSegmentsInsideHiddenCopperPours = (
   }),
 })
 
+export const getTraceClipContextElements = (
+  elements: AnyCircuitElement[],
+  showCopperPours: boolean,
+): AnyCircuitElement[] => (showCopperPours ? elements : [])
+
 export function drawPcbTraceElementsForLayer({
   canvas,
   elements,
@@ -135,13 +140,20 @@ export function drawPcbTraceElementsForLayer({
     }
   }
 
+  // The trace renderer receives a filtered element list. Give it the full
+  // circuit only as clipping context while pours are visible; an empty list
+  // deliberately disables geometric clipping when pours are hidden.
+  const clipContextElements = getTraceClipContextElements(
+    elements,
+    showCopperPours,
+  )
+
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
     drawer.drawElements(nonHighlightedElements, {
       layers,
-      clipTracesInsideSameNetPours: true,
-      clipContextElements: elements,
+      clipContextElements,
     })
   }
 
@@ -151,8 +163,7 @@ export function drawPcbTraceElementsForLayer({
     highlightDrawer.realToCanvasMat = realToCanvasMat
     highlightDrawer.drawElements(highlightedElements, {
       layers,
-      clipTracesInsideSameNetPours: true,
-      clipContextElements: elements,
+      clipContextElements,
     })
   }
 }
