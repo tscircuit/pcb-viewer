@@ -1,4 +1,9 @@
-import type { AnyCircuitElement, PcbRenderLayer, PcbTrace } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  LayerRef,
+  PcbRenderLayer,
+  PcbTrace,
+} from "circuit-json"
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
@@ -7,8 +12,8 @@ import {
 import color from "color"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
-import type { Primitive } from "./types"
 import { normalizeCopperRenderLayers } from "./copper-layers"
+import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
@@ -91,10 +96,35 @@ export const getTraceClipContextElements = (
   showCopperPours: boolean,
 ): AnyCircuitElement[] => (showCopperPours ? elements : [])
 
+export const getHighlightedTraceElementIds = ({
+  primitives,
+  targetLayers,
+  selectedLayer,
+}: {
+  primitives: Primitive[]
+  targetLayers: Set<string>
+  selectedLayer: LayerRef
+}): Set<string> => {
+  const highlightedElementIds = new Set<string>()
+  if (!targetLayers.has(selectedLayer)) return highlightedElementIds
+
+  for (const primitive of primitives) {
+    if (
+      (primitive.is_mouse_over || primitive.is_in_highlighted_net) &&
+      primitive._element?.type === "pcb_trace"
+    ) {
+      highlightedElementIds.add(primitive._element.pcb_trace_id)
+    }
+  }
+
+  return highlightedElementIds
+}
+
 export function drawPcbTraceElementsForLayer({
   canvas,
   elements,
   layers,
+  selectedLayer,
   realToCanvasMat,
   primitives,
   showCopperPours,
@@ -102,6 +132,7 @@ export function drawPcbTraceElementsForLayer({
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
+  selectedLayer: LayerRef
   realToCanvasMat: Matrix
   primitives?: Primitive[]
   showCopperPours: boolean
@@ -118,17 +149,11 @@ export function drawPcbTraceElementsForLayer({
 
   if (traceElements.length === 0) return
 
-  const highlightedElementIds = new Set<string>()
-  if (primitives) {
-    for (const primitive of primitives) {
-      if (
-        (primitive.is_mouse_over || primitive.is_in_highlighted_net) &&
-        primitive._element?.type === "pcb_trace"
-      ) {
-        highlightedElementIds.add(primitive._element.pcb_trace_id)
-      }
-    }
-  }
+  const highlightedElementIds = getHighlightedTraceElementIds({
+    primitives: primitives ?? [],
+    targetLayers,
+    selectedLayer,
+  })
 
   const highlightedElements: PcbTrace[] = []
   const nonHighlightedElements: PcbTrace[] = []
