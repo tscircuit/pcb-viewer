@@ -3,17 +3,18 @@ import type { AnyCircuitElement } from "circuit-json"
 import { distance } from "circuit-json"
 import type { Primitive } from "lib/types"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
-import React, { useState, useMemo } from "react"
+import type React from "react"
+import { useMemo, useState } from "react"
 import { useMeasure } from "react-use"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, inverse } from "transformation-matrix"
-import { ElementOverlayBox } from "./ElementOverlayBox"
 import {
   BoardAnchorOffsetOverlay,
-  GroupAnchorOffsetOverlay,
   ComponentBoundingBoxOverlay,
+  GroupAnchorOffsetOverlay,
   PanelAnchorOffsetOverlay,
 } from "./AnchorOffsetOverlay"
+import { ElementOverlayBox } from "./ElementOverlayBox"
 
 const getPolygonBoundingBox = (
   points: ReadonlyArray<{ x: number; y: number }>,
@@ -216,6 +217,13 @@ export const MouseElementTracker = ({
         basePoint = boundingBox.center
         w = boundingBox.width
         h = boundingBox.height
+      } else if (primitive.pcb_drawing_type === "line") {
+        basePoint = {
+          x: (primitive.x1 + primitive.x2) / 2,
+          y: (primitive.y1 + primitive.y2) / 2,
+        }
+        w = Math.abs(primitive.x2 - primitive.x1)
+        h = Math.abs(primitive.y2 - primitive.y1)
       } else if ("x" in primitive && "y" in primitive) {
         basePoint = { x: primitive.x, y: primitive.y }
         w =
@@ -363,6 +371,7 @@ export const MouseElementTracker = ({
 }
 
 export type HighlightedPrimitive = {
+  _pcb_drawing_object_id: string
   x: number
   y: number
   w: number

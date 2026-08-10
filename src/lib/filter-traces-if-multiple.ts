@@ -1,5 +1,6 @@
-import { AnyCircuitElement } from "circuit-json"
-import { HighlightedPrimitive } from "../components/MouseElementTracker"
+import type { AnyCircuitElement } from "circuit-json"
+import type { HighlightedPrimitive } from "../components/MouseElementTracker"
+import { getAssociatedTraceName } from "./get-trace-overlay-text"
 
 export function filterTracesIfMultiple(filterTraces: {
   primitives: HighlightedPrimitive[]
@@ -27,20 +28,28 @@ export function filterTracesIfMultiple(filterTraces: {
   // Get non-trace primitives
   const nonTraces = primitives.filter((p) => p._element.type !== "pcb_trace")
 
-  // Find traces that have corresponding source traces with max_length
-  const tracesWithMaxLength = traces.filter((trace) =>
-    sourceTraces.some(
+  // Named traces and nets should always have a hover label, even when the
+  // viewer is configured to hide ordinary trace-length overlays.
+  const tracesWithPersistentOverlay = traces.filter((trace) => {
+    const hasMaxLength = sourceTraces.some(
       (sourceTrace) =>
-        trace._element.type === "pcb_trace" &&
         trace._element.source_trace_id === sourceTrace.source_trace_id &&
         sourceTrace.max_length !== undefined,
-    ),
-  )
+    )
 
-  // If not showing multiple traces length, return non-traces and traces with
-  // max length
+    return (
+      hasMaxLength ||
+      getAssociatedTraceName({
+        primitiveElement: trace._element,
+        elements,
+      }) !== null
+    )
+  })
+
+  // If not showing multiple trace lengths, keep only overlays that carry
+  // important metadata (a configured max length or a source name).
   if (!is_showing_multiple_traces_length) {
-    return [...nonTraces, ...tracesWithMaxLength]
+    return [...nonTraces, ...tracesWithPersistentOverlay]
   }
 
   // If multiple traces exist, return only the shortest one

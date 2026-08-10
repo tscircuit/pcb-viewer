@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react"
-import type { HighlightedPrimitive } from "./MouseElementTracker"
-import { useGlobalStore } from "../global-store"
-import { zIndexMap } from "lib/util/z-index-map"
 import type {
   AnyCircuitElement,
   PcbPlatedHoleOval,
   PcbSmtPadRotatedPill,
 } from "circuit-json"
-import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
 import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
+import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
+import { zIndexMap } from "lib/util/z-index-map"
+import React, { useEffect, useState } from "react"
+import { useGlobalStore } from "../global-store"
+import type { HighlightedPrimitive } from "./MouseElementTracker"
 
 const containerStyle = {
   position: "absolute",
@@ -177,7 +177,18 @@ export const HighlightedPrimitiveBoxWithText = ({
             whiteSpace: "nowrap",
           }}
         >
-          {overlayInfo.text}
+          {overlayInfo.text && <div>{overlayInfo.text}</div>}
+          {overlayInfo.name && (
+            <div
+              style={{
+                fontSize: "11px",
+                lineHeight: 1.2,
+                marginTop: overlayInfo.text ? "2px" : 0,
+              }}
+            >
+              {overlayInfo.name}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -278,9 +289,9 @@ export const ElementOverlayBox = ({
   return (
     <div style={containerStyle}>
       {!is_moving_component &&
-        primitives.map((primitive, i) => (
+        primitives.map((primitive) => (
           <HighlightedPrimitiveBoxWithText
-            key={i}
+            key={primitive._pcb_drawing_object_id}
             primitive={primitive}
             mousePos={mousePos}
             elements={elements}
