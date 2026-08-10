@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test"
 import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 import {
   filterTraceByLayers,
+  getHighlightedTraceElementIds,
   getTraceClipContextElements,
   showTraceSegmentsInsideHiddenCopperPours,
 } from "../../src/lib/draw-pcb-trace"
@@ -119,5 +120,40 @@ describe("drawPcbTrace layer filtering", () => {
 
     expect(getTraceClipContextElements(elements, true)).toBe(elements)
     expect(getTraceClipContextElements(elements, false)).toEqual([])
+  })
+
+  it("only highlights traces on the selected layer", () => {
+    const trace: PcbTrace = {
+      type: "pcb_trace",
+      pcb_trace_id: "trace1",
+      route: [],
+    }
+    const highlightedPrimitive = {
+      _pcb_drawing_object_id: "line_0",
+      _element: trace,
+      pcb_drawing_type: "line",
+      x1: 0,
+      y1: 0,
+      x2: 1,
+      y2: 0,
+      width: 0.15,
+      layer: "top",
+      is_mouse_over: true,
+    } as const
+
+    expect(
+      getHighlightedTraceElementIds({
+        primitives: [highlightedPrimitive],
+        targetLayers: new Set(["top"]),
+        selectedLayer: "top",
+      }),
+    ).toEqual(new Set(["trace1"]))
+    expect(
+      getHighlightedTraceElementIds({
+        primitives: [highlightedPrimitive],
+        targetLayers: new Set(["bottom"]),
+        selectedLayer: "top",
+      }),
+    ).toEqual(new Set())
   })
 })

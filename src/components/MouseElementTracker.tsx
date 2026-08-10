@@ -1,10 +1,10 @@
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import { distance } from "circuit-json"
 import type { Primitive } from "lib/types"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import type React from "react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMeasure } from "react-use"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, inverse } from "transformation-matrix"
@@ -68,15 +68,22 @@ const isPointInsidePolygon = (
   return isInside
 }
 
-const getPrimitivesUnderPoint = (
+export const getPrimitivesUnderPoint = (
   primitives: Primitive[],
   rwPoint: { x: number; y: number },
   transform: Matrix,
+  selectedLayer: LayerRef,
 ): Primitive[] => {
   const newMousedPrimitives: Primitive[] = []
 
   for (const primitive of primitives) {
     if (!primitive._element) continue
+    if (
+      primitive._element.type === "pcb_trace" &&
+      primitive.layer !== selectedLayer
+    ) {
+      continue
+    }
 
     // Handle PCB traces
     if ("x1" in primitive && primitive._element?.type === "pcb_trace") {
@@ -176,17 +183,24 @@ export const MouseElementTracker = ({
   children,
   transform,
   primitives,
+  selectedLayer,
   onMouseHoverOverPrimitives,
 }: {
   elements: AnyCircuitElement[]
   children: React.ReactNode
   transform?: Matrix
   primitives: Primitive[]
+  selectedLayer: LayerRef
   onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void
 }) => {
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
+
+  useEffect(() => {
+    setMousedPrimitives([])
+    onMouseHoverOverPrimitives([])
+  }, [selectedLayer, onMouseHoverOverPrimitives])
 
   const highlightedPrimitives = useMemo(() => {
     const highlightedPrimitives: HighlightedPrimitive[] = []
@@ -291,6 +305,7 @@ export const MouseElementTracker = ({
       primitives,
       rwPoint,
       transform,
+      selectedLayer,
     )
 
     if (
