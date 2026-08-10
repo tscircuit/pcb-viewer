@@ -54,6 +54,7 @@ export const CanvasPrimitiveRenderer = ({
   const isShowingFabricationNotes = useGlobalStore(
     (s) => s.is_showing_fabrication_notes,
   )
+  const isShowingPcbNotes = useGlobalStore((s) => s.is_showing_pcb_notes)
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
@@ -272,26 +273,28 @@ export const CanvasPrimitiveRenderer = ({
         }
       }
 
-      // Draw bottom notes
-      const bottomNotesCanvas = canvasRefs.current.bottom_notes
-      if (bottomNotesCanvas) {
-        drawPcbNoteElementsForLayer({
-          canvas: bottomNotesCanvas,
-          elements,
-          layers: ["bottom_user_note"],
-          realToCanvasMat: transform,
-        })
-      }
+      if (isShowingPcbNotes) {
+        // Draw bottom notes
+        const bottomNotesCanvas = canvasRefs.current.bottom_notes
+        if (bottomNotesCanvas) {
+          drawPcbNoteElementsForLayer({
+            canvas: bottomNotesCanvas,
+            elements,
+            layers: ["bottom_user_note"],
+            realToCanvasMat: transform,
+          })
+        }
 
-      // Draw top notes
-      const topNotesCanvas = canvasRefs.current.top_notes
-      if (topNotesCanvas) {
-        drawPcbNoteElementsForLayer({
-          canvas: topNotesCanvas,
-          elements,
-          layers: ["top_user_note"],
-          realToCanvasMat: transform,
-        })
+        // Draw top notes
+        const topNotesCanvas = canvasRefs.current.top_notes
+        if (topNotesCanvas) {
+          drawPcbNoteElementsForLayer({
+            canvas: topNotesCanvas,
+            elements,
+            layers: ["top_user_note"],
+            realToCanvasMat: transform,
+          })
+        }
       }
 
       // Draw top courtyard
@@ -374,6 +377,7 @@ export const CanvasPrimitiveRenderer = ({
     isShowingCopperPours,
     isShowingSolderMask,
     isShowingFabricationNotes,
+    isShowingPcbNotes,
     isShowingCourtyards,
     isShowingSilkscreen,
   ])

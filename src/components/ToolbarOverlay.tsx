@@ -156,6 +156,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingSolderMask,
     setIsShowingSilkscreen,
     setIsShowingFabricationNotes,
+    setIsShowingPcbNotes,
     setPcbGroupViewMode,
     setHoveredErrorId,
     setFocusedErrorId,
@@ -180,6 +181,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_solder_mask: s.is_showing_solder_mask,
       is_showing_silkscreen: s.is_showing_silkscreen,
       is_showing_fabrication_notes: s.is_showing_fabrication_notes,
+      is_showing_pcb_notes: s.is_showing_pcb_notes,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setEditMode: s.setEditMode,
@@ -194,6 +196,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingSolderMask: s.setIsShowingSolderMask,
     setIsShowingSilkscreen: s.setIsShowingSilkscreen,
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
+    setIsShowingPcbNotes: s.setIsShowingPcbNotes,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
     setFocusedErrorId: s.setFocusedErrorId,
@@ -616,6 +619,13 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                     setIsShowingFabricationNotes(
                       !viewSettings.is_showing_fabrication_notes,
                     )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show PCB Notes"
+                  checked={viewSettings.is_showing_pcb_notes}
+                  onClick={() => {
+                    setIsShowingPcbNotes(!viewSettings.is_showing_pcb_notes)
                   }}
                 />
                 <CheckboxMenuItem
