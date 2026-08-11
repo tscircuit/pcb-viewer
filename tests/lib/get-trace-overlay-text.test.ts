@@ -30,6 +30,94 @@ describe("trace hover labels", () => {
     ).toEqual({ text: "", name: "GND", isOverLength: false })
   })
 
+  it("prefers a trace name over its pad selector display name", () => {
+    const pcbTrace = {
+      ...createPcbTrace("source_trace_0"),
+      trace_length: 1.25,
+    }
+    const elements = [
+      pcbTrace,
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_0",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
+        name: "clock",
+        display_name: "U1.1 to U2.2",
+      },
+    ] as AnyCircuitElement[]
+
+    expect(
+      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+    ).toEqual({ text: "1.250 mm", name: "clock", isOverLength: false })
+  })
+
+  it("falls back to the pad selector display name", () => {
+    const pcbTrace = createPcbTrace("source_trace_0")
+    const elements = [
+      pcbTrace,
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_0",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
+        display_name: "U1.1 to U2.2",
+      },
+    ] as AnyCircuitElement[]
+
+    expect(
+      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+    ).toEqual({
+      text: "",
+      name: "U1.1 to U2.2",
+      isOverLength: false,
+    })
+  })
+
+  it("only includes the unit when a trace length is present", () => {
+    const pcbTrace = createPcbTrace("source_trace_0")
+    const elements = [
+      pcbTrace,
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_0",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
+        max_length: 5,
+        display_name: "U1.1 to U2.2",
+      },
+    ] as AnyCircuitElement[]
+
+    expect(
+      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+    ).toEqual({
+      text: "",
+      name: "U1.1 to U2.2",
+      isOverLength: false,
+    })
+  })
+
+  it("formats measured and maximum trace lengths together", () => {
+    const pcbTrace = {
+      ...createPcbTrace("source_trace_0"),
+      trace_length: 5.125,
+    }
+    const elements = [
+      pcbTrace,
+      {
+        type: "source_trace",
+        source_trace_id: "source_trace_0",
+        connected_source_port_ids: [],
+        connected_source_net_ids: [],
+        max_length: 5,
+      },
+    ] as AnyCircuitElement[]
+
+    expect(
+      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+    ).toEqual({ text: "5.125 / 5 mm", name: null, isOverLength: true })
+  })
+
   it("uses the name of an associated source trace", () => {
     const pcbTrace = createPcbTrace("source_trace_0")
     const elements = [
