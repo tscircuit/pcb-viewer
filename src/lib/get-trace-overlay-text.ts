@@ -45,31 +45,25 @@ export function getTraceOverlayInfo({
   primitiveElement,
   elements,
 }: TraceTextContext): TraceOverlayInfo | null {
-  let text = primitiveElement.trace_length
-    ? `${primitiveElement.trace_length.toFixed(3)}`
-    : ""
-
   const trace = su(elements).source_trace.get(
     primitiveElement?.source_trace_id!,
   )
-  const name = getAssociatedTraceName({ primitiveElement, elements })
-  // Get connection information
-  if (trace?.display_name) {
-    // Add max length info
-    if (trace?.max_length) {
-      text += ` / ${trace.max_length}mm `
-    } else {
-      text += " mm "
-    }
-    text += `(${trace.display_name})`
-  }
+  const traceLength = primitiveElement.trace_length
+  const hasTraceLength = typeof traceLength === "number"
+  const maxLength = trace?.max_length
+  const text = hasTraceLength
+    ? `${traceLength.toFixed(3)}${
+        typeof maxLength === "number" ? ` / ${maxLength}` : ""
+      } mm`
+    : ""
+  const name =
+    getAssociatedTraceName({ primitiveElement, elements }) ??
+    getNonEmptyName(trace?.display_name)
 
   if (!text && !name) return null
 
   const isOverLength = Boolean(
-    primitiveElement.trace_length &&
-      trace?.max_length &&
-      primitiveElement.trace_length > trace.max_length,
+    hasTraceLength && typeof maxLength === "number" && traceLength > maxLength,
   )
 
   return {

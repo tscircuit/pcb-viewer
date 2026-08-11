@@ -148,18 +148,15 @@ export const HighlightedPrimitiveBoxWithText = ({
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
     if (!overlayInfo) return null
 
-    const yOffset = mousePos.y - 35
-
     return (
       <div
         style={{
           zIndex: zIndexMap.elementOverlay,
           position: "absolute",
-          left: mousePos.x,
-          top: yOffset,
+          left: mousePos.x + 12,
+          top: mousePos.y + 12,
           color,
           pointerEvents: "none",
-          transform: "translateX(-50%)",
         }}
       >
         <div
@@ -169,11 +166,11 @@ export const HighlightedPrimitiveBoxWithText = ({
             textShadow: "none",
             WebkitFontSmoothing: "antialiased",
             MozOsxFontSmoothing: "grayscale",
-            padding: "6px 6px",
-            borderRadius: "6px",
-            fontSize: "14px",
-            minWidth: "45px",
-            textAlign: "center",
+            padding: "4px 6px",
+            borderRadius: "4px",
+            fontSize: "11px",
+            lineHeight: 1.2,
+            textAlign: "left",
             whiteSpace: "nowrap",
           }}
         >
@@ -181,8 +178,6 @@ export const HighlightedPrimitiveBoxWithText = ({
           {overlayInfo.name && (
             <div
               style={{
-                fontSize: "11px",
-                lineHeight: 1.2,
                 marginTop: overlayInfo.text ? "2px" : 0,
               }}
             >
