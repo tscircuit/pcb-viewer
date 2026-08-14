@@ -116,7 +116,6 @@ export const CanvasPrimitiveRenderer = ({
           canvas,
           elements,
           layers: [copperLayer],
-          selectedLayer,
           realToCanvasMat: transform,
           primitives,
           showCopperPours: isShowingCopperPours,
