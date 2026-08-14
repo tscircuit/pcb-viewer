@@ -167,7 +167,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     selectLayer: s.selectLayer,
     editModes: {
       in_move_footprint_mode: s.in_move_footprint_mode,
-      in_draw_trace_mode: s.in_draw_trace_mode,
     },
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
@@ -338,10 +337,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setErrorsOpen(false)
   }, [])
 
-  const handleEditTraceToggle = useCallback(() => {
-    setEditMode(editModes.in_draw_trace_mode ? "off" : "draw_trace")
-  }, [editModes.in_draw_trace_mode, setEditMode])
-
   const handleMoveComponentToggle = useCallback(() => {
     setEditMode(editModes.in_move_footprint_mode ? "off" : "move_footprint")
   }, [editModes.in_move_footprint_mode, setEditMode])
@@ -484,16 +479,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           setHoveredErrorId={setHoveredErrorId}
           setFocusedErrorId={setFocusedErrorId}
         />
-        <ToolbarButton
-          isSmallScreen={isSmallScreen}
-          style={{}}
-          onClick={handleEditTraceToggle}
-        >
-          <div>
-            {editModes.in_draw_trace_mode ? "✖ " : ""}
-            Edit Traces
-          </div>
-        </ToolbarButton>
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
