@@ -23,7 +23,6 @@ import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import { type BoundsSelection, DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
-import { EditTraceHintOverlay } from "./EditTraceHintOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { MouseElementTracker } from "./MouseElementTracker"
 import { PcbGroupOverlay } from "./PcbGroupOverlay"
@@ -248,53 +247,44 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         onCreateEditEvent={props.onCreateEditEvent}
         onModifyEditEvent={props.onModifyEditEvent}
       >
-        <EditTraceHintOverlay
-          disabled={!props.allowEditing}
-          transform={transform}
-          soup={elements}
+        <DimensionOverlay
+          transform={transform!}
+          focusOnHover={props.focusOnHover}
+          primitives={primitivesWithoutInteractionMetadata}
+          onBoundsSelected={props.onBoundsSelected}
           cancelPanDrag={props.cancelPanDrag}
-          onCreateEditEvent={props.onCreateEditEvent as any}
-          onModifyEditEvent={props.onModifyEditEvent as any}
         >
-          <DimensionOverlay
-            transform={transform!}
-            focusOnHover={props.focusOnHover}
-            primitives={primitivesWithoutInteractionMetadata}
-            onBoundsSelected={props.onBoundsSelected}
-            cancelPanDrag={props.cancelPanDrag}
-          >
-            <ToolbarOverlay elements={elements}>
-              <ErrorOverlay transform={transform} elements={elements}>
-                <RatsNestOverlay transform={transform} soup={elements}>
-                  <PcbGroupOverlay
+          <ToolbarOverlay elements={elements}>
+            <ErrorOverlay transform={transform} elements={elements}>
+              <RatsNestOverlay transform={transform} soup={elements}>
+                <PcbGroupOverlay
+                  transform={transform}
+                  elements={elements}
+                  hoveredComponentIds={hoveredComponentIds}
+                >
+                  <DebugGraphicsOverlay
                     transform={transform}
-                    elements={elements}
-                    hoveredComponentIds={hoveredComponentIds}
+                    debugGraphics={props.debugGraphics}
                   >
-                    <DebugGraphicsOverlay
+                    <WarningGraphicsOverlay
                       transform={transform}
-                      debugGraphics={props.debugGraphics}
+                      elements={elements}
                     >
-                      <WarningGraphicsOverlay
+                      <CanvasPrimitiveRenderer
                         transform={transform}
-                        elements={elements}
-                      >
-                        <CanvasPrimitiveRenderer
-                          transform={transform}
-                          primitives={primitives}
-                          elements={elementsToRender}
-                          width={props.width}
-                          height={props.height}
-                          grid={props.grid}
-                        />
-                      </WarningGraphicsOverlay>
-                    </DebugGraphicsOverlay>
-                  </PcbGroupOverlay>
-                </RatsNestOverlay>
-              </ErrorOverlay>
-            </ToolbarOverlay>
-          </DimensionOverlay>
-        </EditTraceHintOverlay>
+                        primitives={primitives}
+                        elements={elementsToRender}
+                        width={props.width}
+                        height={props.height}
+                        grid={props.grid}
+                      />
+                    </WarningGraphicsOverlay>
+                  </DebugGraphicsOverlay>
+                </PcbGroupOverlay>
+              </RatsNestOverlay>
+            </ErrorOverlay>
+          </ToolbarOverlay>
+        </DimensionOverlay>
       </EditPlacementOverlay>
     </MouseElementTracker>
   )

@@ -1,7 +1,6 @@
 export const zIndexMap = {
   elementOverlay: 40,
   dimensionOverlay: 40,
-  editTraceHintOverlay: 40,
   errorOverlay: 40,
   pcbGroupOverlay: 35,
   ratsNestOverlay: 30,
