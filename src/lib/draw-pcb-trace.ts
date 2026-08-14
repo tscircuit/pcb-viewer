@@ -1,9 +1,4 @@
-import type {
-  AnyCircuitElement,
-  LayerRef,
-  PcbRenderLayer,
-  PcbTrace,
-} from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer, PcbTrace } from "circuit-json"
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
@@ -98,15 +93,10 @@ export const getTraceClipContextElements = (
 
 export const getHighlightedTraceElementIds = ({
   primitives,
-  targetLayers,
-  selectedLayer,
 }: {
   primitives: Primitive[]
-  targetLayers: Set<string>
-  selectedLayer: LayerRef
 }): Set<string> => {
   const highlightedElementIds = new Set<string>()
-  if (!targetLayers.has(selectedLayer)) return highlightedElementIds
 
   for (const primitive of primitives) {
     if (
@@ -124,7 +114,6 @@ export function drawPcbTraceElementsForLayer({
   canvas,
   elements,
   layers,
-  selectedLayer,
   realToCanvasMat,
   primitives,
   showCopperPours,
@@ -132,7 +121,6 @@ export function drawPcbTraceElementsForLayer({
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
-  selectedLayer: LayerRef
   realToCanvasMat: Matrix
   primitives?: Primitive[]
   showCopperPours: boolean
@@ -151,8 +139,6 @@ export function drawPcbTraceElementsForLayer({
 
   const highlightedElementIds = getHighlightedTraceElementIds({
     primitives: primitives ?? [],
-    targetLayers,
-    selectedLayer,
   })
 
   const highlightedElements: PcbTrace[] = []

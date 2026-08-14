@@ -122,7 +122,7 @@ describe("drawPcbTrace layer filtering", () => {
     expect(getTraceClipContextElements(elements, false)).toEqual([])
   })
 
-  it("only highlights traces on the selected layer", () => {
+  it("highlights a hovered trace on every rendered copper layer", () => {
     const trace: PcbTrace = {
       type: "pcb_trace",
       pcb_trace_id: "trace1",
@@ -144,16 +144,7 @@ describe("drawPcbTrace layer filtering", () => {
     expect(
       getHighlightedTraceElementIds({
         primitives: [highlightedPrimitive],
-        targetLayers: new Set(["top"]),
-        selectedLayer: "top",
       }),
     ).toEqual(new Set(["trace1"]))
-    expect(
-      getHighlightedTraceElementIds({
-        primitives: [highlightedPrimitive],
-        targetLayers: new Set(["bottom"]),
-        selectedLayer: "top",
-      }),
-    ).toEqual(new Set())
   })
 })
