@@ -142,9 +142,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsMouseOverContainer,
     selectedLayer,
     selectLayer,
-    editModes,
     viewSettings,
-    setEditMode,
     setIsShowingRatsNest,
     setIsShowingMultipleTracesLength,
     setIsShowingAutorouting,
@@ -165,10 +163,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsMouseOverContainer: s.setIsMouseOverContainer,
     selectedLayer: s.selected_layer,
     selectLayer: s.selectLayer,
-    editModes: {
-      in_move_footprint_mode: s.in_move_footprint_mode,
-      in_draw_trace_mode: s.in_draw_trace_mode,
-    },
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
@@ -184,7 +178,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_pcb_notes: s.is_showing_pcb_notes,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
-    setEditMode: s.setEditMode,
     setIsShowingRatsNest: s.setIsShowingRatsNest,
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
@@ -338,14 +331,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setErrorsOpen(false)
   }, [])
 
-  const handleEditTraceToggle = useCallback(() => {
-    setEditMode(editModes.in_draw_trace_mode ? "off" : "draw_trace")
-  }, [editModes.in_draw_trace_mode, setEditMode])
-
-  const handleMoveComponentToggle = useCallback(() => {
-    setEditMode(editModes.in_move_footprint_mode ? "off" : "move_footprint")
-  }, [editModes.in_move_footprint_mode, setEditMode])
-
   const handleRatsNestToggle = useCallback(() => {
     setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
   }, [viewSettings.is_showing_rats_nest, setIsShowingRatsNest])
@@ -484,26 +469,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           setHoveredErrorId={setHoveredErrorId}
           setFocusedErrorId={setFocusedErrorId}
         />
-        <ToolbarButton
-          isSmallScreen={isSmallScreen}
-          style={{}}
-          onClick={handleEditTraceToggle}
-        >
-          <div>
-            {editModes.in_draw_trace_mode ? "✖ " : ""}
-            Edit Traces
-          </div>
-        </ToolbarButton>
-        <ToolbarButton
-          isSmallScreen={isSmallScreen}
-          style={{}}
-          onClick={handleMoveComponentToggle}
-        >
-          <div>
-            {editModes.in_move_footprint_mode ? "✖ " : ""}
-            Move Components
-          </div>
-        </ToolbarButton>
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
