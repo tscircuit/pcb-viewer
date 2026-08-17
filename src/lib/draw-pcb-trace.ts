@@ -6,26 +6,18 @@ import {
 } from "circuit-to-canvas"
 import color from "color"
 import type { Matrix } from "transformation-matrix"
-import colors from "./colors"
 import { normalizeCopperRenderLayers } from "./copper-layers"
 import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
   ...DEFAULT_PCB_COLOR_MAP,
-  copper: {
-    ...DEFAULT_PCB_COLOR_MAP.copper,
-    top: color(colors.board.pad_front).lighten(0.5).toString(),
-    bottom: color(colors.board.pad_back).lighten(0.5).toString(),
-    inner1: color(colors.board.copper.in1).lighten(0.5).toString(),
-    inner2: color(colors.board.copper.in2).lighten(0.5).toString(),
-    inner3: color(colors.board.copper.in3).lighten(0.5).toString(),
-    inner4: color(colors.board.copper.in4).lighten(0.5).toString(),
-    inner5: color(colors.board.copper.in5).lighten(0.5).toString(),
-    inner6: color(colors.board.copper.in6).lighten(0.5).toString(),
-    inner7: color(colors.board.copper.in7).lighten(0.5).toString(),
-    inner8: color(colors.board.copper.in8).lighten(0.5).toString(),
-  },
+  copper: Object.fromEntries(
+    Object.entries(DEFAULT_PCB_COLOR_MAP.copper).map(([layer, layerColor]) => [
+      layer,
+      color(layerColor).lighten(0.5).toString(),
+    ]),
+  ) as PcbColorMap["copper"],
 }
 
 export function isPcbTrace(element: AnyCircuitElement): element is PcbTrace {
