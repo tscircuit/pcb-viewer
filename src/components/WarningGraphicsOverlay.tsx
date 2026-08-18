@@ -4,6 +4,11 @@ import { useEffect, useRef } from "react"
 import { useMeasure } from "react-use"
 import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import colors from "lib/colors"
+import {
+  getPcbWarningHighlightLabel,
+  isHighlightablePcbWarning,
+} from "lib/util/get-pcb-warning-highlight"
+import { useGlobalStore } from "../global-store"
 
 interface BaseCircuitElement {
   type: string
@@ -21,16 +26,6 @@ interface PcbComponent extends BaseCircuitElement {
   obstructs_within_bounds: boolean
 }
 
-interface PcbManualEditConflictWarning extends BaseCircuitElement {
-  type: "pcb_manual_edit_conflict_warning"
-  pcb_manual_edit_conflict_warning_id: string
-  message: string
-  pcb_component_id: string
-  subcircuit_id: string
-  source_component_id: string
-  warning_type: "pcb_manual_edit_conflict_warning"
-}
-
 interface Props {
   transform?: Matrix
   elements?: AnyCircuitElement[]
@@ -44,6 +39,9 @@ export const WarningGraphicsOverlay = ({
 }: Props) => {
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const isShowingDrcWarnings = useGlobalStore(
+    (state) => state.is_showing_drc_warnings,
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -60,10 +58,7 @@ export const WarningGraphicsOverlay = ({
       (el): el is PcbComponent => el.type === "pcb_component",
     ) as PcbComponent[]
 
-    const warnings = elements.filter(
-      (el): el is PcbManualEditConflictWarning =>
-        el.type === "pcb_manual_edit_conflict_warning",
-    ) as PcbManualEditConflictWarning[]
+    const warnings = elements.filter(isHighlightablePcbWarning)
 
     ctx.strokeStyle = colors.board.drc_warning
     ctx.lineWidth = 2
@@ -93,7 +88,7 @@ export const WarningGraphicsOverlay = ({
       ctx.rect(x, y, boxWidth, boxHeight)
       ctx.stroke()
 
-      const labelText = "Manual Edit Conflict"
+      const labelText = getPcbWarningHighlightLabel(warning)
       const labelPadding = 4
       const fontSize = Math.max(8, Math.min(12, 10 * Math.abs(transform.a)))
       ctx.font = `${fontSize}px sans-serif`
@@ -113,7 +108,18 @@ export const WarningGraphicsOverlay = ({
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelWidth / 2, labelY + labelHeight / 2)
     })
-  }, [elements, transform, width, height])
+  }, [elements, transform, width, height, isShowingDrcWarnings])
+
+  if (!isShowingDrcWarnings) {
+    return (
+      <div
+        ref={containerRef}
+        style={{ position: "relative", width: "100%", height: "100%" }}
+      >
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div
