@@ -7,6 +7,7 @@ import {
   getPcbWarningHighlightLabel,
   isHighlightablePcbWarning,
 } from "../../src/lib/util/get-pcb-warning-highlight"
+import { createConnectorOrientationWarningCircuit } from "../../src/examples/2026/connector-orientation-warnings.fixture"
 
 describe("PCB warning highlights", () => {
   test("recognizes connector orientation warnings and describes the fix", () => {
@@ -39,5 +40,56 @@ describe("PCB warning highlights", () => {
 
     expect(isHighlightablePcbWarning(warning)).toBe(true)
     expect(getPcbWarningHighlightLabel(warning)).toBe("Manual Edit Conflict")
+  })
+
+  test("the viewer fixture generates warnings from real connector placement", async () => {
+    const circuit = createConnectorOrientationWarningCircuit()
+
+    await circuit.renderUntilSettled()
+
+    const circuitJson = circuit.getCircuitJson()
+    const warnings = circuitJson.filter(
+      (element): element is PcbConnectorNotInAccessibleOrientationWarning =>
+        element.type === "pcb_connector_not_in_accessible_orientation_warning",
+    )
+
+    const warningsByComponentName = Object.fromEntries(
+      warnings.map((warning) => {
+        const sourceComponent = circuitJson.find(
+          (element) =>
+            element.type === "source_component" &&
+            element.source_component_id === warning.source_component_id &&
+            "name" in element,
+        )
+
+        return [
+          sourceComponent && "name" in sourceComponent
+            ? sourceComponent.name
+            : "unknown",
+          warning,
+        ]
+      }),
+    )
+
+    expect(warnings).toHaveLength(2)
+    expect(warningsByComponentName.J_CAM).toMatchObject({
+      facing_direction: "y-",
+      recommended_facing_direction: "y+",
+    })
+    expect(warningsByComponentName.J_SD).toMatchObject({
+      facing_direction: "y+",
+      recommended_facing_direction: "y-",
+    })
+
+    for (const warning of warnings) {
+      const pcbComponent = circuitJson.find(
+        (element) =>
+          element.type === "pcb_component" &&
+          element.pcb_component_id === warning.pcb_component_id,
+      )
+      expect(pcbComponent).toMatchObject({
+        cable_insertion_center: expect.any(Object),
+      })
+    }
   })
 })
