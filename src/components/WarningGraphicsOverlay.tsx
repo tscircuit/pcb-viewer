@@ -8,6 +8,7 @@ import {
   getPcbWarningHighlightLabel,
   isHighlightablePcbWarning,
 } from "lib/util/get-pcb-warning-highlight"
+import { useGlobalStore } from "../global-store"
 
 interface BaseCircuitElement {
   type: string
@@ -38,6 +39,9 @@ export const WarningGraphicsOverlay = ({
 }: Props) => {
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const isShowingDrcWarnings = useGlobalStore(
+    (state) => state.is_showing_drc_warnings,
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -104,7 +108,18 @@ export const WarningGraphicsOverlay = ({
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelWidth / 2, labelY + labelHeight / 2)
     })
-  }, [elements, transform, width, height])
+  }, [elements, transform, width, height, isShowingDrcWarnings])
+
+  if (!isShowingDrcWarnings) {
+    return (
+      <div
+        ref={containerRef}
+        style={{ position: "relative", width: "100%", height: "100%" }}
+      >
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div

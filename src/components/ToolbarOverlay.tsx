@@ -147,6 +147,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingMultipleTracesLength,
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
+    setIsShowingDrcWarnings,
     setIsShowingCopperPours,
     setIsShowingCourtyards,
     setIsShowingPcbGroups,
@@ -168,6 +169,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
+      is_showing_drc_warnings: s.is_showing_drc_warnings,
       is_showing_copper_pours: s.is_showing_copper_pours,
       is_showing_courtyards: s.is_showing_courtyards,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
@@ -182,6 +184,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
+    setIsShowingDrcWarnings: s.setIsShowingDrcWarnings,
     setIsShowingCopperPours: s.setIsShowingCopperPours,
     setIsShowingCourtyards: s.setIsShowingCourtyards,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
@@ -545,6 +548,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={viewSettings.is_showing_drc_errors}
                   onClick={() => {
                     setIsShowingDrcErrors(!viewSettings.is_showing_drc_errors)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show DRC Warnings"
+                  checked={viewSettings.is_showing_drc_warnings}
+                  onClick={() => {
+                    setIsShowingDrcWarnings(
+                      !viewSettings.is_showing_drc_warnings,
+                    )
                   }}
                 />
                 <CheckboxMenuItem
