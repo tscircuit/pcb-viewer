@@ -1,4 +1,5 @@
 import { Circuit } from "@tscircuit/core"
+import type { AnyCircuitElement } from "circuit-json"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import { PCBViewer } from "../../PCBViewer"
 
@@ -131,7 +132,9 @@ export const createConnectorOrientationWarningCircuit = () => {
 
 const ConnectorOrientationWarnings = () => {
   const circuit = useMemo(createConnectorOrientationWarningCircuit, [])
-  const [circuitJson, setCircuitJson] = useState(circuit.getCircuitJson())
+  const [circuitJson, setCircuitJson] = useState<AnyCircuitElement[] | null>(
+    null,
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -147,7 +150,7 @@ const ConnectorOrientationWarnings = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={circuitJson} />
+      {circuitJson && <PCBViewer circuitJson={circuitJson} />}
     </div>
   )
 }
