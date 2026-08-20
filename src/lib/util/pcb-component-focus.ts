@@ -3,12 +3,12 @@ import type { AnyCircuitElement, LayerRef, PcbComponent } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { createTransformForBounds } from "./error-preview"
 
-export interface PcbComponentFocusRequest {
+export type PcbComponentFocusRequest = {
   pcbComponentId: string
   requestId: number
 }
 
-export interface PcbComponentFocusTarget {
+export type PcbComponentFocusTarget = {
   component: PcbComponent
   bounds: {
     minX: number
@@ -17,6 +17,11 @@ export interface PcbComponentFocusTarget {
     maxY: number
   }
   layer: LayerRef
+}
+
+export type AppliedPcbComponentFocusRequest = {
+  requestId: number
+  circuitJsonKey: string
 }
 
 export const PCB_COMPONENT_FOCUS_PADDING_MM = 1.75
@@ -79,6 +84,22 @@ export const shouldHandlePcbComponentFocusRequest = (
   request: PcbComponentFocusRequest | undefined,
   lastHandledRequestId: number | null,
 ) => Boolean(request && request.requestId !== lastHandledRequestId)
+
+export const isPcbComponentFocusAppliedToCircuit = ({
+  request,
+  appliedRequest,
+  circuitJsonKey,
+}: {
+  request: PcbComponentFocusRequest | undefined
+  appliedRequest: AppliedPcbComponentFocusRequest | null
+  circuitJsonKey: string
+}) =>
+  Boolean(
+    request &&
+      appliedRequest &&
+      request.requestId === appliedRequest.requestId &&
+      circuitJsonKey === appliedRequest.circuitJsonKey,
+  )
 
 export const shouldResetBoardTransform = ({
   initialRenderCompleted,

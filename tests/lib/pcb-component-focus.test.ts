@@ -4,6 +4,7 @@ import { applyToPoint } from "transformation-matrix"
 import {
   createPcbComponentFocusTransform,
   getPcbComponentFocusTarget,
+  isPcbComponentFocusAppliedToCircuit,
   PCB_COMPONENT_FOCUS_MAX_SCALE,
   shouldHandlePcbComponentFocusRequest,
   shouldResetBoardTransform,
@@ -81,7 +82,7 @@ test("component focus covers the complete footprint and centers it with padding"
   expect(paddedBottomRight.y).toBeLessThan(600)
 })
 
-test("a new request ID retriggers focus for the same component", () => {
+test("new and interrupted requests trigger component focus", () => {
   const firstRequest = {
     pcbComponentId: "pcb_component_target",
     requestId: 1,
@@ -91,6 +92,47 @@ test("a new request ID retriggers focus for the same component", () => {
   expect(shouldHandlePcbComponentFocusRequest(firstRequest, null)).toBe(true)
   expect(shouldHandlePcbComponentFocusRequest(firstRequest, 1)).toBe(false)
   expect(shouldHandlePcbComponentFocusRequest(secondRequest, 1)).toBe(true)
+
+  const activeRequestIdAfterRendererRemount = null
+  expect(
+    shouldHandlePcbComponentFocusRequest(
+      firstRequest,
+      activeRequestIdAfterRendererRemount,
+    ),
+  ).toBe(true)
+})
+
+test("an applied focus request expires when Circuit JSON changes", () => {
+  const request = {
+    pcbComponentId: "pcb_component_target",
+    requestId: 1,
+  }
+  const appliedRequest = {
+    requestId: 1,
+    circuitJsonKey: "circuit-a",
+  }
+
+  expect(
+    isPcbComponentFocusAppliedToCircuit({
+      request,
+      appliedRequest,
+      circuitJsonKey: "circuit-a",
+    }),
+  ).toBe(true)
+  expect(
+    isPcbComponentFocusAppliedToCircuit({
+      request,
+      appliedRequest,
+      circuitJsonKey: "circuit-b",
+    }),
+  ).toBe(false)
+  expect(
+    isPcbComponentFocusAppliedToCircuit({
+      request: { ...request, requestId: 2 },
+      appliedRequest,
+      circuitJsonKey: "circuit-a",
+    }),
+  ).toBe(false)
 })
 
 test("invalid component IDs fail safely", () => {

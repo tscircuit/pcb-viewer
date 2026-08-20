@@ -21,6 +21,7 @@ import type { Matrix } from "transformation-matrix"
 import {
   createPcbComponentFocusTransform,
   getPcbComponentFocusTarget,
+  shouldHandlePcbComponentFocusRequest,
   type PcbComponentFocusRequest,
 } from "lib/util/pcb-component-focus"
 import { useGlobalStore } from "../global-store"
@@ -96,6 +97,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const [hoveredComponentIds, setHoveredComponentIds] = useState<string[]>([])
   const currentTransformRef = useRef<Matrix | null>(transform ?? null)
   const zoomAnimationFrameRef = useRef<number | null>(null)
+  const activePcbComponentFocusRequestIdRef = useRef<number | null>(null)
 
   const elementIndexes = useMemo(
     () => buildErrorPreviewElementIndexes(elements),
@@ -179,7 +181,26 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   useEffect(() => {
     const request = props.pcbComponentFocusRequest
-    if (!request || !props.width || !props.height || !props.setTransform) return
+    if (!request) {
+      if (activePcbComponentFocusRequestIdRef.current !== null) {
+        cancelTransformAnimation(zoomAnimationFrameRef.current)
+      }
+      activePcbComponentFocusRequestIdRef.current = null
+      return
+    }
+    if (focusedErrorId) {
+      activePcbComponentFocusRequestIdRef.current = null
+      return
+    }
+    if (!props.width || !props.height || !props.setTransform) return
+    if (
+      !shouldHandlePcbComponentFocusRequest(
+        request,
+        activePcbComponentFocusRequestIdRef.current,
+      )
+    ) {
+      return
+    }
 
     const target = getPcbComponentFocusTarget(elements, request.pcbComponentId)
     if (!target) {
@@ -190,6 +211,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     const startTransform = currentTransformRef.current ?? transform
     if (!startTransform) return
 
+    activePcbComponentFocusRequestIdRef.current = request.requestId
     selectLayer(target.layer)
     const targetTransform = createPcbComponentFocusTransform({
       target,
@@ -198,7 +220,6 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     })
 
     cancelTransformAnimation(zoomAnimationFrameRef.current)
-    props.onPcbComponentFocusHandled?.(request.requestId, true)
     animateTransform({
       startTransform,
       endTransform: targetTransform,
@@ -210,9 +231,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         currentTransformRef.current = nextTransform
         props.setTransform?.(nextTransform)
       },
+      onComplete: () => {
+        if (activePcbComponentFocusRequestIdRef.current !== request.requestId) {
+          return
+        }
+        props.onPcbComponentFocusHandled?.(request.requestId, true)
+      },
     })
   }, [
     elements,
+    focusedErrorId,
     props.height,
     props.onPcbComponentFocusHandled,
     props.pcbComponentFocusRequest,

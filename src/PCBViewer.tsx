@@ -17,6 +17,7 @@ import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import {
   getPcbComponentFocusTarget,
+  isPcbComponentFocusAppliedToCircuit,
   shouldHandlePcbComponentFocusRequest,
   shouldResetBoardTransform,
   type PcbComponentFocusRequest,
@@ -88,7 +89,10 @@ export const PCBViewer = ({
   const initialRenderCompleted = useRef(false)
   const previousBoardSizeKeyRef = useRef(boardSizeKey)
   const lastHandledFocusRequestIdRef = useRef<number | null>(null)
-  const lastAppliedFocusRequestIdRef = useRef<number | null>(null)
+  const lastAppliedFocusRequestRef = useRef<{
+    requestId: number
+    circuitJsonKey: string
+  } | null>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const circuitJsonKey = useMemo(
     () => calculateCircuitJsonKey(circuitJson),
@@ -136,16 +140,13 @@ export const PCBViewer = ({
     })
   }, [pcbElmsPreEdit, editEvents])
 
-  const pcbComponentFocusTarget = useMemo(
-    () =>
-      pcbComponentFocusRequest
-        ? getPcbComponentFocusTarget(
-            elements,
-            pcbComponentFocusRequest.pcbComponentId,
-          )
-        : null,
-    [elements, pcbComponentFocusRequest],
-  )
+  const pcbComponentFocusTarget = useMemo(() => {
+    if (!pcbComponentFocusRequest) return null
+    return getPcbComponentFocusTarget(
+      elements,
+      pcbComponentFocusRequest.pcbComponentId,
+    )
+  }, [elements, pcbComponentFocusRequest])
   const shouldHandleFocusRequest = shouldHandlePcbComponentFocusRequest(
     pcbComponentFocusRequest,
     lastHandledFocusRequestIdRef.current,
@@ -154,8 +155,11 @@ export const PCBViewer = ({
     pcbComponentFocusTarget &&
       pcbComponentFocusRequest &&
       (shouldHandleFocusRequest ||
-        lastAppliedFocusRequestIdRef.current ===
-          pcbComponentFocusRequest.requestId),
+        isPcbComponentFocusAppliedToCircuit({
+          request: pcbComponentFocusRequest,
+          appliedRequest: lastAppliedFocusRequestRef.current,
+          circuitJsonKey,
+        })),
   )
 
   useEffect(() => {
@@ -186,12 +190,19 @@ export const PCBViewer = ({
     (requestId: number, applied: boolean) => {
       lastHandledFocusRequestIdRef.current = requestId
       if (applied) {
-        lastAppliedFocusRequestIdRef.current = requestId
+        lastAppliedFocusRequestRef.current = {
+          requestId,
+          circuitJsonKey,
+        }
         initialRenderCompleted.current = true
       }
     },
-    [],
+    [circuitJsonKey],
   )
+  let pendingPcbComponentFocusRequest: PcbComponentFocusRequest | undefined
+  if (shouldHandleFocusRequest) {
+    pendingPcbComponentFocusRequest = pcbComponentFocusRequest
+  }
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
@@ -248,9 +259,7 @@ export const PCBViewer = ({
               },
             }}
             elements={elements as SourceTrace[]}
-            pcbComponentFocusRequest={
-              shouldHandleFocusRequest ? pcbComponentFocusRequest : undefined
-            }
+            pcbComponentFocusRequest={pendingPcbComponentFocusRequest}
             onPcbComponentFocusHandled={handlePcbComponentFocusHandled}
             debugGraphics={debugGraphics}
           />
