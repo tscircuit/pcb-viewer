@@ -1,4 +1,4 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import {
   getCopperLayerRefsFromElements,
@@ -97,11 +97,9 @@ export const CanvasPrimitiveRenderer = ({
     // Draw silkscreen elements using circuit-to-canvas
     if (transform) {
       // Draw plated holes using circuit-to-canvas (pads on copper layers, drills on drill layer)
-      const topCanvas = canvasRefs.current.top
-      const bottomCanvas = canvasRefs.current.bottom
       const copperLayers: Array<{
         canvas?: HTMLCanvasElement
-        layer: string
+        layer: LayerRef
         copperLayer: PcbRenderLayer
       }> = getCopperLayerRefsFromElements(elements).map((layer) => ({
         canvas: canvasRefs.current[layer],
@@ -352,17 +350,12 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw keepouts using circuit-to-canvas (on copper layers)
-      const keepoutLayers = [
-        { canvas: topCanvas, layer: "top" },
-        { canvas: bottomCanvas, layer: "bottom" },
-      ]
-
-      for (const { canvas, layer } of keepoutLayers) {
+      for (const { canvas, layer } of copperLayers) {
         if (!canvas) continue
         drawPcbKeepoutElementsForLayer({
           canvas,
           elements,
-          layers: [layer],
+          layer,
           realToCanvasMat: transform,
         })
       }
