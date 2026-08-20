@@ -18,6 +18,11 @@ import {
 } from "lib/util/transform-animation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
+import {
+  createPcbComponentFocusTransform,
+  getPcbComponentFocusTarget,
+  type PcbComponentFocusRequest,
+} from "lib/util/pcb-component-focus"
 import { useGlobalStore } from "../global-store"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
@@ -44,6 +49,8 @@ export interface CanvasElementsRendererProps {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  pcbComponentFocusRequest?: PcbComponentFocusRequest
+  onPcbComponentFocusHandled?: (requestId: number, applied: boolean) => void
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
@@ -53,11 +60,13 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     focusedErrorId,
     isShowingCopperPours,
     selectedLayer,
+    selectLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
     selectedLayer: state.selected_layer,
+    selectLayer: state.selectLayer,
   }))
   const activeErrorId = focusedErrorId ?? hoveredErrorId
 
@@ -166,6 +175,51 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     props.height,
     props.setTransform,
     props.width,
+  ])
+
+  useEffect(() => {
+    const request = props.pcbComponentFocusRequest
+    if (!request || !props.width || !props.height || !props.setTransform) return
+
+    const target = getPcbComponentFocusTarget(elements, request.pcbComponentId)
+    if (!target) {
+      props.onPcbComponentFocusHandled?.(request.requestId, false)
+      return
+    }
+
+    const startTransform = currentTransformRef.current ?? transform
+    if (!startTransform) return
+
+    selectLayer(target.layer)
+    const targetTransform = createPcbComponentFocusTransform({
+      target,
+      width: props.width,
+      height: props.height,
+    })
+
+    cancelTransformAnimation(zoomAnimationFrameRef.current)
+    props.onPcbComponentFocusHandled?.(request.requestId, true)
+    animateTransform({
+      startTransform,
+      endTransform: targetTransform,
+      durationMs: 420,
+      setAnimationFrameId: (animationFrameId) => {
+        zoomAnimationFrameRef.current = animationFrameId
+      },
+      onUpdate: (nextTransform) => {
+        currentTransformRef.current = nextTransform
+        props.setTransform?.(nextTransform)
+      },
+    })
+  }, [
+    elements,
+    props.height,
+    props.onPcbComponentFocusHandled,
+    props.pcbComponentFocusRequest,
+    props.setTransform,
+    props.width,
+    selectLayer,
+    transform,
   ])
 
   const primitives = useMemo(() => {
