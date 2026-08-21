@@ -1,34 +1,34 @@
-import type { AnyCircuitElement } from "circuit-json"
-import { su } from "@tscircuit/circuit-json-util"
-import type { Primitive } from "./types"
-import { type Point, getExpandedStroke } from "./util/expand-stroke"
-import { distance } from "circuit-json"
-import { convertSmtpadRect } from "./element-to-primitive-converters/convert-smtpad-rect"
-import { convertSmtpadCircle } from "./element-to-primitive-converters/convert-smtpad-circle"
-import { convertSmtpadPolygon } from "./element-to-primitive-converters/convert-smtpad-polygon"
+import type { AnyCircuitElement } from "circuit-json";
+import { su } from "@tscircuit/circuit-json-util";
+import type { Primitive } from "./types";
+import { type Point, getExpandedStroke } from "./util/expand-stroke";
+import { distance } from "circuit-json";
+import { convertSmtpadRect } from "./element-to-primitive-converters/convert-smtpad-rect";
+import { convertSmtpadCircle } from "./element-to-primitive-converters/convert-smtpad-circle";
+import { convertSmtpadPolygon } from "./element-to-primitive-converters/convert-smtpad-polygon";
 import {
   convertSmtpadPill,
   convertSmtpadRotatedPill,
-} from "./element-to-primitive-converters/convert-smtpad-pill"
+} from "./element-to-primitive-converters/convert-smtpad-pill";
 
-import { convertPcbCopperTextToPrimitive } from "./element-to-primitive/convert-pcb-copper-text-to-primitive"
+import { convertPcbCopperTextToPrimitive } from "./element-to-primitive/convert-pcb-copper-text-to-primitive";
 
 type MetaData = {
-  _parent_pcb_component?: any
-  _parent_source_component?: any
-  _source_port?: any
-}
+  _parent_pcb_component?: any;
+  _parent_source_component?: any;
+  _source_port?: any;
+};
 
-let globalPcbDrawingObjectCount = 0
+let globalPcbDrawingObjectCount = 0;
 
 export const getNewPcbDrawingObjectId = (prefix: string) =>
-  `${prefix}_${globalPcbDrawingObjectCount++}`
+  `${prefix}_${globalPcbDrawingObjectCount++}`;
 
 export const normalizePolygonPoints = (points: Point[] | undefined) =>
   (points ?? []).map((point) => ({
     x: distance.parse(point.x),
     y: distance.parse(point.y),
-  }))
+  }));
 
 export const convertElementToPrimitives = (
   element: AnyCircuitElement,
@@ -41,7 +41,7 @@ export const convertElementToPrimitives = (
             elm.type === "pcb_component" &&
             elm.pcb_component_id === element.pcb_component_id,
         )
-      : undefined
+      : undefined;
   const _parent_source_component =
     _parent_pcb_component && "source_component_id" in _parent_pcb_component
       ? allElements.find(
@@ -50,20 +50,20 @@ export const convertElementToPrimitives = (
             elm.source_component_id ===
               _parent_pcb_component.source_component_id,
         )
-      : undefined
+      : undefined;
 
   const _source_port_id =
     "source_port_id" in element
       ? element.source_port_id
       : "pcb_port_id" in element
         ? su(allElements).pcb_port.get(element.pcb_port_id!)?.source_port_id
-        : undefined
+        : undefined;
 
   const _source_port = _source_port_id
     ? allElements.find(
         (e) => e.type === "source_port" && e.source_port_id === _source_port_id,
       )
-    : undefined
+    : undefined;
 
   switch (element.type) {
     case "pcb_smtpad": {
@@ -71,24 +71,24 @@ export const convertElementToPrimitives = (
         _parent_pcb_component,
         _parent_source_component,
         _source_port,
-      }
+      };
 
       if (element.shape === "rect" || element.shape === "rotated_rect") {
-        return convertSmtpadRect(element, metadata)
+        return convertSmtpadRect(element, metadata);
       } else if (element.shape === "circle") {
-        return convertSmtpadCircle(element, metadata)
+        return convertSmtpadCircle(element, metadata);
       } else if (element.shape === "polygon") {
-        return convertSmtpadPolygon(element, metadata)
+        return convertSmtpadPolygon(element, metadata);
       } else if (element.shape === "pill") {
-        return convertSmtpadPill(element, metadata)
+        return convertSmtpadPill(element, metadata);
       } else if (element.shape === "rotated_pill") {
-        return convertSmtpadRotatedPill(element, metadata)
+        return convertSmtpadRotatedPill(element, metadata);
       }
-      return []
+      return [];
     }
 
     case "pcb_trace": {
-      const primitives: Primitive[] = []
+      const primitives: Primitive[] = [];
 
       if (element.route_thickness_mode === "interpolated") {
         // Prepare the stroke input
@@ -103,7 +103,7 @@ export const convertElementToPrimitives = (
                 ...routePoint.end,
                 trace_width: routePoint.width,
               },
-            ]
+            ];
           }
 
           return [
@@ -113,13 +113,13 @@ export const convertElementToPrimitives = (
               trace_width:
                 routePoint.route_type === "wire" ? routePoint.width : 0.5,
             },
-          ]
-        })
+          ];
+        });
 
         // Use getExpandedStroke to generate the polygon points
-        const expandedStroke = getExpandedStroke(strokeInput, 0.5) // Use 0.5 as default width
+        const expandedStroke = getExpandedStroke(strokeInput, 0.5); // Use 0.5 as default width
 
-        const layer = (element.route[0] as any).layer
+        const layer = (element.route[0] as any).layer;
 
         // Generate a single polygon primitive from the expanded stroke
         primitives.push({
@@ -128,7 +128,7 @@ export const convertElementToPrimitives = (
           pcb_drawing_type: "polygon",
           points: expandedStroke,
           layer, // same layer for all points
-        })
+        });
 
         // Add circles for vias
         element.route.forEach((r) => {
@@ -141,14 +141,14 @@ export const convertElementToPrimitives = (
               y: r.y,
               r: (r as any).outer_diameter / 2,
               layer: (r as any).from_layer,
-            })
+            });
           }
-        })
+        });
 
-        return primitives
+        return primitives;
       }
-      let prevX: number | null = null
-      let prevY: number | null = null
+      let prevX: number | null = null;
+      let prevY: number | null = null;
 
       for (const route of element.route) {
         if (route.route_type === "wire") {
@@ -164,38 +164,38 @@ export const convertElementToPrimitives = (
               width: route.width,
               squareCap: false,
               layer: route.layer,
-            })
+            });
           }
 
-          prevX = route.x
-          prevY = route.y
+          prevX = route.x;
+          prevY = route.y;
         }
       }
 
-      return primitives
+      return primitives;
     }
     // The builder currently outputs these as smtpads and holes, so pcb_via isn't
     // used, but that maybe should be changed
     case "pcb_via": {
-      const { x, y, outer_diameter, hole_diameter } = element
-      const from_layer = element.from_layer
-      const to_layer = element.to_layer
-      const layers = element.layers
+      const { x, y, outer_diameter, hole_diameter } = element;
+      const from_layer = element.from_layer;
+      const to_layer = element.to_layer;
+      const layers = element.layers;
 
       // Support both old format (from_layer/to_layer) and new format (layers array)
-      const copperLayers: string[] = []
+      const copperLayers: string[] = [];
       if (from_layer && to_layer) {
-        copperLayers.push(from_layer, to_layer)
+        copperLayers.push(from_layer, to_layer);
       } else if (layers && Array.isArray(layers)) {
-        copperLayers.push(...layers)
+        copperLayers.push(...layers);
       } else {
         // Default to top and bottom if no layer info
-        copperLayers.push("top", "bottom")
+        copperLayers.push("top", "bottom");
       }
 
       // Create the outer copper circles on the via layers
       // and the inner drill hole, similar to how pcb_plated_hole works
-      const primitives: Primitive[] = []
+      const primitives: Primitive[] = [];
 
       // Add outer copper circles for each layer
       for (const layer of copperLayers) {
@@ -209,7 +209,7 @@ export const convertElementToPrimitives = (
           _element: element,
           _parent_pcb_component,
           _parent_source_component,
-        })
+        });
       }
 
       // Add inner drill hole (drawn on top due to layer order)
@@ -221,14 +221,14 @@ export const convertElementToPrimitives = (
         r: hole_diameter / 2,
         layer: "drill",
         _element: element,
-      })
+      });
 
-      return primitives
+      return primitives;
     }
 
     case "pcb_plated_hole": {
       if (element.shape === "circle") {
-        const { x, y, hole_diameter, outer_diameter } = element
+        const { x, y, hole_diameter, outer_diameter } = element;
 
         return [
           {
@@ -257,10 +257,10 @@ export const convertElementToPrimitives = (
             // double highlights are annoying
             // _element: element,
           },
-        ]
+        ];
       } else if (element.shape === "oval") {
         const { x, y, outer_height, outer_width, hole_height, hole_width } =
-          element
+          element;
 
         return [
           {
@@ -286,10 +286,10 @@ export const convertElementToPrimitives = (
             rY: hole_height / 2,
             layer: "drill",
           },
-        ]
+        ];
       } else if (element.shape === "pill") {
         const { x, y, outer_height, outer_width, hole_height, hole_width } =
-          element
+          element;
 
         return [
           {
@@ -317,7 +317,7 @@ export const convertElementToPrimitives = (
             layer: "drill",
             ccw_rotation: element.ccw_rotation,
           },
-        ]
+        ];
       } else if (element.shape === "circular_hole_with_rect_pad") {
         const {
           x,
@@ -328,9 +328,9 @@ export const convertElementToPrimitives = (
           rect_border_radius,
           hole_offset_x,
           hole_offset_y,
-        } = element
-        const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0)
-        const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0)
+        } = element;
+        const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0);
+        const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0);
 
         return [
           {
@@ -372,7 +372,7 @@ export const convertElementToPrimitives = (
             layer: "drill",
             is_hoverable: false,
           },
-        ]
+        ];
       } else if (element.shape === "pill_hole_with_rect_pad") {
         const {
           x,
@@ -382,7 +382,7 @@ export const convertElementToPrimitives = (
           rect_pad_width,
           rect_pad_height,
           rect_border_radius,
-        } = element
+        } = element;
 
         return [
           {
@@ -425,7 +425,7 @@ export const convertElementToPrimitives = (
             layer: "drill",
             is_hoverable: false,
           },
-        ]
+        ];
       } else if (element.shape === "rotated_pill_hole_with_rect_pad") {
         const {
           x,
@@ -437,7 +437,7 @@ export const convertElementToPrimitives = (
           rect_pad_height,
           rect_ccw_rotation,
           rect_border_radius,
-        } = element
+        } = element;
 
         return [
           {
@@ -483,7 +483,7 @@ export const convertElementToPrimitives = (
             ccw_rotation: hole_ccw_rotation,
             is_hoverable: false,
           },
-        ]
+        ];
       } else if (element.shape === "hole_with_polygon_pad") {
         const {
           x,
@@ -496,18 +496,18 @@ export const convertElementToPrimitives = (
           layers,
           hole_offset_x,
           hole_offset_y,
-        } = element
+        } = element;
 
-        const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0)
-        const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0)
+        const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0);
+        const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0);
 
-        const pcb_outline = pad_outline
+        const pcb_outline = pad_outline;
 
-        const padPrimitives: Primitive[] = []
+        const padPrimitives: Primitive[] = [];
         if (pcb_outline && Array.isArray(pcb_outline)) {
           const translatedPoints = normalizePolygonPoints(pcb_outline).map(
             (p) => ({ x: p.x + x, y: p.y + y }),
-          )
+          );
 
           for (const layer of layers || ["top", "bottom"]) {
             padPrimitives.push({
@@ -519,16 +519,16 @@ export const convertElementToPrimitives = (
               _parent_pcb_component,
               _parent_source_component,
               _source_port,
-            })
+            });
           }
         }
 
         const holeCenter = {
           x: x + parsed_hole_offset_x,
           y: y + parsed_hole_offset_y,
-        }
+        };
 
-        const holePrimitives: Primitive[] = []
+        const holePrimitives: Primitive[] = [];
 
         if (hole_shape === "circle") {
           holePrimitives.push({
@@ -541,7 +541,7 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
-          })
+          });
         } else if (hole_shape === "oval") {
           holePrimitives.push({
             _pcb_drawing_object_id: `oval_${globalPcbDrawingObjectCount++}`,
@@ -554,7 +554,7 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
-          })
+          });
         } else if (hole_shape === "pill" || hole_shape === "rotated_pill") {
           holePrimitives.push({
             _pcb_drawing_object_id: `pill_${globalPcbDrawingObjectCount++}`,
@@ -568,15 +568,15 @@ export const convertElementToPrimitives = (
             _parent_pcb_component,
             _parent_source_component,
             ccw_rotation: element.ccw_rotation,
-          })
+          });
         }
 
-        return [...padPrimitives, ...holePrimitives]
+        return [...padPrimitives, ...holePrimitives];
       } else {
-        return []
+        return [];
       }
     }
   }
 
-  return []
-}
+  return [];
+};

@@ -1,37 +1,37 @@
-import { lineAlphabet } from "../assets/alphabet"
-import { getNewPcbDrawingObjectId } from "./convert-element-to-primitive"
-import type { Line, Text } from "./types"
+import { lineAlphabet } from "../assets/alphabet";
+import { getNewPcbDrawingObjectId } from "./convert-element-to-primitive";
+import type { Line, Text } from "./types";
 
-export const LETTER_HEIGHT_TO_WIDTH_RATIO = 0.6
-export const LETTER_HEIGHT_TO_SPACE_RATIO = 0.2
+export const LETTER_HEIGHT_TO_WIDTH_RATIO = 0.6;
+export const LETTER_HEIGHT_TO_SPACE_RATIO = 0.2;
 
 const getTextGeometry = (text: Text) => {
-  const target_height = text.size * 0.7 // Apply 70% scaling
+  const target_height = text.size * 0.7; // Apply 70% scaling
 
-  const target_width_char = target_height * LETTER_HEIGHT_TO_WIDTH_RATIO
-  const space_between_chars = target_height * LETTER_HEIGHT_TO_SPACE_RATIO
-  const space_between_lines = target_height * LETTER_HEIGHT_TO_SPACE_RATIO
+  const target_width_char = target_height * LETTER_HEIGHT_TO_WIDTH_RATIO;
+  const space_between_chars = target_height * LETTER_HEIGHT_TO_SPACE_RATIO;
+  const space_between_lines = target_height * LETTER_HEIGHT_TO_SPACE_RATIO;
 
-  const text_lines = text.text.split(/\r?\n/)
-  const has_text = text.text.length > 0 && target_height > 0
-  const line_count = has_text ? text_lines.length : 0
+  const text_lines = text.text.split(/\r?\n/);
+  const has_text = text.text.length > 0 && target_height > 0;
+  const line_count = has_text ? text_lines.length : 0;
 
   const line_widths = has_text
     ? text_lines.map((line) => {
-        if (line.length === 0) return 0
+        if (line.length === 0) return 0;
         return (
           line.length * target_width_char +
           (line.length - 1) * space_between_chars
-        )
+        );
       })
-    : []
+    : [];
 
-  const width = line_widths.length > 0 ? Math.max(...line_widths) : 0
+  const width = line_widths.length > 0 ? Math.max(...line_widths) : 0;
 
   const height =
     line_count > 0
       ? line_count * target_height + (line_count - 1) * space_between_lines
-      : 0
+      : 0;
 
   return {
     text_lines,
@@ -43,13 +43,13 @@ const getTextGeometry = (text: Text) => {
     space_between_lines,
     width,
     height,
-  }
-}
+  };
+};
 
-export const getTextWidth = (text: Text): number => getTextGeometry(text).width
+export const getTextWidth = (text: Text): number => getTextGeometry(text).width;
 
 export const getTextMetrics = (text: Text) => {
-  const geometry = getTextGeometry(text)
+  const geometry = getTextGeometry(text);
 
   return {
     width: geometry.width,
@@ -57,8 +57,8 @@ export const getTextMetrics = (text: Text) => {
     lineHeight: geometry.target_height,
     lineSpacing: geometry.space_between_lines,
     lineCount: geometry.line_count,
-  }
-}
+  };
+};
 
 export const convertTextToLines = (text: Text): Line[] => {
   const {
@@ -70,37 +70,38 @@ export const convertTextToLines = (text: Text): Line[] => {
     space_between_chars,
     space_between_lines,
     width: maxWidth,
-  } = getTextGeometry(text)
+  } = getTextGeometry(text);
 
-  if (target_height <= 0 || line_count === 0) return []
+  if (target_height <= 0 || line_count === 0) return [];
 
-  const strokeWidth = target_height / 12
+  const strokeWidth = target_height / 12;
 
-  const lines: Line[] = []
+  const lines: Line[] = [];
 
   for (let lineIndex = 0; lineIndex < line_count; lineIndex++) {
     // Lines go from top to bottom: first line (index 0) at highest Y, subsequent lines decrease in Y
     // lineIndex 0 -> offset 0 (top), lineIndex 1 -> offset -step (below), etc.
-    const lineYOffset = -lineIndex * (target_height + space_between_lines)
+    const lineYOffset = -lineIndex * (target_height + space_between_lines);
 
     // Center each line within the max width bounding box
     // This ensures multiline text is properly centered when using center alignment
-    const lineWidth = line_widths[lineIndex]
-    const lineXOffset = (maxWidth - lineWidth) / 2
-    let current_x_origin_for_char_box = text.x + lineXOffset
+    const lineWidth = line_widths[lineIndex];
+    const lineXOffset = (maxWidth - lineWidth) / 2;
+    let current_x_origin_for_char_box = text.x + lineXOffset;
 
     for (
       let letterIndex = 0;
       letterIndex < text_lines[lineIndex].length;
       letterIndex++
     ) {
-      const letter = text_lines[lineIndex][letterIndex]
+      const letter = text_lines[lineIndex][letterIndex];
       const letterLines =
-        lineAlphabet[letter] ?? lineAlphabet[letter.toUpperCase()]
+        lineAlphabet[letter] ?? lineAlphabet[letter.toUpperCase()];
 
       if (!letterLines) {
-        current_x_origin_for_char_box += target_width_char + space_between_chars
-        continue
+        current_x_origin_for_char_box +=
+          target_width_char + space_between_chars;
+        continue;
       }
 
       for (const {
@@ -120,11 +121,11 @@ export const convertTextToLines = (text: Text): Line[] => {
           layer: text.layer,
           unit: text.unit,
           color: text.color,
-        })
+        });
       }
-      current_x_origin_for_char_box += target_width_char + space_between_chars
+      current_x_origin_for_char_box += target_width_char + space_between_chars;
     }
   }
 
-  return lines
-}
+  return lines;
+};

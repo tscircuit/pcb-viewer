@@ -5,11 +5,11 @@ export const getErrorId = (error: any, index: number): string => {
     "pcb_component_outside_board_error_id",
     "source_failed_to_create_component_error_id",
     "pcb_error_id",
-  ]
+  ];
 
   for (const key of explicitIdKeys) {
     if (typeof error?.[key] === "string" && error[key].length > 0) {
-      return error[key]
+      return error[key];
     }
   }
 
@@ -19,23 +19,23 @@ export const getErrorId = (error: any, index: number): string => {
       typeof value === "string" &&
       value.length > 0
     ) {
-      return value
+      return value;
     }
   }
 
-  return `error_${index}_${error?.error_type}_${error?.message?.slice(0, 20)}`
-}
+  return `error_${index}_${error?.error_type}_${error?.message?.slice(0, 20)}`;
+};
 
 export const findErrorElementById = (
   elements: Array<{ type?: string }>,
   errorId: string | null | undefined,
 ) => {
-  if (!errorId) return null
+  if (!errorId) return null;
 
   return (
     elements.find((element, index) => {
-      if (!element.type?.includes("error")) return false
-      return getErrorId(element, index) === errorId
+      if (!element.type?.includes("error")) return false;
+      return getErrorId(element, index) === errorId;
     }) ?? null
-  )
-}
+  );
+};

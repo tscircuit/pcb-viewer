@@ -1,50 +1,50 @@
-import type { EagleJSON, Layer } from "@tscircuit/eagle-xml-converter"
+import type { EagleJSON, Layer } from "@tscircuit/eagle-xml-converter";
 import {
   compose,
   fromDefinition,
   fromTransformAttribute,
-} from "transformation-matrix"
-import { Drawer } from "./Drawer"
+} from "transformation-matrix";
+import { Drawer } from "./Drawer";
 
 export const drawEagle = (drawer: Drawer, eagle: EagleJSON) => {
-  const pkg = eagle.library.packages[0]
+  const pkg = eagle.library.packages[0];
 
   if (eagle.grid.unit === "inch") {
     drawer.transform = compose(
       fromDefinition(
         fromTransformAttribute("translate(200, 200) scale(30,-30)"),
       ),
-    )
+    );
   }
 
-  const layerMap: Record<number, Layer> = {}
+  const layerMap: Record<number, Layer> = {};
   for (const layer of eagle.layers) {
-    layerMap[layer.number] = layer
+    layerMap[layer.number] = layer;
   }
 
   for (const smd of pkg.smd || []) {
     drawer.equip({
       color: layerMap[smd.layer].name,
-    })
+    });
     drawer.rect({
       x: smd.x - smd.dx / 2,
       y: smd.y - smd.dy / 2,
       w: smd.dx,
       h: smd.dy,
-    })
+    });
   }
   for (const wire of pkg.wire || []) {
     drawer.equip({
       size: wire.width,
       shape: "circle",
       color: layerMap[wire.layer].name,
-    })
-    drawer.moveTo(wire.x1, wire.y1)
-    drawer.lineTo(wire.x2, wire.y2)
+    });
+    drawer.moveTo(wire.x1, wire.y1);
+    drawer.lineTo(wire.x2, wire.y2);
   }
 
   for (const circle of pkg.circle || []) {
-    drawer.equip({ color: layerMap[circle.layer].name })
-    drawer.circle(circle.x, circle.y, circle.radius)
+    drawer.equip({ color: layerMap[circle.layer].name });
+    drawer.circle(circle.x, circle.y, circle.radius);
   }
-}
+};

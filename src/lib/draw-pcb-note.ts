@@ -1,13 +1,13 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json";
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
   type PcbColorMap,
-} from "circuit-to-canvas"
-import type { Matrix } from "transformation-matrix"
+} from "circuit-to-canvas";
+import type { Matrix } from "transformation-matrix";
 
 export function isPcbNote(element: AnyCircuitElement) {
-  return element.type.startsWith("pcb_note_")
+  return element.type.startsWith("pcb_note_");
 }
 
 export function drawPcbNoteElementsForLayer({
@@ -16,16 +16,16 @@ export function drawPcbNoteElementsForLayer({
   layers,
   realToCanvasMat,
 }: {
-  canvas: HTMLCanvasElement
-  elements: AnyCircuitElement[]
-  layers: PcbRenderLayer[]
-  realToCanvasMat: Matrix
+  canvas: HTMLCanvasElement;
+  elements: AnyCircuitElement[];
+  layers: PcbRenderLayer[];
+  realToCanvasMat: Matrix;
 }) {
-  const drawer = new CircuitToCanvasDrawer(canvas)
+  const drawer = new CircuitToCanvasDrawer(canvas);
 
-  drawer.realToCanvasMat = realToCanvasMat
+  drawer.realToCanvasMat = realToCanvasMat;
 
-  const pcbNoteElements = elements.filter(isPcbNote)
+  const pcbNoteElements = elements.filter(isPcbNote);
 
-  drawer.drawElements(pcbNoteElements, { layers })
+  drawer.drawElements(pcbNoteElements, { layers });
 }

@@ -1,7 +1,7 @@
-import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json";
 
 export const getCopperLayerRefs = (numLayers = 2): LayerRef[] => {
-  const layerCount = Math.max(2, Math.min(10, Math.floor(numLayers)))
+  const layerCount = Math.max(2, Math.min(10, Math.floor(numLayers)));
   return [
     "top",
     ...Array.from(
@@ -9,18 +9,18 @@ export const getCopperLayerRefs = (numLayers = 2): LayerRef[] => {
       (_, index) => `inner${index + 1}` as LayerRef,
     ),
     "bottom",
-  ]
-}
+  ];
+};
 
 export const getCopperLayerRefsFromElements = (
   elements: AnyCircuitElement[],
 ): LayerRef[] => {
-  const board = elements.find((element) => element.type === "pcb_board")
-  return getCopperLayerRefs(board?.num_layers ?? 2)
-}
+  const board = elements.find((element) => element.type === "pcb_board");
+  return getCopperLayerRefs(board?.num_layers ?? 2);
+};
 
 export const getCopperRenderLayer = (layer: LayerRef): PcbRenderLayer =>
-  `${layer}_copper` as PcbRenderLayer
+  `${layer}_copper` as PcbRenderLayer;
 
 export const normalizeCopperRenderLayers = (
   layers: PcbRenderLayer[],
@@ -29,14 +29,14 @@ export const normalizeCopperRenderLayers = (
     layer.endsWith("_copper")
       ? (layer.slice(0, -"_copper".length) as LayerRef)
       : (layer as LayerRef),
-  )
+  );
 
 export const getOrderedCanvasLayers = (
   elements: AnyCircuitElement[],
 ): string[] => {
   const innerLayers = getCopperLayerRefsFromElements(elements).filter((layer) =>
     layer.startsWith("inner"),
-  )
+  );
 
   return [
     "board",
@@ -58,5 +58,5 @@ export const getOrderedCanvasLayers = (
     "top_courtyard",
     "bottom_courtyard",
     "other",
-  ]
-}
+  ];
+};

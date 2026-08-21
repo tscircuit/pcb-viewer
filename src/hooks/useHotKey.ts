@@ -1,5 +1,5 @@
-import { useEffect, useRef, type RefObject } from "react"
-import { useGlobalStore } from "../global-store"
+import { useEffect, useRef, type RefObject } from "react";
+import { useGlobalStore } from "../global-store";
 
 export const useHotKey = (
   key: string,
@@ -8,46 +8,47 @@ export const useHotKey = (
 ) => {
   const isMouseOverContainer = useGlobalStore(
     (s) => s.is_mouse_over_container,
-  ) as boolean
+  ) as boolean;
 
-  const isMouseOverContainerRef = useRef(isMouseOverContainer)
-  const onUseRef = useRef(onUse)
-
-  useEffect(() => {
-    isMouseOverContainerRef.current = isMouseOverContainer
-  }, [isMouseOverContainer])
+  const isMouseOverContainerRef = useRef(isMouseOverContainer);
+  const onUseRef = useRef(onUse);
 
   useEffect(() => {
-    onUseRef.current = onUse
-  }, [onUse])
+    isMouseOverContainerRef.current = isMouseOverContainer;
+  }, [isMouseOverContainer]);
 
   useEffect(() => {
-    if (!key) return
+    onUseRef.current = onUse;
+  }, [onUse]);
+
+  useEffect(() => {
+    if (!key) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement
+      const target = event.target as HTMLElement;
       if (
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.isContentEditable
       ) {
-        return
+        return;
       }
 
-      const keyParts = key.split("+")
+      const keyParts = key.split("+");
 
-      const ctrlRequired = keyParts.includes("ctrl")
-      const shiftRequired = keyParts.includes("shift")
-      const altRequired = keyParts.includes("alt")
-      const metaRequired = keyParts.includes("meta")
-      const mainKey = keyParts[keyParts.length - 1]
+      const ctrlRequired = keyParts.includes("ctrl");
+      const shiftRequired = keyParts.includes("shift");
+      const altRequired = keyParts.includes("alt");
+      const metaRequired = keyParts.includes("meta");
+      const mainKey = keyParts[keyParts.length - 1];
 
       const containerHasFocus = containerRef?.current
         ? containerRef.current.contains(document.activeElement) ||
           document.activeElement === containerRef.current
-        : false
+        : false;
 
-      const shouldTrigger = isMouseOverContainerRef.current || containerHasFocus
+      const shouldTrigger =
+        isMouseOverContainerRef.current || containerHasFocus;
 
       if (
         shouldTrigger &&
@@ -57,15 +58,15 @@ export const useHotKey = (
         (!metaRequired || event.metaKey) &&
         event.key.toLowerCase() === mainKey.toLowerCase()
       ) {
-        event.preventDefault()
-        onUseRef.current()
+        event.preventDefault();
+        onUseRef.current();
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [key])
-}
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [key]);
+};

@@ -1,13 +1,13 @@
-import { expect, it } from "bun:test"
-import type { PcbTrace } from "circuit-json"
-import { getPrimitivesUnderPoint } from "../../src/components/MouseElementTracker"
-import type { Line } from "../../src/lib/types"
+import { expect, it } from "bun:test";
+import type { PcbTrace } from "circuit-json";
+import { getPrimitivesUnderPoint } from "../../src/components/MouseElementTracker";
+import type { Line } from "../../src/lib/types";
 
 const trace: PcbTrace = {
   type: "pcb_trace",
   pcb_trace_id: "trace_0",
   route: [],
-}
+};
 
 const createTracePrimitive = (layer: "top" | "bottom"): Line => ({
   _pcb_drawing_object_id: `line_${layer}`,
@@ -19,11 +19,11 @@ const createTracePrimitive = (layer: "top" | "bottom"): Line => ({
   y2: 0,
   width: 0.15,
   layer,
-})
+});
 
 it("only hit-tests PCB traces on the selected layer", () => {
-  const topTrace = createTracePrimitive("top")
-  const bottomTrace = createTracePrimitive("bottom")
+  const topTrace = createTracePrimitive("top");
+  const bottomTrace = createTracePrimitive("bottom");
 
   expect(
     getPrimitivesUnderPoint(
@@ -32,5 +32,5 @@ it("only hit-tests PCB traces on the selected layer", () => {
       { a: 40, b: 0, c: 0, d: 40, e: 0, f: 0 },
       "top",
     ),
-  ).toEqual([topTrace])
-})
+  ).toEqual([topTrace]);
+});

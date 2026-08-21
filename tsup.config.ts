@@ -1,4 +1,4 @@
-import { defineConfig } from "tsup"
+import { defineConfig } from "tsup";
 
 export default defineConfig({
   entry: ["./src"],
@@ -11,4 +11,4 @@ export default defineConfig({
     ".ts": "tsx",
   },
   external: ["react", "react-dom", "react-reconciler", "react-reconciler-18"],
-})
+});

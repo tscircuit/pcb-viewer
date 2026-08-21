@@ -10,11 +10,13 @@ export interface PcbViewerProps {
   height?: number;
 }
 
-export function resolveViewerFocusConfig(props: PcbViewerProps): { focusOnHover: boolean } {
-  if (typeof props.focusOnHover === 'boolean') {
+export function resolveViewerFocusConfig(props: PcbViewerProps): {
+  focusOnHover: boolean;
+} {
+  if (typeof props.focusOnHover === "boolean") {
     return { focusOnHover: props.focusOnHover };
   }
-  if (typeof props.disableAutoFocus === 'boolean') {
+  if (typeof props.disableAutoFocus === "boolean") {
     return { focusOnHover: !props.disableAutoFocus };
   }
   return { focusOnHover: true };

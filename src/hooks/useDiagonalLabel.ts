@@ -1,16 +1,16 @@
-import { useMemo } from "react"
+import { useMemo } from "react";
 import {
   calculateDiagonalLabel,
   type DiagonalLabelResult,
-} from "lib/util/calculate-diagonal-label"
+} from "lib/util/calculate-diagonal-label";
 
 export interface UseDiagonalLabelParams {
-  dimensionStart: { x: number; y: number }
-  dimensionEnd: { x: number; y: number }
-  screenDimensionStart: { x: number; y: number }
-  screenDimensionEnd: { x: number; y: number }
-  flipX: boolean
-  flipY: boolean
+  dimensionStart: { x: number; y: number };
+  dimensionEnd: { x: number; y: number };
+  screenDimensionStart: { x: number; y: number };
+  screenDimensionEnd: { x: number; y: number };
+  flipX: boolean;
+  flipY: boolean;
 }
 
 export function useDiagonalLabel(
@@ -23,7 +23,7 @@ export function useDiagonalLabel(
     screenDimensionEnd,
     flipX,
     flipY,
-  } = params
+  } = params;
 
   return useMemo(
     () =>
@@ -43,5 +43,5 @@ export function useDiagonalLabel(
       flipX,
       flipY,
     ],
-  )
+  );
 }

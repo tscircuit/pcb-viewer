@@ -1,1 +1,1 @@
-export { lineAlphabet, svgAlphabet } from "@tscircuit/alphabet"
+export { lineAlphabet, svgAlphabet } from "@tscircuit/alphabet";

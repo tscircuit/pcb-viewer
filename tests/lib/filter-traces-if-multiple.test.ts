@@ -1,7 +1,7 @@
-import { expect, it } from "bun:test"
-import type { AnyCircuitElement, PcbTrace } from "circuit-json"
-import type { HighlightedPrimitive } from "../../src/components/MouseElementTracker"
-import { filterTracesIfMultiple } from "../../src/lib/filter-traces-if-multiple"
+import { expect, it } from "bun:test";
+import type { AnyCircuitElement, PcbTrace } from "circuit-json";
+import type { HighlightedPrimitive } from "../../src/components/MouseElementTracker";
+import { filterTracesIfMultiple } from "../../src/lib/filter-traces-if-multiple";
 
 it("keeps named trace overlays visible when ordinary trace lengths are hidden", () => {
   const pcbTrace: PcbTrace = {
@@ -9,7 +9,7 @@ it("keeps named trace overlays visible when ordinary trace lengths are hidden", 
     pcb_trace_id: "pcb_trace_0",
     source_trace_id: "source_net_0",
     route: [],
-  }
+  };
   const elements = [
     pcbTrace,
     {
@@ -18,10 +18,10 @@ it("keeps named trace overlays visible when ordinary trace lengths are hidden", 
       name: "GND",
       member_source_group_ids: [],
     },
-  ] as AnyCircuitElement[]
+  ] as AnyCircuitElement[];
   const primitive = {
     _element: pcbTrace,
-  } as HighlightedPrimitive
+  } as HighlightedPrimitive;
 
   expect(
     filterTracesIfMultiple({
@@ -29,5 +29,5 @@ it("keeps named trace overlays visible when ordinary trace lengths are hidden", 
       is_showing_multiple_traces_length: false,
       elements,
     }),
-  ).toEqual([primitive])
-})
+  ).toEqual([primitive]);
+});

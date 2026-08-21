@@ -4,26 +4,26 @@ import type {
   PcbComponent,
   PcbGroup,
   PcbPanel,
-} from "circuit-json"
+} from "circuit-json";
 
 export const isPcbComponent = (
   element?: AnyCircuitElement,
-): element is PcbComponent => element?.type === "pcb_component"
+): element is PcbComponent => element?.type === "pcb_component";
 
 export const isPcbGroup = (element?: AnyCircuitElement): element is PcbGroup =>
-  element?.type === "pcb_group"
+  element?.type === "pcb_group";
 
 export const isPcbPanel = (element?: AnyCircuitElement): element is PcbPanel =>
-  element?.type === "pcb_panel"
+  element?.type === "pcb_panel";
 
 export const isPcbBoard = (element?: AnyCircuitElement): element is PcbBoard =>
-  element?.type === "pcb_board"
+  element?.type === "pcb_board";
 
 export type BoardAnchoredComponent = PcbComponent & {
-  positioned_relative_to_pcb_board_id?: string
-}
+  positioned_relative_to_pcb_board_id?: string;
+};
 
 export const isBoardAnchoredComponent = (
   component: PcbComponent,
 ): component is BoardAnchoredComponent =>
-  "positioned_relative_to_pcb_board_id" in component
+  "positioned_relative_to_pcb_board_id" in component;
