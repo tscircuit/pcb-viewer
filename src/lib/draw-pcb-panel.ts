@@ -1,9 +1,9 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
-import { CircuitToCanvasDrawer } from "circuit-to-canvas"
-import type { Matrix } from "transformation-matrix"
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json";
+import { CircuitToCanvasDrawer } from "circuit-to-canvas";
+import type { Matrix } from "transformation-matrix";
 
 export function isPcbPanelElement(element: AnyCircuitElement) {
-  return element.type === "pcb_panel"
+  return element.type === "pcb_panel";
 }
 
 export function drawPcbPanelElements({
@@ -13,19 +13,19 @@ export function drawPcbPanelElements({
   realToCanvasMat,
   drawSoldermask,
 }: {
-  canvas: HTMLCanvasElement
-  elements: AnyCircuitElement[]
-  layers: PcbRenderLayer[]
-  realToCanvasMat: Matrix
-  drawSoldermask?: boolean
+  canvas: HTMLCanvasElement;
+  elements: AnyCircuitElement[];
+  layers: PcbRenderLayer[];
+  realToCanvasMat: Matrix;
+  drawSoldermask?: boolean;
 }) {
-  const drawer = new CircuitToCanvasDrawer(canvas)
+  const drawer = new CircuitToCanvasDrawer(canvas);
 
-  drawer.realToCanvasMat = realToCanvasMat
+  drawer.realToCanvasMat = realToCanvasMat;
 
-  const pcbPanelElements = elements.filter(isPcbPanelElement)
+  const pcbPanelElements = elements.filter(isPcbPanelElement);
 
   for (const element of pcbPanelElements) {
-    drawer.drawElements([element], { layers })
+    drawer.drawElements([element], { layers });
   }
 }

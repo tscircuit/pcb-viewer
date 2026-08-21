@@ -238,4 +238,4 @@ export default {
     wire: "rgb(0, 160, 0)",
     worksheet: "rgb(192, 0, 0)",
   },
-}
+};

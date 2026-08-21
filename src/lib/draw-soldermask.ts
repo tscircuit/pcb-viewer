@@ -1,13 +1,13 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json";
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
   type PcbColorMap,
-} from "circuit-to-canvas"
-import color from "color"
-import type { Matrix } from "transformation-matrix"
-import colors from "./colors"
-import type { Primitive } from "./types"
+} from "circuit-to-canvas";
+import color from "color";
+import type { Matrix } from "transformation-matrix";
+import colors from "./colors";
+import type { Primitive } from "./types";
 
 const HOVER_SOLDERMASK_COLOR_MAP: PcbColorMap = {
   ...DEFAULT_PCB_COLOR_MAP,
@@ -29,7 +29,7 @@ const HOVER_SOLDERMASK_COLOR_MAP: PcbColorMap = {
     top: color(colors.board.soldermask.top).lighten(0.35).toString(),
     bottom: color(colors.board.soldermask.bottom).lighten(0.35).toString(),
   },
-}
+};
 
 export function drawSoldermaskElementsForLayer({
   canvas,
@@ -40,17 +40,17 @@ export function drawSoldermaskElementsForLayer({
   drawSoldermaskBottom,
   primitives,
 }: {
-  canvas: HTMLCanvasElement
-  elements: AnyCircuitElement[]
-  layers: PcbRenderLayer[]
-  realToCanvasMat: Matrix
-  drawSoldermaskTop?: boolean
-  drawSoldermaskBottom?: boolean
-  primitives?: Primitive[]
+  canvas: HTMLCanvasElement;
+  elements: AnyCircuitElement[];
+  layers: PcbRenderLayer[];
+  realToCanvasMat: Matrix;
+  drawSoldermaskTop?: boolean;
+  drawSoldermaskBottom?: boolean;
+  primitives?: Primitive[];
 }) {
-  const drawer = new CircuitToCanvasDrawer(canvas)
-  drawer.realToCanvasMat = realToCanvasMat
-  const boards = elements.filter((element) => element.type === "pcb_board")
+  const drawer = new CircuitToCanvasDrawer(canvas);
+  drawer.realToCanvasMat = realToCanvasMat;
+  const boards = elements.filter((element) => element.type === "pcb_board");
   if (boards.length <= 1) {
     drawer.drawElements(elements, {
       layers,
@@ -58,11 +58,11 @@ export function drawSoldermaskElementsForLayer({
       drawSoldermaskTop,
       drawSoldermaskBottom,
       drawBoardMaterial: false,
-    })
+    });
   } else {
     const nonBoardElements = elements.filter(
       (element) => element.type !== "pcb_board",
-    )
+    );
     for (const board of boards) {
       drawer.drawElements([board, ...nonBoardElements], {
         layers,
@@ -70,50 +70,50 @@ export function drawSoldermaskElementsForLayer({
         drawSoldermaskTop,
         drawSoldermaskBottom,
         drawBoardMaterial: false,
-      })
+      });
     }
   }
 
-  if (!primitives) return
+  if (!primitives) return;
 
-  const hoveredElementIds = new Set<string>()
+  const hoveredElementIds = new Set<string>();
   for (const primitive of primitives) {
-    if (!(primitive.is_mouse_over || primitive.is_in_highlighted_net)) continue
-    const element = primitive._element
+    if (!(primitive.is_mouse_over || primitive.is_in_highlighted_net)) continue;
+    const element = primitive._element;
     if (element?.type === "pcb_smtpad") {
-      hoveredElementIds.add(element.pcb_smtpad_id)
+      hoveredElementIds.add(element.pcb_smtpad_id);
     } else if (element?.type === "pcb_plated_hole") {
-      hoveredElementIds.add(element.pcb_plated_hole_id)
+      hoveredElementIds.add(element.pcb_plated_hole_id);
     } else if (element?.type === "pcb_via") {
-      hoveredElementIds.add(element.pcb_via_id)
+      hoveredElementIds.add(element.pcb_via_id);
     }
   }
 
-  if (hoveredElementIds.size === 0) return
+  if (hoveredElementIds.size === 0) return;
 
   const hoveredElements = elements.filter((element) => {
     if (element.type === "pcb_smtpad") {
-      return hoveredElementIds.has(element.pcb_smtpad_id)
+      return hoveredElementIds.has(element.pcb_smtpad_id);
     }
     if (element.type === "pcb_plated_hole") {
-      return hoveredElementIds.has(element.pcb_plated_hole_id)
+      return hoveredElementIds.has(element.pcb_plated_hole_id);
     }
     if (element.type === "pcb_via") {
-      return hoveredElementIds.has(element.pcb_via_id)
+      return hoveredElementIds.has(element.pcb_via_id);
     }
-    return false
-  })
+    return false;
+  });
 
-  if (hoveredElements.length === 0) return
+  if (hoveredElements.length === 0) return;
 
-  const hoverDrawer = new CircuitToCanvasDrawer(canvas)
-  hoverDrawer.configure({ colorOverrides: HOVER_SOLDERMASK_COLOR_MAP })
-  hoverDrawer.realToCanvasMat = realToCanvasMat
+  const hoverDrawer = new CircuitToCanvasDrawer(canvas);
+  hoverDrawer.configure({ colorOverrides: HOVER_SOLDERMASK_COLOR_MAP });
+  hoverDrawer.realToCanvasMat = realToCanvasMat;
   hoverDrawer.drawElements(hoveredElements, {
     layers,
     drawSoldermask: true,
     drawSoldermaskTop,
     drawSoldermaskBottom,
     drawBoardMaterial: false,
-  })
+  });
 }

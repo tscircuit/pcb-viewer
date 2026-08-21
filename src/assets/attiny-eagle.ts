@@ -840,4 +840,4 @@ export default {
       },
     ],
   },
-}
+};

@@ -1,23 +1,23 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json";
 
 export interface PointWithBulge {
-  x: number
-  y: number
-  bulge?: number
+  x: number;
+  y: number;
+  bulge?: number;
 }
 
 export interface Ring {
-  vertices: PointWithBulge[]
+  vertices: PointWithBulge[];
 }
 
 export interface BRepShape {
-  outer_ring: Ring
-  inner_rings?: Ring[]
+  outer_ring: Ring;
+  inner_rings?: Ring[];
 }
 
 export interface PolygonWithArcs extends PCBDrawingObject {
-  pcb_drawing_type: "polygon_with_arcs"
-  brep_shape: BRepShape
+  pcb_drawing_type: "polygon_with_arcs";
+  brep_shape: BRepShape;
 }
 
 export type AlignString =
@@ -29,121 +29,114 @@ export type AlignString =
   | "center_right"
   | "bottom_left"
   | "bottom_center"
-  | "bottom_right"
+  | "bottom_right";
 
-export type LayerRef = string
+export type LayerRef = string;
 
 export interface PCBDrawingObject {
-  _pcb_drawing_object_id: string
+  _pcb_drawing_object_id: string;
 
-  layer: LayerRef
-  unit?: string
-  _element?: AnyCircuitElement
-  _parent_pcb_component?: AnyCircuitElement
-  _parent_source_component?: AnyCircuitElement
-  _source_port?: AnyCircuitElement
+  layer: LayerRef;
+  unit?: string;
+  _element?: AnyCircuitElement;
+  _parent_pcb_component?: AnyCircuitElement;
+  _parent_source_component?: AnyCircuitElement;
+  _source_port?: AnyCircuitElement;
 
-  is_mouse_over?: boolean
-  is_in_highlighted_net?: boolean
-  is_hoverable?: boolean
+  is_mouse_over?: boolean;
+  is_in_highlighted_net?: boolean;
+  is_hoverable?: boolean;
 }
 
 export interface Line extends PCBDrawingObject {
-  pcb_drawing_type: "line"
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-  squareCap?: boolean
-  width: number
-  zoomIndependent?: boolean
-  color?: string
+  pcb_drawing_type: "line";
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  squareCap?: boolean;
+  width: number;
+  zoomIndependent?: boolean;
+  color?: string;
 }
 
 export interface Text extends PCBDrawingObject {
-  pcb_drawing_type: "text"
-  text: string
-  x: number
-  y: number
-  size: number
-  align?: AlignString
-  ccw_rotation?: number
-  color?: string
+  pcb_drawing_type: "text";
+  text: string;
+  x: number;
+  y: number;
+  size: number;
+  align?: AlignString;
+  ccw_rotation?: number;
+  color?: string;
   // Properties for copper text
-  is_mirrored?: boolean
-  is_knockout?: boolean
+  is_mirrored?: boolean;
+  is_knockout?: boolean;
   knockout_padding?: {
-    left: number
-    top: number
-    bottom: number
-    right: number
-  }
+    left: number;
+    top: number;
+    bottom: number;
+    right: number;
+  };
 }
 
 export interface Rect extends PCBDrawingObject {
-  pcb_drawing_type: "rect"
-  x: number
-  y: number
-  w: number
-  h: number
-  roundness?: number
-  align?: AlignString
-  mesh_fill?: boolean
-  stroke_width?: number
-  is_filled?: boolean
-  has_stroke?: boolean
-  is_stroke_dashed?: boolean
-  ccw_rotation?: number
-  color?: string
+  pcb_drawing_type: "rect";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  roundness?: number;
+  align?: AlignString;
+  mesh_fill?: boolean;
+  stroke_width?: number;
+  is_filled?: boolean;
+  has_stroke?: boolean;
+  is_stroke_dashed?: boolean;
+  ccw_rotation?: number;
+  color?: string;
 }
 
 export interface Circle extends PCBDrawingObject {
-  pcb_drawing_type: "circle"
-  x: number
-  y: number
-  r: number
-  mesh_fill?: boolean
-  is_filled?: boolean
+  pcb_drawing_type: "circle";
+  x: number;
+  y: number;
+  r: number;
+  mesh_fill?: boolean;
+  is_filled?: boolean;
 }
 
 export interface Oval extends PCBDrawingObject {
-  pcb_drawing_type: "oval"
-  x: number
-  y: number
-  rX: number
-  rY: number
+  pcb_drawing_type: "oval";
+  x: number;
+  y: number;
+  rX: number;
+  rY: number;
 }
 
 export interface Pill extends PCBDrawingObject {
-  pcb_drawing_type: "pill"
-  x: number
-  y: number
-  w: number
-  h: number
-  ccw_rotation?: number
+  pcb_drawing_type: "pill";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  ccw_rotation?: number;
 }
 
 export interface Polygon extends PCBDrawingObject {
-  pcb_drawing_type: "polygon"
-  points: { x: number; y: number }[]
+  pcb_drawing_type: "polygon";
+  points: { x: number; y: number }[];
 }
 
 export type Primitive =
-  | Line
-  | Text
-  | Rect
-  | Circle
-  | Oval
-  | Pill
-  | Polygon
-  | PolygonWithArcs
+  Line | Text | Rect | Circle | Oval | Pill | Polygon | PolygonWithArcs;
 
 export type GridConfig = {
-  spacing: number
+  spacing: number;
   view_window: {
-    left: number
-    right: number
-    top: number
-    bottom: number
-  }
-}
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  };
+};

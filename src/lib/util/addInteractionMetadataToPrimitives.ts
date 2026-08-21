@@ -1,26 +1,26 @@
-import { Primitive } from "lib/types"
+import { Primitive } from "lib/types";
 
 export function addInteractionMetadataToPrimitives({
   primitivesWithoutInteractionMetadata,
   drawingObjectIdsWithMouseOver,
   primitiveIdsInMousedOverNet,
 }: {
-  primitivesWithoutInteractionMetadata: Primitive[]
-  drawingObjectIdsWithMouseOver: Set<string>
-  primitiveIdsInMousedOverNet: string[]
+  primitivesWithoutInteractionMetadata: Primitive[];
+  drawingObjectIdsWithMouseOver: Set<string>;
+  primitiveIdsInMousedOverNet: string[];
 }): Primitive[] {
-  const newPrimitives = []
+  const newPrimitives = [];
   for (const primitive of primitivesWithoutInteractionMetadata) {
-    const newPrimitive = { ...primitive }
-    const primitiveElement = primitive._element
-    const parentComponent = primitive._parent_pcb_component
+    const newPrimitive = { ...primitive };
+    const primitiveElement = primitive._element;
+    const parentComponent = primitive._parent_pcb_component;
     if (primitive?.layer === "drill") {
-      newPrimitive.is_in_highlighted_net = false
-      newPrimitive.is_mouse_over = false
+      newPrimitive.is_in_highlighted_net = false;
+      newPrimitive.is_mouse_over = false;
     } else if (
       drawingObjectIdsWithMouseOver.has(primitive._pcb_drawing_object_id)
     ) {
-      newPrimitive.is_mouse_over = true
+      newPrimitive.is_mouse_over = true;
     } else if (
       primitiveElement &&
       (("pcb_trace_id" in primitiveElement &&
@@ -41,12 +41,12 @@ export function addInteractionMetadataToPrimitives({
             parentComponent.pcb_component_id!,
           )))
     ) {
-      newPrimitive.is_in_highlighted_net = true
+      newPrimitive.is_in_highlighted_net = true;
     } else {
-      newPrimitive.is_in_highlighted_net = false
-      newPrimitive.is_mouse_over = false
+      newPrimitive.is_in_highlighted_net = false;
+      newPrimitive.is_mouse_over = false;
     }
-    newPrimitives.push(newPrimitive)
+    newPrimitives.push(newPrimitive);
   }
-  return newPrimitives
+  return newPrimitives;
 }

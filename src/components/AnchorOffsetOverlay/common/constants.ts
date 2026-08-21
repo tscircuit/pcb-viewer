@@ -12,11 +12,11 @@ export const VISUAL_CONFIG = {
   LABEL_FONT_SIZE: 11,
   ANCHOR_MARKER_SIZE: 6,
   ANCHOR_MARKER_STROKE_WIDTH: 1.5,
-} as const
+} as const;
 
 export const COLORS = {
   OFFSET_LINE: "white",
   COMPONENT_MARKER_FILL: "#66ccff",
   COMPONENT_MARKER_STROKE: "white",
   LABEL_TEXT: "white",
-} as const
+} as const;

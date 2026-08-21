@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import type { PcbTrace } from "circuit-json"
-import { convertElementToPrimitives } from "../../src/lib/convert-element-to-primitive"
+import { expect, test } from "bun:test";
+import type { PcbTrace } from "circuit-json";
+import { convertElementToPrimitives } from "../../src/lib/convert-element-to-primitive";
 
 test("interpolated traces accept through-pad route points", () => {
   const trace: PcbTrace = {
@@ -31,16 +31,16 @@ test("interpolated traces accept through-pad route points", () => {
         layer: "inner8",
       },
     ],
-  }
+  };
 
-  const primitives = convertElementToPrimitives(trace, [trace])
+  const primitives = convertElementToPrimitives(trace, [trace]);
 
-  expect(primitives).toHaveLength(1)
-  expect(primitives[0]?.pcb_drawing_type).toBe("polygon")
+  expect(primitives).toHaveLength(1);
+  expect(primitives[0]?.pcb_drawing_type).toBe("polygon");
   expect(
     primitives[0]?.pcb_drawing_type === "polygon" &&
       primitives[0].points.every(
         (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
       ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});

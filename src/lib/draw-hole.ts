@@ -1,9 +1,9 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
-import { CircuitToCanvasDrawer } from "circuit-to-canvas"
-import type { Matrix } from "transformation-matrix"
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json";
+import { CircuitToCanvasDrawer } from "circuit-to-canvas";
+import type { Matrix } from "transformation-matrix";
 
 export function isPcbHole(element: AnyCircuitElement) {
-  return element.type === "pcb_hole"
+  return element.type === "pcb_hole";
 }
 
 export function drawPcbHoleElementsForLayer({
@@ -13,17 +13,17 @@ export function drawPcbHoleElementsForLayer({
   realToCanvasMat,
   drawSoldermask,
 }: {
-  canvas: HTMLCanvasElement
-  elements: AnyCircuitElement[]
-  layers: PcbRenderLayer[]
-  realToCanvasMat: Matrix
-  drawSoldermask?: boolean
+  canvas: HTMLCanvasElement;
+  elements: AnyCircuitElement[];
+  layers: PcbRenderLayer[];
+  realToCanvasMat: Matrix;
+  drawSoldermask?: boolean;
 }) {
-  const drawer = new CircuitToCanvasDrawer(canvas)
+  const drawer = new CircuitToCanvasDrawer(canvas);
 
-  drawer.realToCanvasMat = realToCanvasMat
+  drawer.realToCanvasMat = realToCanvasMat;
 
-  const holeElements = elements.filter(isPcbHole)
+  const holeElements = elements.filter(isPcbHole);
 
-  drawer.drawElements(holeElements, { layers, drawSoldermask })
+  drawer.drawElements(holeElements, { layers, drawSoldermask });
 }

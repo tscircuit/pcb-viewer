@@ -1,36 +1,36 @@
-import type { AnyCircuitElement } from "circuit-json"
-import { distance } from "circuit-json"
-import type { PcbCopperText } from "circuit-json"
-import type { Primitive } from "../types"
-import { getNewPcbDrawingObjectId } from "../convert-element-to-primitive"
+import type { AnyCircuitElement } from "circuit-json";
+import { distance } from "circuit-json";
+import type { PcbCopperText } from "circuit-json";
+import type { Primitive } from "../types";
+import { getNewPcbDrawingObjectId } from "../convert-element-to-primitive";
 
 type MetaData = {
-  _parent_pcb_component?: any
-  _parent_source_component?: any
-  _source_port?: any
-}
+  _parent_pcb_component?: any;
+  _parent_source_component?: any;
+  _source_port?: any;
+};
 
 export const convertPcbCopperTextToPrimitive = (
   element: AnyCircuitElement,
   metadata: MetaData,
 ): (Primitive & MetaData)[] => {
-  const { _parent_pcb_component, _parent_source_component } = metadata
-  const copperText = element as PcbCopperText
+  const { _parent_pcb_component, _parent_source_component } = metadata;
+  const copperText = element as PcbCopperText;
 
   const fontSize =
     typeof copperText.font_size === "string"
       ? distance.parse(copperText.font_size)
-      : (copperText.font_size ?? 0.2)
+      : (copperText.font_size ?? 0.2);
 
   // Parse knockout padding if provided
   let knockoutPadding:
     | {
-        left: number
-        top: number
-        bottom: number
-        right: number
+        left: number;
+        top: number;
+        bottom: number;
+        right: number;
       }
-    | undefined
+    | undefined;
   if (copperText.knockout_padding) {
     knockoutPadding = {
       left:
@@ -49,7 +49,7 @@ export const convertPcbCopperTextToPrimitive = (
         typeof copperText.knockout_padding.right === "string"
           ? distance.parse(copperText.knockout_padding.right)
           : copperText.knockout_padding.right,
-    }
+    };
   }
 
   return [
@@ -70,5 +70,5 @@ export const convertPcbCopperTextToPrimitive = (
       _parent_pcb_component,
       _parent_source_component,
     },
-  ]
-}
+  ];
+};

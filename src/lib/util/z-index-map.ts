@@ -11,4 +11,4 @@ export const zIndexMap = {
   // are included, so keep enough room for the complete stack.
   topLayer: 30,
   clickToInteractOverlay: 100,
-}
+};

@@ -1,11 +1,11 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json";
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
   type PcbColorMap,
-} from "circuit-to-canvas"
-import type { Matrix } from "transformation-matrix"
-import colors from "./colors"
+} from "circuit-to-canvas";
+import type { Matrix } from "transformation-matrix";
+import colors from "./colors";
 
 const PCB_VIEWER_COLOR_MAP: PcbColorMap = {
   ...DEFAULT_PCB_COLOR_MAP,
@@ -13,14 +13,14 @@ const PCB_VIEWER_COLOR_MAP: PcbColorMap = {
     top: colors.board.f_crtyd,
     bottom: colors.board.b_crtyd,
   },
-}
+};
 
 export function isCourtyardElement(element: AnyCircuitElement) {
   return (
     element.type === "pcb_courtyard_circle" ||
     element.type === "pcb_courtyard_rect" ||
     element.type === "pcb_courtyard_outline"
-  )
+  );
 }
 
 export function drawCourtyardElementsForLayer({
@@ -29,20 +29,20 @@ export function drawCourtyardElementsForLayer({
   layers,
   realToCanvasMat,
 }: {
-  canvas: HTMLCanvasElement
-  elements: AnyCircuitElement[]
-  layers: PcbRenderLayer[]
-  realToCanvasMat: Matrix
+  canvas: HTMLCanvasElement;
+  elements: AnyCircuitElement[];
+  layers: PcbRenderLayer[];
+  realToCanvasMat: Matrix;
 }) {
-  const drawer = new CircuitToCanvasDrawer(canvas)
+  const drawer = new CircuitToCanvasDrawer(canvas);
 
   drawer.configure({
     colorOverrides: PCB_VIEWER_COLOR_MAP,
-  })
+  });
 
-  drawer.realToCanvasMat = realToCanvasMat
+  drawer.realToCanvasMat = realToCanvasMat;
 
-  const courtyardElements = elements.filter(isCourtyardElement)
+  const courtyardElements = elements.filter(isCourtyardElement);
 
-  drawer.drawElements(courtyardElements, { layers })
+  drawer.drawElements(courtyardElements, { layers });
 }

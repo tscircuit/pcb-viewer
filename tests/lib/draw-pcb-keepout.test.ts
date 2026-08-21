@@ -1,9 +1,9 @@
-import { describe, expect, it } from "bun:test"
-import type { AnyCircuitElement } from "circuit-json"
+import { describe, expect, it } from "bun:test";
+import type { AnyCircuitElement } from "circuit-json";
 import {
   getPcbKeepoutColorForLayer,
   getPcbKeepoutElementsForLayer,
-} from "../../src/lib/draw-pcb-keepout"
+} from "../../src/lib/draw-pcb-keepout";
 
 const elements = [
   {
@@ -32,7 +32,7 @@ const elements = [
     height: 1,
     layers: ["top", "inner1"],
   },
-] as AnyCircuitElement[]
+] as AnyCircuitElement[];
 
 describe("PCB keepout layer rendering", () => {
   it("only returns keepouts assigned to the requested copper layer", () => {
@@ -40,25 +40,25 @@ describe("PCB keepout layer rendering", () => {
       getPcbKeepoutElementsForLayer({ elements, layer: "top" }).map(
         (keepout) => keepout.pcb_keepout_id,
       ),
-    ).toEqual(["top_keepout", "shared_keepout"])
+    ).toEqual(["top_keepout", "shared_keepout"]);
 
     expect(
       getPcbKeepoutElementsForLayer({ elements, layer: "inner1" }).map(
         (keepout) => keepout.pcb_keepout_id,
       ),
-    ).toEqual(["inner_keepout", "shared_keepout"])
+    ).toEqual(["inner_keepout", "shared_keepout"]);
 
     expect(
       getPcbKeepoutElementsForLayer({ elements, layer: "bottom" }),
-    ).toEqual([])
-  })
+    ).toEqual([]);
+  });
 
   it("uses a distinct highlight color for each copper layer", () => {
     expect(getPcbKeepoutColorForLayer("top")).not.toBe(
       getPcbKeepoutColorForLayer("inner1"),
-    )
+    );
     expect(getPcbKeepoutColorForLayer("inner1")).not.toBe(
       getPcbKeepoutColorForLayer("bottom"),
-    )
-  })
-})
+    );
+  });
+});

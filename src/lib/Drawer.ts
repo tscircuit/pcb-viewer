@@ -1,6 +1,6 @@
-import type { Rotation } from "circuit-json"
-import colorParser from "color"
-import type { BRepShape, Ring } from "lib/types"
+import type { Rotation } from "circuit-json";
+import colorParser from "color";
+import type { BRepShape, Ring } from "lib/types";
 import {
   type Matrix,
   applyToPoint,
@@ -8,19 +8,19 @@ import {
   identity,
   inverse,
   translate,
-} from "transformation-matrix"
-import colors from "./colors"
-import { scaleOnly } from "./util/scale-only"
-import { zIndexMap } from "./util/z-index-map"
+} from "transformation-matrix";
+import colors from "./colors";
+import { scaleOnly } from "./util/scale-only";
+import { zIndexMap } from "./util/z-index-map";
 
 export interface Aperture {
-  shape: "circle" | "square"
-  size: number
-  opacity: number
-  mode: "add" | "subtract"
-  fontSize: number
-  color: string
-  layer: string
+  shape: "circle" | "square";
+  size: number;
+  opacity: number;
+  mode: "add" | "subtract";
+  fontSize: number;
+  color: string;
+  layer: string;
 }
 
 export const LAYER_NAME_TO_COLOR = {
@@ -67,9 +67,9 @@ export const LAYER_NAME_TO_COLOR = {
   top_notes: colors.board.user_2,
 
   ...(colors.board as any),
-}
+};
 
-export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR
+export type LayerNameForColor = keyof typeof LAYER_NAME_TO_COLOR;
 
 export const DEFAULT_DRAW_ORDER = [
   "board",
@@ -84,7 +84,7 @@ export const DEFAULT_DRAW_ORDER = [
   "top_fabrication",
   "edge_cuts",
   "top_silkscreen",
-] as const
+] as const;
 
 export const FILL_TYPES = {
   0: "Empty",
@@ -103,36 +103,36 @@ export const FILL_TYPES = {
   13: "Stipple2",
   14: "Stipple3",
   15: "Stipple4",
-}
+};
 
 export class Drawer {
-  canvasLayerMap: Record<string, HTMLCanvasElement>
-  ctxLayerMap: Record<string, CanvasRenderingContext2D>
+  canvasLayerMap: Record<string, HTMLCanvasElement>;
+  ctxLayerMap: Record<string, CanvasRenderingContext2D>;
   // @ts-ignore this.equip({}) handles constructor assignment
-  aperture: Aperture
-  transform: Matrix
-  foregroundLayer = "top"
-  lastPoint: { x: number; y: number }
+  aperture: Aperture;
+  transform: Matrix;
+  foregroundLayer = "top";
+  lastPoint: { x: number; y: number };
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
-    this.canvasLayerMap = canvasLayerMap
+    this.canvasLayerMap = canvasLayerMap;
     this.ctxLayerMap = Object.fromEntries(
       Object.entries(canvasLayerMap).map(([name, canvas]) => [
         name,
         canvas.getContext("2d")!,
       ]),
-    )
-    this.transform = identity()
+    );
+    this.transform = identity();
     // positive is up (cartesian)
-    this.transform.d *= -1
-    this.transform = compose(this.transform, translate(0, -500))
-    this.lastPoint = { x: 0, y: 0 }
-    this.equip({})
+    this.transform.d *= -1;
+    this.transform = compose(this.transform, translate(0, -500));
+    this.lastPoint = { x: 0, y: 0 };
+    this.equip({});
   }
 
   clear() {
     for (const ctx of Object.values(this.ctxLayerMap)) {
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
   }
 
@@ -146,7 +146,7 @@ export class Drawer {
       layer: "top",
       opacity: this.foregroundLayer === aperture.color ? 1 : 0.5,
       ...aperture,
-    }
+    };
   }
 
   drawMeshPattern(
@@ -157,32 +157,32 @@ export class Drawer {
     spacing: number,
     angle = 45,
   ) {
-    const ctx = this.getLayerCtx()
-    const [x1, y1] = applyToPoint(this.transform, [x, y])
-    const [x2, y2] = applyToPoint(this.transform, [x + width, y + height])
-    const spacing$ = scaleOnly(this.transform, spacing)
+    const ctx = this.getLayerCtx();
+    const [x1, y1] = applyToPoint(this.transform, [x, y]);
+    const [x2, y2] = applyToPoint(this.transform, [x + width, y + height]);
+    const spacing$ = scaleOnly(this.transform, spacing);
 
     // Set line properties for the mesh
-    ctx.lineWidth = 1
-    ctx.strokeStyle = this.aperture.color
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = this.aperture.color;
 
     const drawLines = (angle: number) => {
-      const sin = Math.sin(angle)
-      const cos = Math.cos(angle)
-      const diag = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+      const sin = Math.sin(angle);
+      const cos = Math.cos(angle);
+      const diag = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 
       for (let i = -diag; i <= diag; i += spacing$) {
-        ctx.beginPath()
-        ctx.moveTo(x1 + i * cos - diag * sin, y1 + i * sin + diag * cos)
-        ctx.lineTo(x1 + i * cos + diag * sin, y1 + i * sin - diag * cos)
-        ctx.stroke()
+        ctx.beginPath();
+        ctx.moveTo(x1 + i * cos - diag * sin, y1 + i * sin + diag * cos);
+        ctx.lineTo(x1 + i * cos + diag * sin, y1 + i * sin - diag * cos);
+        ctx.stroke();
       }
-    }
+    };
 
     // Draw first set of parallel lines
-    drawLines((angle * Math.PI) / 180)
+    drawLines((angle * Math.PI) / 180);
     // Draw second set of parallel lines (perpendicular to the first set)
-    drawLines(((angle + 90) * Math.PI) / 180)
+    drawLines(((angle + 90) * Math.PI) / 180);
   }
 
   rect({
@@ -197,93 +197,93 @@ export class Drawer {
     stroke_width,
     roundness,
   }: {
-    x: number
-    y: number
-    w: number
-    h: number
-    mesh_fill?: boolean
-    is_filled?: boolean
-    has_stroke?: boolean
-    is_stroke_dashed?: boolean
-    stroke_width?: number
-    roundness?: number
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    mesh_fill?: boolean;
+    is_filled?: boolean;
+    has_stroke?: boolean;
+    is_stroke_dashed?: boolean;
+    stroke_width?: number;
+    roundness?: number;
   }) {
-    const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
-    const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
+    const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2]);
+    const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2]);
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
 
-    const radius$ = roundness ? scaleOnly(this.transform, roundness) : 0
+    const radius$ = roundness ? scaleOnly(this.transform, roundness) : 0;
 
     const shouldDrawStroke =
-      has_stroke === undefined ? is_filled === false : has_stroke
+      has_stroke === undefined ? is_filled === false : has_stroke;
 
     if (mesh_fill) {
-      ctx.save()
-      ctx.beginPath()
+      ctx.save();
+      ctx.beginPath();
       if (radius$ > 0 && ctx.roundRect) {
-        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$);
       } else {
-        ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$);
       }
-      ctx.clip()
+      ctx.clip();
 
       // Draw the mesh pattern
-      this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15) // Adjust spacing as needed
+      this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15); // Adjust spacing as needed
 
-      ctx.restore()
+      ctx.restore();
 
       // Draw the outline
       if (radius$ > 0 && ctx.roundRect) {
-        ctx.beginPath()
-        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
-        ctx.stroke()
+        ctx.beginPath();
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$);
+        ctx.stroke();
       } else {
-        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$);
       }
     } else {
       if (is_filled !== false) {
         if (radius$ > 0 && ctx.roundRect) {
-          ctx.beginPath()
-          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
-          ctx.fill()
+          ctx.beginPath();
+          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$);
+          ctx.fill();
         } else {
-          ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+          ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$);
         }
       }
 
       if (shouldDrawStroke) {
-        const originalLineWidth = ctx.lineWidth
+        const originalLineWidth = ctx.lineWidth;
         if (stroke_width !== undefined) {
-          ctx.lineWidth = scaleOnly(this.transform, stroke_width)
+          ctx.lineWidth = scaleOnly(this.transform, stroke_width);
         }
         if (is_stroke_dashed) {
-          let dashPattern: number[] = []
+          let dashPattern: number[] = [];
 
-          const scale = Math.abs(this.transform.a)
+          const scale = Math.abs(this.transform.a);
           if (scale > 0) {
-            const SEGMENT_LENGTH = 0.1
-            const dash = SEGMENT_LENGTH * scale
-            const gap = dash * 1.3
+            const SEGMENT_LENGTH = 0.1;
+            const dash = SEGMENT_LENGTH * scale;
+            const gap = dash * 1.3;
 
             if (dash > 0.5) {
-              dashPattern = [dash, gap]
+              dashPattern = [dash, gap];
             }
           }
-          ctx.setLineDash(dashPattern)
+          ctx.setLineDash(dashPattern);
         }
         if (radius$ > 0 && ctx.roundRect) {
-          ctx.beginPath()
-          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
-          ctx.stroke()
+          ctx.beginPath();
+          ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$);
+          ctx.stroke();
         } else {
-          ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+          ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$);
         }
         if (is_stroke_dashed) {
-          ctx.setLineDash([]) // Reset dash pattern
+          ctx.setLineDash([]); // Reset dash pattern
         }
         if (stroke_width !== undefined) {
-          ctx.lineWidth = originalLineWidth
+          ctx.lineWidth = originalLineWidth;
         }
       }
     }
@@ -298,50 +298,50 @@ export class Drawer {
     roundness?: number,
     mesh_fill?: boolean,
   ) {
-    const ctx = this.getLayerCtx()
-    this.applyAperture()
+    const ctx = this.getLayerCtx();
+    this.applyAperture();
 
-    const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2])
-    const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2])
-    const radius$ = roundness ? scaleOnly(this.transform, roundness) : 0
+    const [x1$, y1$] = applyToPoint(this.transform, [x - w / 2, y - h / 2]);
+    const [x2$, y2$] = applyToPoint(this.transform, [x + w / 2, y + h / 2]);
+    const radius$ = roundness ? scaleOnly(this.transform, roundness) : 0;
 
-    ctx.save()
+    ctx.save();
 
-    const [centerX, centerY] = applyToPoint(this.transform, [x, y])
-    ctx.translate(centerX, centerY)
-    const cw_rotation = 360 - ccw_rotation
-    if (ccw_rotation) ctx.rotate((cw_rotation * Math.PI) / 180)
-    ctx.translate(-centerX, -centerY)
+    const [centerX, centerY] = applyToPoint(this.transform, [x, y]);
+    ctx.translate(centerX, centerY);
+    const cw_rotation = 360 - ccw_rotation;
+    if (ccw_rotation) ctx.rotate((cw_rotation * Math.PI) / 180);
+    ctx.translate(-centerX, -centerY);
 
     if (mesh_fill) {
-      ctx.beginPath()
+      ctx.beginPath();
       if (radius$ > 0 && ctx.roundRect) {
-        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$);
       } else {
-        ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        ctx.rect(x1$, y1$, x2$ - x1$, y2$ - y1$);
       }
-      ctx.clip()
+      ctx.clip();
 
-      this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15)
+      this.drawMeshPattern(x - w / 2, y - h / 2, w, h, 0.15);
 
       if (radius$ > 0 && ctx.roundRect) {
-        ctx.beginPath()
-        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
-        ctx.stroke()
+        ctx.beginPath();
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$);
+        ctx.stroke();
       } else {
-        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        ctx.strokeRect(x1$, y1$, x2$ - x1$, y2$ - y1$);
       }
     } else {
       if (radius$ > 0 && ctx.roundRect) {
-        ctx.beginPath()
-        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$)
-        ctx.fill()
+        ctx.beginPath();
+        ctx.roundRect(x1$, y1$, x2$ - x1$, y2$ - y1$, radius$);
+        ctx.fill();
       } else {
-        ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$)
+        ctx.fillRect(x1$, y1$, x2$ - x1$, y2$ - y1$);
       }
     }
 
-    ctx.restore()
+    ctx.restore();
   }
 
   rotatedPill(
@@ -351,20 +351,20 @@ export class Drawer {
     h: number,
     ccw_rotation: Rotation,
   ) {
-    const ctx = this.getLayerCtx()
-    this.applyAperture()
+    const ctx = this.getLayerCtx();
+    this.applyAperture();
 
-    ctx.save()
+    ctx.save();
 
-    const [centerX, centerY] = applyToPoint(this.transform, [x, y])
-    ctx.translate(centerX, centerY)
-    const cw_rotation = 360 - ccw_rotation
-    if (ccw_rotation) ctx.rotate((cw_rotation * Math.PI) / 180)
-    ctx.translate(-centerX, -centerY)
+    const [centerX, centerY] = applyToPoint(this.transform, [x, y]);
+    ctx.translate(centerX, centerY);
+    const cw_rotation = 360 - ccw_rotation;
+    if (ccw_rotation) ctx.rotate((cw_rotation * Math.PI) / 180);
+    ctx.translate(-centerX, -centerY);
 
-    this.pill(x, y, w, h)
+    this.pill(x, y, w, h);
 
-    ctx.restore()
+    ctx.restore();
   }
 
   circle(
@@ -374,117 +374,117 @@ export class Drawer {
     mesh_fill?: boolean,
     is_filled = true,
   ) {
-    const r$ = scaleOnly(this.transform, r)
-    const [x$, y$] = applyToPoint(this.transform, [x, y])
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
+    const r$ = scaleOnly(this.transform, r);
+    const [x$, y$] = applyToPoint(this.transform, [x, y]);
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
 
     if (mesh_fill) {
-      ctx.save()
-      ctx.beginPath()
-      ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
-      ctx.clip()
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x$, y$, r$, 0, 2 * Math.PI);
+      ctx.clip();
 
       // Draw the mesh pattern
       // We need to cover the entire circular area, so we use a square that fully encloses the circle
-      this.drawMeshPattern(x - r, y - r, r * 2, r * 2, 0.15) // Adjust spacing as needed
+      this.drawMeshPattern(x - r, y - r, r * 2, r * 2, 0.15); // Adjust spacing as needed
 
-      ctx.restore()
+      ctx.restore();
 
       // Draw the outline
-      ctx.beginPath()
-      ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
-      ctx.stroke()
+      ctx.beginPath();
+      ctx.arc(x$, y$, r$, 0, 2 * Math.PI);
+      ctx.stroke();
     } else {
-      ctx.beginPath()
-      ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
-      ctx.fill()
+      ctx.beginPath();
+      ctx.arc(x$, y$, r$, 0, 2 * Math.PI);
+      ctx.fill();
     }
   }
 
   oval(x: number, y: number, rx: number, ry: number) {
-    const rx$ = scaleOnly(this.transform, rx)
-    const ry$ = scaleOnly(this.transform, ry)
-    const [x$, y$] = applyToPoint(this.transform, [x, y])
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
-    ctx.beginPath()
-    ctx.ellipse(x$, y$, rx$, ry$, 0, 0, 2 * Math.PI)
-    ctx.fill()
-    ctx.closePath()
+    const rx$ = scaleOnly(this.transform, rx);
+    const ry$ = scaleOnly(this.transform, ry);
+    const [x$, y$] = applyToPoint(this.transform, [x, y]);
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
+    ctx.beginPath();
+    ctx.ellipse(x$, y$, rx$, ry$, 0, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.closePath();
   }
 
   pill(x: number, y: number, w: number, h: number) {
-    const [x$, y$] = applyToPoint(this.transform, [x - w / 2, y + h / 2])
-    const width$ = scaleOnly(this.transform, w)
-    const height$ = scaleOnly(this.transform, h)
-    const radius = Math.min(width$, height$) / 2
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
-    ctx.beginPath()
-    ctx.arc(x$ + radius, y$ + radius, radius, Math.PI, Math.PI * 1.5)
-    ctx.arc(x$ + width$ - radius, y$ + radius, radius, Math.PI * 1.5, 0)
+    const [x$, y$] = applyToPoint(this.transform, [x - w / 2, y + h / 2]);
+    const width$ = scaleOnly(this.transform, w);
+    const height$ = scaleOnly(this.transform, h);
+    const radius = Math.min(width$, height$) / 2;
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
+    ctx.beginPath();
+    ctx.arc(x$ + radius, y$ + radius, radius, Math.PI, Math.PI * 1.5);
+    ctx.arc(x$ + width$ - radius, y$ + radius, radius, Math.PI * 1.5, 0);
     ctx.arc(
       x$ + width$ - radius,
       y$ + height$ - radius,
       radius,
       0,
       Math.PI * 0.5,
-    )
-    ctx.arc(x$ + radius, y$ + height$ - radius, radius, Math.PI * 0.5, Math.PI)
-    ctx.fill()
-    ctx.closePath()
+    );
+    ctx.arc(x$ + radius, y$ + height$ - radius, radius, Math.PI * 0.5, Math.PI);
+    ctx.fill();
+    ctx.closePath();
   }
 
   polygon(points: { x: number; y: number }[]) {
     if (points.length < 3) {
-      return
+      return;
     }
 
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
 
     // Transform all points
     const transformedPoints = points.map((point) =>
       applyToPoint(this.transform, [point.x, point.y]),
-    )
+    );
 
     // Draw the filled polygon
-    ctx.beginPath()
-    ctx.moveTo(transformedPoints[0][0], transformedPoints[0][1])
+    ctx.beginPath();
+    ctx.moveTo(transformedPoints[0][0], transformedPoints[0][1]);
     for (let i = 1; i < transformedPoints.length; i++) {
-      ctx.lineTo(transformedPoints[i][0], transformedPoints[i][1])
+      ctx.lineTo(transformedPoints[i][0], transformedPoints[i][1]);
     }
-    ctx.closePath()
-    ctx.fill("evenodd")
+    ctx.closePath();
+    ctx.fill("evenodd");
 
     // Draw the outline only if we have a non-zero stroke width.
     // Calling ctx.stroke() with a zero width will re-use the previous
     // stroke width which can cause the polygon to suddenly expand when
     // other primitives (like hovered rectangles) change the aperture size.
-    const lineWidth = scaleOnly(this.transform, this.aperture.size)
+    const lineWidth = scaleOnly(this.transform, this.aperture.size);
     if (lineWidth > 0) {
-      ctx.lineWidth = lineWidth
-      ctx.stroke()
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
     }
   }
 
   /* NOTE: This is not gerber compatible */
   debugText(text: string, x: number, y: number) {
-    const [x$, y$] = applyToPoint(this.transform, [x, y])
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
+    const [x$, y$] = applyToPoint(this.transform, [x, y]);
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
 
-    ctx.font = "10px sans-serif"
-    ctx.fillText(text, x$, y$)
+    ctx.font = "10px sans-serif";
+    ctx.fillText(text, x$, y$);
   }
 
   getLayerCtx() {
-    const ctx = this.ctxLayerMap[this.aperture.layer]
+    const ctx = this.ctxLayerMap[this.aperture.layer];
     if (!ctx) {
-      throw new Error(`No context for layer "${this.aperture.layer}"`)
+      throw new Error(`No context for layer "${this.aperture.layer}"`);
     }
-    return ctx
+    return ctx;
   }
 
   /**
@@ -494,48 +494,48 @@ export class Drawer {
    * Also: Set the opacity of every non-foreground layer to 0.5
    */
   orderAndFadeLayers() {
-    const { canvasLayerMap, foregroundLayer } = this
+    const { canvasLayerMap, foregroundLayer } = this;
     const innerLayers = Object.keys(canvasLayerMap)
       .filter((layer) => /^inner\d+$/.test(layer))
       .sort(
         (a, b) =>
           Number(b.slice("inner".length)) - Number(a.slice("inner".length)),
-      )
+      );
     const defaultDrawOrder = [
       "board",
       ...innerLayers,
       ...DEFAULT_DRAW_ORDER.filter((layer) => layer !== "board"),
-    ]
+    ];
     const associatedSoldermask =
       foregroundLayer === "top"
         ? "soldermask_top"
         : foregroundLayer === "bottom"
           ? "soldermask_bottom"
-          : undefined
+          : undefined;
     const associatedSilkscreen =
       foregroundLayer === "top"
         ? "top_silkscreen"
         : foregroundLayer === "bottom"
           ? "bottom_silkscreen"
-          : undefined
+          : undefined;
     const associatedNotes =
       foregroundLayer === "top"
         ? "top_notes"
         : foregroundLayer === "bottom"
           ? "bottom_notes"
-          : undefined
+          : undefined;
     const associatedFabrication =
       foregroundLayer === "top"
         ? "top_fabrication"
         : foregroundLayer === "bottom"
           ? "bottom_fabrication"
-          : undefined
+          : undefined;
     const associatedCourtyard =
       foregroundLayer === "top"
         ? "top_courtyard"
         : foregroundLayer === "bottom"
           ? "bottom_courtyard"
-          : undefined
+          : undefined;
 
     const opaqueLayers = new Set<string>([
       foregroundLayer,
@@ -548,7 +548,7 @@ export class Drawer {
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
       ...(associatedCourtyard ? [associatedCourtyard] : []),
-    ])
+    ]);
 
     const layersToShiftToTop = [
       foregroundLayer,
@@ -558,7 +558,7 @@ export class Drawer {
       ...(associatedNotes ? [associatedNotes] : []),
       ...(associatedFabrication ? [associatedFabrication] : []),
       ...(associatedCourtyard ? [associatedCourtyard] : []),
-    ]
+    ];
 
     const order = [
       ...defaultDrawOrder.filter((l) => !layersToShiftToTop.includes(l)),
@@ -570,63 +570,63 @@ export class Drawer {
       ...(associatedFabrication ? [associatedFabrication] : []),
       ...(associatedCourtyard ? [associatedCourtyard] : []),
       "drill",
-    ]
+    ];
 
     order.forEach((layer, i) => {
-      const canvas = canvasLayerMap[layer]
-      if (!canvas) return
+      const canvas = canvasLayerMap[layer];
+      if (!canvas) return;
 
-      canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
-      canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
-    })
+      canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`;
+      canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5";
+    });
   }
 
   applyAperture() {
-    const { transform, aperture } = this
-    let { size, mode, color, fontSize, layer } = aperture
-    if (!(layer in this.ctxLayerMap)) this.aperture.layer = "other"
+    const { transform, aperture } = this;
+    let { size, mode, color, fontSize, layer } = aperture;
+    if (!(layer in this.ctxLayerMap)) this.aperture.layer = "other";
 
-    const ctx = this.getLayerCtx()
+    const ctx = this.getLayerCtx();
     if (!ctx) {
-      throw new Error(`No context for layer "${this.foregroundLayer}"`)
+      throw new Error(`No context for layer "${this.foregroundLayer}"`);
     }
-    if (!color) color = "undefined"
-    ctx.lineWidth = scaleOnly(transform, size)
-    ctx.lineCap = "round"
+    if (!color) color = "undefined";
+    ctx.lineWidth = scaleOnly(transform, size);
+    ctx.lineCap = "round";
 
     if (mode === "add") {
-      ctx.globalCompositeOperation = "source-over"
-      let colorString = LAYER_NAME_TO_COLOR[color.toLowerCase()]
+      ctx.globalCompositeOperation = "source-over";
+      let colorString = LAYER_NAME_TO_COLOR[color.toLowerCase()];
       if (!colorString)
         try {
-          colorString = colorParser(color).rgb().toString()
+          colorString = colorParser(color).rgb().toString();
         } catch (error) {
-          console.warn(`Invalid color format: '${color}'`)
-          colorString = "white"
+          console.warn(`Invalid color format: '${color}'`);
+          colorString = "white";
         }
 
-      ctx.fillStyle = colorString
-      ctx.strokeStyle = colorString
+      ctx.fillStyle = colorString;
+      ctx.strokeStyle = colorString;
     } else {
-      ctx.globalCompositeOperation = "destination-out"
-      ctx.fillStyle = "rgba(0,0,0,1)"
-      ctx.strokeStyle = "rgba(0,0,0,1)"
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      ctx.strokeStyle = "rgba(0,0,0,1)";
     }
-    ctx.font = `${scaleOnly(inverse(transform), fontSize)}px sans-serif`
+    ctx.font = `${scaleOnly(inverse(transform), fontSize)}px sans-serif`;
   }
 
   moveTo(x: number, y: number) {
-    this.lastPoint = { x, y }
+    this.lastPoint = { x, y };
   }
   lineTo(x: number, y: number) {
-    const [x$, y$] = applyToPoint(this.transform, [x, y])
-    const { size, shape, mode } = this.aperture
-    const size$ = scaleOnly(this.transform, size)
-    const { lastPoint } = this
-    const lastPoint$ = applyToPoint(this.transform, lastPoint)
+    const [x$, y$] = applyToPoint(this.transform, [x, y]);
+    const { size, shape, mode } = this.aperture;
+    const size$ = scaleOnly(this.transform, size);
+    const { lastPoint } = this;
+    const lastPoint$ = applyToPoint(this.transform, lastPoint);
 
-    this.applyAperture()
-    const ctx = this.getLayerCtx()
+    this.applyAperture();
+    const ctx = this.getLayerCtx();
 
     if (shape === "square")
       ctx.fillRect(
@@ -634,79 +634,79 @@ export class Drawer {
         lastPoint$.y - size$ / 2,
         size$,
         size$,
-      )
-    ctx.beginPath()
-    ctx.moveTo(lastPoint$.x, lastPoint$.y)
-    ctx.lineTo(x$, y$)
+      );
+    ctx.beginPath();
+    ctx.moveTo(lastPoint$.x, lastPoint$.y);
+    ctx.lineTo(x$, y$);
 
-    ctx.stroke()
-    ctx.closePath()
+    ctx.stroke();
+    ctx.closePath();
 
     if (shape === "square")
-      ctx.fillRect(x$ - size$ / 2, y$ - size$ / 2, size$, size$)
+      ctx.fillRect(x$ - size$ / 2, y$ - size$ / 2, size$, size$);
 
-    this.lastPoint = { x, y }
+    this.lastPoint = { x, y };
   }
 
   polygonWithArcs(brep: BRepShape) {
-    const ctx = this.getLayerCtx()
+    const ctx = this.getLayerCtx();
 
     const processRing = (ring: Ring) => {
-      if (ring.vertices.length === 0) return
-      const startPoint = ring.vertices[0]
+      if (ring.vertices.length === 0) return;
+      const startPoint = ring.vertices[0];
       const t_start_point = applyToPoint(this.transform, [
         startPoint.x,
         startPoint.y,
-      ])
-      ctx.moveTo(t_start_point[0], t_start_point[1])
+      ]);
+      ctx.moveTo(t_start_point[0], t_start_point[1]);
 
       for (let i = 0; i < ring.vertices.length; i++) {
-        const p1 = ring.vertices[i]
-        const p2 = ring.vertices[(i + 1) % ring.vertices.length]
+        const p1 = ring.vertices[i];
+        const p2 = ring.vertices[(i + 1) % ring.vertices.length];
 
         if (p1.bulge && p1.bulge !== 0) {
-          const bulge = p1.bulge
+          const bulge = p1.bulge;
 
-          const dx = p2.x - p1.x
-          const dy = p2.y - p1.y
-          const chord = Math.sqrt(dx * dx + dy * dy)
+          const dx = p2.x - p1.x;
+          const dy = p2.y - p1.y;
+          const chord = Math.sqrt(dx * dx + dy * dy);
 
           if (chord < 1e-9) {
-            const t_p2 = applyToPoint(this.transform, [p2.x, p2.y])
-            ctx.lineTo(t_p2[0], t_p2[1])
-            continue
+            const t_p2 = applyToPoint(this.transform, [p2.x, p2.y]);
+            ctx.lineTo(t_p2[0], t_p2[1]);
+            continue;
           }
 
-          const angle = 4 * Math.atan(bulge)
-          const radius = Math.abs(chord / (2 * Math.sin(angle / 2)))
+          const angle = 4 * Math.atan(bulge);
+          const radius = Math.abs(chord / (2 * Math.sin(angle / 2)));
 
-          const mx = (p1.x + p2.x) / 2
-          const my = (p1.y + p2.y) / 2
+          const mx = (p1.x + p2.x) / 2;
+          const my = (p1.y + p2.y) / 2;
 
-          const norm_dx = dx / chord
-          const norm_dy = dy / chord
+          const norm_dx = dx / chord;
+          const norm_dy = dy / chord;
 
-          const perp_vx = -norm_dy
-          const perp_vy = norm_dx
+          const perp_vx = -norm_dy;
+          const perp_vy = norm_dx;
 
           const dist_to_center = Math.sqrt(
             Math.max(0, radius * radius - (chord / 2) ** 2),
-          )
+          );
 
-          const cx = mx + dist_to_center * perp_vx * Math.sign(bulge)
-          const cy = my + dist_to_center * perp_vy * Math.sign(bulge)
+          const cx = mx + dist_to_center * perp_vx * Math.sign(bulge);
+          const cy = my + dist_to_center * perp_vy * Math.sign(bulge);
 
-          const startAngle = Math.atan2(p1.y - cy, p1.x - cx)
-          let endAngle = Math.atan2(p2.y - cy, p2.x - cx)
+          const startAngle = Math.atan2(p1.y - cy, p1.x - cx);
+          let endAngle = Math.atan2(p2.y - cy, p2.x - cx);
 
           if (bulge > 0 && endAngle < startAngle) {
-            endAngle += 2 * Math.PI
+            endAngle += 2 * Math.PI;
           } else if (bulge < 0 && endAngle > startAngle) {
-            endAngle -= 2 * Math.PI
+            endAngle -= 2 * Math.PI;
           }
 
-          const t_center = applyToPoint(this.transform, [cx, cy])
-          const t_radius = scaleOnly(this.transform, radius)
+          const t_center = applyToPoint(this.transform, [cx, cy]);
+          const t_radius = scaleOnly(this.transform, radius);
 
           ctx.arc(
             t_center[0],
@@ -715,24 +715,24 @@ export class Drawer {
             -startAngle,
             -endAngle,
             bulge > 0,
-          )
+          );
         } else {
-          const t_p2 = applyToPoint(this.transform, [p2.x, p2.y])
-          ctx.lineTo(t_p2[0], t_p2[1])
+          const t_p2 = applyToPoint(this.transform, [p2.x, p2.y]);
+          ctx.lineTo(t_p2[0], t_p2[1]);
         }
       }
-      ctx.closePath()
-    }
+      ctx.closePath();
+    };
 
-    ctx.beginPath()
+    ctx.beginPath();
 
-    processRing(brep.outer_ring)
+    processRing(brep.outer_ring);
     if (brep.inner_rings) {
       for (const inner_ring of brep.inner_rings) {
-        processRing(inner_ring)
+        processRing(inner_ring);
       }
     }
 
-    ctx.fill("evenodd")
+    ctx.fill("evenodd");
   }
 }
