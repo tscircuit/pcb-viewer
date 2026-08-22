@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   IS_SHOWING_SOLDER_MASK: "pcb_viewer_is_showing_solder_mask",
   IS_SHOWING_FABRICATION_NOTES: "pcb_viewer_is_showing_fabrication_notes",
   IS_SHOWING_PCB_NOTES: "pcb_viewer_is_showing_pcb_notes",
+  IS_SHOWING_DEBUG_OBJECTS: "pcb_viewer_is_showing_debug_objects",
   IS_SHOWING_SILKSCREEN: "pcb_viewer_is_showing_silkscreen",
 } as const
 

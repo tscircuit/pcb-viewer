@@ -13,6 +13,7 @@ import { drawPcbHoleElementsForLayer } from "lib/draw-hole"
 import { drawPcbBoardElements } from "lib/draw-pcb-board"
 import { drawPcbCopperTextElementsForLayer } from "lib/draw-pcb-copper-text"
 import { drawPcbCutoutElementsForLayer } from "lib/draw-pcb-cutout"
+import { drawPcbDebugObjects } from "lib/draw-pcb-debug-object"
 import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbPanelElements } from "lib/draw-pcb-panel"
@@ -55,6 +56,9 @@ export const CanvasPrimitiveRenderer = ({
     (s) => s.is_showing_fabrication_notes,
   )
   const isShowingPcbNotes = useGlobalStore((s) => s.is_showing_pcb_notes)
+  const isShowingDebugObjects = useGlobalStore(
+    (s) => s.is_showing_debug_objects,
+  )
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
@@ -359,6 +363,17 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
         })
       }
+
+      if (isShowingDebugObjects) {
+        const debugObjectsCanvas = canvasRefs.current.debug_objects
+        if (debugObjectsCanvas) {
+          drawPcbDebugObjects({
+            canvas: debugObjectsCanvas,
+            elements,
+            realToCanvasMat: transform,
+          })
+        }
+      }
     }
 
     drawer.orderAndFadeLayers()
@@ -371,6 +386,7 @@ export const CanvasPrimitiveRenderer = ({
     isShowingSolderMask,
     isShowingFabricationNotes,
     isShowingPcbNotes,
+    isShowingDebugObjects,
     isShowingCourtyards,
     isShowingSilkscreen,
   ])
