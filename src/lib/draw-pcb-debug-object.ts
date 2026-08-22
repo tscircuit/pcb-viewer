@@ -15,6 +15,10 @@ export function drawPcbDebugObjects({
   drawer.realToCanvasMat = realToCanvasMat
   drawer.drawElements(
     elements.filter((element) => element.type === "pcb_debug_object"),
-    { layers: [], showDebugObjects: true },
+    // Remove the cast when the circuit-to-canvas release containing
+    // showDebugObjects is installed.
+    { layers: [], showDebugObjects: true } as Parameters<
+      typeof drawer.drawElements
+    >[1],
   )
 }
