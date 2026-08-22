@@ -20,3 +20,13 @@ test("DRC warnings are shown by default and can be hidden", () => {
 
   expect(store.getState().is_showing_drc_warnings).toBe(false)
 })
+
+test("PCB debug objects are shown by default in development and can be hidden", () => {
+  const store = createStore()
+
+  expect(store.getState().is_showing_debug_objects).toBe(true)
+
+  store.getState().setIsShowingDebugObjects(false)
+
+  expect(store.getState().is_showing_debug_objects).toBe(false)
+})

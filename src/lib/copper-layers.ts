@@ -58,5 +58,6 @@ export const getOrderedCanvasLayers = (
     "top_courtyard",
     "bottom_courtyard",
     "other",
+    "debug_objects",
   ]
 }

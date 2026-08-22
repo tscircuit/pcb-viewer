@@ -36,6 +36,7 @@ export interface State {
   is_showing_silkscreen: boolean
   is_showing_fabrication_notes: boolean
   is_showing_pcb_notes: boolean
+  is_showing_debug_objects: boolean
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
@@ -58,6 +59,7 @@ export interface State {
   setIsShowingSilkscreen: (is_showing: boolean) => void
   setIsShowingFabricationNotes: (is_showing: boolean) => void
   setIsShowingPcbNotes: (is_showing: boolean) => void
+  setIsShowingDebugObjects: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
   setFocusedErrorId: (errorId: string | null) => void
@@ -122,6 +124,10 @@ export const createStore = (
         is_showing_pcb_notes: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_PCB_NOTES,
           true,
+        ),
+        is_showing_debug_objects: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_DEBUG_OBJECTS,
+          process.env.NODE_ENV !== "production",
         ),
         pcb_group_view_mode: disablePcbGroups
           ? "all"
@@ -193,6 +199,10 @@ export const createStore = (
         setIsShowingPcbNotes: (is_showing) => {
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_NOTES, is_showing)
           set({ is_showing_pcb_notes: is_showing })
+        },
+        setIsShowingDebugObjects: (is_showing) => {
+          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_DEBUG_OBJECTS, is_showing)
+          set({ is_showing_debug_objects: is_showing })
         },
         setPcbGroupViewMode: (mode) => {
           if (disablePcbGroups) return
