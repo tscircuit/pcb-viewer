@@ -23,6 +23,7 @@ import { drawPrimitives } from "lib/draw-primitives"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
+import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
 import type { GridConfig, Primitive } from "lib/types"
 import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
@@ -79,18 +80,12 @@ export const CanvasPrimitiveRenderer = ({
 
     // Filter out solder mask and silkscreen primitives when disabled
     // Also filter out SMT pad primitives since they're drawn with circuit-to-canvas
-    const filteredPrimitives = primitives
-      .filter((p) => isShowingSolderMask || !p.layer?.includes("soldermask"))
-      .filter((p) => isShowingSilkscreen || !p.layer?.includes("silkscreen"))
-      .filter(
-        (p) => isShowingFabricationNotes || !p.layer?.includes("fabrication"),
-      )
-      .filter((p) => p.layer !== "board")
-      .filter((p) => p._element?.type !== "pcb_smtpad")
-      .filter((p) => p._element?.type !== "pcb_plated_hole")
-      .filter((p) => p._element?.type !== "pcb_via")
-      .filter((p) => p._element?.type !== "pcb_trace")
-      .filter((p) => p._element?.type !== "pcb_copper_text")
+    const filteredPrimitives = getPrimitivesForDrawer({
+      primitives,
+      isShowingSolderMask,
+      isShowingSilkscreen,
+      isShowingFabricationNotes,
+    })
 
     drawPrimitives(drawer, filteredPrimitives)
 
