@@ -5,16 +5,19 @@ export const calculateBoardSizeKey = (
 ): string => {
   if (!circuitJson) return "empty"
 
-  const board = circuitJson.find((e) => e.type === "pcb_board") as
-    | PcbBoard
+  const boards = circuitJson.filter((e) => e.type === "pcb_board") as
+    | PcbBoard[]
     | undefined
 
-  if (!board) return "no-board"
+  if (!boards || boards.length === 0) return "no-board"
   const round = (n: number) => Math.round(n * 1000) / 1000
 
-  if (board.outline) {
-    return board.outline.map((o) => `${round(o.x)}_${round(o.y)}`).join(",")
-  }
-
-  return `${round(board.width!)}_${round(board.height!)}`
+  return boards
+    .map((board) => {
+      if (board.outline) {
+        return board.outline.map((o) => `${round(o.x)}_${round(o.y)}`).join(",")
+      }
+      return `${round(board.width!)}_${round(board.height!)}_${round(board.center.x)}_${round(board.center.y)}`
+    })
+    .join("|")
 }
