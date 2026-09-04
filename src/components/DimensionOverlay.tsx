@@ -61,7 +61,7 @@ const shouldExcludePrimitiveFromSnapping = (primitive: Primitive) => {
 export const DimensionOverlay = ({
   children,
   transform,
-  focusOnHover = false,
+  focusOnHover = true,
   primitives = [],
   onBoundsSelected,
   cancelPanDrag,
