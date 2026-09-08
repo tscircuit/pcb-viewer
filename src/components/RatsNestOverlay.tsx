@@ -5,6 +5,7 @@ import { useGlobalStore } from "../global-store"
 import { zIndexMap } from "lib/util/z-index-map"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import { useMemo } from "react"
+import { getUnconnectedRatsNestLines } from "../lib/get-unconnected-rats-nest-lines"
 
 interface Props {
   transform?: Matrix
@@ -22,6 +23,9 @@ type RatsNestLine = {
 
 export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
   const isShowingRatsNest = useGlobalStore((s) => s.is_showing_rats_nest)
+  const onlyUnconnected = useGlobalStore(
+    (s) => s.is_showing_only_unconnected_rats_nest,
+  )
 
   const { netMap, idToNetMap } = useMemo(
     () => getFullConnectivityMapFromCircuitJson(soup || []),
@@ -30,6 +34,7 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
 
   const ratsNestLines = useMemo(() => {
     if (!soup || !isShowingRatsNest) return []
+    if (onlyUnconnected) return getUnconnectedRatsNestLines(soup)
 
     const getElementPosition = (id: string): Point | null => {
       // @ts-ignore
@@ -98,7 +103,7 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
     })
 
     return lines
-  }, [soup, netMap, idToNetMap, isShowingRatsNest])
+  }, [soup, netMap, idToNetMap, isShowingRatsNest, onlyUnconnected])
 
   if (!soup || !isShowingRatsNest) return children
   if (!transform) transform = identity()
@@ -107,6 +112,7 @@ export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
     <div style={{ position: "relative" }}>
       {children}
       <svg
+        aria-label="Rats nest connections"
         style={{
           position: "absolute",
           left: 0,

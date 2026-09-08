@@ -6,7 +6,7 @@ import {
   useLayoutEffect,
 } from "react"
 import { css } from "@emotion/css"
-import { type LayerRef } from "circuit-json"
+import type { LayerRef } from "circuit-json"
 import type { AnyCircuitElement } from "circuit-json"
 import { getCopperLayerRefsFromElements } from "lib/copper-layers"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
@@ -18,6 +18,7 @@ import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { useMobileTouch } from "hooks/useMobileTouch"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
+import { RatsNestMenu } from "./RatsNestMenu"
 
 interface Props {
   children?: React.ReactNode
@@ -143,7 +144,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     selectedLayer,
     selectLayer,
     viewSettings,
-    setIsShowingRatsNest,
     setIsShowingMultipleTracesLength,
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
@@ -165,7 +165,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     selectedLayer: s.selected_layer,
     selectLayer: s.selectLayer,
     viewSettings: {
-      is_showing_rats_nest: s.is_showing_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
@@ -180,7 +179,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_pcb_notes: s.is_showing_pcb_notes,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
-    setIsShowingRatsNest: s.setIsShowingRatsNest,
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
@@ -334,10 +332,6 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setErrorsOpen(false)
   }, [])
 
-  const handleRatsNestToggle = useCallback(() => {
-    setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
-  }, [viewSettings.is_showing_rats_nest, setIsShowingRatsNest])
-
   const handleMeasureToolClick = useCallback(() => {
     setMeasureToolArmed(true)
     setBoundsToolArmed(false)
@@ -472,16 +466,15 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
           setHoveredErrorId={setHoveredErrorId}
           setFocusedErrorId={setFocusedErrorId}
         />
-        <ToolbarButton
+        <RatsNestMenu
           isSmallScreen={isSmallScreen}
-          style={{}}
-          onClick={handleRatsNestToggle}
-        >
-          <div>
-            {viewSettings.is_showing_rats_nest ? "✖ " : ""}
-            Rats Nest
-          </div>
-        </ToolbarButton>
+          onOpen={() => {
+            setLayerMenuOpen(false)
+            setViewMenuOpen(false)
+            setErrorsOpen(false)
+            setHoveredErrorId(null)
+          }}
+        />
 
         <ToolbarButton
           isSmallScreen={isSmallScreen}
