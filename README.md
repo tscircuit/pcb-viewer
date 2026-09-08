@@ -72,11 +72,11 @@ The PCBViewer component accepts these props:
 - `children`: Circuit components to render
 - `circuitJson`: Circuit JSON elements array (alternative to children)
 - `height`: Height of viewer in pixels (default: 600)
-- `allowEditing`: Enable/disable editing capabilities (default: true)
+- `allowEditing`: Enable/disable footprint movement (default: true). When true, **View → Move Footprints** turns drag-to-move on. Hidden when false.
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
-- `initialState`: Initial state for the viewer
+- `initialState`: Initial viewer state. Pass `{ in_move_footprint_mode: true }` to start already in move mode.
 
 ### Features
 

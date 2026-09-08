@@ -22,6 +22,7 @@ import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 interface Props {
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
+  allowEditing?: boolean
 }
 
 interface LayerButtonProps {
@@ -134,7 +135,11 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
   )
 }
 
-export const ToolbarOverlay = ({ children, elements }: Props) => {
+export const ToolbarOverlay = ({
+  children,
+  elements,
+  allowEditing = true,
+}: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
   const {
@@ -142,6 +147,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsMouseOverContainer,
     selectedLayer,
     selectLayer,
+    inMoveFootprintMode,
+    setEditMode,
     viewSettings,
     setIsShowingRatsNest,
     setIsShowingMultipleTracesLength,
@@ -164,6 +171,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsMouseOverContainer: s.setIsMouseOverContainer,
     selectedLayer: s.selected_layer,
     selectLayer: s.selectLayer,
+    inMoveFootprintMode: s.in_move_footprint_mode,
+    setEditMode: s.setEditMode,
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
@@ -525,6 +534,17 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
             </div>
             {isViewMenuOpen && (
               <div style={{ marginTop: 4, minWidth: 120 }}>
+                {allowEditing && (
+                  <CheckboxMenuItem
+                    label="Move Footprints"
+                    checked={inMoveFootprintMode}
+                    onClick={() => {
+                      setEditMode(
+                        inMoveFootprintMode ? "off" : "move_footprint",
+                      )
+                    }}
+                  />
+                )}
                 <CheckboxMenuItem
                   label="Show All Trace Lengths"
                   checked={viewSettings.is_showing_multiple_traces_length}
