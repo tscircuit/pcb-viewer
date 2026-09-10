@@ -7,6 +7,7 @@ import {
 import color from "color"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
+import { drawPcbBoardElements } from "./draw-pcb-board"
 import type { Primitive } from "./types"
 
 const HOVER_SOLDERMASK_COLOR_MAP: PcbColorMap = {
@@ -51,27 +52,22 @@ export function drawSoldermaskElementsForLayer({
   const drawer = new CircuitToCanvasDrawer(canvas)
   drawer.realToCanvasMat = realToCanvasMat
   const boards = elements.filter((element) => element.type === "pcb_board")
-  if (boards.length <= 1) {
-    drawer.drawElements(elements, {
-      layers,
-      drawSoldermask: true,
-      drawSoldermaskTop,
-      drawSoldermaskBottom,
-      drawBoardMaterial: false,
+  drawer.drawElements(elements, {
+    layers,
+    drawSoldermask: true,
+    drawSoldermaskTop,
+    drawSoldermaskBottom,
+    drawBoardMaterial: false,
+  })
+
+  if (boards.length > 1) {
+    drawPcbBoardElements({
+      canvas,
+      elements: boards,
+      layers: [],
+      realToCanvasMat,
+      drawSoldermask: false,
     })
-  } else {
-    const nonBoardElements = elements.filter(
-      (element) => element.type !== "pcb_board",
-    )
-    for (const board of boards) {
-      drawer.drawElements([board, ...nonBoardElements], {
-        layers,
-        drawSoldermask: true,
-        drawSoldermaskTop,
-        drawSoldermaskBottom,
-        drawBoardMaterial: false,
-      })
-    }
   }
 
   if (!primitives) return
