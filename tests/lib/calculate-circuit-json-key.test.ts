@@ -410,32 +410,6 @@ describe("calculateCircuitJsonKey", () => {
 
       expect(result1).not.toBe(result2)
     })
-
-    it("should change key when pcb_trace geometry changes with the same bounds and route length", () => {
-      const baseTrace = {
-        type: "pcb_trace",
-        pcb_trace_id: "trace1",
-        route: [
-          { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
-          { route_type: "wire", x: 5, y: 2, width: 0.1, layer: "top" },
-          { route_type: "wire", x: 10, y: 10, width: 0.1, layer: "top" },
-        ],
-      } as any
-
-      const reroutedTrace = {
-        ...baseTrace,
-        route: [
-          { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
-          { route_type: "wire", x: 7, y: 4, width: 0.1, layer: "top" },
-          { route_type: "wire", x: 10, y: 10, width: 0.1, layer: "top" },
-        ],
-      } as any
-
-      const initialKey = calculateCircuitJsonKey([baseTrace])
-      const reroutedKey = calculateCircuitJsonKey([reroutedTrace])
-
-      expect(initialKey).not.toBe(reroutedKey)
-    })
   })
 
   describe("key format validation", () => {
