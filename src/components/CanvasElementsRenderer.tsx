@@ -3,6 +3,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
+import { filterHiddenComponentElements } from "lib/component-visibility"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 import {
@@ -52,22 +53,28 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
+    isShowingTopComponents,
+    isShowingBottomComponents,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
+    isShowingTopComponents: state.is_showing_top_components,
+    isShowingBottomComponents: state.is_showing_bottom_components,
     selectedLayer: state.selected_layer,
   }))
   const activeErrorId = focusedErrorId ?? hoveredErrorId
 
-  const elementsToRender = useMemo(
-    () =>
-      isShowingCopperPours
-        ? elements
-        : elements.filter((elm) => elm.type !== "pcb_copper_pour"),
-    [elements, isShowingCopperPours],
-  )
+  const elementsToRender = useMemo(() => {
+    const visibilityFiltered = filterHiddenComponentElements(elements, {
+      showTopComponents: isShowingTopComponents,
+      showBottomComponents: isShowingBottomComponents,
+    })
+    return isShowingCopperPours
+      ? visibilityFiltered
+      : visibilityFiltered.filter((elm) => elm.type !== "pcb_copper_pour")
+  }, [elements, isShowingCopperPours, isShowingTopComponents, isShowingBottomComponents])
 
   const [primitivesWithoutInteractionMetadata, connectivityMap] =
     useMemo(() => {

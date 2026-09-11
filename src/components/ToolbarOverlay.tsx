@@ -154,6 +154,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask,
     setIsShowingSilkscreen,
+    setIsShowingTopComponents,
+    setIsShowingBottomComponents,
     setIsShowingFabricationNotes,
     setIsShowingPcbNotes,
     setPcbGroupViewMode,
@@ -176,6 +178,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
       is_showing_solder_mask: s.is_showing_solder_mask,
       is_showing_silkscreen: s.is_showing_silkscreen,
+      is_showing_top_components: s.is_showing_top_components,
+      is_showing_bottom_components: s.is_showing_bottom_components,
       is_showing_fabrication_notes: s.is_showing_fabrication_notes,
       is_showing_pcb_notes: s.is_showing_pcb_notes,
       pcb_group_view_mode: s.pcb_group_view_mode,
@@ -191,6 +195,8 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
     setIsShowingSolderMask: s.setIsShowingSolderMask,
     setIsShowingSilkscreen: s.setIsShowingSilkscreen,
+    setIsShowingTopComponents: s.setIsShowingTopComponents,
+    setIsShowingBottomComponents: s.setIsShowingBottomComponents,
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
     setIsShowingPcbNotes: s.setIsShowingPcbNotes,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
@@ -619,6 +625,24 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
                   checked={viewSettings.is_showing_pcb_groups}
                   onClick={() => {
                     setIsShowingPcbGroups(!viewSettings.is_showing_pcb_groups)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Top Components"
+                  checked={viewSettings.is_showing_top_components}
+                  onClick={() => {
+                    setIsShowingTopComponents(
+                      !viewSettings.is_showing_top_components,
+                    )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Bottom Components"
+                  checked={viewSettings.is_showing_bottom_components}
+                  onClick={() => {
+                    setIsShowingBottomComponents(
+                      !viewSettings.is_showing_bottom_components,
+                    )
                   }}
                 />
                 {viewSettings.is_showing_pcb_groups && (
