@@ -1,4 +1,5 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
+import { isComponentPickable } from "lib/component-visibility"
 import { useGlobalStore } from "../global-store"
 import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
@@ -55,6 +56,13 @@ export const EditPlacementOverlay = ({
   const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
+  const selectedLayer = useGlobalStore((s) => s.selected_layer)
+  const isShowingTopComponents = useGlobalStore(
+    (s) => s.is_showing_top_components,
+  )
+  const isShowingBottomComponents = useGlobalStore(
+    (s) => s.is_showing_bottom_components,
+  )
 
   const disabled = disabledProp || !in_move_footprint_mode
 
@@ -77,7 +85,11 @@ export const EditPlacementOverlay = ({
         for (const e of soup) {
           if (
             e.type === "pcb_component" &&
-            isInsideOf(e, rwMousePoint, 10 / transform.a)
+            isInsideOf(e, rwMousePoint, 10 / transform.a) &&
+            isComponentPickable(e, selectedLayer, {
+              showTopComponents: isShowingTopComponents,
+              showBottomComponents: isShowingBottomComponents,
+            })
           ) {
             cancelPanDrag()
             setActivePcbComponent(e.pcb_component_id)

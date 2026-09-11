@@ -20,3 +20,16 @@ test("DRC warnings are shown by default and can be hidden", () => {
 
   expect(store.getState().is_showing_drc_warnings).toBe(false)
 })
+
+test("top and bottom components are shown by default and can be hidden", () => {
+  const store = createStore()
+
+  expect(store.getState().is_showing_top_components).toBe(true)
+  expect(store.getState().is_showing_bottom_components).toBe(true)
+
+  store.getState().setIsShowingTopComponents(false)
+  store.getState().setIsShowingBottomComponents(false)
+
+  expect(store.getState().is_showing_top_components).toBe(false)
+  expect(store.getState().is_showing_bottom_components).toBe(false)
+})
