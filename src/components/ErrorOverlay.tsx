@@ -10,6 +10,7 @@ import { findErrorElementById, getErrorId } from "lib/util/get-error-id"
 import {
   buildErrorPreviewElementIndexes,
   getErrorFocusPoint,
+  getErrorPortPoints,
 } from "lib/util/error-preview"
 import { FocusMarkerSVG } from "./FocusMarkerSVG"
 
@@ -22,6 +23,46 @@ interface Props {
 interface ErrorMarkerSVGProps {
   errorCenter: { x: number; y: number }
   isHighlighted?: boolean
+}
+
+const ErrorConnectorLinesSVG = ({
+  portCenters,
+  errorCenter,
+  isHighlighted = false,
+}: {
+  portCenters: { x: number; y: number }[]
+  errorCenter: { x: number; y: number }
+  isHighlighted?: boolean
+}) => {
+  if (portCenters.length === 0) return null
+  const stroke = isHighlighted ? "#ff4444" : "red"
+  return (
+    <svg
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        pointerEvents: "none",
+        mixBlendMode: "difference",
+        zIndex: zIndexMap.errorOverlay - 1,
+      }}
+      width="100%"
+      height="100%"
+    >
+      {portCenters.map((portCenter, index) => (
+        <line
+          key={`${portCenter.x}-${portCenter.y}-${index}`}
+          x1={portCenter.x}
+          y1={portCenter.y}
+          x2={errorCenter.x}
+          y2={errorCenter.y}
+          stroke={stroke}
+          strokeWidth={isHighlighted ? 2 : 1.5}
+          strokeDasharray="4 3"
+        />
+      ))}
+    </svg>
+  )
 }
 
 const ErrorMarkerSVG = ({
@@ -133,6 +174,20 @@ export const ErrorOverlay = ({
     return screenCenter as { x: number; y: number }
   }
 
+  const getScreenPortCenters = (error: AnyCircuitElement) => {
+    if (error.type !== "pcb_trace_error") return []
+    const points = getErrorPortPoints(error, elementIndexes.portsById)
+    const centers: { x: number; y: number }[] = []
+    for (const point of points) {
+      const screenCenter = applyToPoint(transform, point as any) as any
+      if (Number.isNaN(screenCenter.x) || Number.isNaN(screenCenter.y)) {
+        continue
+      }
+      centers.push(screenCenter)
+    }
+    return centers
+  }
+
   let focusScreenCenter: { x: number; y: number } | null = null
   if (focusedErrorElement) {
     focusScreenCenter = getScreenErrorCenter(
@@ -152,10 +207,19 @@ export const ErrorOverlay = ({
         const errorCenter = getScreenErrorCenter(el)
         if (!errorCenter) return null
 
+        const portCenters = getScreenPortCenters(el)
+
         const popupPosition = getPopupPosition(errorCenter, containerRef)
 
         return (
           <Fragment key={errorId}>
+            {portCenters.length > 0 && (
+              <ErrorConnectorLinesSVG
+                portCenters={portCenters}
+                errorCenter={errorCenter}
+                isHighlighted={isHighlighted}
+              />
+            )}
             <ErrorMarkerSVG
               errorCenter={errorCenter}
               isHighlighted={isHighlighted}
