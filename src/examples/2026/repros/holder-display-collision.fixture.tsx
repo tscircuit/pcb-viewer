@@ -190,6 +190,7 @@ const createCircuit = (holderMoved: boolean) => {
 
 export const HolderDisplayCollision = () => {
   const [holderMoved, setHolderMoved] = useState(false)
+  const [viewerKey, setViewerKey] = useState(0)
   const [circuitJson, setCircuitJson] = useState<AnyCircuitElement[]>(() =>
     createCircuit(false).getCircuitJson(),
   )
@@ -231,13 +232,20 @@ export const HolderDisplayCollision = () => {
         >
           {holderMoved ? "Restore holder position" : "Move holder and reroute"}
         </button>
+        <button
+          type="button"
+          disabled={isRendering}
+          onClick={() => setViewerKey((key) => key + 1)}
+        >
+          Remount viewer to show expected traces
+        </button>
         <span>
           Real TSX board · {isRendering ? "routing…" : "routing complete"} ·{" "}
           {circuitJson.filter((elm) => elm.type === "pcb_trace").length} traces
           · holder ({holderMoved ? "-1, -0.35" : "0, 0"})
         </span>
       </div>
-      <PCBViewer circuitJson={circuitJson} height={760} />
+      <PCBViewer key={viewerKey} circuitJson={circuitJson} height={760} />
     </div>
   )
 }
