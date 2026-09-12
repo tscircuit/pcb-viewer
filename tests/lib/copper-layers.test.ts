@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import {
+  elementHitsCopperRenderLayers,
   getCopperLayerRefsFromElements,
   getOrderedCanvasLayers,
 } from "../../src/lib/copper-layers"
@@ -35,4 +36,31 @@ test("creates canvases for every copper layer on a 10-layer board", () => {
   expect(orderedLayers).toContain("inner7")
   expect(orderedLayers).toContain("inner8")
   expect(orderedLayers.length).toBeLessThanOrEqual(zIndexMap.topLayer)
+})
+
+test("keeps a through-hole on both copper canvases", () => {
+  expect(elementHitsCopperRenderLayers(["top", "bottom"], ["top_copper"])).toBe(
+    true,
+  )
+  expect(
+    elementHitsCopperRenderLayers(["top", "bottom"], ["bottom_copper"]),
+  ).toBe(true)
+})
+
+test("drops a bottom-only span from the top copper canvas", () => {
+  expect(elementHitsCopperRenderLayers(["bottom"], ["top_copper"])).toBe(false)
+  expect(elementHitsCopperRenderLayers(["bottom"], ["bottom_copper"])).toBe(
+    true,
+  )
+})
+
+test("drops a top-only via from the bottom copper canvas", () => {
+  expect(elementHitsCopperRenderLayers(["top"], ["bottom_copper"])).toBe(false)
+  expect(elementHitsCopperRenderLayers(["top"], ["top_copper"])).toBe(true)
+})
+
+test("legacy spans with no layers list still draw on copper canvases", () => {
+  expect(elementHitsCopperRenderLayers(undefined, ["top_copper"])).toBe(true)
+  expect(elementHitsCopperRenderLayers([], ["bottom_copper"])).toBe(true)
+  expect(elementHitsCopperRenderLayers(undefined, ["drill"])).toBe(false)
 })
