@@ -86,3 +86,27 @@ The PCBViewer component accepts these props:
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
+
+### Rats nest display
+
+The **Rats Nest** toolbar menu offers **Hidden**, **All connections** (the existing
+display), and **Only unconnected**. Only unconnected draws a minimum spanning tree
+between the disconnected PCB islands of each source net, choosing the nearest
+ports on each island. Already routed connections are omitted.
+
+Connectivity uses PCB trace routes, their geometric joins and port links, and
+explicit component-internal connection metadata. It does not independently infer
+connections from copper-pour geometry or standalone via/pad contact. The display
+is a routing aid, not a replacement for board connectivity checks.
+
+To start with only unconnected connections visible:
+
+```tsx
+<PCBViewer
+  circuitJson={circuitJson}
+  initialState={{
+    is_showing_rats_nest: true,
+    is_showing_only_unconnected_rats_nest: true,
+  }}
+/>
+```

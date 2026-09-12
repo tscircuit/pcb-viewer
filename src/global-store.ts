@@ -28,6 +28,7 @@ export interface State {
 
   is_showing_multiple_traces_length: boolean
   is_showing_rats_nest: boolean
+  is_showing_only_unconnected_rats_nest: boolean
   is_showing_copper_pours: boolean
   is_showing_courtyards: boolean
   is_showing_pcb_groups: boolean
@@ -45,6 +46,7 @@ export interface State {
   setEditMode: (mode: "off" | "move_footprint") => void
   setIsMovingComponent: (is_moving: boolean) => void
   setIsShowingRatsNest: (is_showing: boolean) => void
+  setRatsNestMode: (mode: "hidden" | "all" | "unconnected") => void
   setIsMouseOverContainer: (is_focused: boolean) => void
   setIsShowingAutorouting: (is_showing: boolean) => void
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
@@ -89,6 +91,7 @@ export const createStore = (
 
         is_showing_multiple_traces_length: false,
         is_showing_rats_nest: false,
+        is_showing_only_unconnected_rats_nest: false,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
         is_showing_drc_warnings: true,
@@ -143,6 +146,11 @@ export const createStore = (
           }),
         setIsShowingRatsNest: (is_showing) =>
           set({ is_showing_rats_nest: is_showing }),
+        setRatsNestMode: (mode) =>
+          set({
+            is_showing_rats_nest: mode !== "hidden",
+            is_showing_only_unconnected_rats_nest: mode === "unconnected",
+          }),
         setIsMovingComponent: (is_moving) =>
           set({ is_moving_component: is_moving }),
         setIsMouseOverContainer: (is_focused) =>
