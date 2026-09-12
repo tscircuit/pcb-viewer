@@ -82,7 +82,7 @@ The PCBViewer component accepts these props:
 
 - Interactive PCB viewing with pan and zoom
 - Multiple layer support (top, bottom, inner layers)
-- Component placement editing
+- Component placement editing (`Ctrl`/`Cmd`+`Z` undoes the last dropped footprint move)
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
