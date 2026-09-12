@@ -501,12 +501,23 @@ export const convertElementToPrimitives = (
         const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0)
         const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0)
 
+        // pad_outline and the hole offset are relative to the hole position
+        // and rotate with ccw_rotation (the component rotation emitted by core)
+        const outlineRotation = ((element.ccw_rotation ?? 0) * Math.PI) / 180
+        const rotateRelativePoint = (p: { x: number; y: number }) => ({
+          x: p.x * Math.cos(outlineRotation) - p.y * Math.sin(outlineRotation),
+          y: p.x * Math.sin(outlineRotation) + p.y * Math.cos(outlineRotation),
+        })
+
         const pcb_outline = pad_outline
 
         const padPrimitives: Primitive[] = []
         if (pcb_outline && Array.isArray(pcb_outline)) {
           const translatedPoints = normalizePolygonPoints(pcb_outline).map(
-            (p) => ({ x: p.x + x, y: p.y + y }),
+            (p) => {
+              const rotated = rotateRelativePoint(p)
+              return { x: rotated.x + x, y: rotated.y + y }
+            },
           )
 
           for (const layer of layers || ["top", "bottom"]) {
@@ -523,9 +534,13 @@ export const convertElementToPrimitives = (
           }
         }
 
+        const rotatedHoleOffset = rotateRelativePoint({
+          x: parsed_hole_offset_x,
+          y: parsed_hole_offset_y,
+        })
         const holeCenter = {
-          x: x + parsed_hole_offset_x,
-          y: y + parsed_hole_offset_y,
+          x: x + rotatedHoleOffset.x,
+          y: y + rotatedHoleOffset.y,
         }
 
         const holePrimitives: Primitive[] = []
