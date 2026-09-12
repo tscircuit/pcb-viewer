@@ -254,7 +254,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           onBoundsSelected={props.onBoundsSelected}
           cancelPanDrag={props.cancelPanDrag}
         >
-          <ToolbarOverlay elements={elements}>
+          <ToolbarOverlay elements={elements} allowEditing={props.allowEditing}>
             <ErrorOverlay transform={transform} elements={elements}>
               <RatsNestOverlay transform={transform} soup={elements}>
                 <PcbGroupOverlay
