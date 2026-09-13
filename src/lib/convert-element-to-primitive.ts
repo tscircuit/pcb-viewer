@@ -498,15 +498,27 @@ export const convertElementToPrimitives = (
           hole_offset_y,
         } = element
 
-        const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0)
-        const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0)
+        const ccw_rotation = (element as any).ccw_rotation ?? 0
+        const rad = (ccw_rotation * Math.PI) / 180
+        const cos = Math.cos(rad)
+        const sin = Math.sin(rad)
+
+        const raw_hole_offset_x = distance.parse(hole_offset_x ?? 0)
+        const raw_hole_offset_y = distance.parse(hole_offset_y ?? 0)
+
+        const parsed_hole_offset_x = raw_hole_offset_x * cos - raw_hole_offset_y * sin
+        const parsed_hole_offset_y = raw_hole_offset_x * sin + raw_hole_offset_y * cos
 
         const pcb_outline = pad_outline
 
         const padPrimitives: Primitive[] = []
         if (pcb_outline && Array.isArray(pcb_outline)) {
           const translatedPoints = normalizePolygonPoints(pcb_outline).map(
-            (p) => ({ x: p.x + x, y: p.y + y }),
+            (p) => {
+              const rx = p.x * cos - p.y * sin
+              const ry = p.x * sin + p.y * cos
+              return { x: rx + x, y: ry + y }
+            },
           )
 
           for (const layer of layers || ["top", "bottom"]) {
