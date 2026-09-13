@@ -1,8 +1,8 @@
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
-import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
+import { getConnectivityMapForHover } from "lib/get-connectivity-map-for-hover"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 import {
@@ -74,9 +74,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       const primitivesWithoutInteractionMetadata = elementsToRender.flatMap(
         (elm) => convertElementToPrimitives(elm, props.elements),
       )
-      const connectivityMap = getFullConnectivityMapFromCircuitJson(
-        props.elements as any,
-      )
+      const connectivityMap = getConnectivityMapForHover(props.elements)
       return [primitivesWithoutInteractionMetadata, connectivityMap]
     }, [elementsToRender, props.elements])
 
