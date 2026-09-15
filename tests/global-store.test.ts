@@ -20,3 +20,12 @@ test("DRC warnings are shown by default and can be hidden", () => {
 
   expect(store.getState().is_showing_drc_warnings).toBe(false)
 })
+
+test("hidden layer opacity stays set when selecting another layer", () => {
+  const store = createStore()
+  store.getState().setHiddenLayerOpacity(0)
+  store.getState().selectLayer("inner6")
+  expect(store.getState().hidden_layer_opacity).toBe(0)
+  store.getState().setHiddenLayerOpacity(1)
+  expect(store.getState().hidden_layer_opacity).toBe(1)
+})

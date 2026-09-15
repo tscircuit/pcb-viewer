@@ -16,6 +16,7 @@ import { useHotKey } from "hooks/useHotKey"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { useMobileTouch } from "hooks/useMobileTouch"
+import { VisibilityContextMenu } from "./VisibilityContextMenu"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
@@ -198,6 +199,11 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     setFocusedErrorId: s.setFocusedErrorId,
   }))
 
+  const [contextMenuPosition, setContextMenuPosition] = useState<{
+    x: number
+    y: number
+  } | null>(null)
+  const closeContextMenu = useCallback(() => setContextMenuPosition(null), [])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
@@ -374,12 +380,23 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
   return (
     <div
       ref={hotkeyBoundaryRef}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        setContextMenuPosition({ x: event.clientX, y: event.clientY })
+      }}
       style={{ position: "relative", zIndex: "999 !important" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
     >
       {children}
+      {contextMenuPosition && (
+        <VisibilityContextMenu
+          position={contextMenuPosition}
+          onClose={closeContextMenu}
+        />
+      )}
       <div
         style={{
           position: "absolute",
