@@ -49,6 +49,7 @@ export const CanvasPrimitiveRenderer = ({
   height = 500,
 }: Props) => {
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
+  const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const isShowingCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
   const isShowingSolderMask = useGlobalStore((s) => s.is_showing_solder_mask)
@@ -77,6 +78,13 @@ export const CanvasPrimitiveRenderer = ({
     if (transform) drawer.transform = transform
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
+    drawer.hiddenLayerOpacity = hiddenLayerOpacity
+    // Clear every canvas above, then omit drawing completely hidden layers.
+    const visibleCanvasRefs = Object.fromEntries(
+      Object.entries(availableCanvasRefs).filter(
+        ([layer]) => drawer.getLayerOpacity(layer) > 0,
+      ),
+    )
 
     // Filter out solder mask and silkscreen primitives when disabled
     // Also filter out SMT pad primitives since they're drawn with circuit-to-canvas
@@ -87,7 +95,12 @@ export const CanvasPrimitiveRenderer = ({
       isShowingFabricationNotes,
     })
 
-    drawPrimitives(drawer, filteredPrimitives)
+    drawPrimitives(
+      drawer,
+      filteredPrimitives.filter(
+        (p) => drawer.getLayerOpacity(p.layer ?? "other") > 0,
+      ),
+    )
 
     // Draw silkscreen elements using circuit-to-canvas
     if (transform) {
@@ -97,7 +110,7 @@ export const CanvasPrimitiveRenderer = ({
         layer: LayerRef
         copperLayer: PcbRenderLayer
       }> = getCopperLayerRefsFromElements(elements).map((layer) => ({
-        canvas: canvasRefs.current[layer],
+        canvas: visibleCanvasRefs[layer],
         layer,
         copperLayer: getCopperRenderLayer(layer),
       }))
@@ -181,7 +194,7 @@ export const CanvasPrimitiveRenderer = ({
         const drawSoldermaskTop = soldermaskLayer === "top"
         const drawSoldermaskBottom = soldermaskLayer === "bottom"
 
-        const topSoldermaskCanvas = canvasRefs.current.soldermask_top
+        const topSoldermaskCanvas = visibleCanvasRefs.soldermask_top
         if (topSoldermaskCanvas && soldermaskLayer === "top") {
           drawSoldermaskElementsForLayer({
             canvas: topSoldermaskCanvas,
@@ -194,7 +207,7 @@ export const CanvasPrimitiveRenderer = ({
           })
         }
 
-        const bottomSoldermaskCanvas = canvasRefs.current.soldermask_bottom
+        const bottomSoldermaskCanvas = visibleCanvasRefs.soldermask_bottom
         if (bottomSoldermaskCanvas && soldermaskLayer === "bottom") {
           drawSoldermaskElementsForLayer({
             canvas: bottomSoldermaskCanvas,
@@ -209,7 +222,7 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw PCB holes
-      const drillCanvas = canvasRefs.current.drill
+      const drillCanvas = visibleCanvasRefs.drill
       if (drillCanvas) {
         drawPcbHoleElementsForLayer({
           canvas: drillCanvas,
@@ -221,7 +234,7 @@ export const CanvasPrimitiveRenderer = ({
 
       // Draw silkscreen if enabled
       if (isShowingSilkscreen) {
-        const topSilkscreenCanvas = canvasRefs.current.top_silkscreen
+        const topSilkscreenCanvas = visibleCanvasRefs.top_silkscreen
         if (topSilkscreenCanvas) {
           drawSilkscreenElementsForLayer({
             canvas: topSilkscreenCanvas,
@@ -231,7 +244,7 @@ export const CanvasPrimitiveRenderer = ({
           })
         }
 
-        const bottomSilkscreenCanvas = canvasRefs.current.bottom_silkscreen
+        const bottomSilkscreenCanvas = visibleCanvasRefs.bottom_silkscreen
         if (bottomSilkscreenCanvas) {
           drawSilkscreenElementsForLayer({
             canvas: bottomSilkscreenCanvas,
@@ -244,7 +257,7 @@ export const CanvasPrimitiveRenderer = ({
 
       // Draw top fabrication
       if (isShowingFabricationNotes) {
-        const topFabCanvas = canvasRefs.current.top_fabrication
+        const topFabCanvas = visibleCanvasRefs.top_fabrication
         if (topFabCanvas) {
           drawFabricationNoteElementsForLayer({
             canvas: topFabCanvas,
@@ -255,7 +268,7 @@ export const CanvasPrimitiveRenderer = ({
         }
 
         // Draw bottom fabrication
-        const bottomFabCanvas = canvasRefs.current.bottom_fabrication
+        const bottomFabCanvas = visibleCanvasRefs.bottom_fabrication
         if (bottomFabCanvas) {
           drawFabricationNoteElementsForLayer({
             canvas: bottomFabCanvas,
@@ -268,7 +281,7 @@ export const CanvasPrimitiveRenderer = ({
 
       if (isShowingPcbNotes) {
         // Draw bottom notes
-        const bottomNotesCanvas = canvasRefs.current.bottom_notes
+        const bottomNotesCanvas = visibleCanvasRefs.bottom_notes
         if (bottomNotesCanvas) {
           drawPcbNoteElementsForLayer({
             canvas: bottomNotesCanvas,
@@ -279,7 +292,7 @@ export const CanvasPrimitiveRenderer = ({
         }
 
         // Draw top notes
-        const topNotesCanvas = canvasRefs.current.top_notes
+        const topNotesCanvas = visibleCanvasRefs.top_notes
         if (topNotesCanvas) {
           drawPcbNoteElementsForLayer({
             canvas: topNotesCanvas,
@@ -292,7 +305,7 @@ export const CanvasPrimitiveRenderer = ({
 
       // Draw top courtyard
       if (isShowingCourtyards) {
-        const topCourtyardCanvas = canvasRefs.current.top_courtyard
+        const topCourtyardCanvas = visibleCanvasRefs.top_courtyard
         if (topCourtyardCanvas) {
           drawCourtyardElementsForLayer({
             canvas: topCourtyardCanvas,
@@ -303,7 +316,7 @@ export const CanvasPrimitiveRenderer = ({
         }
 
         // Draw bottom courtyard
-        const bottomCourtyardCanvas = canvasRefs.current.bottom_courtyard
+        const bottomCourtyardCanvas = visibleCanvasRefs.bottom_courtyard
         if (bottomCourtyardCanvas) {
           drawCourtyardElementsForLayer({
             canvas: bottomCourtyardCanvas,
@@ -315,7 +328,7 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw board outline using circuit-to-canvas
-      const boardCanvas = canvasRefs.current.board
+      const boardCanvas = visibleCanvasRefs.board
       if (boardCanvas) {
         drawPcbPanelElements({
           canvas: boardCanvas,
@@ -334,7 +347,7 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Draw PCB cutouts using circuit-to-canvas
-      const edgeCutsCanvas = canvasRefs.current.edge_cuts
+      const edgeCutsCanvas = visibleCanvasRefs.edge_cuts
       if (edgeCutsCanvas) {
         drawPcbCutoutElementsForLayer({
           canvas: edgeCutsCanvas,
@@ -362,6 +375,7 @@ export const CanvasPrimitiveRenderer = ({
     elements,
     transform,
     selectedLayer,
+    hiddenLayerOpacity,
     isShowingCopperPours,
     isShowingSolderMask,
     isShowingFabricationNotes,
