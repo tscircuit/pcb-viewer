@@ -12,6 +12,7 @@ export default defineConfig({
   loader: {
     ".ts": "tsx",
   },
+  // Keep externals here: --external in the build script replaces this list.
   external: [
     "@tscircuit/core",
     "react",

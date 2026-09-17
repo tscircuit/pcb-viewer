@@ -1,3 +1,4 @@
+import { RenderingEngineContext } from "./components/RenderingEngineContext"
 import { applyEditEvents } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
@@ -21,7 +22,8 @@ const defaultTransform = compose(translate(400, 300), scale(40, -40))
 type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
-  /** WebGPU runs in a worker and falls back to Canvas when unavailable. */
+  /** Initial engine; users can switch via the context menu. Prop changes reset it.
+   * WebGPU runs in a worker and falls back to Canvas when unavailable. */
   renderer?: "webgpu" | "canvas"
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
@@ -48,6 +50,12 @@ export const PCBViewer = ({
   clickToInteractEnabled = false,
   disablePcbGroups = false,
 }: Props) => {
+  const [activeRenderer, setActiveRenderer] = useState(renderer)
+  useEffect(() => setActiveRenderer(renderer), [renderer])
+  const renderingEngine = useMemo(
+    () => ({ renderer: activeRenderer, setRenderer: setActiveRenderer }),
+    [activeRenderer],
+  )
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
@@ -167,100 +175,102 @@ export const PCBViewer = ({
   )
 
   return (
-    <div
-      ref={transformRef as any}
-      style={{ position: "relative" }}
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      <div ref={ref as any}>
-        <ContextProviders
-          initialState={mergedInitialState}
-          disablePcbGroups={disablePcbGroups}
-        >
-          <CanvasElementsRenderer
-            renderer={renderer}
-            transform={transform}
-            setTransform={setTransform}
-            height={height}
-            width={refDimensions.width}
-            allowEditing={allowEditing}
-            focusOnHover={focusOnHover}
-            onBoundsSelected={onBoundsSelected}
-            cancelPanDrag={cancelPanDrag}
-            onCreateEditEvent={onCreateEditEvent}
-            onModifyEditEvent={onModifyEditEvent}
-            grid={{
-              spacing: 1,
-              view_window: {
-                left: 0,
-                right: refDimensions.width || 500,
-                top: height,
-                bottom: 0,
-              },
-            }}
-            elements={elements as SourceTrace[]}
-            debugGraphics={debugGraphics}
-          />
-          <ToastContainer />
-        </ContextProviders>
-      </div>
-      {clickToInteractEnabled && !isInteractionEnabled && (
-        <div
-          onClick={() => {
-            setIsInteractionEnabled(true)
-            resetTransform()
-          }}
-          onTouchStart={(e) => {
-            const touch = e.touches[0]
-            touchStartRef.current = {
-              x: touch.clientX,
-              y: touch.clientY,
-            }
-          }}
-          onTouchEnd={(e) => {
-            const touch = e.changedTouches[0]
-            const start = touchStartRef.current
-            if (!start) return
-
-            const deltaX = Math.abs(touch.clientX - start.x)
-            const deltaY = Math.abs(touch.clientY - start.y)
-
-            if (deltaX < 10 && deltaY < 10) {
-              e.preventDefault()
+    <RenderingEngineContext.Provider value={renderingEngine}>
+      <div
+        ref={transformRef as any}
+        style={{ position: "relative" }}
+        onContextMenu={(event) => event.preventDefault()}
+      >
+        <div ref={ref as any}>
+          <ContextProviders
+            initialState={mergedInitialState}
+            disablePcbGroups={disablePcbGroups}
+          >
+            <CanvasElementsRenderer
+              renderer={activeRenderer}
+              transform={transform}
+              setTransform={setTransform}
+              height={height}
+              width={refDimensions.width}
+              allowEditing={allowEditing}
+              focusOnHover={focusOnHover}
+              onBoundsSelected={onBoundsSelected}
+              cancelPanDrag={cancelPanDrag}
+              onCreateEditEvent={onCreateEditEvent}
+              onModifyEditEvent={onModifyEditEvent}
+              grid={{
+                spacing: 1,
+                view_window: {
+                  left: 0,
+                  right: refDimensions.width || 500,
+                  top: height,
+                  bottom: 0,
+                },
+              }}
+              elements={elements as SourceTrace[]}
+              debugGraphics={debugGraphics}
+            />
+            <ToastContainer />
+          </ContextProviders>
+        </div>
+        {clickToInteractEnabled && !isInteractionEnabled && (
+          <div
+            onClick={() => {
               setIsInteractionEnabled(true)
               resetTransform()
-            }
+            }}
+            onTouchStart={(e) => {
+              const touch = e.touches[0]
+              touchStartRef.current = {
+                x: touch.clientX,
+                y: touch.clientY,
+              }
+            }}
+            onTouchEnd={(e) => {
+              const touch = e.changedTouches[0]
+              const start = touchStartRef.current
+              if (!start) return
 
-            touchStartRef.current = null
-          }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            cursor: "pointer",
-            zIndex: zIndexMap.clickToInteractOverlay,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            touchAction: "pan-x pan-y pinch-zoom",
-          }}
-        >
-          <div
+              const deltaX = Math.abs(touch.clientX - start.x)
+              const deltaY = Math.abs(touch.clientY - start.y)
+
+              if (deltaX < 10 && deltaY < 10) {
+                e.preventDefault()
+                setIsInteractionEnabled(true)
+                resetTransform()
+              }
+
+              touchStartRef.current = null
+            }}
             style={{
-              backgroundColor: "rgba(0, 0, 0, 0.8)",
-              color: "white",
-              padding: "12px 24px",
-              borderRadius: "8px",
-              fontSize: "16px",
-              pointerEvents: "none",
+              position: "absolute",
+              inset: 0,
+              cursor: "pointer",
+              zIndex: zIndexMap.clickToInteractOverlay,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              touchAction: "pan-x pan-y pinch-zoom",
             }}
           >
-            {typeof window !== "undefined" &&
-            ("ontouchstart" in window || navigator.maxTouchPoints > 0)
-              ? "Touch to Interact"
-              : "Click to Interact"}
+            <div
+              style={{
+                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                color: "white",
+                padding: "12px 24px",
+                borderRadius: "8px",
+                fontSize: "16px",
+                pointerEvents: "none",
+              }}
+            >
+              {typeof window !== "undefined" &&
+              ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+                ? "Touch to Interact"
+                : "Click to Interact"}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </RenderingEngineContext.Provider>
   )
 }

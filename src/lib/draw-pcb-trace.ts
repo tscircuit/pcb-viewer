@@ -51,7 +51,9 @@ export const filterTraceByLayers = (
     (segment) => segment.route_type === "wire",
   ).length
 
-  if (wireCount < 2) return null
+  const hasVia = filteredRoute.some((segment) => segment.route_type === "via")
+
+  if (wireCount < 2 && !hasVia) return null
 
   return {
     ...trace,
@@ -81,7 +83,10 @@ export const showTraceSegmentsInsideHiddenCopperPours = (
 export const getTraceClipContextElements = (
   elements: AnyCircuitElement[],
   showCopperPours: boolean,
-): AnyCircuitElement[] => (showCopperPours ? elements : [])
+): AnyCircuitElement[] =>
+  showCopperPours
+    ? elements
+    : elements.filter((element) => element.type !== "pcb_copper_pour")
 
 export const getHighlightedTraceElementIds = ({
   primitives,
@@ -143,9 +148,6 @@ export function drawPcbTraceElementsForLayer({
     }
   }
 
-  // The trace renderer receives a filtered element list. Give it the full
-  // circuit only as clipping context while pours are visible; an empty list
-  // deliberately disables geometric clipping when pours are hidden.
   const clipContextElements = getTraceClipContextElements(
     elements,
     showCopperPours,

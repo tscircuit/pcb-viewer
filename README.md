@@ -103,22 +103,23 @@ as dimension annotations or interpolated trace routes). The initial GPU geometry
 still takes time on large boards, but runs in the worker. Curves use fixed
 triangle tessellation and can show facets at extreme zoom.
 
-The initial dependency is pinned to a commit of the new renderer repository;
-The Git dependency includes its built JavaScript and types. The renderer has
-its own pure geometry tests and 13 browser visual snapshots. Run
-`bun run test:webgpu` after `bunx playwright install chromium` to test the built
-viewer bundle, AM3352 wheel zoom, resize, StrictMode cleanup, and fallbacks.
-The Cosmos `WebGpuAm3352` fixture switches between the two rendering backends.
+Right-click the board and choose **Rendering Engine → Canvas** or
+**WebGPU (experimental)** to switch without resetting pan, zoom, or layer visibility.
+The `renderer` prop sets the initial selection; changing that prop updates the selection.
+Selecting WebGPU still permits automatic Canvas fallback on unsupported devices or scenes.
 
+Run `bun run test:webgpu` after `bunx playwright install chromium` to test the built
+viewer bundle, AM3352 wheel zoom, resize, StrictMode cleanup, context-menu switching,
+and fallbacks. The Cosmos `WebGpuAm3352` fixture also switches between backends.
 
 The WebGPU integration is still experimental. The complete imported Canvas suite
 currently exposes substantial non-text parity gaps, including soldermask, trace
 clipping, and keepouts. See the renderer's
-[full parity report](https://github.com/tscircuit/circuit-json-webgpu/blob/fix/canvas-text-parity/tests/parity/latest-report.json).
+[full parity report](https://github.com/tscircuit/circuit-json-webgpu/blob/main/tests/parity/latest-report.json).
 The integration PR remains draft until these are resolved; existing diagnostics
 and Canvas fallback do not yet detect every visual mismatch.
 
 The WebGPU renderer is installed as a bundled devDependency from
-`https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.2.tgz`.
+`https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.3.tgz`.
 The renderer repository includes a TypeScript local render command and 597
 SVG-left/WebGPU-right feature snapshot tests.

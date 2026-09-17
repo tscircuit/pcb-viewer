@@ -121,6 +121,62 @@ try {
     "resize must reuse the worker",
   )
 
+  // Change engines through the actual context menu without remounting the viewer.
+  const openEngineMenu = async () => {
+    await page.mouse.click(400, 300, { button: "right" })
+    await page.getByRole("menuitem", { name: "Rendering Engine" }).click()
+  }
+  const beforeSwitch = await page.evaluate(() => window.gpuViewerTest.stats)
+  await openEngineMenu()
+  assert.equal(
+    await page
+      .getByRole("menuitemradio", {
+        name: "WebGPU (experimental)",
+        exact: true,
+      })
+      .getAttribute("aria-checked"),
+    "true",
+  )
+  await page.getByRole("menuitemradio", { name: "Canvas", exact: true }).click()
+  await page.waitForSelector(".pcb-layer-top")
+  assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 0)
+  assert.equal(
+    await page
+      .getByRole("menu", { name: "PCB context menu", exact: true })
+      .count(),
+    0,
+  )
+  const onCanvas = await page.evaluate(() => window.gpuViewerTest.stats)
+  assert.equal(
+    onCanvas.created,
+    onCanvas.terminated,
+    "switch to Canvas must release every worker",
+  )
+  await openEngineMenu()
+  assert.equal(
+    await page
+      .getByRole("menuitemradio", { name: "Canvas", exact: true })
+      .getAttribute("aria-checked"),
+    "true",
+  )
+  await page
+    .getByRole("menuitemradio", { name: "WebGPU (experimental)", exact: true })
+    .click()
+  await page.waitForFunction(
+    (frames) => window.gpuViewerTest.stats.frames > frames,
+    onCanvas.frames,
+    { timeout: 60000 },
+  )
+  const switchedBack = await page.evaluate(() => window.gpuViewerTest.stats)
+  assert.equal(switchedBack.created, beforeSwitch.created + 1)
+  assert.equal(switchedBack.created - switchedBack.terminated, 1)
+  assert.deepEqual(
+    switchedBack.lastView?.transform,
+    beforeSwitch.lastView?.transform,
+    "engine switching must preserve the camera",
+  )
+  assert.equal(await page.locator("[data-webgpu-fallback]").count(), 0)
+
   await open()
   await page.evaluate(() =>
     window.gpuViewerTest.mount(false, "webgpu", false, true),

@@ -15,6 +15,7 @@ const stats = {
   geometryUploads: 0,
   compileMs: 0,
   errors: [] as string[],
+  lastView: null as { transform: Record<string, number> } | null,
 }
 const OriginalWorker = window.Worker
 window.Worker = class extends OriginalWorker {
@@ -30,6 +31,14 @@ window.Worker = class extends OriginalWorker {
         stats.compileMs = data.compileMs
       }
     })
+  }
+  postMessage(
+    message: any,
+    transfer?: Transferable[] | StructuredSerializeOptions,
+  ) {
+    if (message.type === "view") stats.lastView = message
+    if (Array.isArray(transfer)) super.postMessage(message, transfer)
+    else super.postMessage(message, transfer)
   }
   terminate() {
     stats.terminated++
