@@ -22,6 +22,7 @@
   ],
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@napi-rs/canvas": "^0.1.84",
     "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^9.0.1",
@@ -58,8 +59,8 @@
     "@tscircuit/alphabet": "^0.0.25",
     "@tscircuit/math-utils": "^0.0.36",
     "@vitejs/plugin-react": "^5.0.2",
-    "circuit-json": "^0.0.469",
-    "circuit-to-canvas": "0.0.124",
+    "circuit-json": "^0.0.492",
+    "circuit-to-canvas": "0.0.128",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",

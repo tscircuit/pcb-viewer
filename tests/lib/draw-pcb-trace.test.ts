@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test"
-import type { AnyCircuitElement, PcbTrace } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbBoard,
+  PcbTrace,
+  PcbVia,
+} from "circuit-json"
 import {
   filterTraceByLayers,
   getHighlightedTraceElementIds,
@@ -51,7 +56,7 @@ describe("drawPcbTrace layer filtering", () => {
     ])
   })
 
-  it("drops traces that do not contain at least two wire points on the target layer", () => {
+  it("keeps route vias on layers without two wire points", () => {
     const trace: PcbTrace = {
       type: "pcb_trace",
       pcb_trace_id: "trace2",
@@ -69,7 +74,11 @@ describe("drawPcbTrace layer filtering", () => {
       ],
     } as PcbTrace
 
-    expect(filterTraceByLayers(trace, new Set(["top"]))).toBeNull()
+    expect(filterTraceByLayers(trace, new Set(["top"]))?.route).toEqual([
+      trace.route[0],
+      trace.route[1],
+    ])
+    expect(filterTraceByLayers(trace, new Set(["bottom"]))).toBeNull()
   })
 
   it("shows trace segments marked inside a copper pour when pours are hidden", () => {
@@ -111,7 +120,29 @@ describe("drawPcbTrace layer filtering", () => {
   })
 
   it("disables geometric pour clipping when copper pours are hidden", () => {
+    const board: PcbBoard = {
+      type: "pcb_board",
+      pcb_board_id: "board_0",
+      center: { x: 0, y: 0 },
+      width: 10,
+      height: 10,
+      num_layers: 2,
+      thickness: 1.6,
+      material: "fr4",
+      default_via_tented_on_top: true,
+    }
+    const via: PcbVia = {
+      type: "pcb_via",
+      pcb_via_id: "via_0",
+      x: 0,
+      y: 0,
+      layers: ["top", "bottom"],
+      outer_diameter: 0.6,
+      hole_diameter: 0.3,
+    }
     const elements = [
+      board,
+      via,
       {
         type: "pcb_copper_pour",
         pcb_copper_pour_id: "pcb_copper_pour_0",
@@ -119,7 +150,7 @@ describe("drawPcbTrace layer filtering", () => {
     ] as AnyCircuitElement[]
 
     expect(getTraceClipContextElements(elements, true)).toBe(elements)
-    expect(getTraceClipContextElements(elements, false)).toEqual([])
+    expect(getTraceClipContextElements(elements, false)).toEqual([board, via])
   })
 
   it("highlights a hovered trace on every rendered copper layer", () => {
