@@ -10,5 +10,12 @@ export default defineConfig({
   loader: {
     ".ts": "tsx",
   },
-  external: ["react", "react-dom", "react-reconciler", "react-reconciler-18"],
+  // Keep externals here: --external in the build script replaces this list.
+  external: [
+    "@tscircuit/core",
+    "react",
+    "react-dom",
+    "react-reconciler",
+    "react-reconciler-18",
+  ],
 })
