@@ -1,3 +1,12 @@
+import {
+  boundsOverlap,
+  canPartiallyRenderInteractions,
+  createInteractionRenderIndex,
+  getActivePrimitives,
+  getChangedInteractionRegion,
+  getInteractionClipBounds,
+  getPrimitiveRenderBounds,
+} from "lib/interaction-render-regions"
 import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import {
@@ -25,13 +34,20 @@ import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
 import type { GridConfig, Primitive } from "lib/types"
-import React, { useEffect, useRef } from "react"
+import React, { useLayoutEffect, useMemo, useRef } from "react"
+import {
+  PAN_RENDER_MARGIN,
+  getCachedPanOffset,
+  getBufferedRenderTransform,
+  type PanRenderSnapshot,
+} from "lib/pan-render-cache"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 
 interface Props {
   primitives: Primitive[]
+  basePrimitives?: Primitive[]
   elements: AnyCircuitElement[]
   defaultUnit?: string
   transform?: Matrix
@@ -42,8 +58,9 @@ interface Props {
 
 export const CanvasPrimitiveRenderer = ({
   primitives,
-  elements,
-  transform,
+  basePrimitives = primitives,
+  elements: allElements,
+  transform: viewportTransform,
   grid,
   width = 500,
   height = 500,
@@ -60,7 +77,31 @@ export const CanvasPrimitiveRenderer = ({
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
-  useEffect(() => {
+  const renderScene = useMemo(
+    () => ({}),
+    [
+      basePrimitives,
+      allElements,
+      width,
+      height,
+      selectedLayer,
+      hiddenLayerOpacity,
+      isShowingCopperPours,
+      isShowingSolderMask,
+      isShowingFabricationNotes,
+      isShowingPcbNotes,
+      isShowingCourtyards,
+      isShowingSilkscreen,
+    ],
+  )
+  const renderSnapshot = useRef<PanRenderSnapshot | null>(null)
+  const renderedHighlights = useRef(new Map<string, Primitive>())
+  const interactionIndex = useMemo(
+    () => createInteractionRenderIndex(allElements, basePrimitives),
+    [allElements, basePrimitives],
+  )
+
+  useLayoutEffect(() => {
     if (!canvasRefs.current) return
     if (Object.keys(canvasRefs.current).length === 0) return
 
@@ -74,14 +115,76 @@ export const CanvasPrimitiveRenderer = ({
 
     if (Object.keys(availableCanvasRefs).length === 0) return
 
-    const drawer = new Drawer(availableCanvasRefs)
-    if (transform) drawer.transform = transform
+    const offset = getCachedPanOffset(
+      renderSnapshot.current,
+      viewportTransform,
+      renderScene,
+    )
+    for (const canvas of Object.values(availableCanvasRefs)) {
+      canvas.style.transform = `translate(${offset?.x ?? 0}px, ${offset?.y ?? 0}px)`
+    }
+    const highlights = getActivePrimitives(primitives)
+    const changedRegion = offset
+      ? getChangedInteractionRegion(
+          renderedHighlights.current,
+          highlights,
+          interactionIndex,
+        )
+      : null
+    if (offset && changedRegion === undefined) return
+    // Soldermask and unsupported geometry retain the complete rendering path.
+    const partial =
+      offset &&
+      changedRegion &&
+      !isShowingSolderMask &&
+      viewportTransform &&
+      canPartiallyRenderInteractions(viewportTransform)
+        ? changedRegion
+        : null
+    const renderTransform = partial
+      ? renderSnapshot.current!.transform
+      : viewportTransform
+    if (!partial)
+      for (const canvas of Object.values(availableCanvasRefs))
+        canvas.style.transform = "translate(0px, 0px)"
+
+    const transform = renderTransform
+      ? getBufferedRenderTransform(renderTransform)
+      : undefined
+
+    const clip =
+      partial && transform
+        ? getInteractionClipBounds(partial.bounds, transform)
+        : null
+    const elements = clip
+      ? allElements.filter((element) => {
+          const bounds = interactionIndex.elementBounds.get(element)
+          return !bounds || boundsOverlap(bounds, clip.world)
+        })
+      : allElements
+    const renderCanvasRefs = partial
+      ? Object.fromEntries(
+          Object.entries(availableCanvasRefs).filter(([layer]) =>
+            partial.layers.has(layer),
+          ),
+        )
+      : availableCanvasRefs
+    const drawer = new Drawer(renderCanvasRefs)
+    drawer.transform = transform ?? getBufferedRenderTransform(drawer.transform)
+    if (clip)
+      for (const ctx of Object.values(drawer.ctxLayerMap)) {
+        const b = clip.pixels
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(b.minX, b.minY, b.maxX - b.minX, b.maxY - b.minY)
+        ctx.clip()
+      }
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
     drawer.hiddenLayerOpacity = hiddenLayerOpacity
     // Clear every canvas above, then omit drawing completely hidden layers.
     const visibleCanvasRefs = Object.fromEntries(
-      Object.entries(availableCanvasRefs).filter(
+      Object.entries(renderCanvasRefs).filter(
         ([layer]) => drawer.getLayerOpacity(layer) > 0,
       ),
     )
@@ -97,9 +200,15 @@ export const CanvasPrimitiveRenderer = ({
 
     drawPrimitives(
       drawer,
-      filteredPrimitives.filter(
-        (p) => drawer.getLayerOpacity(p.layer ?? "other") > 0,
-      ),
+      filteredPrimitives.filter((p) => {
+        if (
+          !(p.layer in renderCanvasRefs) ||
+          drawer.getLayerOpacity(p.layer) === 0
+        )
+          return false
+        const bounds = getPrimitiveRenderBounds(p)
+        return !clip || !bounds || boundsOverlap(bounds, clip.world)
+      }),
     )
 
     // Draw silkscreen elements using circuit-to-canvas
@@ -369,20 +478,14 @@ export const CanvasPrimitiveRenderer = ({
       }
     }
 
-    drawer.orderAndFadeLayers()
-  }, [
-    primitives,
-    elements,
-    transform,
-    selectedLayer,
-    hiddenLayerOpacity,
-    isShowingCopperPours,
-    isShowingSolderMask,
-    isShowingFabricationNotes,
-    isShowingPcbNotes,
-    isShowingCourtyards,
-    isShowingSilkscreen,
-  ])
+    if (clip) for (const ctx of Object.values(drawer.ctxLayerMap)) ctx.restore()
+    renderedHighlights.current = highlights
+    if (!partial) drawer.orderAndFadeLayers()
+    if (!partial)
+      renderSnapshot.current = viewportTransform
+        ? { transform: { ...viewportTransform }, scene: renderScene }
+        : null
+  }, [viewportTransform, renderScene, primitives, interactionIndex])
 
   return (
     <div
@@ -391,6 +494,7 @@ export const CanvasPrimitiveRenderer = ({
         width,
         height,
         position: "relative",
+        overflow: "hidden",
       }}
     >
       <SuperGrid
@@ -400,10 +504,10 @@ export const CanvasPrimitiveRenderer = ({
         screenSpaceCellSize={200}
         width={width}
         height={height}
-        transform={transform!}
+        transform={viewportTransform!}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
-      {getOrderedCanvasLayers(elements)
+      {getOrderedCanvasLayers(allElements)
         .filter((layer) => {
           if (!isShowingSolderMask && layer.includes("soldermask")) return false
           if (!isShowingSilkscreen && layer.includes("silkscreen")) return false
@@ -426,12 +530,12 @@ export const CanvasPrimitiveRenderer = ({
             style={{
               position: "absolute",
               zIndex: i,
-              left: 0,
-              top: 0,
+              left: -PAN_RENDER_MARGIN,
+              top: -PAN_RENDER_MARGIN,
               pointerEvents: "none",
             }}
-            width={width}
-            height={height}
+            width={width + PAN_RENDER_MARGIN * 2}
+            height={height + PAN_RENDER_MARGIN * 2}
           />
         ))}
     </div>
