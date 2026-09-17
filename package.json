@@ -51,7 +51,8 @@
     "zod": "^3.23.5",
     "@webgpu/types": "^0.1.72",
     "esbuild": "^0.25.2",
-    "playwright": "1.63.0"
+    "playwright": "1.63.0",
+    "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#56ecfc6168a9071c627b162ecbbee6372d3b0b25"
   },
   "peerDependencies": {
     "react": "*",
@@ -68,7 +69,6 @@
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",
     "transformation-matrix": "^2.13.0",
-    "zustand": "^4.5.2",
-    "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#56ecfc6168a9071c627b162ecbbee6372d3b0b25"
+    "zustand": "^4.5.2"
   }
 }
