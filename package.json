@@ -35,9 +35,13 @@
     "@types/node": "18.7.23",
     "@types/react": "19",
     "@types/react-dom": "~19.1.0",
+    "@webgpu/types": "^0.1.72",
+    "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#71f47cd7c30c649191a6f97d5a099cc3ba7a659d",
+    "esbuild": "^0.25.2",
     "format-si-unit": "^0.0.12",
     "next": "^14.1.4",
     "pixi.js": "^8.6.6",
+    "playwright": "1.63.0",
     "react": "19.1.0",
     "react-cosmos": "7.0.0-beta.4",
     "react-cosmos-plugin-vite": "7.0.0-beta.0",
@@ -48,11 +52,7 @@
     "type-fest": "^3.0.0",
     "typescript": "^5.4.4",
     "use-mouse-matrix-transform": "^1.3.4",
-    "zod": "^3.23.5",
-    "@webgpu/types": "^0.1.72",
-    "esbuild": "^0.25.2",
-    "playwright": "1.63.0",
-    "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#3af662d847e06cf1e5b18bc0c63ce8f8ac4a8192"
+    "zod": "^3.23.5"
   },
   "peerDependencies": {
     "react": "*",
