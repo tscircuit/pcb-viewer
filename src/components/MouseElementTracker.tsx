@@ -77,11 +77,26 @@ export const getPrimitivesUnderPoint = (
   const newMousedPrimitives: Primitive[] = []
 
   for (const primitive of primitives) {
-    if (!primitive._element) continue
+    if (!primitive._element || primitive.is_hoverable === false) continue
+    // Drill/mask primitives are visual details, not separate copper targets.
+    // In particular, a shared drill must not select a blind via on another layer.
+    if (!/^(top|bottom|inner\d+)$/.test(primitive.layer)) continue
     if (
-      primitive._element.type === "pcb_trace" &&
-      primitive.layer !== selectedLayer
+      primitive._element.type === "pcb_plated_hole" ||
+      primitive._element.type === "pcb_via"
     ) {
+      // Hole/via converters may emit copper geometry only on the outer layers.
+      // That geometry also represents every layer declared by the element.
+      const layers = primitive._element.layers
+      if (layers && !layers.includes(selectedLayer)) continue
+      if (
+        !layers &&
+        primitive._element.type === "pcb_via" &&
+        primitive.layer !== selectedLayer
+      ) {
+        continue
+      }
+    } else if (primitive.layer !== selectedLayer) {
       continue
     }
 
