@@ -326,6 +326,8 @@ export const MouseElementTracker = ({
       ref={containerRef}
       style={{ position: "relative", width: "100%", height: "100%" }}
       onMouseMove={(e) => {
+        // Dragging pans or edits the board; hover picking can wait until release.
+        if (e.buttons !== 0) return
         if (transform) {
           const rect = e.currentTarget.getBoundingClientRect()
           const x = e.clientX - rect.left

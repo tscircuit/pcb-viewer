@@ -25,7 +25,13 @@ import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
 import type { GridConfig, Primitive } from "lib/types"
-import React, { useEffect, useRef } from "react"
+import React, { useLayoutEffect, useMemo, useRef } from "react"
+import {
+  PAN_RENDER_MARGIN,
+  getCachedPanOffset,
+  getBufferedRenderTransform,
+  type PanRenderSnapshot,
+} from "lib/pan-render-cache"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
@@ -43,7 +49,7 @@ interface Props {
 export const CanvasPrimitiveRenderer = ({
   primitives,
   elements,
-  transform,
+  transform: viewportTransform,
   grid,
   width = 500,
   height = 500,
@@ -60,7 +66,26 @@ export const CanvasPrimitiveRenderer = ({
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
-  useEffect(() => {
+  const renderScene = useMemo(
+    () => ({}),
+    [
+      primitives,
+      elements,
+      width,
+      height,
+      selectedLayer,
+      hiddenLayerOpacity,
+      isShowingCopperPours,
+      isShowingSolderMask,
+      isShowingFabricationNotes,
+      isShowingPcbNotes,
+      isShowingCourtyards,
+      isShowingSilkscreen,
+    ],
+  )
+  const renderSnapshot = useRef<PanRenderSnapshot | null>(null)
+
+  useLayoutEffect(() => {
     if (!canvasRefs.current) return
     if (Object.keys(canvasRefs.current).length === 0) return
 
@@ -74,8 +99,22 @@ export const CanvasPrimitiveRenderer = ({
 
     if (Object.keys(availableCanvasRefs).length === 0) return
 
+    const offset = getCachedPanOffset(
+      renderSnapshot.current,
+      viewportTransform,
+      renderScene,
+    )
+    for (const canvas of Object.values(availableCanvasRefs)) {
+      canvas.style.transform = `translate(${offset?.x ?? 0}px, ${offset?.y ?? 0}px)`
+    }
+    if (offset) return
+
+    const transform = viewportTransform
+      ? getBufferedRenderTransform(viewportTransform)
+      : undefined
+
     const drawer = new Drawer(availableCanvasRefs)
-    if (transform) drawer.transform = transform
+    drawer.transform = transform ?? getBufferedRenderTransform(drawer.transform)
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
     drawer.hiddenLayerOpacity = hiddenLayerOpacity
@@ -370,19 +409,10 @@ export const CanvasPrimitiveRenderer = ({
     }
 
     drawer.orderAndFadeLayers()
-  }, [
-    primitives,
-    elements,
-    transform,
-    selectedLayer,
-    hiddenLayerOpacity,
-    isShowingCopperPours,
-    isShowingSolderMask,
-    isShowingFabricationNotes,
-    isShowingPcbNotes,
-    isShowingCourtyards,
-    isShowingSilkscreen,
-  ])
+    renderSnapshot.current = viewportTransform
+      ? { transform: { ...viewportTransform }, scene: renderScene }
+      : null
+  }, [viewportTransform, renderScene])
 
   return (
     <div
@@ -391,6 +421,7 @@ export const CanvasPrimitiveRenderer = ({
         width,
         height,
         position: "relative",
+        overflow: "hidden",
       }}
     >
       <SuperGrid
@@ -400,7 +431,7 @@ export const CanvasPrimitiveRenderer = ({
         screenSpaceCellSize={200}
         width={width}
         height={height}
-        transform={transform!}
+        transform={viewportTransform!}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
       {getOrderedCanvasLayers(elements)
@@ -426,12 +457,12 @@ export const CanvasPrimitiveRenderer = ({
             style={{
               position: "absolute",
               zIndex: i,
-              left: 0,
-              top: 0,
+              left: -PAN_RENDER_MARGIN,
+              top: -PAN_RENDER_MARGIN,
               pointerEvents: "none",
             }}
-            width={width}
-            height={height}
+            width={width + PAN_RENDER_MARGIN * 2}
+            height={height + PAN_RENDER_MARGIN * 2}
           />
         ))}
     </div>
