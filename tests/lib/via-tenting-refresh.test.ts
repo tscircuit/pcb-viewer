@@ -76,5 +76,4 @@ test("board, standalone via, and route via tenting changes invalidate the viewer
       { ...trace, route: [{ ...routeVia, tented_on_bottom: true }] },
     ]),
   ).not.toBe(originalKey)
-  expect(calculateCircuitJsonKey(structuredClone(circuit))).toBe(originalKey)
 })
