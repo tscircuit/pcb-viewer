@@ -1,5 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { Matrix, RenderOptions } from "circuit-json-webgpu"
+import type { Matrix, RenderOptions } from "@tscircuit/circuit-json-webgpu"
 export type WebGpuRequest =
   | { type: "init"; canvas: OffscreenCanvas }
   | { type: "scene"; elements: AnyCircuitElement[] }

@@ -19,16 +19,14 @@ try {
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
       : {}),
   })
-  const errors = []
+  const errors: string[] = []
   const page = await browser.newPage({ viewport: { width: 800, height: 600 } })
   page.on("pageerror", (e) => {
     errors.push(e.message)
     console.error(e.message)
   })
   const open = async () => {
-    await page.goto(
-      `http://127.0.0.1:${server.httpServer.address().port}/tests/webgpu/`,
-    )
+    await page.goto(`${server.resolvedUrls!.local[0]}tests/webgpu/`)
     await page.waitForFunction(() => window.gpuViewerTest)
   }
   await open()
@@ -68,7 +66,7 @@ try {
   )
   await page.mouse.move(400, 300)
   const navigation = await page.evaluate(async () => {
-    const target = document.querySelector(".pcb-webgpu-canvas"),
+    const target = document.querySelector(".pcb-webgpu-canvas")!,
       samples = [],
       startFrames = window.gpuViewerTest.stats.frames
     let previous = performance.now()
@@ -111,7 +109,7 @@ try {
   })
   await page.setViewportSize({ width: 1000, height: 700 })
   await page.evaluate(() => {
-    document.getElementById("root").style.width = "950px"
+    document.getElementById("root")!.style.width = "950px"
   })
   await page.waitForFunction(
     (before) => window.gpuViewerTest.stats.frames > before,

@@ -109,3 +109,14 @@ Object.assign(window, {
     unmount: () => root.unmount(),
   },
 })
+
+declare global {
+  interface Window {
+    gpuViewerTest: {
+      stats: typeof stats
+      mount: typeof mount
+      metadataBenchmark: typeof metadataBenchmark
+      unmount(): void
+    }
+  }
+}

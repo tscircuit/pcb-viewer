@@ -1,4 +1,4 @@
-import { CircuitToWebGpuDrawer } from "circuit-json-webgpu"
+import { CircuitToWebGpuDrawer } from "@tscircuit/circuit-json-webgpu"
 import type { WebGpuRequest, WebGpuResponse } from "./protocol"
 const scope = self as unknown as {
   onmessage: (event: MessageEvent<WebGpuRequest>) => void

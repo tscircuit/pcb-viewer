@@ -117,3 +117,8 @@ clipping, and keepouts. See the renderer's
 [full parity report](https://github.com/tscircuit/circuit-json-webgpu/blob/fix/canvas-text-parity/tests/parity/latest-report.json).
 The integration PR remains draft until these are resolved; existing diagnostics
 and Canvas fallback do not yet detect every visual mismatch.
+
+The WebGPU renderer is installed as a bundled devDependency from
+`https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.2.tgz`.
+The renderer repository includes a TypeScript local render command and 597
+SVG-left/WebGPU-right feature snapshot tests.

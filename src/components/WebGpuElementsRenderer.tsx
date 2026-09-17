@@ -1,5 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { RenderOptions } from "circuit-json-webgpu"
+import type { RenderOptions } from "@tscircuit/circuit-json-webgpu"
 import type { GridConfig, Primitive } from "lib/types"
 import { createWebGpuWorker } from "lib/webgpu/create-worker"
 import type { WebGpuRequest, WebGpuResponse } from "lib/webgpu/protocol"
