@@ -1,3 +1,4 @@
+import type { PcbRenderOptions } from "lib/rendering/types"
 import { applyEditEvents } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
@@ -21,6 +22,7 @@ const defaultTransform = compose(translate(400, 300), scale(40, -40))
 type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
+  renderOptions?: PcbRenderOptions
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
@@ -36,6 +38,7 @@ export const PCBViewer = ({
   circuitJson,
   debugGraphics,
   height = 600,
+  renderOptions,
   initialState,
   allowEditing = true,
   editEvents: editEventsProp,
@@ -175,7 +178,7 @@ export const PCBViewer = ({
           disablePcbGroups={disablePcbGroups}
         >
           <CanvasElementsRenderer
-            key={refDimensions.width}
+            renderOptions={renderOptions}
             transform={transform}
             setTransform={setTransform}
             height={height}
