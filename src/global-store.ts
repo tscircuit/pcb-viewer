@@ -14,6 +14,9 @@ import {
 } from "./hooks/useLocalStorage"
 
 export interface State {
+  hidden_layer_opacity: number
+  setHiddenLayerOpacity: (opacity: number) => void
+
   selected_layer: LayerRef
 
   pcb_viewer_id: string
@@ -77,6 +80,9 @@ export const createStore = (
   createZustandStore<State>(
     (set) =>
       ({
+        hidden_layer_opacity: 0.4,
+        setHiddenLayerOpacity: (opacity) =>
+          set({ hidden_layer_opacity: Math.max(0, Math.min(1, opacity)) }),
         selected_layer: "top",
 
         pcb_viewer_id: `pcb_viewer_${Math.random().toString().slice(2, 10)}`,

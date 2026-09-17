@@ -112,6 +112,7 @@ export class Drawer {
   aperture: Aperture
   transform: Matrix
   foregroundLayer = "top"
+  hiddenLayerOpacity = 0.4
   lastPoint: { x: number; y: number }
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
@@ -487,11 +488,24 @@ export class Drawer {
     return ctx
   }
 
+  getLayerOpacity(layer: string) {
+    const side = this.foregroundLayer
+    const isSelectedSideDetail =
+      (side === "top" || side === "bottom") &&
+      (layer.startsWith(`${side}_`) || layer.endsWith(`_${side}`))
+    const isSharedLayer = ["board", "drill", "edge_cuts", "other"].includes(
+      layer,
+    )
+    return layer === side || isSelectedSideDetail || isSharedLayer
+      ? 1
+      : this.hiddenLayerOpacity
+  }
+
   /**
    * Iterate over each canvas and set the z index based on the layer order, but
    * always render the foreground layer on top.
    *
-   * Also: Set the opacity of every non-foreground layer to 0.5
+   * Fade inactive layers using the configured hidden-layer opacity.
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
@@ -537,19 +551,6 @@ export class Drawer {
           ? "bottom_courtyard"
           : undefined
 
-    const opaqueLayers = new Set<string>([
-      foregroundLayer,
-      "drill",
-      "edge_cuts",
-      "other",
-      "board",
-      ...(associatedSoldermask ? [associatedSoldermask] : []),
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
-      ...(associatedNotes ? [associatedNotes] : []),
-      ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(associatedCourtyard ? [associatedCourtyard] : []),
-    ])
-
     const layersToShiftToTop = [
       foregroundLayer,
       "edge_cuts",
@@ -577,8 +578,13 @@ export class Drawer {
       if (!canvas) return
 
       canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
-      canvas.style.opacity = opaqueLayers.has(layer) ? "1" : "0.5"
     })
+
+    for (const [layer, canvas] of Object.entries(canvasLayerMap)) {
+      const opacity = this.getLayerOpacity(layer)
+      canvas.style.opacity = String(opacity)
+      canvas.style.display = opacity === 0 ? "none" : ""
+    }
   }
 
   applyAperture() {
