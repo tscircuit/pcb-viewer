@@ -1,4 +1,4 @@
-import { Primitive } from "lib/types"
+import type { Primitive } from "lib/types"
 
 export function addInteractionMetadataToPrimitives({
   primitivesWithoutInteractionMetadata,
@@ -9,44 +9,46 @@ export function addInteractionMetadataToPrimitives({
   drawingObjectIdsWithMouseOver: Set<string>
   primitiveIdsInMousedOverNet: string[]
 }): Primitive[] {
-  const newPrimitives = []
-  for (const primitive of primitivesWithoutInteractionMetadata) {
-    const newPrimitive = { ...primitive }
-    const primitiveElement = primitive._element
+  // Large nets may include hundreds of ids. Build membership once instead of
+  // searching the entire net for every primitive on every pointer movement.
+  const highlightedIds = new Set(primitiveIdsInMousedOverNet)
+
+  return primitivesWithoutInteractionMetadata.map((primitive) => {
+    const element = primitive._element
     const parentComponent = primitive._parent_pcb_component
-    if (primitive?.layer === "drill") {
-      newPrimitive.is_in_highlighted_net = false
-      newPrimitive.is_mouse_over = false
-    } else if (
+    const isMouseOver =
+      primitive.layer !== "drill" &&
       drawingObjectIdsWithMouseOver.has(primitive._pcb_drawing_object_id)
+    const isInHighlightedNet = Boolean(
+      primitive.layer !== "drill" &&
+        !isMouseOver &&
+        element &&
+        (("pcb_trace_id" in element &&
+          highlightedIds.has(element.pcb_trace_id!)) ||
+          ("pcb_port_id" in element &&
+            highlightedIds.has(element.pcb_port_id!)) ||
+          ("pcb_via_id" in element &&
+            highlightedIds.has(element.pcb_via_id!)) ||
+          ("pcb_component_id" in element &&
+            highlightedIds.has(element.pcb_component_id!)) ||
+          (parentComponent &&
+            "pcb_component_id" in parentComponent &&
+            highlightedIds.has(parentComponent.pcb_component_id!))),
+    )
+
+    // Most primitives are unaffected by a hover change. Preserve their identity
+    // and avoid allocating a full second copy of the board's geometry.
+    if (
+      Boolean(primitive.is_mouse_over) === isMouseOver &&
+      Boolean(primitive.is_in_highlighted_net) === isInHighlightedNet
     ) {
-      newPrimitive.is_mouse_over = true
-    } else if (
-      primitiveElement &&
-      (("pcb_trace_id" in primitiveElement &&
-        primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_trace_id!)) ||
-        ("pcb_port_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(
-            primitiveElement.pcb_port_id!,
-          )) ||
-        ("pcb_via_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_via_id!)) ||
-        ("pcb_component_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(
-            primitiveElement.pcb_component_id!,
-          )) ||
-        (parentComponent &&
-          "pcb_component_id" in parentComponent &&
-          primitiveIdsInMousedOverNet.includes(
-            parentComponent.pcb_component_id!,
-          )))
-    ) {
-      newPrimitive.is_in_highlighted_net = true
-    } else {
-      newPrimitive.is_in_highlighted_net = false
-      newPrimitive.is_mouse_over = false
+      return primitive
     }
-    newPrimitives.push(newPrimitive)
-  }
-  return newPrimitives
+
+    return {
+      ...primitive,
+      is_mouse_over: isMouseOver,
+      is_in_highlighted_net: isInHighlightedNet,
+    }
+  })
 }
