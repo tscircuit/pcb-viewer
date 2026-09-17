@@ -1,3 +1,4 @@
+import type { PcbRenderOptions } from "lib/rendering/types"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
@@ -37,6 +38,7 @@ export interface CanvasElementsRendererProps {
   setTransform?: (transform: Matrix) => void
   width?: number
   height?: number
+  renderOptions?: PcbRenderOptions
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
@@ -271,6 +273,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       elements={elements}
                     >
                       <CanvasPrimitiveRenderer
+                        renderOptions={props.renderOptions}
                         transform={transform}
                         primitives={primitives}
                         elements={elementsToRender}

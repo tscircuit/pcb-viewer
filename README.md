@@ -86,3 +86,56 @@ The PCBViewer component accepts these props:
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
+
+### Background rendering
+
+PCB layers render in a pool of four Web Workers by default. The visible canvases
+only draw completed images. Panning and zooming immediately transform cached
+images; after 120 ms without camera movement, the viewer requests sharper images
+for the new region. Results appear layer by layer, with the board and selected
+copper layer prioritized.
+
+```tsx
+<PCBViewer
+  circuitJson={circuitJson}
+  renderOptions={{
+    workerCount: 4,
+    settleDelayMs: 120,
+    maxCacheBytes: 128 * 1024 * 1024,
+  }}
+/>
+```
+
+`CanvasElementsRenderer` accepts the same `renderOptions`. Set `workerCount: 0`
+to force the fallback. When Workers or OffscreenCanvas 2D are unavailable, worker
+startup fails, or a worker errors, the same rendering queue runs on detached
+main-thread canvases, yielding between layers. A single fallback layer can still
+block input while it draws.
+
+Regions include overscan and use quantized zoom levels, so nearby views can reuse
+images. The cache evicts older regions first and closes discarded ImageBitmaps.
+The latest image per layer is retained even if that active set exceeds
+`maxCacheBytes`. Circuit changes invalidate old images; hover changes keep the
+previous image visible until its replacement arrives. Worker count changes and
+unmounting terminate the pool and release its images.
+
+The published bundle includes its worker code; no separate worker asset needs
+hosting. The default factory uses a blob URL and is loaded lazily for SSR. Hosts
+with custom worker hosting or CSP requirements can pass
+`workerFactory: () => Worker | Promise<Worker>` implementing the protocol in
+`src/lib/rendering/types.ts`. Geometry rasterization runs in workers; React UI,
+interaction metadata, hit testing, grid, and editing/debug overlays remain on the
+main thread.
+
+Rendering checks:
+
+```sh
+bun test tests
+bun run build
+bunx tsc --noEmit
+bun run test:rendering:browser
+```
+
+The browser test starts Vite and uses Playwright Chromium (install it with
+`bunx playwright install chromium`). It checks worker/fallback image parity,
+settled-zoom scheduling, unsupported/failed workers, and the AM3352 repro.

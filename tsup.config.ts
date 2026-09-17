@@ -1,8 +1,10 @@
+import { inlineWorkerPlugin } from "./scripts/inline-worker-plugin"
 import { defineConfig } from "tsup"
 
 export default defineConfig({
   entry: ["./src"],
   splitting: false,
+  esbuildPlugins: [inlineWorkerPlugin],
   dts: true,
   sourcemap: true,
   clean: true,
@@ -10,5 +12,11 @@ export default defineConfig({
   loader: {
     ".ts": "tsx",
   },
-  external: ["react", "react-dom", "react-reconciler", "react-reconciler-18"],
+  external: [
+    "@tscircuit/core",
+    "react",
+    "react-dom",
+    "react-reconciler",
+    "react-reconciler-18",
+  ],
 })
