@@ -70,14 +70,15 @@ async function mount(
         ...(unsupported
           ? [
               {
-                type: "pcb_copper_text",
-                pcb_copper_text_id: "knockout",
-                text: "KO",
+                type: "pcb_note_dimension",
+                pcb_note_dimension_id: "unsupported-dimension",
+                text: "2",
                 layer: "top",
-                anchor_position: { x: 8, y: 0 },
+                from: { x: 8, y: 0 },
+                to: { x: 10, y: 0 },
+                arrow_size: 0.3,
                 font_size: 2,
-                anchor_alignment: "center",
-                is_knockout: true,
+                font: "tscircuit2024",
               },
             ]
           : []),

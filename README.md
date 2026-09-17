@@ -99,7 +99,7 @@ There is no bitmap zoom-settle delay or pool of raster workers.
 Pass `renderer="canvas"` to explicitly use the existing Canvas renderer. WebGPU
 also falls back to Canvas when WebGPU/OffscreenCanvas is unavailable, initialization
 fails, the GPU device is lost, or the scene includes unsupported geometry (such
-as knockout text or interpolated trace routes). The initial GPU geometry compile
+as dimension annotations or interpolated trace routes). The initial GPU geometry compile
 still takes time on large boards, but runs in the worker. Curves use fixed
 triangle tessellation and can show facets at extreme zoom.
 
@@ -109,3 +109,11 @@ its own pure geometry tests and 13 browser visual snapshots. Run
 `bun run test:webgpu` after `bunx playwright install chromium` to test the built
 viewer bundle, AM3352 wheel zoom, resize, StrictMode cleanup, and fallbacks.
 The Cosmos `WebGpuAm3352` fixture switches between the two rendering backends.
+
+
+The WebGPU integration is still experimental. The complete imported Canvas suite
+currently exposes substantial non-text parity gaps, including soldermask, trace
+clipping, and keepouts. See the renderer's
+[full parity report](https://github.com/tscircuit/circuit-json-webgpu/blob/fix/canvas-text-parity/tests/parity/latest-report.json).
+The integration PR remains draft until these are resolved; existing diagnostics
+and Canvas fallback do not yet detect every visual mismatch.

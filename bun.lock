@@ -32,7 +32,7 @@
         "@types/react": "19",
         "@types/react-dom": "~19.1.0",
         "@webgpu/types": "^0.1.72",
-        "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#56ecfc6168a9071c627b162ecbbee6372d3b0b25",
+        "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#3af662d847e06cf1e5b18bc0c63ce8f8ac4a8192",
         "esbuild": "^0.25.2",
         "format-si-unit": "^0.0.12",
         "next": "^14.1.4",
@@ -663,7 +663,7 @@
 
     "circuit-json-to-spice": ["circuit-json-to-spice@0.0.45", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5.0.0" } }, "sha512-e8THrj+jWK0BEjpw0relCYNCuEYEFAy5dFRYUQgMxdnrTjs2h5WoGWRNGPndqNkrpV5b63AzdX3wVR7Mtqi1HQ=="],
 
-    "circuit-json-webgpu": ["circuit-json-webgpu@github:tscircuit/circuit-json-webgpu#56ecfc6", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "earcut": "^3.0.2" }, "peerDependencies": { "circuit-json": ">=0.0.469" } }, "tscircuit-circuit-json-webgpu-56ecfc6"],
+    "circuit-json-webgpu": ["circuit-json-webgpu@github:tscircuit/circuit-json-webgpu#3af662d", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "earcut": "^3.0.2" }, "peerDependencies": { "circuit-json": ">=0.0.469" } }, "tscircuit-circuit-json-webgpu-3af662d"],
 
     "circuit-to-canvas": ["circuit-to-canvas@0.0.124", "", { "dependencies": { "transformation-matrix": "^3.1.0" }, "peerDependencies": { "@tscircuit/alphabet": "*", "typescript": "^5" } }, "sha512-B9vQQizVZnV+fE0sSd479UVck6BRjSH44OMb1/53v3HVr8zP76KgysxOn5lQBDmo6lqlGERkhFICvE03sFklvQ=="],
 

@@ -52,7 +52,7 @@
     "@webgpu/types": "^0.1.72",
     "esbuild": "^0.25.2",
     "playwright": "1.63.0",
-    "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#56ecfc6168a9071c627b162ecbbee6372d3b0b25"
+    "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#3af662d847e06cf1e5b18bc0c63ce8f8ac4a8192"
   },
   "peerDependencies": {
     "react": "*",
