@@ -68,10 +68,11 @@ const isPointInsidePolygon = (
   return isInside
 }
 
-const getCopperLayerIndex = (layer: LayerRef) => {
-  if (layer === "top") return 0
-  if (layer === "bottom") return Number.POSITIVE_INFINITY
-  return Number(layer.slice("inner".length))
+const compareCopperLayers = (a: LayerRef, b: LayerRef) => {
+  if (a === b) return 0
+  if (a === "top" || b === "bottom") return -1
+  if (a === "bottom" || b === "top") return 1
+  return Number(a.slice("inner".length)) - Number(b.slice("inner".length))
 }
 
 export const getPrimitivesUnderPoint = (
@@ -102,12 +103,14 @@ export const getPrimitivesUnderPoint = (
         primitive._element.to_layer
       ) {
         // Legacy vias describe a continuous span using just its endpoints.
-        const start = getCopperLayerIndex(primitive._element.from_layer)
-        const end = getCopperLayerIndex(primitive._element.to_layer)
-        const selected = getCopperLayerIndex(selectedLayer)
+        const { from_layer, to_layer } = primitive._element
+        const [start, end] =
+          compareCopperLayers(from_layer, to_layer) <= 0
+            ? [from_layer, to_layer]
+            : [to_layer, from_layer]
         if (
-          selected < Math.min(start, end) ||
-          selected > Math.max(start, end)
+          compareCopperLayers(selectedLayer, start) < 0 ||
+          compareCopperLayers(selectedLayer, end) > 0
         ) {
           continue
         }

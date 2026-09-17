@@ -164,6 +164,39 @@ it("picks legacy vias on intermediate layers within their endpoint span", () => 
   }
 })
 
+it("picks legacy vias through the bottom endpoint in either direction", () => {
+  for (const [from_layer, to_layer] of [
+    ["inner3", "bottom"],
+    ["bottom", "inner3"],
+    ["bottom", "bottom"],
+  ] as const) {
+    const via = {
+      type: "pcb_via",
+      pcb_via_id: "bottom_via",
+      x: 0,
+      y: 0,
+      outer_diameter: 1,
+      hole_diameter: 0.5,
+      from_layer,
+      to_layer,
+    }
+    const primitives = convertElementToPrimitives(via as any, [via] as any)
+    expect(
+      getPrimitivesUnderPoint(primitives, point, transform, "bottom").length,
+    ).toBeGreaterThan(0)
+    for (const layer of ["top", "inner2"] as const) {
+      expect(
+        getPrimitivesUnderPoint(primitives, point, transform, layer),
+      ).toEqual([])
+    }
+    for (const layer of ["inner3", "inner6"] as const) {
+      const hits = getPrimitivesUnderPoint(primitives, point, transform, layer)
+      if (from_layer === to_layer) expect(hits).toEqual([])
+      else expect(hits.length).toBeGreaterThan(0)
+    }
+  }
+})
+
 it("keeps through-hole pads selectable only on their spanned layers", () => {
   const pad = {
     _pcb_drawing_object_id: "plated_pad",
