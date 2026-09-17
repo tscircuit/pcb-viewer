@@ -21,6 +21,8 @@ const defaultTransform = compose(translate(400, 300), scale(40, -40))
 type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
+  /** WebGPU runs in a worker and falls back to Canvas when unavailable. */
+  renderer?: "webgpu" | "canvas"
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
@@ -36,6 +38,7 @@ export const PCBViewer = ({
   circuitJson,
   debugGraphics,
   height = 600,
+  renderer = "webgpu",
   initialState,
   allowEditing = true,
   editEvents: editEventsProp,
@@ -175,7 +178,7 @@ export const PCBViewer = ({
           disablePcbGroups={disablePcbGroups}
         >
           <CanvasElementsRenderer
-            key={refDimensions.width}
+            renderer={renderer}
             transform={transform}
             setTransform={setTransform}
             height={height}

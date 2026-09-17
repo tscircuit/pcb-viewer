@@ -10,12 +10,13 @@
   "license": "MIT",
   "scripts": {
     "start": "cosmos",
-    "build": "tsup ./src/index.tsx --platform browser --external @tscircuit/core --dts --sourcemap --format esm --outDir dist",
+    "build": "tsup ./src/index.tsx --platform browser --dts --sourcemap --format esm --outDir dist",
     "yalc": "npm run build && yalc push",
     "format": "biome format . --write",
     "format:check": "biome format .",
     "cosmos": "cosmos",
-    "cosmos-export": "cosmos-export"
+    "cosmos-export": "cosmos-export",
+    "test:webgpu": "bun run build && node tests/webgpu/run.mjs"
   },
   "files": [
     "dist"
@@ -47,7 +48,10 @@
     "type-fest": "^3.0.0",
     "typescript": "^5.4.4",
     "use-mouse-matrix-transform": "^1.3.4",
-    "zod": "^3.23.5"
+    "zod": "^3.23.5",
+    "@webgpu/types": "^0.1.72",
+    "esbuild": "^0.25.2",
+    "playwright": "1.63.0"
   },
   "peerDependencies": {
     "react": "*",
@@ -64,6 +68,7 @@
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",
     "transformation-matrix": "^2.13.0",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#56ecfc6168a9071c627b162ecbbee6372d3b0b25"
   }
 }

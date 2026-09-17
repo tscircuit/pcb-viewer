@@ -86,3 +86,26 @@ The PCBViewer component accepts these props:
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
+
+### WebGPU rendering
+
+`PCBViewer` defaults to `renderer="webgpu"`. It uses
+[`circuit-json-webgpu`](https://github.com/tscircuit/circuit-json-webgpu) inside a
+Web Worker with an OffscreenCanvas. Circuit geometry is compiled and uploaded
+once per scene; pan and zoom update the camera and draw retained GPU buffers
+continuously. The main thread handles React, interaction, and view messages.
+There is no bitmap zoom-settle delay or pool of raster workers.
+
+Pass `renderer="canvas"` to explicitly use the existing Canvas renderer. WebGPU
+also falls back to Canvas when WebGPU/OffscreenCanvas is unavailable, initialization
+fails, the GPU device is lost, or the scene includes unsupported geometry (such
+as knockout text or interpolated trace routes). The initial GPU geometry compile
+still takes time on large boards, but runs in the worker. Curves use fixed
+triangle tessellation and can show facets at extreme zoom.
+
+The initial dependency is pinned to a commit of the new renderer repository;
+The Git dependency includes its built JavaScript and types. The renderer has
+its own pure geometry tests and 13 browser visual snapshots. Run
+`bun run test:webgpu` after `bunx playwright install chromium` to test the built
+viewer bundle, AM3352 wheel zoom, resize, StrictMode cleanup, and fallbacks.
+The Cosmos `WebGpuAm3352` fixture switches between the two rendering backends.

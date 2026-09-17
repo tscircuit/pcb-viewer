@@ -13,3 +13,5 @@ yalc.lock
 .aider*
 bun.lockb
 package-lock.json
+
+tests/webgpu/actual/

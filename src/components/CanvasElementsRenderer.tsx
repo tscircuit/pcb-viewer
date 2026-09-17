@@ -2,7 +2,10 @@ import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
-import { convertElementToPrimitives } from "lib/convert-element-to-primitive"
+import {
+  convertElementToPrimitives,
+  createPrimitiveMetadataIndex,
+} from "lib/convert-element-to-primitive"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 import {
@@ -19,6 +22,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
+import { WebGpuElementsRenderer } from "./WebGpuElementsRenderer"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import { type BoundsSelection, DimensionOverlay } from "./DimensionOverlay"
@@ -37,6 +41,7 @@ export interface CanvasElementsRendererProps {
   setTransform?: (transform: Matrix) => void
   width?: number
   height?: number
+  renderer?: "webgpu" | "canvas"
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
@@ -71,8 +76,9 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   const [primitivesWithoutInteractionMetadata, connectivityMap] =
     useMemo(() => {
+      const metadataIndex = createPrimitiveMetadataIndex(props.elements)
       const primitivesWithoutInteractionMetadata = elementsToRender.flatMap(
-        (elm) => convertElementToPrimitives(elm, props.elements),
+        (elm) => convertElementToPrimitives(elm, props.elements, metadataIndex),
       )
       const connectivityMap = getFullConnectivityMapFromCircuitJson(
         props.elements as any,
@@ -270,14 +276,25 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       transform={transform}
                       elements={elements}
                     >
-                      <CanvasPrimitiveRenderer
-                        transform={transform}
-                        primitives={primitives}
-                        elements={elementsToRender}
-                        width={props.width}
-                        height={props.height}
-                        grid={props.grid}
-                      />
+                      {props.renderer === "canvas" ? (
+                        <CanvasPrimitiveRenderer
+                          transform={transform}
+                          primitives={primitives}
+                          elements={elementsToRender}
+                          width={props.width}
+                          height={props.height}
+                          grid={props.grid}
+                        />
+                      ) : (
+                        <WebGpuElementsRenderer
+                          transform={transform}
+                          primitives={primitives}
+                          elements={elements}
+                          width={props.width}
+                          height={props.height}
+                          grid={props.grid}
+                        />
+                      )}
                     </WarningGraphicsOverlay>
                   </DebugGraphicsOverlay>
                 </PcbGroupOverlay>
