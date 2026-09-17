@@ -68,6 +68,12 @@ const isPointInsidePolygon = (
   return isInside
 }
 
+const getCopperLayerIndex = (layer: LayerRef) => {
+  if (layer === "top") return 0
+  if (layer === "bottom") return Number.POSITIVE_INFINITY
+  return Number(layer.slice("inner".length))
+}
+
 export const getPrimitivesUnderPoint = (
   primitives: Primitive[],
   rwPoint: { x: number; y: number },
@@ -92,9 +98,19 @@ export const getPrimitivesUnderPoint = (
       if (
         !layers &&
         primitive._element.type === "pcb_via" &&
-        primitive.layer !== selectedLayer
+        primitive._element.from_layer &&
+        primitive._element.to_layer
       ) {
-        continue
+        // Legacy vias describe a continuous span using just its endpoints.
+        const start = getCopperLayerIndex(primitive._element.from_layer)
+        const end = getCopperLayerIndex(primitive._element.to_layer)
+        const selected = getCopperLayerIndex(selectedLayer)
+        if (
+          selected < Math.min(start, end) ||
+          selected > Math.max(start, end)
+        ) {
+          continue
+        }
       }
     } else if (primitive.layer !== selectedLayer) {
       continue

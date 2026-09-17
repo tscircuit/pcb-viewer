@@ -134,6 +134,36 @@ it("ignores soldermask and explicitly non-hoverable duplicates", () => {
   )
 })
 
+it("picks legacy vias on intermediate layers within their endpoint span", () => {
+  for (const endpoints of [
+    { from_layer: "top", to_layer: "bottom" },
+    { from_layer: "inner1", to_layer: "inner3" },
+    { from_layer: "inner3", to_layer: "inner1" },
+    {},
+  ] as const) {
+    const via = {
+      type: "pcb_via",
+      pcb_via_id: "legacy_via",
+      x: 0,
+      y: 0,
+      outer_diameter: 1,
+      hole_diameter: 0.5,
+      ...endpoints,
+    }
+    const primitives = convertElementToPrimitives(via as any, [via] as any)
+    expect(
+      getPrimitivesUnderPoint(primitives, point, transform, "inner2").length,
+    ).toBeGreaterThan(0)
+    if (endpoints.from_layer?.startsWith("inner")) {
+      for (const layer of ["top", "inner4", "bottom"] as const) {
+        expect(
+          getPrimitivesUnderPoint(primitives, point, transform, layer),
+        ).toEqual([])
+      }
+    }
+  }
+})
+
 it("keeps through-hole pads selectable only on their spanned layers", () => {
   const pad = {
     _pcb_drawing_object_id: "plated_pad",
