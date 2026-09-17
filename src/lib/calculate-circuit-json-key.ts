@@ -43,6 +43,16 @@ export const calculateCircuitJsonKey = (
     if (element.type === "pcb_trace") {
       const routeLength = ((element as PcbTrace).route ?? []).length
       signature += `:${routeLength}`
+      for (const point of element.route ?? []) {
+        if (point.route_type !== "via") continue
+        signature += `:${point.tented_on_top}:${point.tented_on_bottom}`
+      }
+    }
+    if (element.type === "pcb_board") {
+      signature += `:${element.default_via_tented_on_top}:${element.default_via_tented_on_bottom}`
+    }
+    if (element.type === "pcb_via") {
+      signature += `:${element.tented_on_top}:${element.tented_on_bottom}`
     }
 
     elementSignatures.push(signature)

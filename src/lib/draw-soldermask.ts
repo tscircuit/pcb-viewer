@@ -107,6 +107,7 @@ export function drawSoldermaskElementsForLayer({
   hoverDrawer.realToCanvasMat = realToCanvasMat
   hoverDrawer.drawElements(hoveredElements, {
     layers,
+    clipContextElements: elements,
     drawSoldermask: true,
     drawSoldermaskTop,
     drawSoldermaskBottom,
