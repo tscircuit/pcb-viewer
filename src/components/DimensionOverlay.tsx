@@ -12,6 +12,7 @@ import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
 import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
 import { useGlobalStore } from "../global-store"
+import { DimensionSnapGuides } from "./DimensionSnapGuides"
 
 interface Props {
   transform?: Matrix
@@ -23,7 +24,8 @@ interface Props {
 }
 
 const SNAP_THRESHOLD_PX = 16
-const SNAP_MARKER_SIZE = 5
+const EMPTY_PRIMITIVES: Primitive[] = []
+const DEFAULT_TRANSFORM = identity()
 
 export interface BoundsSelection {
   minX: number
@@ -62,11 +64,11 @@ export const DimensionOverlay = ({
   children,
   transform,
   focusOnHover = false,
-  primitives = [],
+  primitives = EMPTY_PRIMITIVES,
   onBoundsSelected,
   cancelPanDrag,
 }: Props) => {
-  if (!transform) transform = identity()
+  if (!transform) transform = DEFAULT_TRANSFORM
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
@@ -649,43 +651,13 @@ export const DimensionOverlay = ({
               stroke="red"
             />
           </svg>
-          {dimensionToolStretching &&
-            snappingPointsWithScreen.map((snap) => {
-              const isActive =
-                snap.id === activeSnapIds.start || snap.id === activeSnapIds.end
-              const half = SNAP_MARKER_SIZE / 2
-              return (
-                <svg
-                  key={snap.id}
-                  width={SNAP_MARKER_SIZE}
-                  height={SNAP_MARKER_SIZE}
-                  style={{
-                    position: "absolute",
-                    left: snap.screenPoint.x - half,
-                    top: snap.screenPoint.y - half,
-                    pointerEvents: "none",
-                    zIndex: zIndexMap.dimensionOverlay,
-                  }}
-                >
-                  <line
-                    x1={0}
-                    y1={0}
-                    x2={SNAP_MARKER_SIZE}
-                    y2={SNAP_MARKER_SIZE}
-                    stroke={isActive ? "#66ccff" : "white"}
-                    strokeWidth={1}
-                  />
-                  <line
-                    x1={SNAP_MARKER_SIZE}
-                    y1={0}
-                    x2={0}
-                    y2={SNAP_MARKER_SIZE}
-                    stroke={isActive ? "#66ccff" : "white"}
-                    strokeWidth={1}
-                  />
-                </svg>
-              )
-            })}
+          {dimensionToolStretching && (
+            <DimensionSnapGuides
+              points={snappingPointsWithScreen}
+              startId={activeSnapIds.start}
+              endId={activeSnapIds.end}
+            />
+          )}
           <div
             style={{
               right: 0,
