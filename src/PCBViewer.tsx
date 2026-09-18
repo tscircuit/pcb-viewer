@@ -14,7 +14,6 @@ import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { BoundsSelection } from "./components/DimensionOverlay"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
-import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
@@ -104,10 +103,6 @@ export const PCBViewer = ({
 
   const initialRenderCompleted = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
-  const circuitJsonKey = useMemo(
-    () => calculateCircuitJsonKey(circuitJson),
-    [circuitJson],
-  )
   const boardSizeKey = calculateBoardSizeKey(circuitJson)
 
   const resetTransform = () => {
@@ -160,7 +155,7 @@ export const PCBViewer = ({
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
       ) ?? []
     )
-  }, [circuitJsonKey])
+  }, [circuitJson])
 
   const elements = useMemo(() => {
     return applyEditEvents({
