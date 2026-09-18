@@ -46,6 +46,7 @@ export interface CanvasElementsRendererProps {
   allowEditing: boolean
   focusOnHover?: boolean
   onBoundsSelected?: (bounds: BoundsSelection) => void
+  onContextMenuOpenChange?: (open: boolean) => void
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
@@ -260,7 +261,10 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           onBoundsSelected={props.onBoundsSelected}
           cancelPanDrag={props.cancelPanDrag}
         >
-          <ToolbarOverlay elements={elements}>
+          <ToolbarOverlay
+            elements={elements}
+            onContextMenuOpenChange={props.onContextMenuOpenChange}
+          >
             <ErrorOverlay transform={transform} elements={elements}>
               <RatsNestOverlay transform={transform} soup={elements}>
                 <PcbGroupOverlay

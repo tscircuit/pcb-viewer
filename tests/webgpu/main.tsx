@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client"
 import { StrictMode } from "react"
-import { PCBViewer } from "../../dist/index.js"
+import { PCBViewer } from "../../src/index"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   convertElementToPrimitives,

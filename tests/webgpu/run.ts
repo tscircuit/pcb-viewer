@@ -6,6 +6,10 @@ import { writeFile, mkdir } from "node:fs/promises"
 const root = fileURLToPath(new URL("../../", import.meta.url))
 const server = await createServer({
   root,
+  // Typecheck against source on clean checkouts; exercise the release bundle at runtime.
+  resolve: {
+    alias: [{ find: "../../src/index", replacement: `${root}dist/index.js` }],
+  },
   server: { host: "127.0.0.1", port: 0 },
   logLevel: "error",
 })
@@ -126,6 +130,47 @@ try {
     await page.mouse.click(400, 300, { button: "right" })
     await page.getByRole("menuitem", { name: "Rendering Engine" }).click()
   }
+  const camera = () =>
+    page.evaluate(() => window.gpuViewerTest.stats.lastView?.transform)
+  const beforeMenu = await camera()
+  await page.mouse.move(400, 300)
+  await page.mouse.down({ button: "right" })
+  await page.mouse.move(440, 330, { steps: 5 })
+  await page.mouse.up({ button: "right" })
+  await page.waitForTimeout(100)
+  assert.deepEqual(await camera(), beforeMenu, "right-click must not pan")
+  await page
+    .getByRole("menu", { name: "PCB context menu", exact: true })
+    .waitFor()
+  await page.mouse.move(300, 250)
+  await page.mouse.wheel(0, -100)
+  await page.waitForTimeout(100)
+  assert.deepEqual(
+    await camera(),
+    beforeMenu,
+    "open context menu must freeze navigation",
+  )
+  // The outside press dismisses the menu, but must not become a drag.
+  await page.mouse.down()
+  await page.mouse.move(350, 280, { steps: 5 })
+  await page.mouse.up()
+  await page.waitForTimeout(100)
+  assert.deepEqual(await camera(), beforeMenu, "menu dismissal must not pan")
+  await page.mouse.move(300, 250)
+  await page.mouse.down()
+  await page.mouse.move(350, 280, { steps: 5 })
+  await page.mouse.up()
+  await page.waitForTimeout(100)
+  assert.notDeepEqual(
+    await camera(),
+    beforeMenu,
+    "panning must resume after dismissal",
+  )
+  await openEngineMenu()
+  await page.keyboard.press("Escape")
+  await page
+    .getByRole("menu", { name: "PCB context menu", exact: true })
+    .waitFor({ state: "detached" })
   const beforeSwitch = await page.evaluate(() => window.gpuViewerTest.stats)
   await openEngineMenu()
   assert.equal(

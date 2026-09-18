@@ -54,7 +54,11 @@ export const VisibilityContextMenu = ({
 
   useEffect(() => {
     const dismiss = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose()
+      if (!ref.current?.contains(event.target as Node)) {
+        // Dismiss without letting this same press start a canvas drag.
+        event.preventDefault()
+        onClose()
+      }
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {

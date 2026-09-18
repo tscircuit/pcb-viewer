@@ -59,10 +59,18 @@ export const PCBViewer = ({
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,
   )
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false)
+  const contextMenuOpenRef = useRef(false)
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
   const shouldAllowCanvasInteraction = useCallback(
     (event: MouseEvent | TouchEvent | WheelEvent) => {
+      if (contextMenuOpenRef.current) return false
+      if (
+        event instanceof MouseEvent &&
+        (event.button === 2 || (event.buttons & 2) !== 0)
+      )
+        return false
       const target = event.target
       if (!(target instanceof Element)) return true
 
@@ -78,9 +86,18 @@ export const PCBViewer = ({
   } = useMouseMatrixTransform({
     transform,
     onSetTransform: setTransformInternal,
-    enabled: isInteractionEnabled,
+    enabled: isInteractionEnabled && !isContextMenuOpen,
     shouldDrag: shouldAllowCanvasInteraction,
   })
+
+  const onContextMenuOpenChange = useCallback(
+    (open: boolean) => {
+      contextMenuOpenRef.current = open
+      if (open) cancelPanDrag()
+      setIsContextMenuOpen(open)
+    },
+    [cancelPanDrag],
+  )
 
   let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
@@ -196,6 +213,7 @@ export const PCBViewer = ({
               focusOnHover={focusOnHover}
               onBoundsSelected={onBoundsSelected}
               cancelPanDrag={cancelPanDrag}
+              onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}
               onModifyEditEvent={onModifyEditEvent}
               grid={{

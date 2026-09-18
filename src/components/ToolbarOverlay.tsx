@@ -21,6 +21,7 @@ import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
 interface Props {
+  onContextMenuOpenChange?: (open: boolean) => void
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -135,7 +136,11 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
   )
 }
 
-export const ToolbarOverlay = ({ children, elements }: Props) => {
+export const ToolbarOverlay = ({
+  children,
+  elements,
+  onContextMenuOpenChange,
+}: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
   const {
@@ -203,7 +208,10 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
     x: number
     y: number
   } | null>(null)
-  const closeContextMenu = useCallback(() => setContextMenuPosition(null), [])
+  const closeContextMenu = useCallback(() => {
+    setContextMenuPosition(null)
+    onContextMenuOpenChange?.(false)
+  }, [onContextMenuOpenChange])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
@@ -383,6 +391,7 @@ export const ToolbarOverlay = ({ children, elements }: Props) => {
       onContextMenu={(event) => {
         event.preventDefault()
         event.stopPropagation()
+        onContextMenuOpenChange?.(true)
         setContextMenuPosition({ x: event.clientX, y: event.clientY })
       }}
       style={{ position: "relative", zIndex: "999 !important" }}
