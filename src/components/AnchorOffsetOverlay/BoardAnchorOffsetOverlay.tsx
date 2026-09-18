@@ -132,8 +132,6 @@ export const BoardAnchorOffsetOverlay = ({
           anchor_id: target.board.pcb_board_id,
           target: target.component.center as Point,
           type: "component",
-          display_offset_x: target.component.display_offset_x,
-          display_offset_y: target.component.display_offset_y,
         }
       }
       // group
