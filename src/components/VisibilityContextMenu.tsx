@@ -1,3 +1,4 @@
+import { useRenderingEngine } from "./RenderingEngineContext"
 import { css } from "@emotion/css"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
@@ -34,6 +35,8 @@ export const VisibilityContextMenu = ({
   position: { x: number; y: number }
   onClose: () => void
 }) => {
+  const engine = useRenderingEngine()
+  const [rendererOpen, setRendererOpen] = useState(false)
   const opacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const setOpacity = useGlobalStore((s) => s.setHiddenLayerOpacity)
   const [visibilityOpen, setVisibilityOpen] = useState(false)
@@ -51,7 +54,11 @@ export const VisibilityContextMenu = ({
 
   useEffect(() => {
     const dismiss = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose()
+      if (!ref.current?.contains(event.target as Node)) {
+        // Dismiss without letting this same press start a canvas drag.
+        event.preventDefault()
+        onClose()
+      }
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -119,6 +126,8 @@ export const VisibilityContextMenu = ({
             setOpacityOpen(false)
           else if (menu.getAttribute("aria-label") === "Visibility")
             setVisibilityOpen(false)
+          else if (menu.getAttribute("aria-label") === "Rendering Engine")
+            setRendererOpen(false)
         } else if (event.key === "Escape") {
           event.preventDefault()
           onClose()
@@ -129,20 +138,23 @@ export const VisibilityContextMenu = ({
         zIndex: 10000,
         left: Math.max(
           openLeft ? 310 : 4,
-          Math.min(position.x, window.innerWidth - (stacked ? 248 : 148)),
+          Math.min(position.x, window.innerWidth - (stacked ? 248 : 168)),
         ),
         top: Math.max(
           4,
           Math.min(position.y, window.innerHeight - (stacked ? 340 : 260)),
         ),
-        width: stacked ? 230 : 130,
+        width: stacked ? 230 : 150,
         maxHeight: window.innerHeight - 8,
         ...(stacked ? { overflowY: "auto" } : {}),
       }}
     >
       <div
         style={{ position: "relative" }}
-        onMouseEnter={() => setVisibilityOpen(true)}
+        onMouseEnter={() => {
+          setVisibilityOpen(true)
+          setRendererOpen(false)
+        }}
       >
         <button
           type="button"
@@ -150,7 +162,10 @@ export const VisibilityContextMenu = ({
           aria-haspopup="menu"
           aria-expanded={visibilityOpen}
           className={itemStyle}
-          onClick={() => setVisibilityOpen(true)}
+          onClick={() => {
+            setVisibilityOpen(true)
+            setRendererOpen(false)
+          }}
         >
           Visibility ▸
         </button>
@@ -212,6 +227,59 @@ export const VisibilityContextMenu = ({
           </div>
         )}
       </div>
+      {engine && (
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => {
+            setRendererOpen(true)
+            setVisibilityOpen(false)
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            aria-haspopup="menu"
+            aria-expanded={rendererOpen}
+            className={itemStyle}
+            onClick={() => {
+              setRendererOpen(true)
+              setVisibilityOpen(false)
+            }}
+          >
+            Rendering Engine ▸
+          </button>
+          {rendererOpen && (
+            <div
+              role="menu"
+              aria-label="Rendering Engine"
+              className={menuStyle}
+              style={submenuStyle}
+            >
+              {(["canvas", "webgpu"] as const).map((renderer) => (
+                <button
+                  key={renderer}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={engine.renderer === renderer}
+                  className={itemStyle}
+                  onClick={() => {
+                    engine.setRenderer(renderer)
+                    onClose()
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{ display: "inline-block", width: 16 }}
+                  >
+                    {engine.renderer === renderer ? "✓" : ""}
+                  </span>
+                  {renderer === "canvas" ? "Canvas" : "WebGPU (experimental)"}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>,
     document.body,
   )

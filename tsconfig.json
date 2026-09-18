@@ -14,7 +14,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "baseUrl": "./src",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["@webgpu/types", "bun"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "tets.js"],
   "exclude": ["node_modules", "vite.config.ts"]

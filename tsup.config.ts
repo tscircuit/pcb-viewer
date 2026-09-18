@@ -1,8 +1,10 @@
+import { inlineWorkerPlugin } from "./scripts/inline-worker-plugin"
 import { defineConfig } from "tsup"
 
 export default defineConfig({
   entry: ["./src"],
   splitting: false,
+  esbuildPlugins: [inlineWorkerPlugin],
   dts: true,
   sourcemap: true,
   clean: true,

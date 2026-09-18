@@ -1,5 +1,4 @@
 import type { AnyCircuitElement } from "circuit-json"
-import { su } from "@tscircuit/circuit-json-util"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 import { distance } from "circuit-json"
@@ -30,40 +29,49 @@ export const normalizePolygonPoints = (points: Point[] | undefined) =>
     y: distance.parse(point.y),
   }))
 
+export function createPrimitiveMetadataIndex(elements: AnyCircuitElement[]) {
+  const index = new Map<string, AnyCircuitElement>()
+  for (const element of elements) {
+    const id = (element as any)[`${element.type}_id`]
+    if (id !== undefined && !index.has(`${element.type}:${id}`))
+      index.set(`${element.type}:${id}`, element)
+  }
+  return index
+}
+
 export const convertElementToPrimitives = (
   element: AnyCircuitElement,
   allElements: AnyCircuitElement[],
+  metadataIndex?: ReturnType<typeof createPrimitiveMetadataIndex>,
 ): (Primitive & MetaData)[] => {
-  const _parent_pcb_component =
-    "pcb_component_id" in element
-      ? allElements.find(
-          (elm) =>
-            elm.type === "pcb_component" &&
-            elm.pcb_component_id === element.pcb_component_id,
-        )
-      : undefined
-  const _parent_source_component =
-    _parent_pcb_component && "source_component_id" in _parent_pcb_component
-      ? allElements.find(
-          (elm) =>
-            elm.type === "source_component" &&
-            elm.source_component_id ===
-              _parent_pcb_component.source_component_id,
-        )
-      : undefined
-
+  const lookup = <T extends AnyCircuitElement["type"]>(
+    type: T,
+    id: string | undefined,
+  ): Extract<AnyCircuitElement, { type: T }> | undefined => {
+    if (id === undefined) return undefined
+    return (
+      metadataIndex
+        ? metadataIndex.get(`${type}:${id}`)
+        : allElements.find(
+            (e) => e.type === type && (e as any)[`${type}_id`] === id,
+          )
+    ) as Extract<AnyCircuitElement, { type: T }> | undefined
+  }
+  const _parent_pcb_component = lookup(
+    "pcb_component",
+    "pcb_component_id" in element ? element.pcb_component_id : undefined,
+  )
+  const _parent_source_component = lookup(
+    "source_component",
+    _parent_pcb_component?.source_component_id,
+  )
   const _source_port_id =
     "source_port_id" in element
       ? element.source_port_id
       : "pcb_port_id" in element
-        ? su(allElements).pcb_port.get(element.pcb_port_id!)?.source_port_id
+        ? lookup("pcb_port", element.pcb_port_id)?.source_port_id
         : undefined
-
-  const _source_port = _source_port_id
-    ? allElements.find(
-        (e) => e.type === "source_port" && e.source_port_id === _source_port_id,
-      )
-    : undefined
+  const _source_port = lookup("source_port", _source_port_id)
 
   switch (element.type) {
     case "pcb_smtpad": {
