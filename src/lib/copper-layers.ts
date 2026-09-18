@@ -31,6 +31,17 @@ export const normalizeCopperRenderLayers = (
       : (layer as LayerRef),
   )
 
+export const elementHitsCopperRenderLayers = (
+  elementLayers: readonly string[] | undefined,
+  renderLayers: PcbRenderLayer[],
+): boolean => {
+  if (!elementLayers || elementLayers.length === 0) {
+    return renderLayers.some((layer) => layer.includes("copper"))
+  }
+  const targetLayers = new Set(normalizeCopperRenderLayers(renderLayers))
+  return elementLayers.some((layer) => targetLayers.has(layer as LayerRef))
+}
+
 export const getOrderedCanvasLayers = (
   elements: AnyCircuitElement[],
 ): string[] => {

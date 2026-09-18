@@ -1,13 +1,14 @@
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import {
+  CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
   type PcbColorMap,
-  CircuitToCanvasDrawer,
 } from "circuit-to-canvas"
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import color from "color"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
-import color from "color"
-import { Primitive } from "./types"
+import { elementHitsCopperRenderLayers } from "./copper-layers"
+import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
 const HOVER_COLOR_MAP: PcbColorMap = {
@@ -46,11 +47,9 @@ export function drawPcbViaElementsForLayer({
   primitives?: Primitive[]
   drawSoldermask?: boolean
 }) {
-  // Filter vias to only those on the specified layers
-  const viaElements = elements.filter(isPcbVia).filter((element) => {
-    // Vias are typically drawn on copper layers
-    return layers.some((layer) => layer.includes("copper"))
-  })
+  const viaElements = elements
+    .filter(isPcbVia)
+    .filter((element) => elementHitsCopperRenderLayers(element.layers, layers))
 
   if (viaElements.length === 0) return
 

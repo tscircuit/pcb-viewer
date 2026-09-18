@@ -8,6 +8,7 @@ import color from "color"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import colors from "./colors"
+import { elementHitsCopperRenderLayers } from "./copper-layers"
 import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
@@ -47,7 +48,9 @@ export function drawPlatedHolePads({
   primitives?: Primitive[]
   drawSoldermask?: boolean
 }) {
-  const platedHoleElements = elements.filter(isPlatedHole)
+  const platedHoleElements = elements
+    .filter(isPlatedHole)
+    .filter((element) => elementHitsCopperRenderLayers(element.layers, layers))
 
   if (platedHoleElements.length === 0) return
 
