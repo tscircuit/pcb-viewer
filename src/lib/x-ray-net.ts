@@ -1,3 +1,7 @@
+import {
+  getAssociatedTraceName,
+  getTraceOverlayInfo,
+} from "./get-trace-overlay-text"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
@@ -31,4 +35,46 @@ export function isXRayCopper(element: AnyCircuitElement | undefined) {
       element.type,
     )
   )
+}
+
+/** Use trace/net names before generated pad-selector labels, consistently with hover text. */
+export function getXRayDisplayName(
+  element: AnyCircuitElement,
+  elements: AnyCircuitElement[],
+  connectivityMap: ConnectivityMap,
+): string {
+  const directName =
+    element.type === "pcb_trace"
+      ? getAssociatedTraceName({ primitiveElement: element, elements })
+      : null
+  if (directName) return directName
+  const netId = getElementNetId(element, connectivityMap)
+  const connected = netId
+    ? elements.filter(
+        (candidate) => getElementNetId(candidate, connectivityMap) === netId,
+      )
+    : []
+  for (const type of ["source_net", "source_trace"]) {
+    for (const candidate of connected) {
+      if (
+        candidate.type === type &&
+        "name" in candidate &&
+        typeof candidate.name === "string" &&
+        candidate.name.trim()
+      )
+        return candidate.name.trim()
+    }
+  }
+  if (element.type === "pcb_trace") {
+    const label = getTraceOverlayInfo({
+      primitiveElement: element,
+      elements,
+    })?.name
+    if (label) return label
+  }
+  for (const candidate of connected) {
+    if (candidate.type === "source_trace" && candidate.display_name?.trim())
+      return candidate.display_name.trim()
+  }
+  return "Net"
 }

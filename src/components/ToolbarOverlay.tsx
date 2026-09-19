@@ -21,7 +21,9 @@ import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
 interface Props {
-  getNetAtPoint?: (point: { x: number; y: number }) => string | undefined
+  getNetAtPoint?: (point: { x: number; y: number }) =>
+    | { netId: string; displayName: string }
+    | undefined
   xRayNetIds?: readonly string[]
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
@@ -215,6 +217,7 @@ export const ToolbarOverlay = ({
     y: number
   } | null>(null)
   const [contextNetId, setContextNetId] = useState<string>()
+  const [contextNetDisplayName, setContextNetDisplayName] = useState("Net")
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const inEditMode = useGlobalStore((s) => s.in_edit_mode)
   const netAtEvent = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -424,13 +427,15 @@ export const ToolbarOverlay = ({
           Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4
         )
           return
-        const net = netAtEvent(event)
-        if (!net) return
+        const hit = netAtEvent(event)
+        if (!hit) return
+        const net = hit.netId
         if (xRayNetIds.includes(net)) {
           onXRayNetsChange?.(xRayNetIds.filter((id) => id !== net))
           closeContextMenu()
         } else {
           setContextNetId(net)
+          setContextNetDisplayName(hit.displayName)
           onContextMenuOpenChange?.(true)
           setContextMenuPosition({ x: event.clientX, y: event.clientY })
         }
@@ -442,7 +447,9 @@ export const ToolbarOverlay = ({
       onContextMenu={(event) => {
         event.preventDefault()
         event.stopPropagation()
-        setContextNetId(netAtEvent(event))
+        const hit = netAtEvent(event)
+        setContextNetId(hit?.netId)
+        setContextNetDisplayName(hit?.displayName ?? "Net")
         onContextMenuOpenChange?.(true)
         setContextMenuPosition({ x: event.clientX, y: event.clientY })
       }}
@@ -456,6 +463,7 @@ export const ToolbarOverlay = ({
         <VisibilityContextMenu
           position={contextMenuPosition}
           onClose={closeContextMenu}
+          xRayDisplayName={contextNetDisplayName}
           onXRayNet={
             contextNetId && !xRayNetIds.includes(contextNetId)
               ? () => onXRayNetsChange?.([...xRayNetIds, contextNetId])

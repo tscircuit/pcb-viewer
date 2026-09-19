@@ -14,6 +14,7 @@ export const scene = [
     {
       type: "source_trace",
       source_trace_id: `source_${net}`,
+      ...(net === "a" ? { name: "CLK" } : { display_name: "U1.1 to U2.2" }),
       connected_source_port_ids: [`source_port_${net}`],
       connected_source_net_ids: [`net_${net}`],
     },

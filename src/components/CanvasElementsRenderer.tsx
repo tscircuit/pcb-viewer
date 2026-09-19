@@ -21,7 +21,11 @@ import {
 } from "lib/util/transform-animation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { applyToPoint, inverse, type Matrix } from "transformation-matrix"
-import { getElementNetId, isXRayCopper } from "lib/x-ray-net"
+import {
+  getElementNetId,
+  getXRayDisplayName,
+  isXRayCopper,
+} from "lib/x-ray-net"
 import { useGlobalStore } from "../global-store"
 import { WebGpuElementsRenderer } from "./WebGpuElementsRenderer"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
@@ -108,6 +112,10 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   )
   const getNetAtPoint = (point: { x: number; y: number }) => {
     if (!transform) return undefined
+    const describeNet = (netId: string, element: AnyCircuitElement) => ({
+      netId,
+      displayName: getXRayDisplayName(element, elements, connectivityMap),
+    })
     const hits = getPrimitivesUnderPoint(
       primitivesWithoutInteractionMetadata,
       applyToPoint(inverse(transform), point),
@@ -125,11 +133,12 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     // Inspected nets render above dimmed copper; prefer the frontmost selected hit.
     for (const primitive of copper) {
       const net = getElementNetId(primitive._element, connectivityMap)
-      if (net && xRayNetIds.includes(net)) return net
+      if (net && xRayNetIds.includes(net))
+        return describeNet(net, primitive._element!)
     }
     for (const primitive of copper) {
       const net = getElementNetId(primitive._element, connectivityMap)
-      if (net) return net
+      if (net) return describeNet(net, primitive._element!)
     }
   }
 
