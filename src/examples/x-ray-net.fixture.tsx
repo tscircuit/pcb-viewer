@@ -15,6 +15,10 @@ export default function XRayNetDemo() {
     >
       <h2>X-Ray Net</h2>
       <p>
+        Choose X-Ray DATA on either trace to inspect both members of the bus
+        together.
+      </p>
+      <p>
         Click a pad or trace and choose X-Ray Net. Choose X-Ray Net on another
         net to add it to the inspection. Press 1, 2, or 4 over the board to
         bring top, inner1, or bottom copper forward. The overlapping traces

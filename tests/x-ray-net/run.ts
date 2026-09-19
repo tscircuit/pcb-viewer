@@ -284,6 +284,38 @@ try {
       }
       await page.waitForSelector(activeXRay, { state: "detached" })
     }
+    for (const button of ["left", "right"] as const) {
+      await page.mouse.click(295, 300, { button })
+      assert.equal(
+        await page
+          .getByRole("menuitem", { name: "X-Ray CLK", exact: true })
+          .count(),
+        1,
+      )
+      await page
+        .getByRole("menuitem", { name: "X-Ray DATA", exact: true })
+        .click()
+      await page.waitForTimeout(150)
+      assert.deepEqual(
+        await netPixels(),
+        [Array(7).fill(255), Array(7).fill(255)],
+        "The bus option must inspect every member's copper and drills",
+      )
+      await page.mouse.dblclick(650, 180)
+      await page.waitForSelector(activeXRay, { state: "detached" })
+    }
+    await enter()
+    await page.mouse.click(295, 300, { button: "right" })
+    await page
+      .getByRole("menuitem", { name: "X-Ray DATA", exact: true })
+      .click()
+    await page.waitForTimeout(150)
+    assert.deepEqual(await netPixels(), [
+      Array(7).fill(255),
+      Array(7).fill(255),
+    ])
+    await page.mouse.dblclick(650, 180)
+    await page.waitForSelector(activeXRay, { state: "detached" })
     // A drag ending on a pad must not open the menu.
     await page.mouse.move(220, 300)
     await page.mouse.down()

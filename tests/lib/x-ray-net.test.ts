@@ -1,3 +1,4 @@
+import { getXRayGroups } from "../../src/lib/x-ray-net"
 import { expect, test } from "bun:test"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import {
@@ -103,4 +104,22 @@ test("X-Ray uses a connected source net name before a generated connection label
       getElementNetId(el, map) === map.getNetConnectedToId("net_a"),
   ))
     expect(getXRayDisplayName(element, elements, map)).toBe("GND")
+})
+
+test("X-Ray groups resolve electrical membership, deduplicate nets and ignore missing members", () => {
+  const map = getFullConnectivityMapFromCircuitJson(scene)
+  const net = map.getNetConnectedToId("source_a")!
+  const elements = [
+    ...scene,
+    {
+      type: "source_bus" as const,
+      source_bus_id: "pair_usb",
+      name: "USB",
+      source_trace_ids: ["source_a", "source_a", "source_b", "missing"],
+    },
+  ]
+  const groups = getXRayGroups(net, elements, map)
+  expect(groups.map((group) => group.name)).toEqual(["DATA", "USB"])
+  expect(groups[1].netIds).toEqual([net, map.getNetConnectedToId("source_b")!])
+  expect(getXRayGroups("unrelated", elements, map)).toEqual([])
 })

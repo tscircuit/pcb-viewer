@@ -2,6 +2,12 @@ import type { AnyCircuitElement } from "circuit-json"
 
 export const scene = [
   {
+    type: "source_bus",
+    source_bus_id: "bus_data",
+    name: "DATA",
+    source_trace_ids: ["source_a", "source_b"],
+  },
+  {
     type: "pcb_board",
     pcb_board_id: "board",
     center: { x: 0, y: 0 },
