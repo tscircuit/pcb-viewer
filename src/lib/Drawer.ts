@@ -490,8 +490,8 @@ export class Drawer {
   }
 
   getLayerOpacity(layer: string) {
-    if (this.xRayNetActive && /^(top|bottom|inner\d+)$/.test(layer))
-      return this.hiddenLayerOpacity
+    if (this.xRayNetActive)
+      return /^(top|bottom|inner\d+)$/.test(layer) ? this.hiddenLayerOpacity : 0
     const side = this.foregroundLayer
     const isSelectedSideDetail =
       (side === "top" || side === "bottom") &&

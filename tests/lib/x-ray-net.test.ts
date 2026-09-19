@@ -30,13 +30,27 @@ test("X-Ray follows electrical connectivity across layers without including othe
 test("X-Ray dims every ordinary copper layer, then restores selected-layer visibility", () => {
   const drawer = new Drawer({})
   drawer.foregroundLayer = "inner1"
-  for (const opacity of [0, 0.4, 1]) {
+  for (const opacity of [0, 0.05, 0.4, 1]) {
     drawer.hiddenLayerOpacity = opacity
     drawer.xRayNetActive = true
     for (const layer of ["top", "inner1", "inner2", "bottom"])
       expect(drawer.getLayerOpacity(layer)).toBe(opacity)
-    expect(drawer.getLayerOpacity("board")).toBe(1)
+    for (const layer of [
+      "board",
+      "drill",
+      "edge_cuts",
+      "other",
+      "top_silkscreen",
+      "bottom_silkscreen",
+      "soldermask_top",
+      "top_fabrication",
+      "top_notes",
+      "top_courtyard",
+    ])
+      expect(drawer.getLayerOpacity(layer)).toBe(0)
     drawer.xRayNetActive = false
+    for (const layer of ["board", "drill", "edge_cuts", "other"])
+      expect(drawer.getLayerOpacity(layer)).toBe(1)
     expect(drawer.getLayerOpacity("inner1")).toBe(1)
     expect(drawer.getLayerOpacity("top")).toBe(opacity)
   }

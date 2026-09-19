@@ -26,9 +26,11 @@ try {
   page.on("pageerror", (e) => errors.push(e.message))
   for (const query of [
     "opacity=0",
+    "opacity=0.05",
     "opacity=0.4",
     "opacity=1",
     "opacity=0&gpu",
+    "opacity=0.05&gpu",
     "opacity=0.4&gpu",
   ]) {
     await page.goto(`${server.resolvedUrls!.local[0]}tests/x-ray-net/?${query}`)
@@ -89,6 +91,23 @@ try {
           .locator(`.pcb-layer-${layer}`)
           .evaluate((el) => (el as HTMLElement).style.opacity),
         new URLSearchParams(query).get("opacity"),
+      )
+    }
+    if (!native) {
+      const details = await page
+        .locator('canvas[class^="pcb-layer-"]')
+        .evaluateAll((nodes) =>
+          nodes
+            .filter(
+              (node) =>
+                !/^pcb-layer-(top|bottom|inner\d+)$/.test(node.className),
+            )
+            .map((node) => (node as HTMLElement).style.opacity),
+        )
+      assert(details.length > 0)
+      assert(
+        details.every((opacity) => opacity === "0"),
+        "All non-copper layers must be transparent during X-Ray",
       )
     }
     const copperFrames = () =>

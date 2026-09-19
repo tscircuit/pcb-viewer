@@ -230,7 +230,7 @@ export const VisibilityContextMenu = ({
                     ...submenuStyle,
                   }}
                 >
-                  {[0, 0.1, 0.2, 0.4, 0.6, 0.8, 1].map((value) => (
+                  {[0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1].map((value) => (
                     <button
                       key={value}
                       type="button"
