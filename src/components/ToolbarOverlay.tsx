@@ -22,8 +22,8 @@ import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
 interface Props {
   getNetAtPoint?: (point: { x: number; y: number }) => string | undefined
-  xRayNetId?: string | null
-  onXRayNetChange?: (netId: string | null) => void
+  xRayNetIds?: readonly string[]
+  onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
@@ -144,8 +144,8 @@ export const ToolbarOverlay = ({
   elements,
   onContextMenuOpenChange,
   getNetAtPoint,
-  xRayNetId,
-  onXRayNetChange,
+  xRayNetIds = [],
+  onXRayNetsChange,
 }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
@@ -426,8 +426,8 @@ export const ToolbarOverlay = ({
           return
         const net = netAtEvent(event)
         if (!net) return
-        if (net === xRayNetId) {
-          onXRayNetChange?.(null)
+        if (xRayNetIds.includes(net)) {
+          onXRayNetsChange?.(xRayNetIds.filter((id) => id !== net))
           closeContextMenu()
         } else {
           setContextNetId(net)
@@ -436,7 +436,7 @@ export const ToolbarOverlay = ({
         }
       }}
       onDoubleClick={() => {
-        onXRayNetChange?.(null)
+        onXRayNetsChange?.([])
         closeContextMenu()
       }}
       onContextMenu={(event) => {
@@ -457,11 +457,13 @@ export const ToolbarOverlay = ({
           position={contextMenuPosition}
           onClose={closeContextMenu}
           onXRayNet={
-            contextNetId && contextNetId !== xRayNetId
-              ? () => onXRayNetChange?.(contextNetId)
+            contextNetId && !xRayNetIds.includes(contextNetId)
+              ? () => onXRayNetsChange?.([...xRayNetIds, contextNetId])
               : undefined
           }
-          onExitXRayNet={xRayNetId ? () => onXRayNetChange?.(null) : undefined}
+          onExitXRayNet={
+            xRayNetIds.length > 0 ? () => onXRayNetsChange?.([]) : undefined
+          }
         />
       )}
       <div

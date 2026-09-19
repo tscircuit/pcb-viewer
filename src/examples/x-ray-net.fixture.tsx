@@ -15,14 +15,16 @@ export default function XRayNetDemo() {
     >
       <h2>X-Ray Net</h2>
       <p>
-        Click a pad or trace and choose X-Ray Net. Press 1, 2, or 4 over the
-        board to bring top, inner1, or bottom copper forward. The overlapping
-        traces above the pads make the layer order easy to see.
+        Click a pad or trace and choose X-Ray Net. Choose X-Ray Net on another
+        net to add it to the inspection. Press 1, 2, or 4 over the board to
+        bring top, inner1, or bottom copper forward. The overlapping traces
+        above the pads make the layer order easy to see.
       </p>
       <p>
-        Exit by clicking the selected net, double-clicking the board, or using
-        right-click → Exit X-Ray Net. The right-click menu also lets you change
-        hidden-layer opacity and compare Canvas with WebGPU.
+        Click an inspected net to remove it. Clear all inspected nets by
+        double-clicking the board or using right-click → Exit X-Ray Net. The
+        right-click menu also lets you change hidden-layer opacity and compare
+        Canvas with WebGPU.
       </p>
       <PCBViewer
         circuitJson={scene}
