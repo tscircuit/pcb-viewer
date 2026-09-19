@@ -1,3 +1,4 @@
+import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import {
@@ -393,6 +394,14 @@ export const CanvasPrimitiveRenderer = ({
         drawPlatedHolePads(args)
         drawPcbViaElementsForLayer(args)
       }
+      const drillDrawer = new CircuitToCanvasDrawer(canvas)
+      drillDrawer.realToCanvasMat = transform
+      drillDrawer.drawElements(
+        xRayElements.filter(
+          (el) => el.type === "pcb_via" || el.type === "pcb_plated_hole",
+        ),
+        { layers: ["drill"], drawSoldermask: false },
+      )
     }
   }, [
     primitives,

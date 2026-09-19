@@ -110,6 +110,32 @@ try {
         "All non-copper layers must be transparent during X-Ray",
       )
     }
+    const drills = await page.locator(activeXRay).evaluate((node) => {
+      const original =
+        node instanceof HTMLCanvasElement
+          ? node
+          : node.querySelector<HTMLCanvasElement>(".pcb-webgpu-canvas")!
+      const canvas = document.createElement("canvas")
+      canvas.width = original.width
+      canvas.height = original.height
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(original, 0, 0)
+      return [340, 430].map((x) => ({
+        selected: Array.from(ctx.getImageData(x, 300, 1, 1).data),
+        unrelated: ctx.getImageData(x, 420, 1, 1).data[3],
+      }))
+    })
+    for (const drill of drills) {
+      assert.deepEqual(
+        drill.selected,
+        [255, 38, 226, 255],
+        "Selected via and plated-hole drills must be opaque",
+      )
+      assert(
+        drill.unrelated <= (native ? Math.round(opacity * 255) : 0),
+        "Unrelated drills must remain hidden; underlying copper may be dimmed",
+      )
+    }
     const copperFrames = () =>
       page
         .locator(".pcb-layer-top, .pcb-x-ray-net, .pcb-webgpu-canvas")

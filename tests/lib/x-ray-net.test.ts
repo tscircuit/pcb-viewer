@@ -20,6 +20,7 @@ test("X-Ray follows electrical connectivity across layers without including othe
     "cross_inner1",
     "cross_top",
     "pad_a",
+    "plated_a",
     "trace_a_bottom",
     "trace_a_inner1",
     "trace_a_top",

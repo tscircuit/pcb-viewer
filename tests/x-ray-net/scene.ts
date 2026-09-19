@@ -58,6 +58,17 @@ export const scene = [
       height: 2,
     },
     {
+      type: "pcb_plated_hole",
+      pcb_plated_hole_id: `plated_${net}`,
+      pcb_port_id: `port_${net}`,
+      shape: "circle",
+      x: 2,
+      y: i * -8,
+      outer_diameter: 1.5,
+      hole_diameter: 0.8,
+      layers: ["top", "bottom"],
+    },
+    {
       type: "pcb_via",
       pcb_via_id: `via_${net}`,
       source_trace_id: `source_${net}`,
