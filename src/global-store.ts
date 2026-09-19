@@ -7,8 +7,10 @@ import type { LayerRef } from "circuit-json"
 import { useContext } from "react"
 import {
   getStoredBoolean,
+  getStoredNumber,
   getStoredString,
   setStoredBoolean,
+  setStoredNumber,
   setStoredString,
   STORAGE_KEYS,
 } from "./hooks/useLocalStorage"
@@ -80,9 +82,16 @@ export const createStore = (
   createZustandStore<State>(
     (set) =>
       ({
-        hidden_layer_opacity: 0.4,
-        setHiddenLayerOpacity: (opacity) =>
-          set({ hidden_layer_opacity: Math.max(0, Math.min(1, opacity)) }),
+        hidden_layer_opacity: Math.max(
+          0,
+          Math.min(1, getStoredNumber(STORAGE_KEYS.HIDDEN_LAYER_OPACITY, 0.2)),
+        ),
+        setHiddenLayerOpacity: (opacity) => {
+          if (!Number.isFinite(opacity)) return
+          const value = Math.max(0, Math.min(1, opacity))
+          setStoredNumber(STORAGE_KEYS.HIDDEN_LAYER_OPACITY, value)
+          set({ hidden_layer_opacity: value })
+        },
         selected_layer: "top",
 
         pcb_viewer_id: `pcb_viewer_${Math.random().toString().slice(2, 10)}`,

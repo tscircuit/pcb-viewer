@@ -112,7 +112,7 @@ export class Drawer {
   aperture: Aperture
   transform: Matrix
   foregroundLayer = "top"
-  hiddenLayerOpacity = 0.4
+  hiddenLayerOpacity = 0.2
   lastPoint: { x: number; y: number }
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
