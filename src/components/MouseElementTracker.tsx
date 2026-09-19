@@ -187,12 +187,14 @@ export const MouseElementTracker = ({
   primitives,
   selectedLayer,
   onMouseHoverOverPrimitives,
+  disableHoverHighlights = false,
 }: {
   elements: AnyCircuitElement[]
   children: React.ReactNode
   transform?: Matrix
   primitives: Primitive[]
   selectedLayer: LayerRef
+  disableHoverHighlights?: boolean
   onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void
 }) => {
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
@@ -206,6 +208,7 @@ export const MouseElementTracker = ({
 
   const highlightedPrimitives = useMemo(() => {
     const highlightedPrimitives: HighlightedPrimitive[] = []
+    if (disableHoverHighlights) return highlightedPrimitives
 
     for (const primitive of mousedPrimitives) {
       if (primitive._element?.type === "pcb_via") continue
@@ -293,7 +296,7 @@ export const MouseElementTracker = ({
     }
 
     return highlightedPrimitives
-  }, [mousedPrimitives, transform])
+  }, [mousedPrimitives, transform, disableHoverHighlights])
 
   const handleInteraction = (
     x: number,

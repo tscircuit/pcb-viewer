@@ -223,6 +223,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   ])
 
   const primitives = useMemo(() => {
+    if (xRayNetId) return primitivesWithoutInteractionMetadata
     const combinedPrimitiveIds = [
       ...hoverState.primitiveIdsInMousedOverNet,
       ...errorRelatedIds,
@@ -233,7 +234,12 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       drawingObjectIdsWithMouseOver: hoverState.drawingObjectIdsWithMouseOver,
       primitiveIdsInMousedOverNet: combinedPrimitiveIds,
     })
-  }, [primitivesWithoutInteractionMetadata, hoverState, errorRelatedIds])
+  }, [
+    primitivesWithoutInteractionMetadata,
+    hoverState,
+    errorRelatedIds,
+    xRayNetId,
+  ])
 
   const onMouseOverPrimitives = useCallback(
     (primitivesHoveredOver: Primitive[]) => {
@@ -291,6 +297,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       transform={transform}
       primitives={primitivesWithoutInteractionMetadata}
       selectedLayer={selectedLayer}
+      disableHoverHighlights={Boolean(xRayNetId)}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
     >
       <EditPlacementOverlay

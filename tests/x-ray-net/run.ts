@@ -29,6 +29,7 @@ try {
     "opacity=0.4",
     "opacity=1",
     "opacity=0&gpu",
+    "opacity=0.4&gpu",
   ]) {
     await page.goto(`${server.resolvedUrls!.local[0]}tests/x-ray-net/?${query}`)
     await page.waitForSelector("canvas")
@@ -76,7 +77,10 @@ try {
     })
     assert.deepEqual(
       pixels,
-      Array.from({ length: 5 }, () => [255, 0]),
+      Array.from({ length: 5 }, () => [
+        255,
+        native ? Math.round(opacity * 255) : 0,
+      ]),
       `selected pads/traces are opaque on all layers, unrelated net excluded (${query})`,
     )
     for (const layer of native ? [] : ["top", "inner1", "bottom"]) {
@@ -87,6 +91,25 @@ try {
         new URLSearchParams(query).get("opacity"),
       )
     }
+    const copperFrames = () =>
+      page
+        .locator(".pcb-layer-top, .pcb-x-ray-net, .pcb-webgpu-canvas")
+        .evaluateAll((canvases) =>
+          canvases.map((node) => (node as HTMLCanvasElement).toDataURL()),
+        )
+    await page.mouse.move(650, 180)
+    const unhovered = await copperFrames()
+    for (const y of [300, 420]) {
+      await page.mouse.move(295, y)
+      // Allow React and the worker to render the hover event before comparing.
+      await page.waitForTimeout(100)
+      assert.deepEqual(
+        await copperFrames(),
+        unhovered,
+        "X-Ray must not highlight either the selected or unrelated net on hover",
+      )
+    }
+    await page.mouse.move(650, 180)
     // Identical overlapping segments must use the frontmost copper color.
     const crossColor = () =>
       page.locator(activeXRay).evaluate((node) => {
