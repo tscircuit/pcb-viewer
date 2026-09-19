@@ -222,6 +222,65 @@ try {
           .evaluate((el) => (el as HTMLElement).style.opacity),
         "1",
       )
+    // Both left- and right-click menus add another net without replacing the first.
+    const netPixels = () =>
+      page.locator(activeXRay).evaluate((node) => {
+        const original =
+          node instanceof HTMLCanvasElement
+            ? node
+            : node.querySelector<HTMLCanvasElement>(".pcb-webgpu-canvas")!
+        const canvas = document.createElement("canvas")
+        canvas.width = original.width
+        canvas.height = original.height
+        const ctx = canvas.getContext("2d")!
+        ctx.drawImage(original, 0, 0)
+        return [300, 420].map((y) =>
+          [250, 295, 385, 475, 520, 340, 430].map(
+            (x) => ctx.getImageData(x, y, 1, 1).data[3],
+          ),
+        )
+      })
+    for (const button of ["left", "right"] as const) {
+      await enter()
+      await page.mouse.click(250, 420, { button })
+      await page
+        .getByRole("menuitem", { name: "X-Ray Net", exact: true })
+        .click()
+      // Wait for the worker's frame, not just the menu state.
+      await page.waitForTimeout(150)
+      assert.deepEqual(
+        await netPixels(),
+        [Array(7).fill(255), Array(7).fill(255)],
+        "Adding a net must retain opaque copper and drills for both nets",
+      )
+      await page.mouse.click(475, 300)
+      await page.waitForTimeout(150)
+      const remaining = await netPixels()
+      assert.deepEqual(
+        remaining[1],
+        Array(7).fill(255),
+        "Removing one net must retain the other",
+      )
+      assert.equal(remaining[0][0], native ? Math.round(opacity * 255) : 0)
+      await page.mouse.click(250, 300, { button })
+      await page
+        .getByRole("menuitem", { name: "X-Ray Net", exact: true })
+        .click()
+      await page.waitForTimeout(150)
+      assert.deepEqual(await netPixels(), [
+        Array(7).fill(255),
+        Array(7).fill(255),
+      ])
+      if (button === "left") {
+        await page.mouse.dblclick(650, 180)
+      } else {
+        await page.mouse.click(650, 180, { button: "right" })
+        await page
+          .getByRole("menuitem", { name: "Exit X-Ray Net", exact: true })
+          .click()
+      }
+      await page.waitForSelector(activeXRay, { state: "detached" })
+    }
     // A drag ending on a pad must not open the menu.
     await page.mouse.move(220, 300)
     await page.mouse.down()
