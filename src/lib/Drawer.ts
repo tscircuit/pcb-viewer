@@ -112,7 +112,7 @@ export class Drawer {
   aperture: Aperture
   transform: Matrix
   foregroundLayer = "top"
-  hiddenLayerOpacity = 0.4
+  hiddenLayerOpacity = 0.2
   xRayNetActive = false
   lastPoint: { x: number; y: number }
 
