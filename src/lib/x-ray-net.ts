@@ -78,3 +78,36 @@ export function getXRayDisplayName(
   }
   return "Net"
 }
+
+export interface XRayGroup {
+  id: string
+  name: string
+  netIds: string[]
+}
+
+/** Resolve bus members electrically so pads and split trace segments work too. */
+export function getXRayGroups(
+  netId: string,
+  elements: AnyCircuitElement[],
+  connectivityMap: ConnectivityMap,
+): XRayGroup[] {
+  return elements.flatMap((element) => {
+    if (element.type !== "source_bus") return []
+    const netIds = [
+      ...new Set(
+        element.source_trace_ids.flatMap((id) => {
+          const net = connectivityMap.getNetConnectedToId(id)
+          return net ? [net] : []
+        }),
+      ),
+    ]
+    if (!netIds.includes(netId)) return []
+    return [
+      {
+        id: element.source_bus_id,
+        name: element.name?.trim() || "Bus",
+        netIds,
+      },
+    ]
+  })
+}

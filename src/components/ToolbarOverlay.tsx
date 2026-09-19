@@ -1,3 +1,4 @@
+import type { XRayGroup } from "../lib/x-ray-net"
 import {
   useEffect,
   useState,
@@ -22,7 +23,7 @@ import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
 interface Props {
   getNetAtPoint?: (point: { x: number; y: number }) =>
-    | { netId: string; displayName: string }
+    | { netId: string; displayName: string; groups: XRayGroup[] }
     | undefined
   xRayNetIds?: readonly string[]
   onXRayNetsChange?: (netIds: string[]) => void
@@ -216,6 +217,7 @@ export const ToolbarOverlay = ({
     x: number
     y: number
   } | null>(null)
+  const [contextGroups, setContextGroups] = useState<XRayGroup[]>([])
   const [contextNetId, setContextNetId] = useState<string>()
   const [contextNetDisplayName, setContextNetDisplayName] = useState("Net")
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
@@ -436,6 +438,7 @@ export const ToolbarOverlay = ({
         } else {
           setContextNetId(net)
           setContextNetDisplayName(hit.displayName)
+          setContextGroups(hit.groups)
           onContextMenuOpenChange?.(true)
           setContextMenuPosition({ x: event.clientX, y: event.clientY })
         }
@@ -450,6 +453,7 @@ export const ToolbarOverlay = ({
         const hit = netAtEvent(event)
         setContextNetId(hit?.netId)
         setContextNetDisplayName(hit?.displayName ?? "Net")
+        setContextGroups(hit?.groups ?? [])
         onContextMenuOpenChange?.(true)
         setContextMenuPosition({ x: event.clientX, y: event.clientY })
       }}
@@ -464,6 +468,12 @@ export const ToolbarOverlay = ({
           position={contextMenuPosition}
           onClose={closeContextMenu}
           xRayDisplayName={contextNetDisplayName}
+          xRayGroups={contextGroups.filter((group) =>
+            group.netIds.some((id) => !xRayNetIds.includes(id)),
+          )}
+          onXRayGroup={(group) =>
+            onXRayNetsChange?.([...new Set([...xRayNetIds, ...group.netIds])])
+          }
           onXRayNet={
             contextNetId && !xRayNetIds.includes(contextNetId)
               ? () => onXRayNetsChange?.([...xRayNetIds, contextNetId])

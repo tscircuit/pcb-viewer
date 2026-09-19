@@ -1,3 +1,4 @@
+import type { XRayGroup } from "../lib/x-ray-net"
 import { useRenderingEngine } from "./RenderingEngineContext"
 import { css } from "@emotion/css"
 import { useEffect, useRef, useState } from "react"
@@ -32,12 +33,16 @@ export const VisibilityContextMenu = ({
   position,
   onClose,
   onXRayNet,
+  xRayGroups = [],
+  onXRayGroup,
   xRayDisplayName = "Net",
   onExitXRayNet,
 }: {
   position: { x: number; y: number }
   onClose: () => void
   onXRayNet?: () => void
+  xRayGroups?: XRayGroup[]
+  onXRayGroup?: (group: XRayGroup) => void
   xRayDisplayName?: string
   onExitXRayNet?: () => void
 }) => {
@@ -169,6 +174,22 @@ export const VisibilityContextMenu = ({
           X-Ray {xRayDisplayName}
         </button>
       )}
+      {onXRayGroup &&
+        xRayGroups.map((group) => (
+          <button
+            key={group.id}
+            type="button"
+            role="menuitem"
+            className={itemStyle}
+            style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}
+            onClick={() => {
+              onXRayGroup(group)
+              onClose()
+            }}
+          >
+            X-Ray {group.name}
+          </button>
+        ))}
       {onExitXRayNet && (
         <button
           type="button"

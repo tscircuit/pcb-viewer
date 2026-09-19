@@ -24,6 +24,7 @@ import { applyToPoint, inverse, type Matrix } from "transformation-matrix"
 import {
   getElementNetId,
   getXRayDisplayName,
+  getXRayGroups,
   isXRayCopper,
 } from "lib/x-ray-net"
 import { useGlobalStore } from "../global-store"
@@ -115,6 +116,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     const describeNet = (netId: string, element: AnyCircuitElement) => ({
       netId,
       displayName: getXRayDisplayName(element, elements, connectivityMap),
+      groups: getXRayGroups(netId, elements, connectivityMap),
     })
     const hits = getPrimitivesUnderPoint(
       primitivesWithoutInteractionMetadata,
