@@ -21,6 +21,7 @@ const browser = await chromium.launch({
 })
 try {
   const page = await browser.newPage({ viewport: { width: 800, height: 600 } })
+  const activeXRay = '.pcb-x-ray-net, [data-x-ray-net-active="true"]'
   const errors: string[] = []
   page.on("pageerror", (e) => errors.push(e.message))
   for (const query of [
@@ -51,12 +52,23 @@ try {
       await page
         .getByRole("menuitem", { name: "X-Ray Net", exact: true })
         .click()
-      await page.waitForSelector(".pcb-x-ray-net")
+      await page.waitForSelector(activeXRay)
     }
     await enter()
-    const pixels = await page.locator(".pcb-x-ray-net").evaluate((node) => {
-      const canvas = node as HTMLCanvasElement
+    const native =
+      (await page.locator('[data-x-ray-net-active="true"]').count()) > 0
+    if (process.env.XRAY_EXPECT_NATIVE && query.includes("gpu"))
+      assert(native, "X-Ray must remain on WebGPU")
+    const pixels = await page.locator(activeXRay).evaluate((node) => {
+      const original =
+        node instanceof HTMLCanvasElement
+          ? node
+          : node.querySelector<HTMLCanvasElement>(".pcb-webgpu-canvas")!
+      const canvas = document.createElement("canvas")
+      canvas.width = original.width
+      canvas.height = original.height
       const ctx = canvas.getContext("2d")!
+      ctx.drawImage(original, 0, 0)
       return [250, 295, 385, 475, 520].map((x) => [
         ctx.getImageData(x, 300, 1, 1).data[3],
         ctx.getImageData(x, 420, 1, 1).data[3],
@@ -67,7 +79,7 @@ try {
       Array.from({ length: 5 }, () => [255, 0]),
       `selected pads/traces are opaque on all layers, unrelated net excluded (${query})`,
     )
-    for (const layer of ["top", "inner1", "bottom"]) {
+    for (const layer of native ? [] : ["top", "inner1", "bottom"]) {
       assert.equal(
         await page
           .locator(`.pcb-layer-${layer}`)
@@ -75,21 +87,66 @@ try {
         new URLSearchParams(query).get("opacity"),
       )
     }
+    // Identical overlapping segments must use the frontmost copper color.
+    const crossColor = () =>
+      page.locator(activeXRay).evaluate((node) => {
+        const original =
+          node instanceof HTMLCanvasElement
+            ? node
+            : node.querySelector<HTMLCanvasElement>(".pcb-webgpu-canvas")!
+        const canvas = document.createElement("canvas")
+        canvas.width = original.width
+        canvas.height = original.height
+        const ctx = canvas.getContext("2d")!
+        ctx.drawImage(original, 0, 0)
+        return Array.from(ctx.getImageData(400, 210, 1, 1).data)
+      })
+    assert.deepEqual(
+      await crossColor(),
+      [200, 52, 52, 255],
+      "top copper must cover bottom copper in X-Ray",
+    )
+    await page.mouse.move(650, 180)
+    for (const [key, expected] of [
+      ["4", [77, 127, 196, 255]],
+      ["2", [127, 200, 127, 255]],
+      ["1", [200, 52, 52, 255]],
+    ] as const) {
+      await page.keyboard.press(key)
+      await page.waitForFunction(
+        ({ selector, expected }) => {
+          const node = document.querySelector(selector)!
+          const original =
+            node instanceof HTMLCanvasElement
+              ? node
+              : node.querySelector<HTMLCanvasElement>(".pcb-webgpu-canvas")!
+          const canvas = document.createElement("canvas")
+          canvas.width = original.width
+          canvas.height = original.height
+          const ctx = canvas.getContext("2d")!
+          ctx.drawImage(original, 0, 0)
+          return Array.from(ctx.getImageData(400, 210, 1, 1).data).every(
+            (value, index) => value === expected[index],
+          )
+        },
+        { selector: activeXRay, expected },
+      )
+    }
     // Exit by clicking the selected bottom-layer trace.
     await page.mouse.click(475, 300)
-    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    await page.waitForSelector(activeXRay, { state: "detached" })
     await enter(295, 300) // Entry from trace, not just pad.
     await page.mouse.dblclick(650, 180)
-    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    await page.waitForSelector(activeXRay, { state: "detached" })
     await enter()
     await page.mouse.dblclick(250, 420)
-    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    await page.waitForSelector(activeXRay, { state: "detached" })
     await enter()
     await page.mouse.click(650, 180, { button: "right" })
     await page
       .getByRole("menuitem", { name: "Exit X-Ray Net", exact: true })
       .click()
-    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    await page.waitForSelector(activeXRay, { state: "detached" })
     if (!query.includes("gpu"))
       assert.equal(
         await page

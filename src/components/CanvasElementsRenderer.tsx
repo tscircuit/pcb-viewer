@@ -330,9 +330,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       transform={transform}
                       elements={elements}
                     >
-                      {/* The experimental GPU backend has no per-net opacity; use the
-                          canvas compositor for X-Ray and restore it on exit. */}
-                      {props.renderer === "canvas" || xRayElements ? (
+                      {props.renderer === "canvas" ? (
                         <CanvasPrimitiveRenderer
                           transform={transform}
                           primitives={primitives}
@@ -347,6 +345,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           transform={transform}
                           primitives={primitives}
                           elements={elements}
+                          xRayElements={xRayElements}
                           width={props.width}
                           height={props.height}
                           grid={props.grid}

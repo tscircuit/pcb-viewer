@@ -520,8 +520,11 @@ export class Drawer {
       )
     const defaultDrawOrder = [
       "board",
+      "bottom",
       ...innerLayers,
-      ...DEFAULT_DRAW_ORDER.filter((layer) => layer !== "board"),
+      ...DEFAULT_DRAW_ORDER.filter(
+        (layer) => layer !== "board" && layer !== "bottom",
+      ),
     ]
     const associatedSoldermask =
       foregroundLayer === "top"

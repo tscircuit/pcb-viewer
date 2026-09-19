@@ -60,3 +60,15 @@ export const getOrderedCanvasLayers = (
     "other",
   ]
 }
+
+/** Back-to-front copper order, with the inspected layer foremost. */
+export const getCopperLayerDrawOrder = (
+  elements: AnyCircuitElement[],
+  selectedLayer: string,
+): LayerRef[] => {
+  const layers = getCopperLayerRefsFromElements(elements).reverse()
+  return [
+    ...layers.filter((layer) => layer !== selectedLayer),
+    ...layers.filter((layer) => layer === selectedLayer),
+  ]
+}

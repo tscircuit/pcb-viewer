@@ -5,6 +5,9 @@ const scope = self as unknown as {
   postMessage: (message: WebGpuResponse) => void
   requestAnimationFrame?: (callback: () => void) => number
 }
+const supportsXRayNet =
+  "supportsXRayNet" in CircuitToWebGpuDrawer &&
+  CircuitToWebGpuDrawer.supportsXRayNet === true
 let drawer: CircuitToWebGpuDrawer | undefined
 let canvas: OffscreenCanvas
 let latestView: Extract<WebGpuRequest, { type: "view" }> | undefined
@@ -32,6 +35,8 @@ function schedule() {
       drawer.render({ ...view.options, transform: view.transform })
       scope.postMessage({
         type: "rendered",
+        xRayActive:
+          supportsXRayNet && Boolean(view.options.xRayElementIds?.length),
         geometryUploads: drawer.stats.geometryUploads,
         frames: drawer.stats.frames,
         compileMs: drawer.stats.compileMs,
@@ -54,7 +59,10 @@ scope.onmessage = async ({ data }) => {
         drawer.dispose()
         return
       }
-      scope.postMessage({ type: "ready" })
+      scope.postMessage({
+        type: "ready",
+        supportsXRayNet,
+      })
     } else if (data.type === "scene") {
       drawer!.setCircuitJson(data.elements)
       if (drawer!.diagnostics.length)

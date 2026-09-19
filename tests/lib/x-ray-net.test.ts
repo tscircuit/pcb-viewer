@@ -16,6 +16,9 @@ test("X-Ray follows electrical connectivity across layers without including othe
   )
   expect(selected.map((el) => (el as any)[`${el.type}_id`]).sort()).toEqual([
     "bottom_pad_a",
+    "cross_bottom",
+    "cross_inner1",
+    "cross_top",
     "pad_a",
     "trace_a_bottom",
     "trace_a_inner1",

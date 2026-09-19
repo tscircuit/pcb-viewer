@@ -68,4 +68,13 @@ export const scene = [
       layers: ["top", "inner1", "inner2", "bottom"],
     },
   ]),
+  ...["top", "inner1", "bottom"].map((layer) => ({
+    type: "pcb_trace",
+    pcb_trace_id: `cross_${layer}`,
+    source_trace_id: "source_a",
+    route: [
+      { route_type: "wire", x: -5, y: 6, width: 2, layer },
+      { route_type: "wire", x: 5, y: 6, width: 2, layer },
+    ],
+  })),
 ] as AnyCircuitElement[]

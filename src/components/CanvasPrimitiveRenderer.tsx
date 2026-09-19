@@ -2,6 +2,7 @@ import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import {
   getCopperLayerRefsFromElements,
+  getCopperLayerDrawOrder,
   getCopperRenderLayer,
   getOrderedCanvasLayers,
 } from "lib/copper-layers"
@@ -379,7 +380,7 @@ export const CanvasPrimitiveRenderer = ({
     if (canvas && transform && xRayElements) {
       canvas.getContext("2d")!.clearRect(0, 0, width, height)
       // Composite selected copper above every ordinary layer at full opacity.
-      for (const layer of getCopperLayerRefsFromElements(elements)) {
+      for (const layer of getCopperLayerDrawOrder(elements, selectedLayer)) {
         const args = {
           canvas,
           elements: xRayElements,

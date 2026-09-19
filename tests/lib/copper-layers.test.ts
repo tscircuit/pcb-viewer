@@ -36,3 +36,27 @@ test("creates canvases for every copper layer on a 10-layer board", () => {
   expect(orderedLayers).toContain("inner8")
   expect(orderedLayers.length).toBeLessThanOrEqual(zIndexMap.topLayer)
 })
+
+import { getCopperLayerDrawOrder } from "../../src/lib/copper-layers"
+
+test("orders X-Ray copper back to front and promotes the selected layer", () => {
+  const elements = [{ type: "pcb_board", num_layers: 4 }] as any
+  expect(getCopperLayerDrawOrder(elements, "top")).toEqual([
+    "bottom",
+    "inner2",
+    "inner1",
+    "top",
+  ])
+  expect(getCopperLayerDrawOrder(elements, "bottom")).toEqual([
+    "inner2",
+    "inner1",
+    "top",
+    "bottom",
+  ])
+  expect(getCopperLayerDrawOrder(elements, "inner1")).toEqual([
+    "bottom",
+    "inner2",
+    "top",
+    "inner1",
+  ])
+})
