@@ -32,11 +32,13 @@ export const VisibilityContextMenu = ({
   position,
   onClose,
   onXRayNet,
+  xRayDisplayName = "Net",
   onExitXRayNet,
 }: {
   position: { x: number; y: number }
   onClose: () => void
   onXRayNet?: () => void
+  xRayDisplayName?: string
   onExitXRayNet?: () => void
 }) => {
   const engine = useRenderingEngine()
@@ -158,12 +160,13 @@ export const VisibilityContextMenu = ({
           type="button"
           role="menuitem"
           className={itemStyle}
+          style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}
           onClick={() => {
             onXRayNet()
             onClose()
           }}
         >
-          X-Ray Net
+          X-Ray {xRayDisplayName}
         </button>
       )}
       {onExitXRayNet && (

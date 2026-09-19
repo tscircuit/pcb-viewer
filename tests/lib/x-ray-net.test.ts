@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
-import { getElementNetId, isXRayCopper } from "../../src/lib/x-ray-net"
+import {
+  getElementNetId,
+  getXRayDisplayName,
+  isXRayCopper,
+} from "../../src/lib/x-ray-net"
 import { scene } from "../x-ray-net/scene"
 import { Drawer } from "../../src/lib/Drawer"
 
@@ -55,4 +59,48 @@ test("X-Ray dims every ordinary copper layer, then restores selected-layer visib
     expect(drawer.getLayerOpacity("inner1")).toBe(1)
     expect(drawer.getLayerOpacity("top")).toBe(opacity)
   }
+})
+
+test("X-Ray labels prefer explicit names, then connection labels, then Net", () => {
+  const trace = scene.find(
+    (el) => el.type === "pcb_trace" && el.pcb_trace_id === "trace_a_top",
+  )!
+  for (const [sourceFields, expected] of [
+    [{ name: "  clock  ", display_name: "U1.1 to U2.2" }, "clock"],
+    [{ name: " ", display_name: " U1.1 to U2.2 " }, "U1.1 to U2.2"],
+    [{ name: "", display_name: "" }, "Net"],
+  ] as const) {
+    const elements = scene.map((el) =>
+      el.type === "source_trace" && el.source_trace_id === "source_a"
+        ? { ...el, ...sourceFields }
+        : el,
+    )
+    const map = getFullConnectivityMapFromCircuitJson(elements)
+    expect(getXRayDisplayName(trace, elements, map)).toBe(expected)
+    const pad = elements.find(
+      (el) => el.type === "pcb_smtpad" && el.pcb_smtpad_id === "pad_a",
+    )!
+    expect(getXRayDisplayName(pad, elements, map)).toBe(expected)
+  }
+})
+
+test("X-Ray uses a connected source net name before a generated connection label", () => {
+  const elements = scene.map((el) =>
+    el.type === "source_trace" && el.source_trace_id === "source_a"
+      ? { ...el, name: "", display_name: "U1.1 to U2.2" }
+      : el,
+  )
+  elements.push({
+    type: "source_net",
+    source_net_id: "net_a",
+    name: "GND",
+    member_source_group_ids: [],
+  })
+  const map = getFullConnectivityMapFromCircuitJson(elements)
+  for (const element of elements.filter(
+    (el) =>
+      isXRayCopper(el) &&
+      getElementNetId(el, map) === map.getNetConnectedToId("net_a"),
+  ))
+    expect(getXRayDisplayName(element, elements, map)).toBe("GND")
 })

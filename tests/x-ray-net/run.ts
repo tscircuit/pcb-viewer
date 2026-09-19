@@ -53,7 +53,10 @@ try {
     const enter = async (x = 250, y = 300) => {
       await page.mouse.click(x, y)
       await page
-        .getByRole("menuitem", { name: "X-Ray Net", exact: true })
+        .getByRole("menuitem", {
+          name: y === 300 ? "X-Ray CLK" : "X-Ray U1.1 to U2.2",
+          exact: true,
+        })
         .click()
       await page.waitForSelector(activeXRay)
     }
@@ -242,9 +245,9 @@ try {
       })
     for (const button of ["left", "right"] as const) {
       await enter()
-      await page.mouse.click(250, 420, { button })
+      await page.mouse.click(295, 420, { button })
       await page
-        .getByRole("menuitem", { name: "X-Ray Net", exact: true })
+        .getByRole("menuitem", { name: "X-Ray U1.1 to U2.2", exact: true })
         .click()
       // Wait for the worker's frame, not just the menu state.
       await page.waitForTimeout(150)
@@ -262,9 +265,9 @@ try {
         "Removing one net must retain the other",
       )
       assert.equal(remaining[0][0], native ? Math.round(opacity * 255) : 0)
-      await page.mouse.click(250, 300, { button })
+      await page.mouse.click(295, 300, { button })
       await page
-        .getByRole("menuitem", { name: "X-Ray Net", exact: true })
+        .getByRole("menuitem", { name: "X-Ray CLK", exact: true })
         .click()
       await page.waitForTimeout(150)
       assert.deepEqual(await netPixels(), [
