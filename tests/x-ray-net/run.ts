@@ -1,0 +1,114 @@
+import assert from "node:assert/strict"
+import { createServer } from "vite"
+import { chromium } from "playwright"
+import { fileURLToPath } from "node:url"
+
+const root = fileURLToPath(new URL("../../", import.meta.url))
+const server = await createServer({
+  root,
+  resolve: {
+    alias: [{ find: "../../src/index", replacement: `${root}dist/index.js` }],
+  },
+  server: { host: "127.0.0.1", port: 0 },
+  logLevel: "error",
+})
+await server.listen()
+const browser = await chromium.launch({
+  headless: true,
+  ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+    ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+    : {}),
+})
+try {
+  const page = await browser.newPage({ viewport: { width: 800, height: 600 } })
+  const errors: string[] = []
+  page.on("pageerror", (e) => errors.push(e.message))
+  for (const query of [
+    "opacity=0",
+    "opacity=0.4",
+    "opacity=1",
+    "opacity=0&gpu",
+  ]) {
+    await page.goto(`${server.resolvedUrls!.local[0]}tests/x-ray-net/?${query}`)
+    await page.waitForSelector("canvas")
+    await page.mouse.click(650, 180, { button: "right" })
+    await page
+      .getByRole("menuitem", { name: "Visibility ▸", exact: true })
+      .hover()
+    await page
+      .getByRole("menuitem", { name: "Hidden Layer Visibility ▸", exact: true })
+      .hover()
+    const opacity = Number(new URLSearchParams(query).get("opacity"))
+    await page
+      .getByRole("menuitemradio", {
+        name: opacity === 0 ? "Hide" : `${opacity * 100}%`,
+        exact: true,
+      })
+      .click()
+    // 40x30 board fitted at 15 pixels/mm, centered at (400, 300).
+    const enter = async (x = 250, y = 300) => {
+      await page.mouse.click(x, y)
+      await page
+        .getByRole("menuitem", { name: "X-Ray Net", exact: true })
+        .click()
+      await page.waitForSelector(".pcb-x-ray-net")
+    }
+    await enter()
+    const pixels = await page.locator(".pcb-x-ray-net").evaluate((node) => {
+      const canvas = node as HTMLCanvasElement
+      const ctx = canvas.getContext("2d")!
+      return [250, 295, 385, 475, 520].map((x) => [
+        ctx.getImageData(x, 300, 1, 1).data[3],
+        ctx.getImageData(x, 420, 1, 1).data[3],
+      ])
+    })
+    assert.deepEqual(
+      pixels,
+      Array.from({ length: 5 }, () => [255, 0]),
+      `selected pads/traces are opaque on all layers, unrelated net excluded (${query})`,
+    )
+    for (const layer of ["top", "inner1", "bottom"]) {
+      assert.equal(
+        await page
+          .locator(`.pcb-layer-${layer}`)
+          .evaluate((el) => (el as HTMLElement).style.opacity),
+        new URLSearchParams(query).get("opacity"),
+      )
+    }
+    // Exit by clicking the selected bottom-layer trace.
+    await page.mouse.click(475, 300)
+    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    await enter(295, 300) // Entry from trace, not just pad.
+    await page.mouse.dblclick(650, 180)
+    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    await enter()
+    await page.mouse.dblclick(250, 420)
+    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    await enter()
+    await page.mouse.click(650, 180, { button: "right" })
+    await page
+      .getByRole("menuitem", { name: "Exit X-Ray Net", exact: true })
+      .click()
+    await page.waitForSelector(".pcb-x-ray-net", { state: "detached" })
+    if (!query.includes("gpu"))
+      assert.equal(
+        await page
+          .locator(".pcb-layer-top")
+          .evaluate((el) => (el as HTMLElement).style.opacity),
+        "1",
+      )
+    // A drag ending on a pad must not open the menu.
+    await page.mouse.move(220, 300)
+    await page.mouse.down()
+    await page.mouse.move(250, 300, { steps: 5 })
+    await page.mouse.up()
+    assert.equal(await page.getByRole("menu").count(), 0)
+  }
+  assert.deepEqual(errors, [])
+  console.log(
+    "X-Ray Net browser tests passed: layer opacity, pads/traces, all exit gestures, pan, and WebGPU selection",
+  )
+} finally {
+  await browser.close()
+  await server.close()
+}

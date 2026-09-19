@@ -31,9 +31,13 @@ const itemStyle = css`
 export const VisibilityContextMenu = ({
   position,
   onClose,
+  onXRayNet,
+  onExitXRayNet,
 }: {
   position: { x: number; y: number }
   onClose: () => void
+  onXRayNet?: () => void
+  onExitXRayNet?: () => void
 }) => {
   const engine = useRenderingEngine()
   const [rendererOpen, setRendererOpen] = useState(false)
@@ -149,6 +153,32 @@ export const VisibilityContextMenu = ({
         ...(stacked ? { overflowY: "auto" } : {}),
       }}
     >
+      {onXRayNet && (
+        <button
+          type="button"
+          role="menuitem"
+          className={itemStyle}
+          onClick={() => {
+            onXRayNet()
+            onClose()
+          }}
+        >
+          X-Ray Net
+        </button>
+      )}
+      {onExitXRayNet && (
+        <button
+          type="button"
+          role="menuitem"
+          className={itemStyle}
+          onClick={() => {
+            onExitXRayNet()
+            onClose()
+          }}
+        >
+          Exit X-Ray Net
+        </button>
+      )}
       <div
         style={{ position: "relative" }}
         onMouseEnter={() => {

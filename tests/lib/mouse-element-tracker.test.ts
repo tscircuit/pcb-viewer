@@ -34,3 +34,16 @@ it("only hit-tests PCB traces on the selected layer", () => {
     ),
   ).toEqual([topTrace])
 })
+
+it("hit-tests hidden traces while X-Ray is active so clicking the net can exit", () => {
+  const bottomTrace = createTracePrimitive("bottom")
+  expect(
+    getPrimitivesUnderPoint(
+      [bottomTrace],
+      { x: 0.5, y: 0 },
+      { a: 40, b: 0, c: 0, d: -40, e: 0, f: 0 },
+      "top",
+      true,
+    ),
+  ).toEqual([bottomTrace])
+})

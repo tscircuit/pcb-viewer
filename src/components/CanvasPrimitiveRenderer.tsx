@@ -24,6 +24,7 @@ import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
+import { zIndexMap } from "lib/util/z-index-map"
 import type { GridConfig, Primitive } from "lib/types"
 import React, { useEffect, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
@@ -33,6 +34,7 @@ import { useGlobalStore } from "../global-store"
 interface Props {
   primitives: Primitive[]
   elements: AnyCircuitElement[]
+  xRayElements?: AnyCircuitElement[]
   defaultUnit?: string
   transform?: Matrix
   grid?: GridConfig
@@ -43,11 +45,13 @@ interface Props {
 export const CanvasPrimitiveRenderer = ({
   primitives,
   elements,
+  xRayElements,
   transform,
   grid,
   width = 500,
   height = 500,
 }: Props) => {
+  const xRayCanvasRef = useRef<HTMLCanvasElement>(null)
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
@@ -79,6 +83,7 @@ export const CanvasPrimitiveRenderer = ({
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
     drawer.hiddenLayerOpacity = hiddenLayerOpacity
+    drawer.xRayNetActive = Boolean(xRayElements)
     // Clear every canvas above, then omit drawing completely hidden layers.
     const visibleCanvasRefs = Object.fromEntries(
       Object.entries(availableCanvasRefs).filter(
@@ -370,9 +375,30 @@ export const CanvasPrimitiveRenderer = ({
     }
 
     drawer.orderAndFadeLayers()
+    const canvas = xRayCanvasRef.current
+    if (canvas && transform && xRayElements) {
+      canvas.getContext("2d")!.clearRect(0, 0, width, height)
+      // Composite selected copper above every ordinary layer at full opacity.
+      for (const layer of getCopperLayerRefsFromElements(elements)) {
+        const args = {
+          canvas,
+          elements: xRayElements,
+          layers: [getCopperRenderLayer(layer)],
+          realToCanvasMat: transform,
+          drawSoldermask: false,
+        }
+        drawPcbTraceElementsForLayer({ ...args, showCopperPours: false })
+        drawPcbSmtPadElementsForLayer(args)
+        drawPlatedHolePads(args)
+        drawPcbViaElementsForLayer(args)
+      }
+    }
   }, [
     primitives,
     elements,
+    xRayElements,
+    width,
+    height,
     transform,
     selectedLayer,
     hiddenLayerOpacity,
@@ -403,6 +429,21 @@ export const CanvasPrimitiveRenderer = ({
         transform={transform!}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
+      {xRayElements && (
+        <canvas
+          ref={xRayCanvasRef}
+          className="pcb-x-ray-net"
+          width={width}
+          height={height}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            zIndex: zIndexMap.topLayer,
+            pointerEvents: "none",
+          }}
+        />
+      )}
       {getOrderedCanvasLayers(elements)
         .filter((layer) => {
           if (!isShowingSolderMask && layer.includes("soldermask")) return false

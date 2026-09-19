@@ -16,6 +16,7 @@
     "format:check": "biome format .",
     "cosmos": "cosmos",
     "cosmos-export": "cosmos-export",
+    "test:x-ray-net": "bun run build && bun tests/x-ray-net/run.ts",
     "test:webgpu": "bun run build && bun tests/webgpu/run.ts"
   },
   "files": [
