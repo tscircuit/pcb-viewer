@@ -1,3 +1,6 @@
+// Snapshot: seveibar/am3352-dev-board-4layer-dogbone v0.1.1, downloaded 2026-09-19.
+// Release 1dde7554-9eed-449f-a580-8b886cdedd9e (latest completed build; v0.1.2 was pending).
+// https://api.tscircuit.com/package_files/download?package_release_id=1dde7554-9eed-449f-a580-8b886cdedd9e&file_path=dist%2Findex%2Fcircuit.json
 import { PCBViewer } from "../../../../PCBViewer"
 import circuitJson from "./circuit.json"
 
