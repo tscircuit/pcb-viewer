@@ -21,6 +21,9 @@ import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
 interface Props {
+  getNetAtPoint?: (point: { x: number; y: number }) => string | undefined
+  xRayNetId?: string | null
+  onXRayNetChange?: (netId: string | null) => void
   onContextMenuOpenChange?: (open: boolean) => void
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
@@ -140,6 +143,9 @@ export const ToolbarOverlay = ({
   children,
   elements,
   onContextMenuOpenChange,
+  getNetAtPoint,
+  xRayNetId,
+  onXRayNetChange,
 }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
@@ -208,6 +214,16 @@ export const ToolbarOverlay = ({
     x: number
     y: number
   } | null>(null)
+  const [contextNetId, setContextNetId] = useState<string>()
+  const pointerStart = useRef<{ x: number; y: number } | null>(null)
+  const inEditMode = useGlobalStore((s) => s.in_edit_mode)
+  const netAtEvent = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return getNetAtPoint?.({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    })
+  }
   const closeContextMenu = useCallback(() => {
     setContextMenuPosition(null)
     onContextMenuOpenChange?.(false)
@@ -388,9 +404,45 @@ export const ToolbarOverlay = ({
   return (
     <div
       ref={hotkeyBoundaryRef}
+      onPointerDown={(event) => {
+        pointerStart.current = { x: event.clientX, y: event.clientY }
+      }}
+      onClick={(event) => {
+        if (
+          event.detail > 1 ||
+          inEditMode ||
+          measureToolArmed ||
+          boundsToolArmed ||
+          (event.target as HTMLElement).closest(
+            "button, input, select, [role=menu]",
+          )
+        )
+          return
+        const start = pointerStart.current
+        if (
+          !start ||
+          Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4
+        )
+          return
+        const net = netAtEvent(event)
+        if (!net) return
+        if (net === xRayNetId) {
+          onXRayNetChange?.(null)
+          closeContextMenu()
+        } else {
+          setContextNetId(net)
+          onContextMenuOpenChange?.(true)
+          setContextMenuPosition({ x: event.clientX, y: event.clientY })
+        }
+      }}
+      onDoubleClick={() => {
+        onXRayNetChange?.(null)
+        closeContextMenu()
+      }}
       onContextMenu={(event) => {
         event.preventDefault()
         event.stopPropagation()
+        setContextNetId(netAtEvent(event))
         onContextMenuOpenChange?.(true)
         setContextMenuPosition({ x: event.clientX, y: event.clientY })
       }}
@@ -404,6 +456,12 @@ export const ToolbarOverlay = ({
         <VisibilityContextMenu
           position={contextMenuPosition}
           onClose={closeContextMenu}
+          onXRayNet={
+            contextNetId && contextNetId !== xRayNetId
+              ? () => onXRayNetChange?.(contextNetId)
+              : undefined
+          }
+          onExitXRayNet={xRayNetId ? () => onXRayNetChange?.(null) : undefined}
         />
       )}
       <div

@@ -8,13 +8,14 @@ export type WebGpuRequest =
       width: number
       height: number
       transform: Matrix
-      options: RenderOptions
+      options: RenderOptions & { xRayElementIds?: readonly string[] }
     }
   | { type: "dispose" }
 export type WebGpuResponse =
-  | { type: "ready" }
+  | { type: "ready"; supportsXRayNet: boolean }
   | {
       type: "rendered"
+      xRayActive: boolean
       geometryUploads: number
       frames: number
       compileMs: number

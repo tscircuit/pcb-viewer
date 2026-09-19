@@ -113,6 +113,7 @@ export class Drawer {
   transform: Matrix
   foregroundLayer = "top"
   hiddenLayerOpacity = 0.2
+  xRayNetActive = false
   lastPoint: { x: number; y: number }
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
@@ -489,6 +490,8 @@ export class Drawer {
   }
 
   getLayerOpacity(layer: string) {
+    if (this.xRayNetActive)
+      return /^(top|bottom|inner\d+)$/.test(layer) ? this.hiddenLayerOpacity : 0
     const side = this.foregroundLayer
     const isSelectedSideDetail =
       (side === "top" || side === "bottom") &&

@@ -12,6 +12,7 @@ import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 type Props = {
   elements: AnyCircuitElement[]
   primitives: Primitive[]
+  xRayElements?: AnyCircuitElement[]
   transform?: Matrix
   width?: number
   height?: number
@@ -24,6 +25,7 @@ export function WebGpuElementsRenderer(props: Props) {
   const holder = useRef<HTMLDivElement>(null)
   const workerRef = useRef<Worker | undefined>(undefined)
   const ready = useRef(false)
+  const [supportsXRayNet, setSupportsXRayNet] = useState(false)
   const [failure, setFailure] = useState<string>()
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
@@ -48,7 +50,15 @@ export function WebGpuElementsRenderer(props: Props) {
     ],
     [primitives],
   )
-  const options = useMemo<RenderOptions>(
+  const xRayElementIds = useMemo(
+    () =>
+      (props.xRayElements ?? []).map(
+        (element) =>
+          (element as unknown as Record<string, string>)[`${element.type}_id`],
+      ),
+    [props.xRayElements],
+  )
+  const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(
     () => ({
       selectedLayer,
       hiddenLayerOpacity,
@@ -59,6 +69,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showPcbNotes,
       showCourtyards,
       highlightedElementIds,
+      xRayElementIds,
     }),
     [
       selectedLayer,
@@ -70,6 +81,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showPcbNotes,
       showCourtyards,
       highlightedElementIds,
+      xRayElementIds,
     ],
   )
   const sceneRef = useRef(elements)
@@ -131,11 +143,15 @@ export function WebGpuElementsRenderer(props: Props) {
         workerRef.current = worker
         worker.onmessage = ({ data }: MessageEvent<WebGpuResponse>) => {
           if (disposed || failed) return
-          if (data.type === "error") {
+          if (data.type === "rendered") {
+            if (holder.current)
+              holder.current.dataset.xRayNetActive = String(data.xRayActive)
+          } else if (data.type === "error") {
             clearTimeout(timeout)
             fallback(data.message)
           } else if (data.type === "ready") {
             clearTimeout(timeout)
+            setSupportsXRayNet(data.supportsXRayNet)
             ready.current = true
             worker!.postMessage({
               type: "scene",
@@ -197,28 +213,39 @@ export function WebGpuElementsRenderer(props: Props) {
         <CanvasPrimitiveRenderer {...props} elements={fallbackElements} />
       </div>
     )
+  // Keep the worker mounted so exiting X-Ray restores older GPU versions without
+  // uploading geometry again. New versions render the net natively in the worker.
+  const useXRayFallback = Boolean(props.xRayElements && !supportsXRayNet)
   return (
-    <div
-      ref={holder}
-      data-pcb-renderer="webgpu"
-      style={{
-        width,
-        height,
-        background: "black",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <SuperGrid
-        textColor="rgba(0,255,0,0.8)"
-        majorColor="rgba(0,255,0,0.4)"
-        minorColor="rgba(0,255,0,0.2)"
-        screenSpaceCellSize={200}
-        width={width}
-        height={height}
-        transform={transform!}
-        stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
-      />
-    </div>
+    <>
+      {useXRayFallback && (
+        <div data-x-ray-fallback="unsupported-webgpu-version">
+          <CanvasPrimitiveRenderer {...props} elements={fallbackElements} />
+        </div>
+      )}
+      <div
+        ref={holder}
+        data-pcb-renderer="webgpu"
+        style={{
+          width,
+          height,
+          background: "black",
+          position: "relative",
+          overflow: "hidden",
+          display: useXRayFallback ? "none" : undefined,
+        }}
+      >
+        <SuperGrid
+          textColor="rgba(0,255,0,0.8)"
+          majorColor="rgba(0,255,0,0.4)"
+          minorColor="rgba(0,255,0,0.2)"
+          screenSpaceCellSize={200}
+          width={width}
+          height={height}
+          transform={transform!}
+          stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
+        />
+      </div>
+    </>
   )
 }
