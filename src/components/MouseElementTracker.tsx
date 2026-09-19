@@ -68,6 +68,13 @@ const isPointInsidePolygon = (
   return isInside
 }
 
+const compareCopperLayers = (a: LayerRef, b: LayerRef) => {
+  if (a === b) return 0
+  if (a === "top" || b === "bottom") return -1
+  if (a === "bottom" || b === "top") return 1
+  return Number(a.slice("inner".length)) - Number(b.slice("inner".length))
+}
+
 export const getPrimitivesUnderPoint = (
   primitives: Primitive[],
   rwPoint: { x: number; y: number },
@@ -77,11 +84,38 @@ export const getPrimitivesUnderPoint = (
   const newMousedPrimitives: Primitive[] = []
 
   for (const primitive of primitives) {
-    if (!primitive._element) continue
+    if (!primitive._element || primitive.is_hoverable === false) continue
+    // Drill/mask primitives are visual details, not separate copper targets.
+    // In particular, a shared drill must not select a blind via on another layer.
+    if (!/^(top|bottom|inner\d+)$/.test(primitive.layer)) continue
     if (
-      primitive._element.type === "pcb_trace" &&
-      primitive.layer !== selectedLayer
+      primitive._element.type === "pcb_plated_hole" ||
+      primitive._element.type === "pcb_via"
     ) {
+      // Hole/via converters may emit copper geometry only on the outer layers.
+      // That geometry also represents every layer declared by the element.
+      const layers = primitive._element.layers
+      if (layers && !layers.includes(selectedLayer)) continue
+      if (
+        !layers &&
+        primitive._element.type === "pcb_via" &&
+        primitive._element.from_layer &&
+        primitive._element.to_layer
+      ) {
+        // Legacy vias describe a continuous span using just its endpoints.
+        const { from_layer, to_layer } = primitive._element
+        const [start, end] =
+          compareCopperLayers(from_layer, to_layer) <= 0
+            ? [from_layer, to_layer]
+            : [to_layer, from_layer]
+        if (
+          compareCopperLayers(selectedLayer, start) < 0 ||
+          compareCopperLayers(selectedLayer, end) > 0
+        ) {
+          continue
+        }
+      }
+    } else if (primitive.layer !== selectedLayer) {
       continue
     }
 
