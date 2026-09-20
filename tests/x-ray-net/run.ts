@@ -157,6 +157,23 @@ try {
         "X-Ray must not highlight either the selected or unrelated net on hover",
       )
     }
+    for (const [x, label] of [
+      [250, "TOP"],
+      [520, "BOTTOM"],
+      [430, "THROUGH"],
+    ] as const) {
+      await page.mouse.move(x, 300)
+      await page.getByText(`${label}_a`, { exact: true }).waitFor()
+      await page.mouse.move(x, 420)
+      await page
+        .getByText(`${label}_a`, { exact: true })
+        .waitFor({ state: "detached" })
+      assert.equal(
+        await page.getByText(`${label}_b`, { exact: true }).count(),
+        0,
+        "Unrelated pads must not show tooltips during X-Ray",
+      )
+    }
     await page.mouse.move(650, 180)
     // Identical overlapping segments must use the frontmost copper color.
     const crossColor = () =>

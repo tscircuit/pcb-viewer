@@ -35,6 +35,7 @@ export const scene = [
     {
       type: "pcb_smtpad",
       pcb_smtpad_id: `pad_${net}`,
+      port_hints: [`TOP_${net}`],
       pcb_port_id: `port_${net}`,
       pcb_component_id: "shared_component",
       shape: "rect",
@@ -56,6 +57,7 @@ export const scene = [
     {
       type: "pcb_smtpad",
       pcb_smtpad_id: `bottom_pad_${net}`,
+      port_hints: [`BOTTOM_${net}`],
       pcb_port_id: `port_${net}`,
       shape: "rect",
       layer: "bottom",
@@ -67,6 +69,7 @@ export const scene = [
     {
       type: "pcb_plated_hole",
       pcb_plated_hole_id: `plated_${net}`,
+      port_hints: [`THROUGH_${net}`],
       pcb_port_id: `port_${net}`,
       shape: "circle",
       x: 2,

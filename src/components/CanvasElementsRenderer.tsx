@@ -111,6 +111,17 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         : undefined,
     [elementsToRender, connectivityMap, xRayNetIds],
   )
+  const hoverPrimitives = useMemo(() => {
+    if (!xRayElements) return primitivesWithoutInteractionMetadata
+    const selectedElements = new Set(xRayElements)
+    return primitivesWithoutInteractionMetadata.filter(
+      (primitive) =>
+        (primitive._element?.type === "pcb_smtpad" ||
+          primitive._element?.type === "pcb_plated_hole") &&
+        selectedElements.has(primitive._element),
+    )
+  }, [primitivesWithoutInteractionMetadata, xRayElements])
+
   const getNetAtPoint = (point: { x: number; y: number }) => {
     if (!transform) return undefined
     const describeNet = (netId: string, element: AnyCircuitElement) => ({
@@ -305,9 +316,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     <MouseElementTracker
       elements={elementsToRender}
       transform={transform}
-      primitives={primitivesWithoutInteractionMetadata}
+      primitives={hoverPrimitives}
       selectedLayer={selectedLayer}
-      disableHoverHighlights={xRayNetIds.length > 0}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
     >
       <EditPlacementOverlay
