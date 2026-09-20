@@ -31,9 +31,13 @@ export function getElementNetId(
 export function isXRayCopper(element: AnyCircuitElement | undefined) {
   return (
     element &&
-    ["pcb_trace", "pcb_smtpad", "pcb_plated_hole", "pcb_via"].includes(
-      element.type,
-    )
+    [
+      "pcb_trace",
+      "pcb_smtpad",
+      "pcb_plated_hole",
+      "pcb_via",
+      "pcb_copper_pour",
+    ].includes(element.type)
   )
 }
 

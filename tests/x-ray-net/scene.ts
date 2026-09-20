@@ -46,6 +46,16 @@ export const scene = [
       height: 2,
     },
     ...["top", "inner1", "bottom"].map((layer, j) => ({
+      type: "pcb_copper_pour",
+      pcb_copper_pour_id: `pour_${net}_${layer}`,
+      source_net_id: `net_${net}`,
+      layer,
+      shape: "rect",
+      center: { x: -10 + j * 6, y: 3 - i * 8 },
+      width: 3,
+      height: 2,
+    })),
+    ...["top", "inner1", "bottom"].map((layer, j) => ({
       type: "pcb_trace",
       pcb_trace_id: `trace_${net}_${layer}`,
       source_trace_id: `source_${net}`,

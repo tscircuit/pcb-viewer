@@ -88,6 +88,31 @@ try {
       ]),
       `selected pads/traces are opaque on all layers, unrelated net excluded (${query})`,
     )
+    const pourPixels = await page.locator(activeXRay).evaluate((node) => {
+      const original =
+        node instanceof HTMLCanvasElement
+          ? node
+          : node.querySelector<HTMLCanvasElement>(".pcb-webgpu-canvas")!
+      const canvas = document.createElement("canvas")
+      canvas.width = original.width
+      canvas.height = original.height
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(original, 0, 0)
+      return [250, 340, 430].map((x) => ({
+        selected: ctx.getImageData(x, 255, 1, 1).data[3],
+        unrelated: ctx.getImageData(x, 375, 1, 1).data[3],
+      }))
+    })
+    for (const pixel of pourPixels) {
+      assert(
+        pixel.selected >= 127,
+        `Selected pours must be visible on every copper layer (${query})`,
+      )
+      assert(
+        pixel.unrelated <= (native ? Math.ceil(opacity * 255) : 0),
+        "Unrelated pours must remain dimmed or hidden",
+      )
+    }
     for (const layer of native ? [] : ["top", "inner1", "bottom"]) {
       assert.equal(
         await page
