@@ -20,7 +20,7 @@ There are two main ways to use the PCBViewer:
 
 ### 1. Using Circuit Components
 
-This approach allows you to declaratively define your circuit using React components:
+To render declarative circuit components with PCBViewer, wrap components inside a `circuit` container:
 
 ```tsx
 import React from "react"
@@ -30,8 +30,10 @@ export default () => {
   return (
     <div style={{ backgroundColor: "black" }}>
       <PCBViewer>
-        <resistor footprint="0805" resistance="10k" />
-        <capacitor footprint="0603" capacitance="100nF" />
+        <circuit>
+          <resistor name="R1" footprint="0805" resistance="10k" />
+          <capacitor name="C1" footprint="0603" capacitance="100nF" />
+        </circuit>
       </PCBViewer>
     </div>
   )
