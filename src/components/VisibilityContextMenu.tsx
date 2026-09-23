@@ -357,7 +357,7 @@ export const VisibilityContextMenu = ({
             })
           }}
         >
-          ↗️ {component.refdes} on Schematic
+          ↗︎ {component.refdes} on Schematic
         </button>
       )}
       {component?.manufacturer_part_number && (
@@ -369,7 +369,6 @@ export const VisibilityContextMenu = ({
           className={itemStyle}
           style={{
             marginTop: 4,
-            border: "1px solid #555",
             background: "#292929",
             color: "#aaa",
             cursor: "default",
@@ -377,7 +376,7 @@ export const VisibilityContextMenu = ({
             overflowWrap: "anywhere",
           }}
         >
-          {component.manufacturer_part_number}
+          MPN: {component.manufacturer_part_number}
         </button>
       )}
     </div>,

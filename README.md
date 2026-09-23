@@ -76,7 +76,7 @@ The PCBViewer component accepts these props:
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
-- `onViewSchematicComponent`: Optional callback for the pad context menu action `↗️ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
+- `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
 - `initialState`: Initial state for the viewer
 
 ### Features
@@ -128,7 +128,7 @@ SVG-left/WebGPU-right feature snapshot tests.
 ### Navigate from a pad to a schematic
 
 Click or right-click an SMT pad or plated hole to see its component's manufacturer
-part number in a disabled box at the bottom of the context menu, when available.
+part number in a disabled row at the bottom of the context menu, when available.
 Passing `onViewSchematicComponent` also enables the schematic action:
 
 ```tsx

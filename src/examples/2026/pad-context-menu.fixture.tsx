@@ -37,8 +37,8 @@ export default function PadContextMenu() {
         <h3 style={{ margin: "0 0 8px" }}>Pad context menu</h3>
         <p>
           Click or right-click a pad on U1 (left, SMT) or U2 (right,
-          through-hole). The manufacturer part number appears in a disabled box
-          at the bottom. Choose “↗️ U1 on Schematic” to see the callback below.
+          through-hole). The manufacturer part number appears in a disabled row
+          at the bottom. Choose “↗︎ U1 on Schematic” to see the callback below.
         </p>
         <label>
           <input
