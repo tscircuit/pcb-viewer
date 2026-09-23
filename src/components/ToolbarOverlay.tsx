@@ -1,3 +1,7 @@
+import type {
+  PadComponent,
+  ViewSchematicComponentEvent,
+} from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
 import {
   useEffect,
@@ -22,6 +26,10 @@ import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 
 interface Props {
+  getComponentAtPoint?: (point: { x: number; y: number }) =>
+    | PadComponent
+    | undefined
+  onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   getNetAtPoint?: (point: { x: number; y: number }) =>
     | { netId: string; displayName: string; groups: XRayGroup[] }
     | undefined
@@ -147,6 +155,8 @@ export const ToolbarOverlay = ({
   elements,
   onContextMenuOpenChange,
   getNetAtPoint,
+  getComponentAtPoint,
+  onViewSchematicComponent,
   xRayNetIds = [],
   onXRayNetsChange,
 }: Props) => {
@@ -220,6 +230,14 @@ export const ToolbarOverlay = ({
   const [contextGroups, setContextGroups] = useState<XRayGroup[]>([])
   const [contextNetId, setContextNetId] = useState<string>()
   const [contextNetDisplayName, setContextNetDisplayName] = useState("Net")
+  const [contextComponent, setContextComponent] = useState<PadComponent>()
+  const componentAtEvent = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return getComponentAtPoint?.({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    })
+  }
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const inEditMode = useGlobalStore((s) => s.in_edit_mode)
   const netAtEvent = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -430,15 +448,17 @@ export const ToolbarOverlay = ({
         )
           return
         const hit = netAtEvent(event)
-        if (!hit) return
-        const net = hit.netId
-        if (xRayNetIds.includes(net)) {
+        const component = componentAtEvent(event)
+        if (!hit && !component) return
+        const net = hit?.netId
+        if (net && xRayNetIds.includes(net)) {
           onXRayNetsChange?.(xRayNetIds.filter((id) => id !== net))
           closeContextMenu()
         } else {
           setContextNetId(net)
-          setContextNetDisplayName(hit.displayName)
-          setContextGroups(hit.groups)
+          setContextNetDisplayName(hit?.displayName ?? "Net")
+          setContextGroups(hit?.groups ?? [])
+          setContextComponent(component)
           onContextMenuOpenChange?.(true)
           setContextMenuPosition({ x: event.clientX, y: event.clientY })
         }
@@ -451,6 +471,7 @@ export const ToolbarOverlay = ({
         event.preventDefault()
         event.stopPropagation()
         const hit = netAtEvent(event)
+        setContextComponent(componentAtEvent(event))
         setContextNetId(hit?.netId)
         setContextNetDisplayName(hit?.displayName ?? "Net")
         setContextGroups(hit?.groups ?? [])
@@ -466,6 +487,8 @@ export const ToolbarOverlay = ({
       {contextMenuPosition && (
         <VisibilityContextMenu
           position={contextMenuPosition}
+          component={contextComponent}
+          onViewSchematicComponent={onViewSchematicComponent}
           onClose={closeContextMenu}
           xRayDisplayName={contextNetDisplayName}
           xRayGroups={contextGroups.filter((group) =>
