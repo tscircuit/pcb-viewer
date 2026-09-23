@@ -1,3 +1,4 @@
+import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
 import { RenderingEngineContext } from "./components/RenderingEngineContext"
 import { applyEditEvents } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
@@ -29,6 +30,8 @@ type Props = {
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  /** Omit when the host has no enabled schematic tab. */
+  onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
@@ -46,6 +49,7 @@ export const PCBViewer = ({
   editEvents: editEventsProp,
   onEditEventsChanged,
   onBoundsSelected,
+  onViewSchematicComponent,
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
@@ -212,6 +216,7 @@ export const PCBViewer = ({
               allowEditing={allowEditing}
               focusOnHover={focusOnHover}
               onBoundsSelected={onBoundsSelected}
+              onViewSchematicComponent={onViewSchematicComponent}
               cancelPanDrag={cancelPanDrag}
               onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}

@@ -1,3 +1,7 @@
+import type {
+  PadComponent,
+  ViewSchematicComponentEvent,
+} from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
 import { useRenderingEngine } from "./RenderingEngineContext"
 import { css } from "@emotion/css"
@@ -30,6 +34,8 @@ const itemStyle = css`
 `
 
 export const VisibilityContextMenu = ({
+  component,
+  onViewSchematicComponent,
   position,
   onClose,
   onXRayNet,
@@ -38,6 +44,8 @@ export const VisibilityContextMenu = ({
   xRayDisplayName = "Net",
   onExitXRayNet,
 }: {
+  component?: PadComponent
+  onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   position: { x: number; y: number }
   onClose: () => void
   onXRayNet?: () => void
@@ -108,9 +116,9 @@ export const VisibilityContextMenu = ({
         const button = (event.target as HTMLElement).closest("button")
         if (!button) return
         const menu = button.closest('[role="menu"]')!
-        const items = Array.from(menu.querySelectorAll("button")).filter(
-          (item) => item.closest('[role="menu"]') === menu,
-        )
+        const items = Array.from(
+          menu.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"),
+        ).filter((item) => item.closest('[role="menu"]') === menu)
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault()
           const step = event.key === "ArrowDown" ? 1 : -1
@@ -333,6 +341,57 @@ export const VisibilityContextMenu = ({
             </div>
           )}
         </div>
+      )}
+      {component && onViewSchematicComponent && (
+        <button
+          type="button"
+          role="menuitem"
+          className={itemStyle}
+          style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}
+          onClick={() => {
+            onClose()
+            onViewSchematicComponent({
+              source_component_id: component.source_component_id,
+              pcb_component_id: component.pcb_component_id,
+              refdes: component.refdes,
+            })
+          }}
+        >
+          <svg
+            aria-hidden="true"
+            width="12"
+            height="12"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ verticalAlign: "-1px", marginRight: 5 }}
+          >
+            <path d="M5 11 11 5M5 5h6v6" />
+          </svg>
+          {component.refdes} on Schematic
+        </button>
+      )}
+      {component?.manufacturer_part_number && (
+        <button
+          type="button"
+          role="menuitem"
+          disabled
+          aria-label={`Manufacturer part number: ${component.manufacturer_part_number}`}
+          className={itemStyle}
+          style={{
+            marginTop: 4,
+            background: "#292929",
+            color: "#aaa",
+            cursor: "default",
+            whiteSpace: "normal",
+            overflowWrap: "anywhere",
+          }}
+        >
+          MPN: {component.manufacturer_part_number}
+        </button>
       )}
     </div>,
     document.body,

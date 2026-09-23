@@ -76,6 +76,7 @@ The PCBViewer component accepts these props:
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
+- `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
 - `initialState`: Initial state for the viewer
 
 ### Features
@@ -123,3 +124,25 @@ The WebGPU renderer is installed as a bundled devDependency from
 `https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.3.tgz`.
 The renderer repository includes a TypeScript local render command and 597
 SVG-left/WebGPU-right feature snapshot tests.
+
+### Navigate from a pad to a schematic
+
+Click or right-click an SMT pad or plated hole to see its component's manufacturer
+part number in a disabled row at the bottom of the context menu, when available.
+Passing `onViewSchematicComponent` also enables the schematic action:
+
+```tsx
+<PCBViewer
+  circuitJson={circuitJson}
+  onViewSchematicComponent={schematicTabEnabled ? ({ source_component_id }) => {
+    // The host switches tabs and focuses the matching schematic component.
+    showSchematicComponent(source_component_id)
+  } : undefined}
+/>
+```
+
+The callback uses the source component ID so hosts can resolve the corresponding
+schematic component even when reference designators repeat across subcircuits.
+RunFrame and CircuitJsonViewer can forward this callback from their shared PCB
+preview when the schematic tab is enabled. Tab switching and schematic zooming
+are implemented by the host; PCBViewer does not require schematic elements.

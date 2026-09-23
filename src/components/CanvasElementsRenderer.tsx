@@ -1,3 +1,7 @@
+import {
+  getPadComponent,
+  type ViewSchematicComponentEvent,
+} from "../lib/get-pad-component"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
@@ -54,6 +58,7 @@ export interface CanvasElementsRendererProps {
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
+  onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
   onContextMenuOpenChange?: (open: boolean) => void
   cancelPanDrag: () => void
@@ -121,6 +126,25 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         selectedElements.has(primitive._element),
     )
   }, [primitivesWithoutInteractionMetadata, xRayElements])
+
+  const getComponentAtPoint = (point: { x: number; y: number }) => {
+    if (!transform) return
+    const hits = getPrimitivesUnderPoint(
+      primitivesWithoutInteractionMetadata,
+      applyToPoint(inverse(transform), point),
+      transform,
+      selectedLayer,
+    ).filter(
+      (p) =>
+        p._element?.type === "pcb_smtpad" ||
+        p._element?.type === "pcb_plated_hole",
+    )
+    hits.sort(
+      (a, b) =>
+        Number(b.layer === selectedLayer) - Number(a.layer === selectedLayer),
+    )
+    return getPadComponent(hits[0]?._element, elements)
+  }
 
   const getNetAtPoint = (point: { x: number; y: number }) => {
     if (!transform) return undefined
@@ -341,6 +365,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             xRayNetIds={xRayNetIds}
             onXRayNetsChange={setXRayNetIds}
             onContextMenuOpenChange={props.onContextMenuOpenChange}
+            getComponentAtPoint={getComponentAtPoint}
+            onViewSchematicComponent={props.onViewSchematicComponent}
           >
             <ErrorOverlay transform={transform} elements={elements}>
               <RatsNestOverlay transform={transform} soup={elements}>
