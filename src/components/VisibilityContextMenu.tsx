@@ -357,7 +357,21 @@ export const VisibilityContextMenu = ({
             })
           }}
         >
-          ↗︎ {component.refdes} on Schematic
+          <svg
+            aria-hidden="true"
+            width="12"
+            height="12"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ verticalAlign: "-1px", marginRight: 5 }}
+          >
+            <path d="M5 11 11 5M5 5h6v6" />
+          </svg>
+          {component.refdes} on Schematic
         </button>
       )}
       {component?.manufacturer_part_number && (
