@@ -26,9 +26,9 @@ export default function XRayNetDemo() {
       </p>
       <p>
         Click an inspected net to remove it. Clear all inspected nets by
-        double-clicking the board or using right-click → Exit X-Ray Net. The
-        right-click menu also lets you change hidden-layer opacity and compare
-        Canvas with WebGPU.
+        pressing Escape, double-clicking the board, or using right-click → Exit
+        X-Ray Net. The right-click menu also lets you change hidden-layer
+        opacity and compare Canvas with WebGPU.
       </p>
       <PCBViewer
         circuitJson={scene}
