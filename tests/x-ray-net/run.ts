@@ -223,6 +223,14 @@ try {
     // Exit by clicking the selected bottom-layer trace.
     await page.mouse.click(475, 300)
     await page.waitForSelector(activeXRay, { state: "detached" })
+    await enter()
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(activeXRay, { state: "detached" })
+    await enter()
+    await page.mouse.click(650, 180, { button: "right" })
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(activeXRay, { state: "detached" })
+    assert.equal(await page.getByRole("menu").count(), 0)
     await enter(295, 300) // Entry from trace, not just pad.
     await page.mouse.dblclick(650, 180)
     await page.waitForSelector(activeXRay, { state: "detached" })
@@ -318,7 +326,7 @@ try {
         [Array(7).fill(255), Array(7).fill(255)],
         "The bus option must inspect every member's copper and drills",
       )
-      await page.mouse.dblclick(650, 180)
+      await page.keyboard.press("Escape")
       await page.waitForSelector(activeXRay, { state: "detached" })
     }
     await enter()
