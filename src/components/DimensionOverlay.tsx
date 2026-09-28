@@ -101,6 +101,7 @@ export const DimensionOverlay = ({
   const [boundsStart, setBoundsStart] = useState({ x: 0, y: 0 })
   const [boundsEnd, setBoundsEnd] = useState({ x: 0, y: 0 })
   const mousePosRef = useRef({ x: 0, y: 0 })
+  const measurementPointerDownRef = useRef(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const container = containerRef.current!
   const containerBounds = container?.getBoundingClientRect()
@@ -399,6 +400,25 @@ export const DimensionOverlay = ({
       // biome-ignore lint/a11y/noNoninteractiveTabindex: <explanation>
       tabIndex={0}
       style={{ position: "relative", outline: "none" }}
+      onMouseDownCapture={() => {
+        measurementPointerDownRef.current = false
+      }}
+      onClickCapture={(event) => {
+        if (!measurementPointerDownRef.current) return
+        measurementPointerDownRef.current = false
+        event.stopPropagation()
+        containerRef.current?.focus()
+      }}
+      onContextMenuCapture={(event) => {
+        if (
+          !measureToolArmed &&
+          !dimensionToolVisible &&
+          !measurementPointerDownRef.current
+        )
+          return
+        event.preventDefault()
+        event.stopPropagation()
+      }}
       onMouseEnter={() => {
         if (focusOnHover && containerRef.current) {
           containerRef.current.focus()
@@ -433,6 +453,10 @@ export const DimensionOverlay = ({
         }
       }}
       onMouseDown={(e) => {
+        // Keep this through mouse-up: starting or dismissing a measurement
+        // changes the tool state before the resulting click reaches the toolbar.
+        measurementPointerDownRef.current =
+          measureToolArmed || dimensionToolVisible
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
