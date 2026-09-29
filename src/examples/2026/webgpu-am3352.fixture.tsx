@@ -22,7 +22,7 @@ export const WebGpuAm3352 = () => {
             setRenderer(event.target.value as "webgpu" | "canvas")
           }
         >
-          <option value="webgpu">WebGPU (automatic Canvas fallback)</option>
+          <option value="webgpu">WebGPU</option>
           <option value="canvas">Canvas</option>
         </select>
       </label>
