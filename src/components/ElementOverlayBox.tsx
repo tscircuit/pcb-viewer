@@ -19,6 +19,10 @@ const containerStyle = {
   fontFamily: "sans-serif",
   fontSize: 12,
   textShadow: "0 0 2px black",
+  // The inner label boxes carry their own z-index, but without one on the
+  // container they lose to the copper canvas planes (z-index <= topLayer).
+  // Every sibling overlay (dimension, error, groups) sets its own; do the same.
+  zIndex: zIndexMap.elementOverlay,
 } as const
 
 export const getTextForHighlightedPrimitive = (
