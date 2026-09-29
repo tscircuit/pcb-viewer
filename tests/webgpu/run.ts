@@ -41,7 +41,7 @@ try {
     { timeout: 30000 },
   )
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 1)
-  assert.equal(await page.locator("[data-webgpu-fallback]").count(), 0)
+  assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
   assert.deepEqual(
     await page.evaluate(() => window.gpuViewerTest.stats.errors),
     [],
@@ -64,7 +64,7 @@ try {
   const initial = await page.evaluate(() => window.gpuViewerTest.stats)
   assert.equal(initial.geometryUploads, 1)
   assert.deepEqual(initial.errors, [])
-  assert.equal(await page.locator("[data-webgpu-fallback]").count(), 0)
+  assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
   const metadata = await page.evaluate(() =>
     window.gpuViewerTest.metadataBenchmark(),
   )
@@ -220,15 +220,36 @@ try {
     beforeSwitch.lastView?.transform,
     "engine switching must preserve the camera",
   )
-  assert.equal(await page.locator("[data-webgpu-fallback]").count(), 0)
+  assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
 
   await open()
   await page.evaluate(() =>
     window.gpuViewerTest.mount(false, "webgpu", false, true),
   )
-  await page.waitForSelector("[data-webgpu-fallback]", { timeout: 30000 })
+  await page.waitForSelector("[data-webgpu-error]", { timeout: 30000 })
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 0)
-  assert(await page.locator(".pcb-layer-top").count())
+  assert.equal(await page.locator(".pcb-layer-top").count(), 0)
+  assert.equal(await page.locator('[data-pcb-renderer="webgpu"]').count(), 1)
+  assert.match(
+    await page.getByRole("alert").innerText(),
+    /Unsupported WebGPU geometry/,
+  )
+  const unsupportedStats = await page.evaluate(() => window.gpuViewerTest.stats)
+  assert.equal(unsupportedStats.created, unsupportedStats.terminated)
+  // A failure must still allow an explicit selection of Canvas.
+  await openEngineMenu()
+  assert.equal(
+    await page
+      .getByRole("menuitemradio", {
+        name: "WebGPU (experimental)",
+        exact: true,
+      })
+      .getAttribute("aria-checked"),
+    "true",
+  )
+  await page.getByRole("menuitemradio", { name: "Canvas", exact: true }).click()
+  await page.waitForSelector(".pcb-layer-top")
+  assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
   await open()
   await page.evaluate(() => {
     Object.defineProperty(navigator, "gpu", {
@@ -237,8 +258,57 @@ try {
     })
     return window.gpuViewerTest.mount()
   })
-  await page.waitForSelector("[data-webgpu-fallback]")
-  assert(await page.locator(".pcb-layer-top").count())
+  await page.waitForSelector("[data-webgpu-error]")
+  assert.equal(await page.locator(".pcb-layer-top").count(), 0)
+  assert.match(
+    await page.getByRole("alert").innerText(),
+    /WebGPU workers are unavailable/,
+  )
+  assert.equal(
+    (await page.evaluate(() => window.gpuViewerTest.stats)).created,
+    0,
+  )
+
+  for (const scenario of [
+    "worker-error",
+    "message-error",
+    "device-lost",
+    "timeout",
+  ]) {
+    await page.goto(
+      `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=${scenario}`,
+    )
+    await page.waitForSelector("[data-webgpu-error]", { timeout: 30000 })
+    assert.equal(await page.locator(".pcb-layer-top").count(), 0)
+    assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 0)
+    assert.equal(await page.locator('[data-pcb-renderer="webgpu"]').count(), 1)
+    const failedStats = await page.evaluate(() => window.gpuViewerTest.stats)
+    assert.equal(failedStats.created, failedStats.terminated)
+  }
+  await page.goto(
+    `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=xray-unsupported`,
+  )
+  await page.waitForFunction(() => window.gpuViewerTest.stats.frames > 0)
+  const beforeXRay = await page.evaluate(
+    () => window.gpuViewerTest.stats.created,
+  )
+  await page.mouse.click(250, 300)
+  await page.getByRole("menuitem", { name: "X-Ray CLK", exact: true }).click()
+  await page.getByRole("status").waitFor()
+  assert.match(
+    await page.getByRole("status").innerText(),
+    /X-Ray is unavailable/,
+  )
+  assert.equal(await page.locator(".pcb-layer-top").count(), 0)
+  assert(await page.locator(".pcb-webgpu-canvas").isVisible())
+  assert.equal(
+    (await page.evaluate(() => window.gpuViewerTest.stats)).created,
+    beforeXRay,
+  )
+  await page.keyboard.press("Escape")
+  await page.getByRole("status").waitFor({ state: "detached" })
+  assert(await page.locator(".pcb-webgpu-canvas").isVisible())
+
   await open()
   await page.evaluate(() => window.gpuViewerTest.mount(false, "canvas"))
   await page.waitForSelector(".pcb-layer-top")

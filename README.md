@@ -98,27 +98,30 @@ continuously. The main thread handles React, interaction, and view messages.
 There is no bitmap zoom-settle delay or pool of raster workers.
 
 Pass `renderer="canvas"` to explicitly use the existing Canvas renderer. WebGPU
-also falls back to Canvas when WebGPU/OffscreenCanvas is unavailable, initialization
-fails, the GPU device is lost, or the scene includes unsupported geometry (such
-as dimension annotations or interpolated trace routes). The initial GPU geometry compile
+stays selected when WebGPU/OffscreenCanvas is unavailable, initialization fails,
+the GPU device is lost, or the scene includes unsupported geometry (such as
+dimension annotations or interpolated trace routes). These failures display an
+error in the viewer and release the worker; they never start the Canvas renderer.
+If the installed WebGPU renderer does not support X-Ray, the viewer displays a
+notice and keeps the GPU view visible. The initial GPU geometry compile
 still takes time on large boards, but runs in the worker. Curves use fixed
 triangle tessellation and can show facets at extreme zoom.
 
 Right-click the board and choose **Rendering Engine → Canvas** or
 **WebGPU (experimental)** to switch without resetting pan, zoom, or layer visibility.
 The `renderer` prop sets the initial selection; changing that prop updates the selection.
-Selecting WebGPU still permits automatic Canvas fallback on unsupported devices or scenes.
+Switching to Canvas always requires an explicit engine selection.
 
 Run `bun run test:webgpu` after `bunx playwright install chromium` to test the built
 viewer bundle, AM3352 wheel zoom, resize, StrictMode cleanup, context-menu switching,
-and fallbacks. The Cosmos `WebGpuAm3352` fixture also switches between backends.
+and failure handling. The Cosmos `WebGpuAm3352` fixture also switches between backends.
 
 The WebGPU integration is still experimental. The complete imported Canvas suite
 currently exposes substantial non-text parity gaps, including soldermask, trace
 clipping, and keepouts. See the renderer's
 [full parity report](https://github.com/tscircuit/circuit-json-webgpu/blob/main/tests/parity/latest-report.json).
 The integration PR remains draft until these are resolved; existing diagnostics
-and Canvas fallback do not yet detect every visual mismatch.
+do not yet detect every visual mismatch.
 
 The WebGPU renderer is installed as a bundled devDependency from
 `https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.3.tgz`.

@@ -24,7 +24,7 @@ type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
   /** Initial engine; users can switch via the context menu. Prop changes reset it.
-   * WebGPU runs in a worker and falls back to Canvas when unavailable. */
+   * WebGPU runs in a worker and reports failures without changing engines. */
   renderer?: "webgpu" | "canvas"
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]

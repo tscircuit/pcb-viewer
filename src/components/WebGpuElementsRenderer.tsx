@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
-import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 
 type Props = {
   elements: AnyCircuitElement[]
@@ -25,7 +24,7 @@ export function WebGpuElementsRenderer(props: Props) {
   const holder = useRef<HTMLDivElement>(null)
   const workerRef = useRef<Worker | undefined>(undefined)
   const ready = useRef(false)
-  const [supportsXRayNet, setSupportsXRayNet] = useState(false)
+  const [supportsXRayNet, setSupportsXRayNet] = useState<boolean | null>(null)
   const [failure, setFailure] = useState<string>()
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
@@ -114,17 +113,20 @@ export function WebGpuElementsRenderer(props: Props) {
     canvas.style.cssText =
       "position:absolute;inset:0;width:100%;height:100%;pointer-events:none"
     holder.current?.append(canvas)
-    const fallback = (message: string) => {
+    const fail = (message: string) => {
       if (disposed || failed) return
       failed = true
+      clearTimeout(timeout)
       canvas.remove()
       ready.current = false
       worker?.terminate()
+      worker = undefined
       workerRef.current = undefined
+      if (holder.current) holder.current.dataset.xRayNetActive = "false"
       setFailure(message)
     }
     const timeout = setTimeout(
-      () => fallback("WebGPU worker startup timed out"),
+      () => fail("WebGPU worker startup timed out"),
       15000,
     )
     void (async () => {
@@ -147,8 +149,7 @@ export function WebGpuElementsRenderer(props: Props) {
             if (holder.current)
               holder.current.dataset.xRayNetActive = String(data.xRayActive)
           } else if (data.type === "error") {
-            clearTimeout(timeout)
-            fallback(data.message)
+            fail(data.message)
           } else if (data.type === "ready") {
             clearTimeout(timeout)
             setSupportsXRayNet(data.supportsXRayNet)
@@ -162,21 +163,18 @@ export function WebGpuElementsRenderer(props: Props) {
         }
         worker.onerror = (event) => {
           event.preventDefault()
-          clearTimeout(timeout)
-          fallback(event.message || "WebGPU worker failed")
+          fail(event.message || "WebGPU worker failed")
         }
-        worker.onmessageerror = () => {
-          clearTimeout(timeout)
-          fallback("WebGPU worker communication failed")
-        }
+        worker.addEventListener("messageerror", () => {
+          fail("WebGPU worker communication failed")
+        })
         const offscreen = canvas.transferControlToOffscreen()
         worker.postMessage(
           { type: "init", canvas: offscreen } satisfies WebGpuRequest,
           [offscreen],
         )
       } catch (error) {
-        clearTimeout(timeout)
-        fallback(String(error))
+        fail(String(error))
       }
     })()
     return () => {
@@ -200,52 +198,52 @@ export function WebGpuElementsRenderer(props: Props) {
       workerRef.current?.postMessage(viewRef.current)
   }, [transform, width, height, options])
 
-  const fallbackElements = useMemo(
-    () =>
-      showCopperPours
-        ? elements
-        : elements.filter((e) => e.type !== "pcb_copper_pour"),
-    [elements, showCopperPours],
+  const xRayUnavailable = Boolean(
+    props.xRayElements && supportsXRayNet === false,
   )
-  if (failure)
-    return (
-      <div data-pcb-renderer="canvas" data-webgpu-fallback={failure}>
-        <CanvasPrimitiveRenderer {...props} elements={fallbackElements} />
-      </div>
-    )
-  // Keep the worker mounted so exiting X-Ray restores older GPU versions without
-  // uploading geometry again. New versions render the net natively in the worker.
-  const useXRayFallback = Boolean(props.xRayElements && !supportsXRayNet)
   return (
-    <>
-      {useXRayFallback && (
-        <div data-x-ray-fallback="unsupported-webgpu-version">
-          <CanvasPrimitiveRenderer {...props} elements={fallbackElements} />
+    <div
+      ref={holder}
+      data-pcb-renderer="webgpu"
+      data-webgpu-error={failure}
+      style={{
+        width,
+        height,
+        background: "black",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {failure ? (
+        <div
+          role="alert"
+          style={{ padding: 16, color: "white", position: "relative" }}
+        >
+          <strong>WebGPU rendering failed</strong>
+          <div>{failure}</div>
         </div>
+      ) : (
+        <>
+          <SuperGrid
+            textColor="rgba(0,255,0,0.8)"
+            majorColor="rgba(0,255,0,0.4)"
+            minorColor="rgba(0,255,0,0.2)"
+            screenSpaceCellSize={200}
+            width={width}
+            height={height}
+            transform={transform!}
+            stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
+          />
+          {xRayUnavailable && (
+            <div
+              role="status"
+              style={{ padding: 16, color: "white", position: "relative" }}
+            >
+              X-Ray is unavailable in this WebGPU renderer.
+            </div>
+          )}
+        </>
       )}
-      <div
-        ref={holder}
-        data-pcb-renderer="webgpu"
-        style={{
-          width,
-          height,
-          background: "black",
-          position: "relative",
-          overflow: "hidden",
-          display: useXRayFallback ? "none" : undefined,
-        }}
-      >
-        <SuperGrid
-          textColor="rgba(0,255,0,0.8)"
-          majorColor="rgba(0,255,0,0.4)"
-          minorColor="rgba(0,255,0,0.2)"
-          screenSpaceCellSize={200}
-          width={width}
-          height={height}
-          transform={transform!}
-          stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
-        />
-      </div>
-    </>
+    </div>
   )
 }
