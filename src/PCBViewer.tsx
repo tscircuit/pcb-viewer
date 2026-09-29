@@ -17,6 +17,7 @@ import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
+import { undoLastEditEvent } from "lib/undo-last-edit-event"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -186,6 +187,41 @@ export const PCBViewer = ({
     setEditEvents(newEditEvents)
     onEditEventsChanged?.(newEditEvents)
   }
+
+  const editEventsRef = useRef(editEvents)
+  editEventsRef.current = editEvents
+  const onEditEventsChangedRef = useRef(onEditEventsChanged)
+  onEditEventsChangedRef.current = onEditEventsChanged
+  const allowEditingRef = useRef(allowEditing)
+  allowEditingRef.current = allowEditing
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!allowEditingRef.current) return
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+      const isUndo =
+        (event.ctrlKey || event.metaKey) &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "z"
+      if (!isUndo) return
+      const current = editEventsRef.current
+      const next = undoLastEditEvent(current)
+      if (next.length === current.length) return
+      event.preventDefault()
+      setEditEvents(next)
+      onEditEventsChangedRef.current?.(next)
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [])
 
   const mergedInitialState = useMemo(
     () => ({
