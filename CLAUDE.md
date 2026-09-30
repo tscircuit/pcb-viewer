@@ -5,8 +5,8 @@
 - Format code: `npm run format` (Biome formatter)
 - Check formatting: `npm run format:check`
 - Type check: `npx tsc --noEmit`
-- Run Storybook: `npm run storybook` or `npm start`
-- Build Storybook: `npm run build-storybook`
+- Run Cosmos (fixtures / dev): `npm start` or `npm run cosmos`
+- Export Cosmos fixtures: `npm run cosmos-export`
 - Build and publish to yalc: `npm run yalc`
 
 ## Code Style Guidelines
