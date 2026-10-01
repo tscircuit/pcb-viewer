@@ -32,6 +32,7 @@ test("the release bundle leaves React and React DOM to the consuming app", async
         /node_modules\/react(?:-dom)?\//.test(source),
       ),
     ).toEqual([])
+    expect(bundle).not.toContain('from "@tscircuit/core"')
   } finally {
     await rm(outDir, { recursive: true, force: true })
   }
