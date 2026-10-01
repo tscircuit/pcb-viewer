@@ -1,6 +1,5 @@
 import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
 import { RenderingEngineContext } from "./components/RenderingEngineContext"
-import { applyEditEvents } from "@tscircuit/core"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
@@ -17,6 +16,7 @@ import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
+import { applyEditEvents } from "lib/apply-edit-events"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
