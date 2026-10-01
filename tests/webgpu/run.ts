@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
-import { createServer } from "vite"
-import { chromium } from "playwright"
+import { mkdir, writeFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
-import { writeFile, mkdir } from "node:fs/promises"
+import { type Browser, chromium } from "playwright"
+import { createServer } from "vite"
 const root = fileURLToPath(new URL("../../", import.meta.url))
 const server = await createServer({
   root,
@@ -14,7 +14,7 @@ const server = await createServer({
   logLevel: "error",
 })
 await server.listen()
-let browser
+let browser: Browser | undefined
 try {
   browser = await chromium.launch({
     headless: true,
@@ -34,7 +34,7 @@ try {
     await page.waitForFunction(() => window.gpuViewerTest)
   }
   await open()
-  await page.evaluate(() => window.gpuViewerTest.mount(false, "webgpu", true))
+  await page.evaluate(() => window.gpuViewerTest.mount({ strict: true }))
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.frames > 0,
     null,
@@ -55,7 +55,7 @@ try {
   )
 
   await open()
-  await page.evaluate(() => window.gpuViewerTest.mount(true))
+  await page.evaluate(() => window.gpuViewerTest.mount({ large: true }))
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.frames > 0,
     null,
@@ -70,9 +70,9 @@ try {
   )
   await page.mouse.move(400, 300)
   const navigation = await page.evaluate(async () => {
-    const target = document.querySelector(".pcb-webgpu-canvas")!,
-      samples = [],
-      startFrames = window.gpuViewerTest.stats.frames
+    const target = document.querySelector(".pcb-webgpu-canvas")!
+    const samples = []
+    const startFrames = window.gpuViewerTest.stats.frames
     let previous = performance.now()
     for (let i = 0; i < 60; i++) {
       await new Promise(requestAnimationFrame)
@@ -223,8 +223,22 @@ try {
   assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
 
   await open()
+  const beforeDimension = await page.evaluate(
+    () => window.gpuViewerTest.stats.frames,
+  )
   await page.evaluate(() =>
-    window.gpuViewerTest.mount(false, "webgpu", false, true),
+    window.gpuViewerTest.mount({ geometry: "drv8307evm-dimension" }),
+  )
+  await page.waitForFunction(
+    (frames) => window.gpuViewerTest.stats.frames > frames,
+    beforeDimension,
+  )
+  assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
+  assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 1)
+
+  await open()
+  await page.evaluate(() =>
+    window.gpuViewerTest.mount({ geometry: "unsupported" }),
   )
   await page.waitForSelector("[data-webgpu-error]", { timeout: 30000 })
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 0)
@@ -310,7 +324,7 @@ try {
   assert(await page.locator(".pcb-webgpu-canvas").isVisible())
 
   await open()
-  await page.evaluate(() => window.gpuViewerTest.mount(false, "canvas"))
+  await page.evaluate(() => window.gpuViewerTest.mount({ renderer: "canvas" }))
   await page.waitForSelector(".pcb-layer-top")
   assert.equal(
     (await page.evaluate(() => window.gpuViewerTest.stats)).created,
