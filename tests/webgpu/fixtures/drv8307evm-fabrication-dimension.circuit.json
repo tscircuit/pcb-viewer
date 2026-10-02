@@ -1,0 +1,26 @@
+[
+  {
+    "type": "pcb_board",
+    "pcb_board_id": "drv8307evm-board",
+    "center": { "x": 30.2641, "y": 27.1399 },
+    "width": 30,
+    "height": 10,
+    "num_layers": 2,
+    "thickness": 1.6
+  },
+  {
+    "type": "pcb_fabrication_note_dimension",
+    "pcb_fabrication_note_dimension_id": "drv8307evm-dimension-1000mil",
+    "pcb_component_id": "drv8307evm-board-graphics",
+    "layer": "top",
+    "from": { "x": 17.5641, "y": 27.1399 },
+    "to": { "x": 42.9641, "y": 27.1399 },
+    "text": "1000.00 mil",
+    "offset_distance": 0,
+    "offset_direction": { "x": 0, "y": 1 },
+    "arrow_size": 1.524,
+    "font_size": 1.524,
+    "font": "tscircuit2024",
+    "color": "#ec4899"
+  }
+]

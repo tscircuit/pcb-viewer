@@ -73,63 +73,48 @@ window.Worker = class extends OriginalWorker {
 }
 let elements: AnyCircuitElement[]
 type MountOptions = {
-  geometry?: "basic" | "drv8307evm-dimension" | "unsupported"
+  circuitJsonUrl?: string
   large?: boolean
   renderer?: "webgpu" | "canvas"
   strict?: boolean
+  unsupported?: boolean
 }
 
 async function mount(options: MountOptions = {}) {
   const {
-    geometry = "basic",
+    circuitJsonUrl,
     large = false,
     renderer = "webgpu",
     strict = false,
+    unsupported = false,
   } = options
-  elements = large
-    ? await (
-        await fetch("/src/examples/2026/repros/am3352-dev-board/circuit.json")
-      ).json()
-    : ([
-        {
-          type: "pcb_board",
-          pcb_board_id: "board",
-          center: { x: 0, y: 0 },
-          width: 40,
-          height: 30,
-          num_layers: 2,
-          thickness: 1.6,
-        },
-        {
-          type: "pcb_smtpad",
-          pcb_smtpad_id: "pad",
-          shape: "rect",
-          layer: "top",
-          x: 0,
-          y: 0,
-          width: 5,
-          height: 4,
-        },
-        ...(geometry === "drv8307evm-dimension"
-          ? [
-              {
-                type: "pcb_fabrication_note_dimension",
-                pcb_fabrication_note_dimension_id:
-                  "drv8307evm-dimension-1000mil",
-                pcb_component_id: "drv8307evm-board-graphics",
-                layer: "top",
-                from: { x: 17.5641, y: 27.1399 },
-                to: { x: 42.9641, y: 27.1399 },
-                text: "1000.00 mil",
-                offset_distance: 0,
-                offset_direction: { x: 0, y: 1 },
-                arrow_size: 1.524,
-                font_size: 1.524,
-                font: "tscircuit2024",
-                color: "#ec4899",
-              },
-            ]
-          : geometry === "unsupported"
+  elements = circuitJsonUrl
+    ? await (await fetch(circuitJsonUrl)).json()
+    : large
+      ? await (
+          await fetch("/src/examples/2026/repros/am3352-dev-board/circuit.json")
+        ).json()
+      : ([
+          {
+            type: "pcb_board",
+            pcb_board_id: "board",
+            center: { x: 0, y: 0 },
+            width: 40,
+            height: 30,
+            num_layers: 2,
+            thickness: 1.6,
+          },
+          {
+            type: "pcb_smtpad",
+            pcb_smtpad_id: "pad",
+            shape: "rect",
+            layer: "top",
+            x: 0,
+            y: 0,
+            width: 5,
+            height: 4,
+          },
+          ...(unsupported
             ? [
                 {
                   type: "pcb_future_geometry",
@@ -137,7 +122,7 @@ async function mount(options: MountOptions = {}) {
                 },
               ]
             : []),
-      ] as AnyCircuitElement[])
+        ] as AnyCircuitElement[])
   if (scenario === "xray-unsupported") elements = xRayScene
   const view = (
     <PCBViewer
@@ -185,7 +170,7 @@ if (scenario === "unavailable")
   })
 if (scenario) {
   void mount({
-    geometry: scenario === "unsupported" ? "unsupported" : "basic",
     renderer: scenario === "canvas" ? "canvas" : "webgpu",
+    unsupported: scenario === "unsupported",
   })
 }

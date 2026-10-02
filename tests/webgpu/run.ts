@@ -227,7 +227,10 @@ try {
     () => window.gpuViewerTest.stats.frames,
   )
   await page.evaluate(() =>
-    window.gpuViewerTest.mount({ geometry: "drv8307evm-dimension" }),
+    window.gpuViewerTest.mount({
+      circuitJsonUrl:
+        "/tests/webgpu/fixtures/drv8307evm-fabrication-dimension.circuit.json",
+    }),
   )
   await page.waitForFunction(
     (frames) => window.gpuViewerTest.stats.frames > frames,
@@ -237,9 +240,7 @@ try {
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 1)
 
   await open()
-  await page.evaluate(() =>
-    window.gpuViewerTest.mount({ geometry: "unsupported" }),
-  )
+  await page.evaluate(() => window.gpuViewerTest.mount({ unsupported: true }))
   await page.waitForSelector("[data-webgpu-error]", { timeout: 30000 })
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 0)
   assert.equal(await page.locator(".pcb-layer-top").count(), 0)
