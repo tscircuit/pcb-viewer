@@ -61,6 +61,7 @@ export interface CanvasElementsRendererProps {
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
   onContextMenuOpenChange?: (open: boolean) => void
+  onRenderComplete?: () => void
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
@@ -402,6 +403,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           width={props.width}
                           height={props.height}
                           grid={props.grid}
+                          onRenderComplete={props.onRenderComplete}
                         />
                       ) : (
                         <WebGpuElementsRenderer
@@ -412,6 +414,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           width={props.width}
                           height={props.height}
                           grid={props.grid}
+                          onRenderComplete={props.onRenderComplete}
                         />
                       )}
                     </WarningGraphicsOverlay>
