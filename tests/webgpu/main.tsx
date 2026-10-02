@@ -15,6 +15,7 @@ const stats = {
   frames: 0,
   geometryUploads: 0,
   compileMs: 0,
+  renderCompletions: 0,
   errors: [] as string[],
   lastView: null as { transform: Record<string, number> } | null,
 }
@@ -130,6 +131,7 @@ async function mount(options: MountOptions = {}) {
       renderer={renderer}
       allowEditing={false}
       height={600}
+      onRenderComplete={() => stats.renderCompletions++}
     />
   )
   root.render(strict ? <StrictMode>{view}</StrictMode> : view)

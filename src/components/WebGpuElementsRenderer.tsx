@@ -16,6 +16,7 @@ type Props = {
   width?: number
   height?: number
   grid?: GridConfig
+  onRenderComplete?: () => void
 }
 
 /** Retains a GPU canvas in a worker; the UI thread sends scene/camera changes only. */
@@ -23,6 +24,8 @@ export function WebGpuElementsRenderer(props: Props) {
   const { elements, primitives, transform, width = 500, height = 500 } = props
   const holder = useRef<HTMLDivElement>(null)
   const workerRef = useRef<Worker | undefined>(undefined)
+  const onRenderCompleteRef = useRef(props.onRenderComplete)
+  onRenderCompleteRef.current = props.onRenderComplete
   const ready = useRef(false)
   const [supportsXRayNet, setSupportsXRayNet] = useState<boolean | null>(null)
   const [failure, setFailure] = useState<string>()
@@ -148,6 +151,7 @@ export function WebGpuElementsRenderer(props: Props) {
           if (data.type === "rendered") {
             if (holder.current)
               holder.current.dataset.xRayNetActive = String(data.xRayActive)
+            onRenderCompleteRef.current?.()
           } else if (data.type === "error") {
             fail(data.message)
           } else if (data.type === "ready") {

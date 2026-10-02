@@ -42,6 +42,7 @@ interface Props {
   grid?: GridConfig
   width?: number
   height?: number
+  onRenderComplete?: () => void
 }
 
 export const CanvasPrimitiveRenderer = ({
@@ -52,9 +53,12 @@ export const CanvasPrimitiveRenderer = ({
   grid,
   width = 500,
   height = 500,
+  onRenderComplete,
 }: Props) => {
   const xRayCanvasRef = useRef<HTMLCanvasElement>(null)
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
+  const onRenderCompleteRef = useRef(onRenderComplete)
+  onRenderCompleteRef.current = onRenderComplete
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const isShowingCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
@@ -403,6 +407,7 @@ export const CanvasPrimitiveRenderer = ({
         { layers: ["drill"], drawSoldermask: false },
       )
     }
+    onRenderCompleteRef.current?.()
   }, [
     primitives,
     elements,
