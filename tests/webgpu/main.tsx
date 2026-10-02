@@ -6,6 +6,7 @@ import {
   convertElementToPrimitives,
   createPrimitiveMetadataIndex,
 } from "../../src/lib/convert-element-to-primitive"
+import type { WebGpuResponse } from "../../src/lib/webgpu/protocol"
 import { scene as xRayScene } from "../x-ray-net/scene"
 const root = createRoot(document.getElementById("root")!)
 const stats = {
@@ -16,16 +17,35 @@ const stats = {
   geometryUploads: 0,
   compileMs: 0,
   renderCompletions: 0,
+  latestSubmittedSceneGeneration: 0,
+  heldSceneGenerations: [] as number[],
   errors: [] as string[],
   lastView: null as { transform: Record<string, number> } | null,
 }
 const scenario = new URLSearchParams(location.search).get("scenario")
 const OriginalWorker = window.Worker
+let activeWorker: Worker | undefined
+let holdRenderedResponses = false
+let replayingRenderedResponse = false
+const heldRenderedResponses: Extract<WebGpuResponse, { type: "rendered" }>[] =
+  []
 window.Worker = class extends OriginalWorker {
   constructor(...args: ConstructorParameters<typeof Worker>) {
     super(...args)
+    activeWorker = this
     stats.created++
-    this.addEventListener("message", ({ data }) => {
+    this.addEventListener("message", (event) => {
+      const { data } = event
+      if (
+        data.type === "rendered" &&
+        holdRenderedResponses &&
+        !replayingRenderedResponse
+      ) {
+        event.stopImmediatePropagation()
+        heldRenderedResponses.push(data)
+        stats.heldSceneGenerations.push(data.sceneGeneration)
+        return
+      }
       if (data.type === "ready") {
         stats.ready++
         if (scenario === "xray-unsupported") data.supportsXRayNet = false
@@ -50,6 +70,8 @@ window.Worker = class extends OriginalWorker {
     message: any,
     transfer?: Transferable[] | StructuredSerializeOptions,
   ) {
+    if (message.type === "scene")
+      stats.latestSubmittedSceneGeneration = message.sceneGeneration
     if (message.type === "init") {
       if (scenario === "timeout") return
       if (scenario === "worker-error" || scenario === "message-error") {
@@ -149,6 +171,23 @@ Object.assign(window, {
     stats,
     mount,
     metadataBenchmark,
+    holdRenderedResponses: () => {
+      holdRenderedResponses = true
+    },
+    releaseRenderedResponse: (sceneGeneration: number) => {
+      const responseIndex = heldRenderedResponses.findIndex(
+        (response) => response.sceneGeneration === sceneGeneration,
+      )
+      if (responseIndex === -1 || !activeWorker) return
+      const [response] = heldRenderedResponses.splice(responseIndex, 1)
+      const statsIndex = stats.heldSceneGenerations.indexOf(sceneGeneration)
+      if (statsIndex !== -1) stats.heldSceneGenerations.splice(statsIndex, 1)
+      replayingRenderedResponse = true
+      activeWorker.dispatchEvent(
+        new MessageEvent("message", { data: response }),
+      )
+      replayingRenderedResponse = false
+    },
     unmount: () => root.unmount(),
   },
 })
@@ -159,6 +198,8 @@ declare global {
       stats: typeof stats
       mount: typeof mount
       metadataBenchmark: typeof metadataBenchmark
+      holdRenderedResponses(): void
+      releaseRenderedResponse(sceneGeneration: number): void
       unmount(): void
     }
   }

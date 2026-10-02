@@ -11,6 +11,7 @@ const supportsXRayNet =
 let drawer: CircuitToWebGpuDrawer | undefined
 let canvas: OffscreenCanvas
 let latestView: Extract<WebGpuRequest, { type: "view" }> | undefined
+let sceneGeneration = 0
 let scheduled = false,
   failed = false
 const fail = (error: unknown) => {
@@ -30,6 +31,7 @@ function schedule() {
     if (failed || !drawer || !latestView) return
     try {
       const view = latestView
+      const renderedSceneGeneration = sceneGeneration
       if (canvas.width !== view.width) canvas.width = view.width
       if (canvas.height !== view.height) canvas.height = view.height
       drawer.render({ ...view.options, transform: view.transform })
@@ -40,6 +42,7 @@ function schedule() {
         geometryUploads: drawer.stats.geometryUploads,
         frames: drawer.stats.frames,
         compileMs: drawer.stats.compileMs,
+        sceneGeneration: renderedSceneGeneration,
       })
     } catch (error) {
       fail(error)
@@ -69,6 +72,7 @@ scope.onmessage = async ({ data }) => {
         throw new Error(
           `Unsupported WebGPU geometry: ${drawer!.diagnostics.map((d) => `${d.type}: ${d.message}`).join("; ")}`,
         )
+      sceneGeneration = data.sceneGeneration
       schedule()
     } else if (data.type === "view") {
       latestView = data
