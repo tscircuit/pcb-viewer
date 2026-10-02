@@ -25,7 +25,7 @@
         "@semantic-release/release-notes-generator": "^10.0.3",
         "@swc/core": "^1.4.12",
         "@tscircuit/circuit-json-util": "^0.0.116",
-        "@tscircuit/circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#20560f2946213b4dcb590efd06495488ce898512",
+        "@tscircuit/circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#6719bfd89f7e6d75e571a77ca175547f3f180010",
         "@tscircuit/core": "^0.0.1701",
         "@tscircuit/eagle-xml-converter": "^1.0.0",
         "@types/bun": "latest",
@@ -422,7 +422,7 @@
 
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.116", "", { "dependencies": { "@flatten-js/core": "^1.6.14", "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "3" } }, "sha512-umIO/hRQlgcU4GpKTbmv6D87RUJ8yNeSjJrTeUP1t2sUZXJXyJHI/7iL4lAAsewY8md1otGUZYBZNG7xfG2cXg=="],
 
-    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@github:tscircuit/circuit-json-webgpu#20560f2", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "earcut": "^3.0.2" }, "peerDependencies": { "circuit-json": ">=0.0.469" } }, "tscircuit-circuit-json-webgpu-20560f2"],
+    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@github:tscircuit/circuit-json-webgpu#6719bfd", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "earcut": "^3.0.2" }, "peerDependencies": { "circuit-json": ">=0.0.469" } }, "tscircuit-circuit-json-webgpu-6719bfd"],
 
     "@tscircuit/cli": ["@tscircuit/cli@0.1.1950", "", { "peerDependencies": { "circuit-json": "^0.0.464", "tscircuit": "*" }, "bin": { "tscircuit-cli": "cli/entrypoint.js" } }, "sha512-NWCUQUv1Ce+EtqhGvsyqUrfdtcAMyJoUhj5JJo/HOlLug/1MWU2sQI/5dciWOe3LA86iRuvzNLlrbyap+ikUmQ=="],
 
