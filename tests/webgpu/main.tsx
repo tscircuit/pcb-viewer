@@ -1,12 +1,12 @@
-import { createRoot } from "react-dom/client"
-import { StrictMode } from "react"
-import { PCBViewer } from "../../src/index"
 import type { AnyCircuitElement } from "circuit-json"
-import { scene as xRayScene } from "../x-ray-net/scene"
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { PCBViewer } from "../../src/index"
 import {
   convertElementToPrimitives,
   createPrimitiveMetadataIndex,
 } from "../../src/lib/convert-element-to-primitive"
+import { scene as xRayScene } from "../x-ray-net/scene"
 const root = createRoot(document.getElementById("root")!)
 const stats = {
   created: 0,
@@ -72,52 +72,57 @@ window.Worker = class extends OriginalWorker {
   }
 }
 let elements: AnyCircuitElement[]
-async function mount(
-  large = false,
-  renderer: "webgpu" | "canvas" = "webgpu",
-  strict = false,
-  unsupported = false,
-) {
-  elements = large
-    ? await (
-        await fetch("/src/examples/2026/repros/am3352-dev-board/circuit.json")
-      ).json()
-    : ([
-        {
-          type: "pcb_board",
-          pcb_board_id: "board",
-          center: { x: 0, y: 0 },
-          width: 40,
-          height: 30,
-          num_layers: 2,
-          thickness: 1.6,
-        },
-        {
-          type: "pcb_smtpad",
-          pcb_smtpad_id: "pad",
-          shape: "rect",
-          layer: "top",
-          x: 0,
-          y: 0,
-          width: 5,
-          height: 4,
-        },
-        ...(unsupported
-          ? [
-              {
-                type: "pcb_note_dimension",
-                pcb_note_dimension_id: "unsupported-dimension",
-                text: "2",
-                layer: "top",
-                from: { x: 8, y: 0 },
-                to: { x: 10, y: 0 },
-                arrow_size: 0.3,
-                font_size: 2,
-                font: "tscircuit2024",
-              },
-            ]
-          : []),
-      ] as AnyCircuitElement[])
+type MountOptions = {
+  circuitJsonUrl?: string
+  large?: boolean
+  renderer?: "webgpu" | "canvas"
+  strict?: boolean
+  unsupported?: boolean
+}
+
+async function mount(options: MountOptions = {}) {
+  const {
+    circuitJsonUrl,
+    large = false,
+    renderer = "webgpu",
+    strict = false,
+    unsupported = false,
+  } = options
+  elements = circuitJsonUrl
+    ? await (await fetch(circuitJsonUrl)).json()
+    : large
+      ? await (
+          await fetch("/src/examples/2026/repros/am3352-dev-board/circuit.json")
+        ).json()
+      : ([
+          {
+            type: "pcb_board",
+            pcb_board_id: "board",
+            center: { x: 0, y: 0 },
+            width: 40,
+            height: 30,
+            num_layers: 2,
+            thickness: 1.6,
+          },
+          {
+            type: "pcb_smtpad",
+            pcb_smtpad_id: "pad",
+            shape: "rect",
+            layer: "top",
+            x: 0,
+            y: 0,
+            width: 5,
+            height: 4,
+          },
+          ...(unsupported
+            ? [
+                {
+                  type: "pcb_future_geometry",
+                  pcb_future_geometry_id: "unsupported-geometry",
+                },
+              ]
+            : []),
+        ] as AnyCircuitElement[])
   if (scenario === "xray-unsupported") elements = xRayScene
   const view = (
     <PCBViewer
@@ -130,8 +135,8 @@ async function mount(
   root.render(strict ? <StrictMode>{view}</StrictMode> : view)
 }
 function metadataBenchmark() {
-  const start = performance.now(),
-    index = createPrimitiveMetadataIndex(elements)
+  const start = performance.now()
+  const index = createPrimitiveMetadataIndex(elements)
   const primitives = elements.flatMap((e) =>
     convertElementToPrimitives(e, elements, index),
   )
@@ -163,10 +168,9 @@ if (scenario === "unavailable")
     configurable: true,
     value: undefined,
   })
-if (scenario)
-  void mount(
-    false,
-    scenario === "canvas" ? "canvas" : "webgpu",
-    false,
-    scenario === "unsupported",
-  )
+if (scenario) {
+  void mount({
+    renderer: scenario === "canvas" ? "canvas" : "webgpu",
+    unsupported: scenario === "unsupported",
+  })
+}
