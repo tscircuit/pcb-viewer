@@ -17,34 +17,45 @@ export function addInteractionMetadataToPrimitives({
     if (primitive?.layer === "drill") {
       newPrimitive.is_in_highlighted_net = false
       newPrimitive.is_mouse_over = false
-    } else if (
-      drawingObjectIdsWithMouseOver.has(primitive._pcb_drawing_object_id)
-    ) {
-      newPrimitive.is_mouse_over = true
-    } else if (
-      primitiveElement &&
-      (("pcb_trace_id" in primitiveElement &&
-        primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_trace_id!)) ||
-        ("pcb_port_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(
-            primitiveElement.pcb_port_id!,
-          )) ||
-        ("pcb_via_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_via_id!)) ||
-        ("pcb_component_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(
-            primitiveElement.pcb_component_id!,
-          )) ||
-        (parentComponent &&
-          "pcb_component_id" in parentComponent &&
-          primitiveIdsInMousedOverNet.includes(
-            parentComponent.pcb_component_id!,
-          )))
-    ) {
-      newPrimitive.is_in_highlighted_net = true
     } else {
-      newPrimitive.is_in_highlighted_net = false
-      newPrimitive.is_mouse_over = false
+      if (drawingObjectIdsWithMouseOver.has(primitive._pcb_drawing_object_id)) {
+        newPrimitive.is_mouse_over = true
+      } else {
+        newPrimitive.is_mouse_over = false
+      }
+
+      if (
+        primitiveElement &&
+        (("pcb_trace_id" in primitiveElement &&
+          primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_trace_id!)) ||
+          ("pcb_port_id" in primitiveElement &&
+            primitiveIdsInMousedOverNet.includes(
+              primitiveElement.pcb_port_id!,
+            )) ||
+          ("pcb_via_id" in primitiveElement &&
+            primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_via_id!)) ||
+          ("pcb_component_id" in primitiveElement &&
+            primitiveIdsInMousedOverNet.includes(
+              primitiveElement.pcb_component_id!,
+            )) ||
+          ("pcb_plated_hole_id" in primitiveElement &&
+            primitiveIdsInMousedOverNet.includes(
+              primitiveElement.pcb_plated_hole_id!,
+            )) ||
+          ("pcb_smtpad_id" in primitiveElement &&
+            primitiveIdsInMousedOverNet.includes(
+              primitiveElement.pcb_smtpad_id!,
+            )) ||
+          (parentComponent &&
+            "pcb_component_id" in parentComponent &&
+            primitiveIdsInMousedOverNet.includes(
+              parentComponent.pcb_component_id!,
+            )))
+      ) {
+        newPrimitive.is_in_highlighted_net = true
+      } else {
+        newPrimitive.is_in_highlighted_net = false
+      }
     }
     newPrimitives.push(newPrimitive)
   }
