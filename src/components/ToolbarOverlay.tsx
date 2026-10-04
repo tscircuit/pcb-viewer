@@ -427,6 +427,11 @@ export const ToolbarOverlay = ({
   return (
     <div
       ref={hotkeyBoundaryRef}
+      onPointerDownCapture={(event) => {
+        if (!(event.target as HTMLElement).closest("[data-view-menu]")) {
+          setViewMenuOpen(false)
+        }
+      }}
       onPointerDown={(event) => {
         pointerStart.current = { x: event.clientX, y: event.clientY }
       }}
@@ -627,6 +632,7 @@ export const ToolbarOverlay = ({
         </ToolbarButton>
 
         <ToolbarButton
+          data-view-menu
           isSmallScreen={isSmallScreen}
           onClick={handleViewMenuToggle}
         >
