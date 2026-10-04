@@ -57,6 +57,7 @@ export const CanvasPrimitiveRenderer = ({
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
+  const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
   const isShowingCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
   const isShowingSolderMask = useGlobalStore((s) => s.is_showing_solder_mask)
   const isShowingFabricationNotes = useGlobalStore(
@@ -131,7 +132,7 @@ export const CanvasPrimitiveRenderer = ({
           layers: [copperLayer],
           realToCanvasMat: transform,
           primitives,
-          showCopperPours: isShowingCopperPours,
+          showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
         })
       }
 
@@ -166,6 +167,7 @@ export const CanvasPrimitiveRenderer = ({
           elements,
           layers: [copperLayer],
           realToCanvasMat: transform,
+          opacity: isShowingCopperPours ? copperPourOpacity : 0,
         })
       }
 
@@ -412,6 +414,7 @@ export const CanvasPrimitiveRenderer = ({
     transform,
     selectedLayer,
     hiddenLayerOpacity,
+    copperPourOpacity,
     isShowingCopperPours,
     isShowingSolderMask,
     isShowingFabricationNotes,

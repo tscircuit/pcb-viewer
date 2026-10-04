@@ -58,6 +58,12 @@ export const VisibilityContextMenu = ({
   const [rendererOpen, setRendererOpen] = useState(false)
   const opacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const setOpacity = useGlobalStore((s) => s.setHiddenLayerOpacity)
+  const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
+  const setCopperPourOpacity = useGlobalStore((s) => s.setCopperPourOpacity)
+  const showCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
+  const setShowCopperPours = useGlobalStore((s) => s.setIsShowingCopperPours)
+  const [copperPourOpacityOpen, setCopperPourOpacityOpen] = useState(false)
+  const effectiveCopperPourOpacity = showCopperPours ? copperPourOpacity : 0
   const [visibilityOpen, setVisibilityOpen] = useState(false)
   const [opacityOpen, setOpacityOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -143,6 +149,8 @@ export const VisibilityContextMenu = ({
             ?.focus()
           if (menu.getAttribute("aria-label") === "Hidden Layer Visibility")
             setOpacityOpen(false)
+          else if (menu.getAttribute("aria-label") === "Copper Pour Visibility")
+            setCopperPourOpacityOpen(false)
           else if (menu.getAttribute("aria-label") === "Visibility")
             setVisibilityOpen(false)
           else if (menu.getAttribute("aria-label") === "Rendering Engine")
@@ -240,7 +248,10 @@ export const VisibilityContextMenu = ({
           >
             <div
               style={{ position: "relative" }}
-              onMouseEnter={() => setOpacityOpen(true)}
+              onMouseEnter={() => {
+                setOpacityOpen(true)
+                setCopperPourOpacityOpen(false)
+              }}
             >
               <button
                 type="button"
@@ -248,7 +259,10 @@ export const VisibilityContextMenu = ({
                 aria-haspopup="menu"
                 aria-expanded={opacityOpen}
                 className={itemStyle}
-                onClick={() => setOpacityOpen(true)}
+                onClick={() => {
+                  setOpacityOpen(true)
+                  setCopperPourOpacityOpen(false)
+                }}
               >
                 Hidden Layer Visibility ▸
               </button>
@@ -279,6 +293,58 @@ export const VisibilityContextMenu = ({
                         style={{ display: "inline-block", width: 16 }}
                       >
                         {opacity === value ? "✓" : ""}
+                      </span>
+                      {value === 0 ? "Hide" : `${value * 100}%`}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div
+              style={{ position: "relative" }}
+              onMouseEnter={() => {
+                setCopperPourOpacityOpen(true)
+                setOpacityOpen(false)
+              }}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                aria-haspopup="menu"
+                aria-expanded={copperPourOpacityOpen}
+                className={itemStyle}
+                onClick={() => {
+                  setCopperPourOpacityOpen(true)
+                  setOpacityOpen(false)
+                }}
+              >
+                Copper Pour Visibility ▸
+              </button>
+              {copperPourOpacityOpen && (
+                <div
+                  role="menu"
+                  aria-label="Copper Pour Visibility"
+                  className={menuStyle}
+                  style={{ minWidth: 80, ...submenuStyle }}
+                >
+                  {[0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={effectiveCopperPourOpacity === value}
+                      className={itemStyle}
+                      onClick={() => {
+                        if (value > 0) setCopperPourOpacity(value)
+                        setShowCopperPours(value > 0)
+                        onClose()
+                      }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        style={{ display: "inline-block", width: 16 }}
+                      >
+                        {effectiveCopperPourOpacity === value ? "✓" : ""}
                       </span>
                       {value === 0 ? "Hide" : `${value * 100}%`}
                     </button>

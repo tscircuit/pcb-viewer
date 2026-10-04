@@ -28,6 +28,7 @@ export function WebGpuElementsRenderer(props: Props) {
   const [failure, setFailure] = useState<string>()
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
+  const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
   const showCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
   const showSolderMask = useGlobalStore((s) => s.is_showing_solder_mask)
   const showSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
@@ -61,6 +62,7 @@ export function WebGpuElementsRenderer(props: Props) {
     () => ({
       selectedLayer,
       hiddenLayerOpacity,
+      copperPourOpacity,
       showCopperPours,
       showSolderMask,
       showSilkscreen,
@@ -73,6 +75,7 @@ export function WebGpuElementsRenderer(props: Props) {
     [
       selectedLayer,
       hiddenLayerOpacity,
+      copperPourOpacity,
       showCopperPours,
       showSolderMask,
       showSilkscreen,

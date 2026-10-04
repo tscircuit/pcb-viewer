@@ -1,6 +1,7 @@
 import { useCallback } from "react"
 
 export const STORAGE_KEYS = {
+  COPPER_POUR_OPACITY: "pcb_viewer_copper_pour_opacity",
   HIDDEN_LAYER_OPACITY: "pcb_viewer_hidden_layer_opacity",
   IS_SHOWING_PCB_GROUPS: "pcb_viewer_is_showing_pcb_groups",
   PCB_GROUP_VIEW_MODE: "pcb_viewer_group_view_mode",
