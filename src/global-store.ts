@@ -16,6 +16,9 @@ import {
 } from "./hooks/useLocalStorage"
 
 export interface State {
+  copper_pour_opacity: number
+  setCopperPourOpacity: (opacity: number) => void
+
   hidden_layer_opacity: number
   setHiddenLayerOpacity: (opacity: number) => void
 
@@ -82,6 +85,16 @@ export const createStore = (
   createZustandStore<State>(
     (set) =>
       ({
+        copper_pour_opacity: Math.max(
+          0,
+          Math.min(1, getStoredNumber(STORAGE_KEYS.COPPER_POUR_OPACITY, 1)),
+        ),
+        setCopperPourOpacity: (opacity) => {
+          if (!Number.isFinite(opacity)) return
+          const value = Math.max(0, Math.min(1, opacity))
+          setStoredNumber(STORAGE_KEYS.COPPER_POUR_OPACITY, value)
+          set({ copper_pour_opacity: value })
+        },
         hidden_layer_opacity: Math.max(
           0,
           Math.min(1, getStoredNumber(STORAGE_KEYS.HIDDEN_LAYER_OPACITY, 0.2)),

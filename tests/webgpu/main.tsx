@@ -16,7 +16,10 @@ const stats = {
   geometryUploads: 0,
   compileMs: 0,
   errors: [] as string[],
-  lastView: null as { transform: Record<string, number> } | null,
+  lastView: null as {
+    transform: Record<string, number>
+    options: { copperPourOpacity?: number; showCopperPours?: boolean }
+  } | null,
 }
 const scenario = new URLSearchParams(location.search).get("scenario")
 const OriginalWorker = window.Worker
@@ -101,6 +104,15 @@ async function mount(
           y: 0,
           width: 5,
           height: 4,
+        },
+        {
+          type: "pcb_copper_pour",
+          pcb_copper_pour_id: "pour",
+          shape: "rect",
+          layer: "top",
+          center: { x: 10, y: 0 },
+          width: 6,
+          height: 6,
         },
         ...(unsupported
           ? [

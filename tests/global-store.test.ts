@@ -99,3 +99,23 @@ test("hidden layer visibility is restored for a new viewer", () => {
     else Reflect.deleteProperty(globalThis, "localStorage")
   }
 })
+
+test("copper pour opacity preserves defaults and is independent of layer visibility", () => {
+  const store = createStore()
+  expect(store.getState().copper_pour_opacity).toBe(1)
+  store.getState().setCopperPourOpacity(0.4)
+  store.getState().selectLayer("bottom")
+  store.getState().setHiddenLayerOpacity(0.1)
+  store.getState().setIsShowingCopperPours(false)
+  expect(store.getState().copper_pour_opacity).toBe(0.4)
+  store.getState().setIsShowingCopperPours(true)
+  expect(store.getState().copper_pour_opacity).toBe(0.4)
+  for (const invalid of [NaN, Infinity, -Infinity]) {
+    store.getState().setCopperPourOpacity(invalid)
+    expect(store.getState().copper_pour_opacity).toBe(0.4)
+  }
+  store.getState().setCopperPourOpacity(-1)
+  expect(store.getState().copper_pour_opacity).toBe(0)
+  store.getState().setCopperPourOpacity(2)
+  expect(store.getState().copper_pour_opacity).toBe(1)
+})
