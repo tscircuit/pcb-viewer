@@ -21,7 +21,9 @@ const stats = {
     options: { copperPourOpacity?: number; showCopperPours?: boolean }
   } | null,
 }
-const scenario = new URLSearchParams(location.search).get("scenario")
+const searchParams = new URLSearchParams(location.search)
+const scenario = searchParams.get("scenario")
+const circuitJsonUrl = searchParams.get("circuitJsonUrl")
 const OriginalWorker = window.Worker
 window.Worker = class extends OriginalWorker {
   constructor(...args: ConstructorParameters<typeof Worker>) {
@@ -81,9 +83,13 @@ async function mount(
   strict = false,
   unsupported = false,
 ) {
-  elements = large
+  const shouldLoadCircuitJson = large || circuitJsonUrl !== null
+  elements = shouldLoadCircuitJson
     ? await (
-        await fetch("/src/examples/2026/repros/am3352-dev-board/circuit.json")
+        await fetch(
+          circuitJsonUrl ??
+            "/src/examples/2026/repros/am3352-dev-board/circuit.json",
+        )
       ).json()
     : ([
         {
@@ -117,15 +123,12 @@ async function mount(
         ...(unsupported
           ? [
               {
-                type: "pcb_note_dimension",
-                pcb_note_dimension_id: "unsupported-dimension",
-                text: "2",
+                type: "pcb_smtpad",
+                pcb_smtpad_id: "unsupported-pad",
+                shape: "future_shape",
                 layer: "top",
-                from: { x: 8, y: 0 },
-                to: { x: 10, y: 0 },
-                arrow_size: 0.3,
-                font_size: 2,
-                font: "tscircuit2024",
+                x: 8,
+                y: 0,
               },
             ]
           : []),
@@ -175,7 +178,7 @@ if (scenario === "unavailable")
     configurable: true,
     value: undefined,
   })
-if (scenario)
+if (scenario || circuitJsonUrl !== null)
   void mount(
     false,
     scenario === "canvas" ? "canvas" : "webgpu",

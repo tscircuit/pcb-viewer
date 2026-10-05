@@ -29,8 +29,14 @@ try {
     errors.push(e.message)
     console.error(e.message)
   })
-  const open = async () => {
-    await page.goto(`${server.resolvedUrls!.local[0]}tests/webgpu/`)
+  const open = async (circuitJsonUrl?: string) => {
+    const webGpuTestUrl = new URL(
+      "tests/webgpu/",
+      server.resolvedUrls!.local[0],
+    )
+    if (circuitJsonUrl)
+      webGpuTestUrl.searchParams.set("circuitJsonUrl", circuitJsonUrl)
+    await page.goto(webGpuTestUrl.href)
     await page.waitForFunction(() => window.gpuViewerTest)
   }
   await open()
@@ -221,6 +227,25 @@ try {
     "engine switching must preserve the camera",
   )
   assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
+
+  await open(
+    "/tests/webgpu/fixtures/drv8307evm-fabrication-dimensions.circuit.json",
+  )
+  await page.waitForFunction(
+    () => window.gpuViewerTest.stats.frames > 0,
+    null,
+    { timeout: 30000 },
+  )
+  assert.equal(
+    await page.locator("[data-webgpu-error]").count(),
+    0,
+    "the DRV8307EVM fabrication dimensions must not reject WebGPU",
+  )
+  assert.equal(
+    await page.locator(".pcb-webgpu-canvas").count(),
+    1,
+    "the DRV8307EVM fabrication dimensions must stay on WebGPU",
+  )
 
   await open()
   await page.evaluate(() =>
