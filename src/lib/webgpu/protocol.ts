@@ -2,7 +2,11 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { Matrix, RenderOptions } from "@tscircuit/circuit-json-webgpu"
 export type WebGpuRequest =
   | { type: "init"; canvas: OffscreenCanvas }
-  | { type: "scene"; elements: AnyCircuitElement[] }
+  | {
+      type: "scene"
+      elements: AnyCircuitElement[]
+      sceneGeneration: number
+    }
   | {
       type: "view"
       width: number
@@ -19,5 +23,6 @@ export type WebGpuResponse =
       geometryUploads: number
       frames: number
       compileMs: number
+      sceneGeneration: number
     }
   | { type: "error"; message: string }

@@ -7,6 +7,7 @@ import {
   convertElementToPrimitives,
   createPrimitiveMetadataIndex,
 } from "../../src/lib/convert-element-to-primitive"
+import type { WebGpuResponse } from "../../src/lib/webgpu/protocol"
 const root = createRoot(document.getElementById("root")!)
 const stats = {
   created: 0,
@@ -15,6 +16,9 @@ const stats = {
   frames: 0,
   geometryUploads: 0,
   compileMs: 0,
+  renderCompletions: 0,
+  latestSubmittedSceneGeneration: 0,
+  heldSceneGenerations: [] as number[],
   errors: [] as string[],
   lastView: null as {
     transform: Record<string, number>
@@ -25,20 +29,39 @@ const searchParams = new URLSearchParams(location.search)
 const scenario = searchParams.get("scenario")
 const circuitJsonUrl = searchParams.get("circuitJsonUrl")
 const OriginalWorker = window.Worker
+let activeWorker: Worker | undefined
+let holdRenderedResponses = false
+let replayingRenderedResponse = false
+const heldRenderedResponses: Extract<WebGpuResponse, { type: "rendered" }>[] =
+  []
 window.Worker = class extends OriginalWorker {
   constructor(...args: ConstructorParameters<typeof Worker>) {
     super(...args)
+    activeWorker = this
     stats.created++
-    this.addEventListener("message", ({ data }) => {
-      if (data.type === "ready") {
-        stats.ready++
-        if (scenario === "xray-unsupported") data.supportsXRayNet = false
+    this.addEventListener("message", (event) => {
+      const workerResponse = event.data
+      if (
+        workerResponse.type === "rendered" &&
+        holdRenderedResponses &&
+        !replayingRenderedResponse
+      ) {
+        event.stopImmediatePropagation()
+        heldRenderedResponses.push(workerResponse)
+        stats.heldSceneGenerations.push(workerResponse.sceneGeneration)
+        return
       }
-      if (data.type === "error") stats.errors.push(data.message)
-      if (data.type === "rendered") {
+      if (workerResponse.type === "ready") {
+        stats.ready++
+        if (scenario === "xray-unsupported")
+          workerResponse.supportsXRayNet = false
+      }
+      if (workerResponse.type === "error")
+        stats.errors.push(workerResponse.message)
+      if (workerResponse.type === "rendered") {
         stats.frames++
-        stats.geometryUploads = data.geometryUploads
-        stats.compileMs = data.compileMs
+        stats.geometryUploads = workerResponse.geometryUploads
+        stats.compileMs = workerResponse.compileMs
         if (scenario === "device-lost" && stats.frames === 1)
           queueMicrotask(() =>
             this.dispatchEvent(
@@ -54,6 +77,8 @@ window.Worker = class extends OriginalWorker {
     message: any,
     transfer?: Transferable[] | StructuredSerializeOptions,
   ) {
+    if (message.type === "scene")
+      stats.latestSubmittedSceneGeneration = message.sceneGeneration
     if (message.type === "init") {
       if (scenario === "timeout") return
       if (scenario === "worker-error" || scenario === "message-error") {
@@ -140,6 +165,7 @@ async function mount(
       renderer={renderer}
       allowEditing={false}
       height={600}
+      onRenderComplete={() => stats.renderCompletions++}
     />
   )
   root.render(strict ? <StrictMode>{view}</StrictMode> : view)
@@ -157,6 +183,23 @@ Object.assign(window, {
     stats,
     mount,
     metadataBenchmark,
+    holdRenderedResponses: () => {
+      holdRenderedResponses = true
+    },
+    releaseRenderedResponse: (sceneGeneration: number) => {
+      const responseIndex = heldRenderedResponses.findIndex(
+        (response) => response.sceneGeneration === sceneGeneration,
+      )
+      if (responseIndex === -1 || !activeWorker) return
+      const [response] = heldRenderedResponses.splice(responseIndex, 1)
+      const statsIndex = stats.heldSceneGenerations.indexOf(sceneGeneration)
+      if (statsIndex !== -1) stats.heldSceneGenerations.splice(statsIndex, 1)
+      replayingRenderedResponse = true
+      activeWorker.dispatchEvent(
+        new MessageEvent("message", { data: response }),
+      )
+      replayingRenderedResponse = false
+    },
     unmount: () => root.unmount(),
   },
 })
@@ -167,6 +210,8 @@ declare global {
       stats: typeof stats
       mount: typeof mount
       metadataBenchmark: typeof metadataBenchmark
+      holdRenderedResponses(): void
+      releaseRenderedResponse(sceneGeneration: number): void
       unmount(): void
     }
   }

@@ -30,6 +30,8 @@ type Props = {
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  /** Called after the active renderer has produced a frame for the current Circuit JSON. */
+  onRenderComplete?: () => void
   /** Omit when the host has no enabled schematic tab. */
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
@@ -48,6 +50,7 @@ export const PCBViewer = ({
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
+  onRenderComplete,
   onBoundsSelected,
   onViewSchematicComponent,
   focusOnHover = false,
@@ -221,6 +224,7 @@ export const PCBViewer = ({
               onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}
               onModifyEditEvent={onModifyEditEvent}
+              onRenderComplete={onRenderComplete}
               grid={{
                 spacing: 1,
                 view_window: {

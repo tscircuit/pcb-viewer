@@ -3,7 +3,7 @@ import type { RenderOptions } from "@tscircuit/circuit-json-webgpu"
 import type { GridConfig, Primitive } from "lib/types"
 import { createWebGpuWorker } from "lib/webgpu/create-worker"
 import type { WebGpuRequest, WebGpuResponse } from "lib/webgpu/protocol"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
@@ -16,6 +16,7 @@ type Props = {
   width?: number
   height?: number
   grid?: GridConfig
+  onRenderComplete?: () => void
 }
 
 /** Retains a GPU canvas in a worker; the UI thread sends scene/camera changes only. */
@@ -23,6 +24,10 @@ export function WebGpuElementsRenderer(props: Props) {
   const { elements, primitives, transform, width = 500, height = 500 } = props
   const holder = useRef<HTMLDivElement>(null)
   const workerRef = useRef<Worker | undefined>(undefined)
+  const onRenderCompleteRef = useRef(props.onRenderComplete)
+  const sceneRef = useRef({ elements, sceneGeneration: 0 })
+  const latestSubmittedSceneGenerationRef = useRef(0)
+  const completedSceneGenerationRef = useRef(0)
   const ready = useRef(false)
   const [supportsXRayNet, setSupportsXRayNet] = useState<boolean | null>(null)
   const [failure, setFailure] = useState<string>()
@@ -86,9 +91,7 @@ export function WebGpuElementsRenderer(props: Props) {
       xRayElementIds,
     ],
   )
-  const sceneRef = useRef(elements)
   const viewRef = useRef<WebGpuRequest | undefined>(undefined)
-  sceneRef.current = elements
   if (transform) {
     const ratio =
       typeof window === "undefined" ? 1 : window.devicePixelRatio || 1
@@ -107,6 +110,20 @@ export function WebGpuElementsRenderer(props: Props) {
       options,
     }
   }
+  useLayoutEffect(() => {
+    onRenderCompleteRef.current = props.onRenderComplete
+  }, [props.onRenderComplete])
+  useLayoutEffect(() => {
+    const sceneGeneration = sceneRef.current.sceneGeneration + 1
+    sceneRef.current = { elements, sceneGeneration }
+    if (!ready.current || !workerRef.current) return
+    latestSubmittedSceneGenerationRef.current = sceneGeneration
+    workerRef.current.postMessage({
+      type: "scene",
+      elements,
+      sceneGeneration,
+    } satisfies WebGpuRequest)
+  }, [elements])
   useEffect(() => {
     let disposed = false,
       failed = false,
@@ -146,20 +163,35 @@ export function WebGpuElementsRenderer(props: Props) {
           return
         }
         workerRef.current = worker
-        worker.onmessage = ({ data }: MessageEvent<WebGpuResponse>) => {
+        worker.onmessage = (event: MessageEvent<WebGpuResponse>) => {
           if (disposed || failed) return
-          if (data.type === "rendered") {
+          const workerResponse = event.data
+          if (workerResponse.type === "rendered") {
+            if (
+              workerResponse.sceneGeneration !==
+                latestSubmittedSceneGenerationRef.current ||
+              workerResponse.sceneGeneration ===
+                completedSceneGenerationRef.current
+            )
+              return
             if (holder.current)
-              holder.current.dataset.xRayNetActive = String(data.xRayActive)
-          } else if (data.type === "error") {
-            fail(data.message)
-          } else if (data.type === "ready") {
+              holder.current.dataset.xRayNetActive = String(
+                workerResponse.xRayActive,
+              )
+            completedSceneGenerationRef.current = workerResponse.sceneGeneration
+            onRenderCompleteRef.current?.()
+          } else if (workerResponse.type === "error") {
+            fail(workerResponse.message)
+          } else if (workerResponse.type === "ready") {
             clearTimeout(timeout)
-            setSupportsXRayNet(data.supportsXRayNet)
+            setSupportsXRayNet(workerResponse.supportsXRayNet)
             ready.current = true
+            const scene = sceneRef.current
+            latestSubmittedSceneGenerationRef.current = scene.sceneGeneration
             worker!.postMessage({
               type: "scene",
-              elements: sceneRef.current,
+              elements: scene.elements,
+              sceneGeneration: scene.sceneGeneration,
             } satisfies WebGpuRequest)
             if (viewRef.current) worker!.postMessage(viewRef.current)
           }
@@ -189,13 +221,6 @@ export function WebGpuElementsRenderer(props: Props) {
       canvas.remove()
     }
   }, [])
-  useEffect(() => {
-    if (ready.current)
-      workerRef.current?.postMessage({
-        type: "scene",
-        elements,
-      } satisfies WebGpuRequest)
-  }, [elements])
   useEffect(() => {
     if (ready.current && viewRef.current)
       workerRef.current?.postMessage(viewRef.current)
