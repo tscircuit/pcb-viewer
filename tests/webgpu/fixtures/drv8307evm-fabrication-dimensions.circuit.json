@@ -1,0 +1,86 @@
+[
+  {
+    "type": "pcb_board",
+    "pcb_board_id": "pcb_board_altium",
+    "center": {
+      "x": 61.4426,
+      "y": 76.463652
+    },
+    "width": 87.7316,
+    "height": 75.00010400000001,
+    "shape": "polygon",
+    "outline": [
+      {
+        "x": 17.5768,
+        "y": 38.9636
+      },
+      {
+        "x": 17.5768,
+        "y": 113.963704
+      },
+      {
+        "x": 105.30839999999999,
+        "y": 113.963704
+      },
+      {
+        "x": 105.30839999999999,
+        "y": 38.9636
+      },
+      {
+        "x": 17.5768,
+        "y": 38.9636
+      }
+    ],
+    "thickness": 1.6,
+    "num_layers": 2,
+    "material": "fr4"
+  },
+  {
+    "type": "pcb_fabrication_note_dimension",
+    "pcb_fabrication_note_dimension_id": "pcb_fabrication_note_dimension_altium_101",
+    "pcb_component_id": "pcb_component_altium_board_graphics",
+    "layer": "top",
+    "from": {
+      "x": 17.5641,
+      "y": 27.139899999999997
+    },
+    "to": {
+      "x": 42.964099999999995,
+      "y": 27.139899999999997
+    },
+    "text": "1000.00 mil",
+    "offset_distance": 0,
+    "offset_direction": {
+      "x": 0,
+      "y": 1
+    },
+    "font": "tscircuit2024",
+    "font_size": 1.524,
+    "arrow_size": 1.524,
+    "color": "#ec4899"
+  },
+  {
+    "type": "pcb_fabrication_note_dimension",
+    "pcb_fabrication_note_dimension_id": "pcb_fabrication_note_dimension_altium_103",
+    "pcb_component_id": "pcb_component_altium_board_graphics",
+    "layer": "top",
+    "from": {
+      "x": 17.5768,
+      "y": 38.9636
+    },
+    "to": {
+      "x": 17.5768,
+      "y": 38.96360000000001
+    },
+    "text": "0.00 mil",
+    "offset_distance": 2.54,
+    "offset_direction": {
+      "x": -1,
+      "y": 6.123233995736766e-17
+    },
+    "font": "tscircuit2024",
+    "font_size": 1.524,
+    "arrow_size": 1.524,
+    "color": "#ec4899"
+  }
+]
