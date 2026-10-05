@@ -39,6 +39,54 @@ try {
     await page.goto(webGpuTestUrl.href)
     await page.waitForFunction(() => window.gpuViewerTest)
   }
+  await page.goto(
+    `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=controlled-xray`,
+  )
+  await page.waitForFunction(
+    () => window.gpuViewerTest.stats.renderCompletions === 1,
+  )
+  assert.equal(await page.locator('[data-x-ray-net-active="false"]').count(), 1)
+  await page.mouse.click(250, 300)
+  await page.getByRole("menuitem", { name: "X-Ray CLK", exact: true }).click()
+  await page.waitForSelector('[data-x-ray-net-active="true"]')
+  assert.equal(
+    await page.evaluate(() => window.gpuViewerTest.stats.renderCompletions),
+    1,
+    "X-Ray entry must not complete the same scene again",
+  )
+  await page.mouse.click(475, 300)
+  await page.waitForSelector('[data-x-ray-net-active="false"]')
+  assert.equal(
+    await page.evaluate(() => window.gpuViewerTest.stats.renderCompletions),
+    1,
+    "X-Ray exit must not complete the same scene again",
+  )
+
+  await open()
+  await page.evaluate(() => window.gpuViewerTest.mount(false, "canvas"))
+  await page.waitForSelector(".pcb-layer-top")
+  await page.waitForFunction(
+    () => window.gpuViewerTest.stats.renderCompletions === 1,
+  )
+  assert.equal(
+    (await page.evaluate(() => window.gpuViewerTest.stats)).created,
+    0,
+  )
+  await page.mouse.move(400, 300)
+  await page.mouse.wheel(0, -100)
+  await page.setViewportSize({ width: 900, height: 650 })
+  await page.keyboard.press("2")
+  await page.waitForTimeout(100)
+  assert.equal(
+    await page.evaluate(() => window.gpuViewerTest.stats.renderCompletions),
+    1,
+    "Canvas interaction frames must not complete the same scene again",
+  )
+  await page.evaluate(() => window.gpuViewerTest.mount(true, "canvas"))
+  await page.waitForFunction(
+    () => window.gpuViewerTest.stats.renderCompletions === 2,
+  )
+
   await open()
   await page.evaluate(() => window.gpuViewerTest.mount(false, "webgpu", true))
   await page.waitForFunction(
@@ -61,6 +109,49 @@ try {
   )
 
   await open()
+  await page.evaluate(() => {
+    window.gpuViewerTest.holdRenderedResponses()
+    return window.gpuViewerTest.mount()
+  })
+  await page.waitForFunction(
+    () => window.gpuViewerTest.stats.heldSceneGenerations.length > 0,
+  )
+  const sceneAGeneration = await page.evaluate(
+    () => window.gpuViewerTest.stats.latestSubmittedSceneGeneration,
+  )
+  await page.evaluate(() => window.gpuViewerTest.mount(true))
+  await page.waitForFunction(
+    (previousGeneration) =>
+      window.gpuViewerTest.stats.latestSubmittedSceneGeneration >
+        previousGeneration &&
+      window.gpuViewerTest.stats.heldSceneGenerations.includes(
+        window.gpuViewerTest.stats.latestSubmittedSceneGeneration,
+      ),
+    sceneAGeneration,
+  )
+  const sceneBGeneration = await page.evaluate(
+    () => window.gpuViewerTest.stats.latestSubmittedSceneGeneration,
+  )
+  await page.evaluate(
+    (sceneGeneration) =>
+      window.gpuViewerTest.releaseRenderedResponse(sceneGeneration),
+    sceneAGeneration,
+  )
+  await page.waitForTimeout(50)
+  assert.equal(
+    await page.evaluate(() => window.gpuViewerTest.stats.renderCompletions),
+    0,
+    "a stale scene must not complete the current Circuit JSON",
+  )
+  await page.evaluate(
+    (sceneGeneration) =>
+      window.gpuViewerTest.releaseRenderedResponse(sceneGeneration),
+    sceneBGeneration,
+  )
+  await page.waitForFunction(
+    () => window.gpuViewerTest.stats.renderCompletions === 1,
+  )
+  await open()
   await page.evaluate(() => window.gpuViewerTest.mount(true))
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.frames > 0,
@@ -69,6 +160,7 @@ try {
   )
   const initial = await page.evaluate(() => window.gpuViewerTest.stats)
   assert.equal(initial.geometryUploads, 1)
+  assert(initial.renderCompletions > 0)
   assert.deepEqual(initial.errors, [])
   assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
   const metadata = await page.evaluate(() =>
@@ -104,6 +196,11 @@ try {
   })
   await page.waitForTimeout(200)
   const after = await page.evaluate(() => window.gpuViewerTest.stats)
+  assert.equal(
+    after.renderCompletions,
+    initial.renderCompletions,
+    "camera-only frames must not complete the same scene again",
+  )
   assert.equal(
     after.geometryUploads,
     1,
@@ -190,6 +287,11 @@ try {
   )
   await page.getByRole("menuitemradio", { name: "Canvas", exact: true }).click()
   await page.waitForSelector(".pcb-layer-top")
+  await page.waitForFunction(
+    (renderCompletions) =>
+      window.gpuViewerTest.stats.renderCompletions > renderCompletions,
+    beforeSwitch.renderCompletions,
+  )
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 0)
   assert.equal(
     await page
