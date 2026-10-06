@@ -46,6 +46,7 @@ import { PcbGroupOverlay } from "./PcbGroupOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
+import { FocusedPcbComponentOverlay } from "./FocusedPcbComponentOverlay"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
@@ -58,6 +59,7 @@ export interface CanvasElementsRendererProps {
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
+  focusedPcbComponent?: { pcbComponentId: string } | null
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
   onContextMenuOpenChange?: (open: boolean) => void
@@ -355,6 +357,11 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       selectedLayer={selectedLayer}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
     >
+      <FocusedPcbComponentOverlay
+        focusRequest={props.focusedPcbComponent}
+        elements={elements}
+        transform={transform}
+      />
       <EditPlacementOverlay
         disabled={!props.allowEditing}
         transform={transform}

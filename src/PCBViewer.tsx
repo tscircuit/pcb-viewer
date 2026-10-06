@@ -17,6 +17,8 @@ import { zIndexMap } from "lib/util/z-index-map"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { applyEditEvents } from "lib/apply-edit-events"
+import type { PcbViewerController } from "./hooks/usePcbViewerController"
+import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -39,6 +41,8 @@ type Props = {
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
   disablePcbGroups?: boolean
+  /** Connect the controller returned by usePcbViewerController. */
+  controller?: PcbViewerController
 }
 
 export const PCBViewer = ({
@@ -56,8 +60,11 @@ export const PCBViewer = ({
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
+  controller,
 }: Props) => {
   const [activeRenderer, setActiveRenderer] = useState(renderer)
+  const [focusedPcbComponent, setFocusedPcbComponent] =
+    useState<PcbViewerController["focusRequest"]>(null)
   useEffect(() => setActiveRenderer(renderer), [renderer])
   const renderingEngine = useMemo(
     () => ({ renderer: activeRenderer, setRenderer: setActiveRenderer }),
@@ -176,6 +183,30 @@ export const PCBViewer = ({
     })
   }, [pcbElmsPreEdit, editEvents])
 
+  useEffect(() => {
+    const request = controller?.focusRequest
+    if (!request || !refDimensions.width || !height || !elements.length) return
+    const focus = getPcbComponentFocus(
+      elements,
+      request.pcbComponentId,
+      refDimensions.width,
+      height,
+    )
+    if (focus) {
+      cancelPanDrag()
+      setTransform(focus.transform)
+      setFocusedPcbComponent(request)
+    }
+    controller.onFocusRequestHandled(request)
+  }, [
+    controller,
+    elements,
+    refDimensions.width,
+    height,
+    cancelPanDrag,
+    setTransform,
+  ])
+
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
     onEditEventsChanged?.([...editEvents, event])
@@ -220,6 +251,7 @@ export const PCBViewer = ({
               focusOnHover={focusOnHover}
               onBoundsSelected={onBoundsSelected}
               onViewSchematicComponent={onViewSchematicComponent}
+              focusedPcbComponent={focusedPcbComponent}
               cancelPanDrag={cancelPanDrag}
               onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}
