@@ -204,6 +204,31 @@ export const getErrorFocusPoint = ({
     ...indexes,
   })
 
+/**
+ * Raw (unprojected) port positions for the dotted connector lines between
+ * each involved port and the error diamond. Only meaningful when the diamond
+ * sits at an explicit `error.center` — otherwise the diamond already is the
+ * ports midpoint and connectors would collapse onto it.
+ */
+export const getErrorPortPoints = (
+  error: any,
+  portsById: Map<string, any>,
+): Point[] => {
+  if (!error?.center || !Array.isArray(error.pcb_port_ids)) return []
+  const points: Point[] = []
+  for (const pcbPortId of error.pcb_port_ids) {
+    const port = portsById.get(pcbPortId)
+    if (
+      port &&
+      typeof port.x === "number" &&
+      typeof port.y === "number"
+    ) {
+      points.push({ x: port.x, y: port.y })
+    }
+  }
+  return points
+}
+
 const getComponentBoundaryViolationBounds = ({
   error,
   boardsById,
