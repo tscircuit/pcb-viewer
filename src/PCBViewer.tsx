@@ -1,6 +1,5 @@
 import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
 import { RenderingEngineContext } from "./components/RenderingEngineContext"
-import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
 import type { StateProps } from "./global-store"
@@ -19,6 +18,7 @@ import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { applyEditEvents } from "lib/apply-edit-events"
 import type { PcbViewerController } from "./hooks/usePcbViewerController"
 import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
+import { getDefaultPcbViewBounds } from "./lib/get-default-pcb-view-bounds"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -127,13 +127,7 @@ export const PCBViewer = ({
   const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
-    const { center, width, height } = elements.some((e) =>
-      e.type.startsWith("pcb_"),
-    )
-      ? findBoundsAndCenter(
-          elements.filter((e) => e.type.startsWith("pcb_")) as any,
-        )
-      : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
+    const { center, width, height } = getDefaultPcbViewBounds(elements)
     const scaleFactor =
       Math.min(
         (elmBounds.width ?? 0) / width,
