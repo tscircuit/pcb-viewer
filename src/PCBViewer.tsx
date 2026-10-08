@@ -1,5 +1,8 @@
 import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
-import { RenderingEngineContext } from "./components/RenderingEngineContext"
+import {
+  RenderingEngineContext,
+  type RenderingEngine,
+} from "./components/RenderingEngineContext"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ContextProviders } from "./components/ContextProviders"
@@ -19,13 +22,24 @@ import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { applyEditEvents } from "lib/apply-edit-events"
 import type { PcbViewerController } from "./hooks/usePcbViewerController"
 import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
+import {
+  getStoredString,
+  setStoredString,
+  STORAGE_KEYS,
+} from "./hooks/useLocalStorage"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
+
+const getPreferredRenderer = (): RenderingEngine => {
+  const stored = getStoredString(STORAGE_KEYS.RENDERING_ENGINE, "webgpu")
+  return stored === "canvas" || stored === "webgpu" ? stored : "webgpu"
+}
 
 type Props = {
   circuitJson?: AnyCircuitElement[]
   height?: number
-  /** Initial engine; users can switch via the context menu. Prop changes reset it.
+  /** Initial engine override; otherwise restores the saved user preference.
+   * Users can switch via the context menu. Prop changes reset it.
    * WebGPU runs in a worker and reports failures without changing engines. */
   renderer?: "webgpu" | "canvas"
   allowEditing?: boolean
@@ -49,7 +63,7 @@ export const PCBViewer = ({
   circuitJson,
   debugGraphics,
   height = 600,
-  renderer = "webgpu",
+  renderer,
   initialState,
   allowEditing = true,
   editEvents: editEventsProp,
@@ -62,13 +76,22 @@ export const PCBViewer = ({
   disablePcbGroups = false,
   controller,
 }: Props) => {
-  const [activeRenderer, setActiveRenderer] = useState(renderer)
+  const [activeRenderer, setActiveRenderer] = useState<RenderingEngine>(
+    () => renderer ?? getPreferredRenderer(),
+  )
   const [focusedPcbComponent, setFocusedPcbComponent] =
     useState<PcbViewerController["focusRequest"]>(null)
-  useEffect(() => setActiveRenderer(renderer), [renderer])
+  useEffect(
+    () => setActiveRenderer(renderer ?? getPreferredRenderer()),
+    [renderer],
+  )
+  const setPreferredRenderer = useCallback((engine: RenderingEngine) => {
+    setActiveRenderer(engine)
+    setStoredString(STORAGE_KEYS.RENDERING_ENGINE, engine)
+  }, [])
   const renderingEngine = useMemo(
-    () => ({ renderer: activeRenderer, setRenderer: setActiveRenderer }),
-    [activeRenderer],
+    () => ({ renderer: activeRenderer, setRenderer: setPreferredRenderer }),
+    [activeRenderer, setPreferredRenderer],
   )
   const [isInteractionEnabled, setIsInteractionEnabled] = useState(
     !clickToInteractEnabled,

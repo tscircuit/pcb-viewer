@@ -20,7 +20,8 @@
     "test:component-focus": "bun run build && bun tests/component-focus/run.ts",
     "test:measurement-context-menu": "bun run build && bun tests/measurement-context-menu/run.ts",
     "test:copper-pour-opacity": "bun run build && bun tests/copper-pour-opacity/run.ts",
-    "test:webgpu": "bun run build && bun tests/webgpu/run.ts"
+    "test:webgpu": "bun run build && bun tests/webgpu/run.ts",
+    "test:rendering-engine-preference": "bun run build && bun tests/rendering-engine-preference/run.ts"
   },
   "files": [
     "dist"
