@@ -141,7 +141,7 @@ window.Worker = class extends OriginalWorker {
 let elements: AnyCircuitElement[]
 async function mount(
   large = false,
-  renderer: "webgpu" | "canvas" | null = "webgpu",
+  renderer: "webgpu" | "canvas" = "webgpu",
   strict = false,
   unsupported = false,
 ) {
@@ -200,7 +200,7 @@ async function mount(
   const view = (
     <PCBViewer
       circuitJson={elements}
-      renderer={renderer ?? undefined}
+      renderer={renderer}
       allowEditing={false}
       height={600}
       onRenderComplete={() => stats.renderCompletions++}
