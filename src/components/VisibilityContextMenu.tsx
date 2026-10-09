@@ -17,6 +17,7 @@ const menuStyle = css`
   padding: 4px;
   font: 12px sans-serif;
   box-shadow: 0 4px 16px #0008;
+  outline: none;
 `
 const itemStyle = css`
   display: block;
@@ -91,7 +92,7 @@ export const VisibilityContextMenu = ({
         onClose()
       }
     }
-    ref.current?.querySelector("button")?.focus()
+    ref.current?.focus()
     window.addEventListener("pointerdown", dismiss, true)
     window.addEventListener("keydown", onKeyDown)
     window.addEventListener("resize", onClose)
@@ -108,6 +109,7 @@ export const VisibilityContextMenu = ({
     <div
       ref={ref}
       role="menu"
+      tabIndex={-1}
       aria-label="PCB context menu"
       className={menuStyle}
       onContextMenu={(event) => {
@@ -120,20 +122,19 @@ export const VisibilityContextMenu = ({
       onKeyDown={(event) => {
         event.stopPropagation()
         const button = (event.target as HTMLElement).closest("button")
-        if (!button) return
-        const menu = button.closest('[role="menu"]')!
+        const menu = button?.closest('[role="menu"]') ?? ref.current
+        if (!menu) return
         const items = Array.from(
           menu.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"),
         ).filter((item) => item.closest('[role="menu"]') === menu)
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault()
           const step = event.key === "ArrowDown" ? 1 : -1
-          items[
-            (items.indexOf(button) + step + items.length) % items.length
-          ]?.focus()
+          const index = button ? items.indexOf(button) : step === 1 ? -1 : 0
+          items[(index + step + items.length) % items.length]?.focus()
         } else if (
           event.key === "ArrowRight" &&
-          button.hasAttribute("aria-haspopup")
+          button?.hasAttribute("aria-haspopup")
         ) {
           event.preventDefault()
           button.click()
