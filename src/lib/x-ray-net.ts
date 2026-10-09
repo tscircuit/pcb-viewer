@@ -26,14 +26,20 @@ export function getElementNetId(
     const net = connectivityMap.getNetConnectedToId(id)
     if (net) return net
   }
+  // Pour-only nets have no trace/port connections in the connectivity map.
+  if ("source_net_id" in element) return element.source_net_id
 }
 
 export function isXRayCopper(element: AnyCircuitElement | undefined) {
   return (
     element &&
-    ["pcb_trace", "pcb_smtpad", "pcb_plated_hole", "pcb_via"].includes(
-      element.type,
-    )
+    [
+      "pcb_trace",
+      "pcb_smtpad",
+      "pcb_plated_hole",
+      "pcb_via",
+      "pcb_copper_pour",
+    ].includes(element.type)
   )
 }
 

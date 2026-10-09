@@ -403,6 +403,12 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
           drawSoldermask: false,
         }
+        if (isShowingCopperPours) {
+          drawCopperPourElementsForLayer({
+            ...args,
+            opacity: copperPourOpacity,
+          })
+        }
         drawPcbTraceElementsForLayer({ ...args, showCopperPours: false })
         drawPcbSmtPadElementsForLayer(args)
         drawPlatedHolePads(args)

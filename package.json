@@ -16,6 +16,7 @@
     "format:check": "biome format .",
     "cosmos": "cosmos",
     "cosmos-export": "cosmos-export",
+    "test:copper-pour-x-ray": "bun run build && bun tests/copper-pour-x-ray/run.ts",
     "test:x-ray-net": "bun run build && bun tests/x-ray-net/run.ts",
     "test:component-focus": "bun run build && bun tests/component-focus/run.ts",
     "test:measurement-context-menu": "bun run build && bun tests/measurement-context-menu/run.ts",

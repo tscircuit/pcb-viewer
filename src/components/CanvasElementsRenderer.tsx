@@ -32,6 +32,7 @@ import {
   isXRayCopper,
 } from "lib/x-ray-net"
 import { useGlobalStore } from "../global-store"
+import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { WebGpuElementsRenderer } from "./WebGpuElementsRenderer"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
@@ -75,11 +76,13 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
+    copperPourOpacity,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
+    copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
   }))
   const activeErrorId = focusedErrorId ?? hoveredErrorId
@@ -122,12 +125,13 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         ? elementsToRender.filter(
             (element) =>
               isXRayCopper(element) &&
+              (element.type !== "pcb_copper_pour" || copperPourOpacity > 0) &&
               xRayNetIds.includes(
                 getElementNetId(element, connectivityMap) ?? "",
               ),
           )
         : undefined,
-    [elementsToRender, connectivityMap, xRayNetIds],
+    [elementsToRender, connectivityMap, xRayNetIds, copperPourOpacity],
   )
   const hoverPrimitives = useMemo(() => {
     if (!xRayElements) return primitivesWithoutInteractionMetadata
@@ -166,6 +170,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       displayName: getXRayDisplayName(element, elements, connectivityMap),
       groups: getXRayGroups(netId, elements, connectivityMap),
     })
+    if (isShowingCopperPours && copperPourOpacity > 0) {
+      for (const pour of getCopperPoursUnderPoint(
+        elementsToRender,
+        applyToPoint(inverse(transform), point),
+        selectedLayer,
+      ).reverse()) {
+        const net = getElementNetId(pour, connectivityMap)
+        if (net) return describeNet(net, pour)
+      }
+    }
     const hits = getPrimitivesUnderPoint(
       primitivesWithoutInteractionMetadata,
       applyToPoint(inverse(transform), point),
