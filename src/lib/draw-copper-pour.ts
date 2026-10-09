@@ -1,11 +1,40 @@
-import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
+  drawPcbCopperPour,
   type PcbColorMap,
 } from "circuit-to-canvas"
 import color from "color"
 import type { Matrix } from "transformation-matrix"
+import { identity } from "transformation-matrix"
+
+/** Test the same paths used for painting, including rotations, arcs and holes. */
+export function getCopperPoursUnderPoint(
+  elements: AnyCircuitElement[],
+  point: { x: number; y: number },
+  selectedLayer: LayerRef,
+) {
+  const canvas = document.createElement("canvas")
+  canvas.width = canvas.height = 1
+  const ctx = canvas.getContext("2d")!
+  return elements.filter((element) => {
+    if (element.type !== "pcb_copper_pour" || element.layer !== selectedLayer)
+      return false
+    // Painting on a scratch canvas leaves the exact path available for testing.
+    drawPcbCopperPour({
+      ctx,
+      pour: element,
+      realToCanvasMat: identity(),
+      colorMap: DEFAULT_PCB_COLOR_MAP,
+    })
+    return ctx.isPointInPath(
+      point.x,
+      point.y,
+      element.shape === "brep" ? "evenodd" : "nonzero",
+    )
+  })
+}
 
 export function isCopperPourElement(element: AnyCircuitElement) {
   return element.type === "pcb_copper_pour"

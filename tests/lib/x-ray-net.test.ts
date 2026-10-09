@@ -8,6 +8,45 @@ import {
 } from "../../src/lib/x-ray-net"
 import { scene } from "../x-ray-net/scene"
 import { Drawer } from "../../src/lib/Drawer"
+import type { AnyCircuitElement } from "circuit-json"
+
+test("X-Ray resolves pour-only nets and includes only pours connected to that net", () => {
+  const elements: AnyCircuitElement[] = [
+    {
+      type: "source_net",
+      source_net_id: "ground",
+      name: "GND",
+      member_source_group_ids: [],
+    },
+    ...["top", "bottom"].map((layer) => ({
+      type: "pcb_copper_pour" as const,
+      pcb_copper_pour_id: `pour_${layer}`,
+      source_net_id: "ground",
+      layer: layer as "top" | "bottom",
+      shape: "rect" as const,
+      center: { x: 0, y: 0 },
+      width: 10,
+      height: 10,
+      covered_with_solder_mask: false,
+    })),
+  ]
+  const map = getFullConnectivityMapFromCircuitJson(elements)
+  const net = getElementNetId(elements[1], map)
+  expect(net).toBe("ground")
+  expect(getXRayDisplayName(elements[1], elements, map)).toBe("GND")
+  expect(
+    elements.filter(
+      (element) =>
+        isXRayCopper(element) && getElementNetId(element, map) === net,
+    ),
+  ).toHaveLength(2)
+  expect(
+    getElementNetId(
+      { ...elements[1], source_net_id: undefined } as AnyCircuitElement,
+      map,
+    ),
+  ).toBeUndefined()
+})
 
 test("X-Ray follows electrical connectivity across layers without including other pads on a component", () => {
   const map = getFullConnectivityMapFromCircuitJson(scene)
