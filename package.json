@@ -34,7 +34,7 @@
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@swc/core": "^1.4.12",
     "@tscircuit/circuit-json-util": "^0.0.120",
-    "@tscircuit/circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#13bb210bdbada865719ff62032c4ade818e23262",
+    "@tscircuit/circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#fef1ec23cd36ac2c518f34006fd530b91c10d096",
     "@tscircuit/core": "^0.0.1701",
     "@tscircuit/eagle-xml-converter": "^1.0.0",
     "@types/bun": "latest",

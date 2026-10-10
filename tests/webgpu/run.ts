@@ -349,6 +349,22 @@ try {
     "the DRV8307EVM fabrication dimensions must stay on WebGPU",
   )
 
+  await open("/tests/webgpu/fixtures/translated-fabrication-paths.circuit.json")
+  await page.waitForFunction(
+    () =>
+      window.gpuViewerTest.stats.frames > 0 ||
+      window.gpuViewerTest.stats.errors.length > 0,
+    null,
+    { timeout: 30000 },
+  )
+  assert.deepEqual(
+    await page.evaluate(() => window.gpuViewerTest.stats.errors),
+    [],
+    "translated fabrication paths must compile without clipping failures",
+  )
+  assert.equal(await page.locator("[data-webgpu-error]").count(), 0)
+  assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 1)
+
   await open()
   await page.evaluate(() =>
     window.gpuViewerTest.mount(false, "webgpu", false, true),
