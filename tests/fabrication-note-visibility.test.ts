@@ -43,7 +43,22 @@ test("fabrication polarity markings are visible on first load and can be hidden"
       .first()
       .click({ delay: 350 })
     await checkbox.waitFor({ state: "hidden" })
-    const shown = await page.screenshot({ animations: "disabled" })
+    const captureFabricationLayer = () =>
+      page.locator(".pcb-layer-top_fabrication").evaluate((element) => {
+        const canvas = element as HTMLCanvasElement
+        const pixels = canvas
+          .getContext("2d")!
+          .getImageData(0, 0, canvas.width, canvas.height).data
+        return {
+          image: canvas.toDataURL(),
+          paintedPixels: pixels.filter(
+            (value, index) => index % 4 === 3 && value > 0,
+          ).length,
+        }
+      })
+    // Capture actual fabrication pixels, excluding browser/OS UI font rendering.
+    const shown = await captureFabricationLayer()
+    expect(shown.paintedPixels).toBeGreaterThan(0)
     await page
       .locator("[data-view-menu] > div > div")
       .first()
@@ -58,9 +73,9 @@ test("fabrication polarity markings are visible on first load and can be hidden"
       .first()
       .click({ delay: 350 })
     await checkbox.waitFor({ state: "hidden" })
-    const hidden = await page.screenshot({ animations: "disabled" })
-    expect(shown.toString("base64")).not.toBe(hidden.toString("base64"))
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="425"><rect width="1200" height="425" fill="#222"/><text x="10" y="18" fill="white">Default: polarity notes visible</text><text x="610" y="18" fill="white">Explicitly hidden</text><image y="25" width="600" height="400" href="data:image/png;base64,${shown.toString("base64")}"/><image x="600" y="25" width="600" height="400" href="data:image/png;base64,${hidden.toString("base64")}"/></svg>`
+    const hidden = await captureFabricationLayer()
+    expect(hidden.paintedPixels).toBe(0)
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400"><title>Fabrication notes: default shown at left; explicitly hidden at right.</title><rect width="1200" height="400" fill="#111"/><image width="600" height="400" href="${shown.image}"/><image x="600" width="600" height="400" href="${hidden.image}"/></svg>`
     await expect(svg).toMatchSvgSnapshot(import.meta.path)
     await page.reload()
     await page.waitForSelector(".pcb-layer-top")
