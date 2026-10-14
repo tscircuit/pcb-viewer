@@ -66,6 +66,18 @@ try {
     await input.evaluate((element) => element === document.activeElement),
     true,
   )
+  await input.click()
+  assert.equal(
+    await input.evaluate((element) => element === document.activeElement),
+    true,
+    "clicking the search input retains focus",
+  )
+  await page.keyboard.type("u2")
+  assert.equal(
+    await input.inputValue(),
+    "u2",
+    "typing reaches the clicked input",
+  )
   await input.fill(" u ")
   const results = page.getByRole("list", { name: "Matching components" })
   assert.equal(await results.getByRole("button").count(), 2)
