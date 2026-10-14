@@ -11,7 +11,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { ToastContainer } from "lib/toast"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
-import { compose, scale, translate } from "transformation-matrix"
+import { compose, scale, translate, type Matrix } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import type { BoundsSelection } from "./components/DimensionOverlay"
@@ -27,6 +27,11 @@ import {
   setStoredString,
   STORAGE_KEYS,
 } from "./hooks/useLocalStorage"
+
+import {
+  animateTransform,
+  cancelTransformAnimation,
+} from "./lib/util/transform-animation"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -101,6 +106,15 @@ export const PCBViewer = ({
   const contextMenuOpenRef = useRef(false)
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
+  const searchAnimationFrame = useRef<number | null>(null)
+  const cancelSearchAnimation = useCallback(() => {
+    cancelTransformAnimation(searchAnimationFrame.current)
+    searchAnimationFrame.current = null
+  }, [])
+  useEffect(() => cancelSearchAnimation, [cancelSearchAnimation])
+  useEffect(() => {
+    cancelSearchAnimation()
+  }, [circuitJson, cancelSearchAnimation])
   const shouldAllowCanvasInteraction = useCallback(
     (event: MouseEvent | TouchEvent | WheelEvent) => {
       if (contextMenuOpenRef.current) return false
@@ -119,7 +133,7 @@ export const PCBViewer = ({
 
   const {
     ref: transformRef,
-    setTransform,
+    setTransform: setMouseTransform,
     cancelDrag: cancelPanDrag,
   } = useMouseMatrixTransform({
     transform,
@@ -127,6 +141,14 @@ export const PCBViewer = ({
     enabled: isInteractionEnabled && !isContextMenuOpen,
     shouldDrag: shouldAllowCanvasInteraction,
   })
+
+  const setTransform = useCallback(
+    (next: Matrix) => {
+      cancelSearchAnimation()
+      setMouseTransform(next)
+    },
+    [cancelSearchAnimation, setMouseTransform],
+  )
 
   const onContextMenuOpenChange = useCallback(
     (open: boolean) => {
@@ -243,19 +265,39 @@ export const PCBViewer = ({
       if (!focus) return
       cancelPanDrag()
       // Keep surrounding board context: use half the normal component-fit zoom.
-      setTransform(
-        compose(
-          translate(width / 2, height / 2),
-          scale(0.5, 0.5),
-          translate(-width / 2, -height / 2),
-          focus.transform,
-        ),
+      const target = compose(
+        translate(width / 2, height / 2),
+        scale(0.5, 0.5),
+        translate(-width / 2, -height / 2),
+        focus.transform,
       )
+      cancelSearchAnimation()
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setMouseTransform(target)
+      } else {
+        animateTransform({
+          startTransform: transform,
+          endTransform: target,
+          durationMs: 450,
+          onUpdate: setMouseTransform,
+          setAnimationFrameId: (id) => {
+            searchAnimationFrame.current = id
+          },
+        })
+      }
       const request = { pcbComponentId }
       searchFocusRequest.current = request
       setFocusedPcbComponent(request)
     },
-    [elements, refDimensions.width, height, cancelPanDrag, setTransform],
+    [
+      elements,
+      refDimensions.width,
+      height,
+      cancelPanDrag,
+      cancelSearchAnimation,
+      setMouseTransform,
+      transform,
+    ],
   )
 
   useEffect(() => {
@@ -295,6 +337,14 @@ export const PCBViewer = ({
       <div
         ref={transformRef as any}
         style={{ position: "relative" }}
+        onPointerDownCapture={(event) => {
+          if (!(event.target as Element).closest("[data-toolbar-overlay]"))
+            cancelSearchAnimation()
+        }}
+        onWheelCapture={(event) => {
+          if (!(event.target as Element).closest("[data-toolbar-overlay]"))
+            cancelSearchAnimation()
+        }}
         onContextMenu={(event) => event.preventDefault()}
       >
         <div ref={ref as any}>

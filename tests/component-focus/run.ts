@@ -89,6 +89,17 @@ try {
   await input.fill("u2")
   assert.equal(await results.getByRole("button").count(), 1)
   await results.getByRole("button", { name: "U2 bottom" }).click()
+  const movingOutline = page.locator(
+    '[data-focused-pcb-component-id="component_1"]',
+  )
+  const startBounds = (await movingOutline.boundingBox())!
+  await page.clock.runFor(200)
+  const intermediateBounds = (await movingOutline.boundingBox())!
+  assert(
+    intermediateBounds.width < startBounds.width,
+    "zoom progresses gradually",
+  )
+  await page.clock.runFor(300)
   await assertFocused("component_1")
   assert.equal(await input.count(), 0)
   const focused = page.locator('[data-focused-pcb-component-id="component_1"]')
@@ -119,6 +130,29 @@ try {
     .first()
     .click({ position: { x: 700, y: 500 } })
   assert.equal(await input.count(), 0, "outside click closes search")
+  await search.click()
+  await input.fill("u1")
+  await input.press("Enter")
+  await page.clock.runFor(100)
+  const u1Outline = page.locator(
+    '[data-focused-pcb-component-id="component_0"]',
+  )
+  await page
+    .locator("canvas")
+    .first()
+    .click({ position: { x: 700, y: 500 } })
+  const stoppedBounds = await u1Outline.boundingBox()
+  await page.clock.runFor(500)
+  assert.deepEqual(
+    await u1Outline.boundingBox(),
+    stoppedBounds,
+    "manual interaction cancels animation",
+  )
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await search.click()
+  await input.fill("u2")
+  await input.press("Enter")
+  await assertFocused("component_1")
   assert.deepEqual(errors, [])
   console.log(
     "PCB focus queues across mounting, changes targets, and acknowledges requests.",
