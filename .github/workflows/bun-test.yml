@@ -24,5 +24,8 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install Chromium for browser regressions
+        run: bunx --no-install playwright install --with-deps chromium
+
       - name: Run tests
         run: bun test
