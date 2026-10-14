@@ -153,6 +153,12 @@ try {
   await input.fill("u2")
   await input.press("Enter")
   await assertFocused("component_1")
+  await page.getByRole("button", { name: "Rename U1" }).click()
+  await search.click()
+  await input.fill("ic1")
+  await results.getByRole("button", { name: "IC1 top" }).waitFor()
+  await input.fill("u1")
+  await page.getByText("No matching components.").waitFor()
   assert.deepEqual(errors, [])
   console.log(
     "PCB focus queues across mounting, changes targets, and acknowledges requests.",

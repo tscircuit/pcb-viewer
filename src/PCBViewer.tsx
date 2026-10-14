@@ -1,37 +1,34 @@
-import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
-import {
-  RenderingEngineContext,
-  type RenderingEngine,
-} from "./components/RenderingEngineContext"
 import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
+import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
-import { ContextProviders } from "./components/ContextProviders"
-import type { StateProps } from "./global-store"
 import type { GraphicsObject } from "graphics-debug"
+import { applyEditEvents } from "lib/apply-edit-events"
+import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
+import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { ToastContainer } from "lib/toast"
+import { zIndexMap } from "lib/util/z-index-map"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
-import { compose, scale, translate, type Matrix } from "transformation-matrix"
+import { type Matrix, compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
+import { ContextProviders } from "./components/ContextProviders"
 import type { BoundsSelection } from "./components/DimensionOverlay"
-import type { ManualEditEvent } from "@tscircuit/props"
-import { zIndexMap } from "lib/util/z-index-map"
-import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
-import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
-import { applyEditEvents } from "lib/apply-edit-events"
-import type { PcbViewerController } from "./hooks/usePcbViewerController"
-import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
 import {
+  type RenderingEngine,
+  RenderingEngineContext,
+} from "./components/RenderingEngineContext"
+import type { StateProps } from "./global-store"
+import {
+  STORAGE_KEYS,
   getStoredString,
   setStoredString,
-  STORAGE_KEYS,
 } from "./hooks/useLocalStorage"
+import type { PcbViewerController } from "./hooks/usePcbViewerController"
+import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
+import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
 
-import {
-  animateTransform,
-  cancelTransformAnimation,
-} from "./lib/util/transform-animation"
+import { usePcbComponentSearchFocus } from "./hooks/usePcbComponentSearchFocus"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -86,7 +83,6 @@ export const PCBViewer = ({
   )
   const [focusedPcbComponent, setFocusedPcbComponent] =
     useState<PcbViewerController["focusRequest"]>(null)
-  const searchFocusRequest = useRef<PcbViewerController["focusRequest"]>(null)
   useEffect(
     () => setActiveRenderer(renderer ?? getPreferredRenderer()),
     [renderer],
@@ -106,15 +102,6 @@ export const PCBViewer = ({
   const contextMenuOpenRef = useRef(false)
   const [ref, refDimensions] = useMeasure()
   const [transform, setTransformInternal] = useState(defaultTransform)
-  const searchAnimationFrame = useRef<number | null>(null)
-  const cancelSearchAnimation = useCallback(() => {
-    cancelTransformAnimation(searchAnimationFrame.current)
-    searchAnimationFrame.current = null
-  }, [])
-  useEffect(() => cancelSearchAnimation, [cancelSearchAnimation])
-  useEffect(() => {
-    cancelSearchAnimation()
-  }, [circuitJson, cancelSearchAnimation])
   const shouldAllowCanvasInteraction = useCallback(
     (event: MouseEvent | TouchEvent | WheelEvent) => {
       if (contextMenuOpenRef.current) return false
@@ -140,6 +127,14 @@ export const PCBViewer = ({
     onSetTransform: setTransformInternal,
     enabled: isInteractionEnabled && !isContextMenuOpen,
     shouldDrag: shouldAllowCanvasInteraction,
+  })
+
+  const { focusComponent, cancelSearchAnimation } = usePcbComponentSearchFocus({
+    transform,
+    setTransform: setMouseTransform,
+    focusedPcbComponent,
+    setFocusedPcbComponent,
+    circuitJson,
   })
 
   const setTransform = useCallback(
@@ -220,7 +215,7 @@ export const PCBViewer = ({
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
       ) ?? []
     )
-  }, [circuitJsonKey])
+  }, [circuitJson, circuitJsonKey])
 
   const elements = useMemo(() => {
     return applyEditEvents({
@@ -264,51 +259,10 @@ export const PCBViewer = ({
       )
       if (!focus) return
       cancelPanDrag()
-      // Keep surrounding board context: use half the normal component-fit zoom.
-      const target = compose(
-        translate(width / 2, height / 2),
-        scale(0.5, 0.5),
-        translate(-width / 2, -height / 2),
-        focus.transform,
-      )
-      cancelSearchAnimation()
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setMouseTransform(target)
-      } else {
-        animateTransform({
-          startTransform: transform,
-          endTransform: target,
-          durationMs: 450,
-          onUpdate: setMouseTransform,
-          setAnimationFrameId: (id) => {
-            searchAnimationFrame.current = id
-          },
-        })
-      }
-      const request = { pcbComponentId }
-      searchFocusRequest.current = request
-      setFocusedPcbComponent(request)
+      focusComponent(focus, width, height)
     },
-    [
-      elements,
-      refDimensions.width,
-      height,
-      cancelPanDrag,
-      cancelSearchAnimation,
-      setMouseTransform,
-      transform,
-    ],
+    [elements, refDimensions.width, height, cancelPanDrag, focusComponent],
   )
-
-  useEffect(() => {
-    if (
-      !focusedPcbComponent ||
-      focusedPcbComponent !== searchFocusRequest.current
-    )
-      return
-    const timeout = window.setTimeout(() => setFocusedPcbComponent(null), 3000)
-    return () => window.clearTimeout(timeout)
-  }, [focusedPcbComponent])
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])

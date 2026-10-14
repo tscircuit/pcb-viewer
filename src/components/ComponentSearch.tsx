@@ -1,6 +1,6 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react"
-import type { AnyCircuitElement } from "circuit-json"
 import { css } from "@emotion/css"
+import type { AnyCircuitElement } from "circuit-json"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 
 const buttonClass = css`
   background: #1f1f1f;
@@ -130,9 +130,13 @@ export const ComponentSearch = ({
             }}
           />
           {!normalizedQuery ? (
-            <p role="status">Type a component name.</p>
+            <output style={{ display: "block", marginTop: 8 }}>
+              Type a component name.
+            </output>
           ) : matches.length === 0 ? (
-            <p role="status">No matching components.</p>
+            <output style={{ display: "block", marginTop: 8 }}>
+              No matching components.
+            </output>
           ) : (
             <ul
               aria-label="Matching components"
