@@ -34,6 +34,7 @@
         "@types/react": "19",
         "@types/react-dom": "~19.1.0",
         "@webgpu/types": "^0.1.72",
+        "bun-match-svg": "^0.0.9",
         "esbuild": "^0.25.2",
         "format-si-unit": "^0.0.12",
         "next": "^14.1.4",
