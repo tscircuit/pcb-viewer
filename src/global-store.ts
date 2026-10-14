@@ -145,7 +145,7 @@ export const createStore = (
         ),
         is_showing_fabrication_notes: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_FABRICATION_NOTES,
-          false,
+          true,
         ),
         is_showing_pcb_notes: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_PCB_NOTES,
