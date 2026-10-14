@@ -81,6 +81,7 @@ export const PCBViewer = ({
   )
   const [focusedPcbComponent, setFocusedPcbComponent] =
     useState<PcbViewerController["focusRequest"]>(null)
+  const searchFocusRequest = useRef<PcbViewerController["focusRequest"]>(null)
   useEffect(
     () => setActiveRenderer(renderer ?? getPreferredRenderer()),
     [renderer],
@@ -230,6 +231,43 @@ export const PCBViewer = ({
     setTransform,
   ])
 
+  const focusSearchComponent = useCallback(
+    (pcbComponentId: string) => {
+      const width = refDimensions.width
+      const focus = getPcbComponentFocus(
+        elements,
+        pcbComponentId,
+        width,
+        height,
+      )
+      if (!focus) return
+      cancelPanDrag()
+      // Keep surrounding board context: use half the normal component-fit zoom.
+      setTransform(
+        compose(
+          translate(width / 2, height / 2),
+          scale(0.5, 0.5),
+          translate(-width / 2, -height / 2),
+          focus.transform,
+        ),
+      )
+      const request = { pcbComponentId }
+      searchFocusRequest.current = request
+      setFocusedPcbComponent(request)
+    },
+    [elements, refDimensions.width, height, cancelPanDrag, setTransform],
+  )
+
+  useEffect(() => {
+    if (
+      !focusedPcbComponent ||
+      focusedPcbComponent !== searchFocusRequest.current
+    )
+      return
+    const timeout = window.setTimeout(() => setFocusedPcbComponent(null), 3000)
+    return () => window.clearTimeout(timeout)
+  }, [focusedPcbComponent])
+
   const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
     onEditEventsChanged?.([...editEvents, event])
@@ -275,6 +313,7 @@ export const PCBViewer = ({
               onBoundsSelected={onBoundsSelected}
               onViewSchematicComponent={onViewSchematicComponent}
               focusedPcbComponent={focusedPcbComponent}
+              onSearchComponent={focusSearchComponent}
               cancelPanDrag={cancelPanDrag}
               onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}

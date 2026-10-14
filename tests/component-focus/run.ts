@@ -57,6 +57,56 @@ try {
   await page.waitForSelector('[data-pending="true"]', { state: "attached" })
   await page.getByRole("button", { name: "Mount and focus U1" }).click()
   await assertFocused("component_0")
+  await page.clock.install()
+  const search = page.getByRole("button", { name: "Search components" })
+  const input = page.getByRole("textbox", { name: "Component name" })
+  await search.click()
+  await input.waitFor()
+  assert.equal(
+    await input.evaluate((element) => element === document.activeElement),
+    true,
+  )
+  await input.fill(" u ")
+  const results = page.getByRole("list", { name: "Matching components" })
+  assert.equal(await results.getByRole("button").count(), 2)
+  await search.click()
+  assert.equal(await input.count(), 0)
+  await search.click()
+  await input.fill("missing")
+  await page.getByText("No matching components.").waitFor()
+  await input.fill("u2")
+  assert.equal(await results.getByRole("button").count(), 1)
+  await results.getByRole("button", { name: "U2 bottom" }).click()
+  await assertFocused("component_1")
+  assert.equal(await input.count(), 0)
+  const focused = page.locator('[data-focused-pcb-component-id="component_1"]')
+  const bounds = (await focused.boundingBox())!
+  assert(
+    bounds.width < 800 * 0.5 && bounds.height < 600 * 0.5,
+    "search leaves surrounding context",
+  )
+  await page.clock.fastForward(2000)
+  assert.equal(await focused.count(), 1)
+  await search.click()
+  await input.fill("u2")
+  await input.press("Enter")
+  await page.clock.fastForward(2900)
+  assert.equal(
+    await focused.count(),
+    1,
+    "reselection restarts highlight duration",
+  )
+  await page.clock.fastForward(200)
+  assert.equal(await focused.count(), 0, "highlight clears after three seconds")
+  await search.click()
+  await input.press("Escape")
+  assert.equal(await input.count(), 0)
+  await search.click()
+  await page
+    .locator("canvas")
+    .first()
+    .click({ position: { x: 700, y: 500 } })
+  assert.equal(await input.count(), 0, "outside click closes search")
   assert.deepEqual(errors, [])
   console.log(
     "PCB focus queues across mounting, changes targets, and acknowledges requests.",
