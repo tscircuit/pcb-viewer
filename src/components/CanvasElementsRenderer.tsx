@@ -33,6 +33,8 @@ import {
 } from "lib/x-ray-net"
 import { useGlobalStore } from "../global-store"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
+import { getPcbTraceAtPoint } from "lib/get-pcb-trace-at-point"
+import type { SimulateReturnCurrentEvent } from "lib/return-current-simulation"
 import { WebGpuElementsRenderer } from "./WebGpuElementsRenderer"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
@@ -62,6 +64,7 @@ export interface CanvasElementsRendererProps {
   focusOnHover?: boolean
   focusedPcbComponent?: { pcbComponentId: string } | null
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
+  onSimulateReturnCurrent?: (event: SimulateReturnCurrentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onRenderComplete?: () => void
@@ -204,6 +207,17 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       const net = getElementNetId(primitive._element, connectivityMap)
       if (net) return describeNet(net, primitive._element!)
     }
+  }
+
+  const getTraceAtPoint = (point: { x: number; y: number }) => {
+    if (!transform) return
+    return getPcbTraceAtPoint({
+      primitives: primitivesWithoutInteractionMetadata,
+      point: applyToPoint(inverse(transform), point),
+      transform,
+      selectedLayer,
+      includeHiddenTraces: xRayNetIds.length > 0,
+    })
   }
 
   const [hoverState, setHoverState] = useState({
@@ -399,6 +413,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             onContextMenuOpenChange={props.onContextMenuOpenChange}
             getComponentAtPoint={getComponentAtPoint}
             onViewSchematicComponent={props.onViewSchematicComponent}
+            getTraceAtPoint={getTraceAtPoint}
+            onSimulateReturnCurrent={props.onSimulateReturnCurrent}
           >
             <ErrorOverlay transform={transform} elements={elements}>
               <RatsNestOverlay transform={transform} soup={elements}>

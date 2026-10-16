@@ -14,6 +14,11 @@ import { useMeasure } from "react-use"
 import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
+import { ReturnCurrentSimulationOverlay } from "./components/ReturnCurrentSimulationOverlay"
+import type {
+  ReturnCurrentSimulationOptions,
+  SimulateReturnCurrentEvent,
+} from "./lib/return-current-simulation"
 import type { BoundsSelection } from "./components/DimensionOverlay"
 import type { ManualEditEvent } from "@tscircuit/props"
 import { zIndexMap } from "lib/util/z-index-map"
@@ -27,6 +32,11 @@ import {
   setStoredString,
   STORAGE_KEYS,
 } from "./hooks/useLocalStorage"
+
+export type {
+  ReturnCurrentSimulationOptions,
+  SimulateReturnCurrentEvent,
+} from "./lib/return-current-simulation"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -50,6 +60,10 @@ type Props = {
   onRenderComplete?: () => void
   /** Omit when the host has no enabled schematic tab. */
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
+  /** Enables the return-current action for the exact trace under the context menu. */
+  onSimulateReturnCurrent?: (event: SimulateReturnCurrentEvent) => void
+  /** Display one completed result from the full Circuit JSON over the PCB. */
+  returnCurrentSimulation?: ReturnCurrentSimulationOptions
   onBoundsSelected?: (bounds: BoundsSelection) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
@@ -71,6 +85,8 @@ export const PCBViewer = ({
   onRenderComplete,
   onBoundsSelected,
   onViewSchematicComponent,
+  onSimulateReturnCurrent,
+  returnCurrentSimulation,
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
@@ -274,6 +290,7 @@ export const PCBViewer = ({
               focusOnHover={focusOnHover}
               onBoundsSelected={onBoundsSelected}
               onViewSchematicComponent={onViewSchematicComponent}
+              onSimulateReturnCurrent={onSimulateReturnCurrent}
               focusedPcbComponent={focusedPcbComponent}
               cancelPanDrag={cancelPanDrag}
               onContextMenuOpenChange={onContextMenuOpenChange}
@@ -292,6 +309,15 @@ export const PCBViewer = ({
               elements={elements as SourceTrace[]}
               debugGraphics={debugGraphics}
             />
+            {returnCurrentSimulation && (
+              <ReturnCurrentSimulationOverlay
+                circuitJson={circuitJson ?? []}
+                simulation={returnCurrentSimulation}
+                transform={transform}
+                width={refDimensions.width}
+                height={height}
+              />
+            )}
             <ToastContainer />
           </ContextProviders>
         </div>
