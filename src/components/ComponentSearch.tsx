@@ -206,7 +206,9 @@ export const ComponentSearch = ({
               aria-label="Matching components"
               style={{
                 listStyle: "none",
-                padding: 0,
+                padding: "0 12px 0 0",
+                scrollbarGutter: "stable",
+                overflowX: "hidden",
                 margin: "8px 0 0",
                 maxHeight: 220,
                 overflowY: "auto",
@@ -224,6 +226,7 @@ export const ComponentSearch = ({
                     className={buttonClass}
                     style={{
                       width: "100%",
+                      boxSizing: "border-box",
                       display: "flex",
                       justifyContent: "space-between",
                       border: "none",
