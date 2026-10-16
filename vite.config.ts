@@ -9,6 +9,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    proxy: {
+      "/api": {
+        target:
+          process.env.RETURN_CURRENT_DEV_API_URL ?? "http://127.0.0.1:3031",
+        changeOrigin: true,
+      },
+    },
   },
   define: {
     global: {},

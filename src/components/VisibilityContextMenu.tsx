@@ -37,6 +37,7 @@ const itemStyle = css`
 export const VisibilityContextMenu = ({
   component,
   onViewSchematicComponent,
+  onSimulateReturnCurrent,
   position,
   onClose,
   onXRayNet,
@@ -47,6 +48,7 @@ export const VisibilityContextMenu = ({
 }: {
   component?: PadComponent
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
+  onSimulateReturnCurrent?: () => void
   position: { x: number; y: number }
   onClose: () => void
   onXRayNet?: () => void
@@ -57,6 +59,7 @@ export const VisibilityContextMenu = ({
 }) => {
   const engine = useRenderingEngine()
   const [rendererOpen, setRendererOpen] = useState(false)
+  const [simulationOpen, setSimulationOpen] = useState(false)
   const opacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const setOpacity = useGlobalStore((s) => s.setHiddenLayerOpacity)
   const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
@@ -156,6 +159,8 @@ export const VisibilityContextMenu = ({
             setVisibilityOpen(false)
           else if (menu.getAttribute("aria-label") === "Rendering Engine")
             setRendererOpen(false)
+          else if (menu.getAttribute("aria-label") === "Simulate")
+            setSimulationOpen(false)
         } else if (event.key === "Escape") {
           event.preventDefault()
           onClose()
@@ -177,6 +182,51 @@ export const VisibilityContextMenu = ({
         ...(stacked ? { overflowY: "auto" } : {}),
       }}
     >
+      {onSimulateReturnCurrent && (
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => {
+            setSimulationOpen(true)
+            setVisibilityOpen(false)
+            setRendererOpen(false)
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            aria-haspopup="menu"
+            aria-expanded={simulationOpen}
+            className={itemStyle}
+            onClick={() => {
+              setSimulationOpen(true)
+              setVisibilityOpen(false)
+              setRendererOpen(false)
+            }}
+          >
+            Simulate ▸
+          </button>
+          {simulationOpen && (
+            <div
+              role="menu"
+              aria-label="Simulate"
+              className={menuStyle}
+              style={submenuStyle}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                className={itemStyle}
+                onClick={() => {
+                  onClose()
+                  onSimulateReturnCurrent()
+                }}
+              >
+                Return Current Simulation
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       {onXRayNet && (
         <button
           type="button"
@@ -225,6 +275,7 @@ export const VisibilityContextMenu = ({
         onMouseEnter={() => {
           setVisibilityOpen(true)
           setRendererOpen(false)
+          setSimulationOpen(false)
         }}
       >
         <button
@@ -236,6 +287,7 @@ export const VisibilityContextMenu = ({
           onClick={() => {
             setVisibilityOpen(true)
             setRendererOpen(false)
+            setSimulationOpen(false)
           }}
         >
           Visibility ▸
@@ -362,6 +414,7 @@ export const VisibilityContextMenu = ({
           onMouseEnter={() => {
             setRendererOpen(true)
             setVisibilityOpen(false)
+            setSimulationOpen(false)
           }}
         >
           <button
@@ -373,6 +426,7 @@ export const VisibilityContextMenu = ({
             onClick={() => {
               setRendererOpen(true)
               setVisibilityOpen(false)
+              setSimulationOpen(false)
             }}
           >
             Rendering Engine ▸
