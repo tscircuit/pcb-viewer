@@ -227,7 +227,7 @@ export const ComponentSearch = ({
                       display: "flex",
                       justifyContent: "space-between",
                       border: "none",
-                      borderTop: index > 0 ? "1px solid #444" : undefined,
+                      borderTop: index > 0 ? "1px solid #444" : "0",
                       borderRadius: 0,
                       padding: "8px 6px",
                       backgroundColor:
