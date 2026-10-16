@@ -67,6 +67,10 @@ test("queues one job at a time, deduplicates IDs, and serves ordered status/resu
   const firstGate = new Promise<void>((resolve) => {
     releaseFirst = resolve
   })
+  let markFirstStarted!: () => void
+  const firstStarted = new Promise<void>((resolve) => {
+    markFirstStarted = resolve
+  })
   const calls: string[] = []
   let active = 0
   let maxActive = 0
@@ -74,7 +78,10 @@ test("queues one job at a time, deduplicates IDs, and serves ordered status/resu
     calls.push(input.request_id)
     active++
     maxActive = Math.max(maxActive, active)
-    if (input.request_id === "first") await firstGate
+    if (input.request_id === "first") {
+      markFirstStarted()
+      await firstGate
+    }
     active--
     // Protocol-only runner: no simulated fields or golden physics data.
     return input.circuit_json
@@ -82,6 +89,7 @@ test("queues one job at a time, deduplicates IDs, and serves ordered status/resu
   try {
     expect((await post(base, request("first"))).status).toBe(202)
     await waitForStatus(base, "first", "running")
+    await firstStarted
     expect((await post(base, request("first"))).status).toBe(200)
     expect(
       (await post(base, { ...request("first"), frequency_hz: 200_000_000 }))
