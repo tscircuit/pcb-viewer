@@ -22,6 +22,9 @@ export const ComponentSearch = ({
 }) => {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [activeComponentId, setActiveComponentId] = useState<string | null>(
+    null,
+  )
   const container = useRef<HTMLDivElement>(null)
   const toggle = useRef<HTMLButtonElement>(null)
   const input = useRef<HTMLInputElement>(null)
@@ -51,8 +54,21 @@ export const ComponentSearch = ({
     component.name.toLowerCase().includes(normalizedQuery),
   )
 
+  const activeIndex = matches.findIndex(
+    (component) => component.id === activeComponentId,
+  )
+  const activeOptionId =
+    activeIndex >= 0 ? `${panelId}-option-${activeIndex}` : undefined
+  useEffect(() => {
+    if (open && activeOptionId)
+      document
+        .getElementById(activeOptionId)
+        ?.scrollIntoView({ block: "nearest" })
+  }, [open, activeOptionId])
+
   useEffect(() => {
     if (!open) return
+    setActiveComponentId(null)
     input.current?.focus()
     const closeOutside = (event: PointerEvent) => {
       if (!container.current?.contains(event.target as Node)) setOpen(false)
@@ -72,6 +88,28 @@ export const ComponentSearch = ({
       ref={container}
       style={{ position: "relative", height: "fit-content" }}
       onKeyDown={(event) => {
+        if (
+          (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+          open &&
+          normalizedQuery &&
+          matches.length
+        ) {
+          event.preventDefault()
+          event.stopPropagation()
+          const nextIndex =
+            activeIndex < 0
+              ? event.key === "ArrowDown"
+                ? 0
+                : matches.length - 1
+              : (activeIndex +
+                  (event.key === "ArrowDown" ? 1 : -1) +
+                  matches.length) %
+                matches.length
+          const component = matches[nextIndex]
+          setActiveComponentId(component.id)
+          onSelect(component.id)
+          input.current?.focus()
+        }
         if (event.key === "Escape") {
           event.stopPropagation()
           setOpen(false)
@@ -109,14 +147,22 @@ export const ComponentSearch = ({
         >
           <input
             ref={input}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={open}
+            aria-controls={`${panelId}-results`}
+            aria-activedescendant={activeOptionId}
             aria-label="Component name"
             placeholder="Search component name…"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value)
+              setActiveComponentId(null)
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && normalizedQuery && matches[0]) {
                 event.preventDefault()
-                select(matches[0].id)
+                select(matches[activeIndex >= 0 ? activeIndex : 0].id)
               }
             }}
             style={{
@@ -138,7 +184,11 @@ export const ComponentSearch = ({
               No matching components.
             </output>
           ) : (
-            <ul
+            <div
+              id={`${panelId}-results`}
+              // biome-ignore lint/a11y/useSemanticElements: Custom combobox popup keeps focus in the input.
+              role="listbox"
+              tabIndex={-1}
               aria-label="Matching components"
               style={{
                 listStyle: "none",
@@ -148,25 +198,34 @@ export const ComponentSearch = ({
                 overflowY: "auto",
               }}
             >
-              {matches.map((component) => (
-                <li key={component.id}>
+              {matches.map((component, index) => (
+                <div key={component.id} role="presentation">
                   <button
                     type="button"
+                    // biome-ignore lint/a11y/useSemanticElements: Custom combobox options are clickable and use aria-activedescendant.
+                    role="option"
+                    id={`${panelId}-option-${index}`}
+                    aria-selected={component.id === activeComponentId}
+                    tabIndex={-1}
                     className={buttonClass}
                     style={{
                       width: "100%",
                       display: "flex",
                       justifyContent: "space-between",
                       marginBottom: 4,
+                      backgroundColor:
+                        component.id === activeComponentId
+                          ? "#34506e"
+                          : undefined,
                     }}
                     onClick={() => select(component.id)}
                   >
                     <span>{component.name}</span>
                     <span style={{ color: "#aaa" }}>{component.layer}</span>
                   </button>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       )}

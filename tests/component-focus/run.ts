@@ -59,7 +59,7 @@ try {
   await assertFocused("component_0")
   await page.clock.install()
   const search = page.getByRole("button", { name: "Search components" })
-  const input = page.getByRole("textbox", { name: "Component name" })
+  const input = page.getByRole("combobox", { name: "Component name" })
   await search.click()
   await input.waitFor()
   assert.equal(
@@ -79,16 +79,16 @@ try {
     "typing reaches the clicked input",
   )
   await input.fill(" u ")
-  const results = page.getByRole("list", { name: "Matching components" })
-  assert.equal(await results.getByRole("button").count(), 2)
+  const results = page.getByRole("listbox", { name: "Matching components" })
+  assert.equal(await results.getByRole("option").count(), 2)
   await search.click()
   assert.equal(await input.count(), 0)
   await search.click()
   await input.fill("missing")
   await page.getByText("No matching components.").waitFor()
   await input.fill("u2")
-  assert.equal(await results.getByRole("button").count(), 1)
-  await results.getByRole("button", { name: "U2 bottom" }).click()
+  assert.equal(await results.getByRole("option").count(), 1)
+  await results.getByRole("option", { name: "U2 bottom" }).click()
   const movingOutline = page.locator(
     '[data-focused-pcb-component-id="component_1"]',
   )
@@ -156,7 +156,7 @@ try {
   await page.getByRole("button", { name: "Rename U1" }).click()
   await search.click()
   await input.fill("ic1")
-  await results.getByRole("button", { name: "IC1 top" }).waitFor()
+  await results.getByRole("option", { name: "IC1 top" }).waitFor()
   await input.fill("u1")
   await page.getByText("No matching components.").waitFor()
   assert.deepEqual(errors, [])
