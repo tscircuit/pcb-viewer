@@ -30,16 +30,13 @@ export const FocusedPcbComponentOverlay = ({
   }, [focusRequest, layer, selectLayer])
 
   if (!focus || !transform) return null
-  const { component } = focus
-  const center = applyToPoint(transform, component.center)
-  const rotatedTransform = compose(
-    transform,
-    rotateDEG(component.rotation ?? 0),
-  )
+  const { outline } = focus
+  const center = applyToPoint(transform, outline.center)
+  const rotatedTransform = compose(transform, rotateDEG(outline.rotation ?? 0))
   const width =
-    component.width * Math.hypot(rotatedTransform.a, rotatedTransform.b) + 8
+    outline.width * Math.hypot(rotatedTransform.a, rotatedTransform.b) + 8
   const height =
-    component.height * Math.hypot(rotatedTransform.c, rotatedTransform.d) + 8
+    outline.height * Math.hypot(rotatedTransform.c, rotatedTransform.d) + 8
   const rotation = Math.atan2(rotatedTransform.b, rotatedTransform.a)
   return (
     <div
