@@ -122,11 +122,25 @@ export const ComponentSearch = ({
         type="button"
         className={buttonClass}
         aria-label="Search components"
+        title="Search components"
+        style={{ display: "flex", alignItems: "center", padding: "4px 6px" }}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen(!open)}
       >
-        Search
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 5 5" />
+        </svg>
       </button>
       {open && (
         <div
@@ -212,7 +226,10 @@ export const ComponentSearch = ({
                       width: "100%",
                       display: "flex",
                       justifyContent: "space-between",
-                      marginBottom: 4,
+                      border: "none",
+                      borderTop: index > 0 ? "1px solid #444" : undefined,
+                      borderRadius: 0,
+                      padding: "8px 6px",
                       backgroundColor:
                         component.id === activeComponentId
                           ? "#34506e"
