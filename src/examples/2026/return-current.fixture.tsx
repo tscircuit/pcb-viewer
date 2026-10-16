@@ -6,7 +6,7 @@ import {
   getReturnCurrentGroundCandidates,
   getReturnCurrentTraceTerminals,
 } from "../../lib/return-current-experiment"
-import { returnCurrentDemoBoard } from "./return-current/board"
+import { returnCurrentDemoBoard } from "../../assets/return-current-board"
 
 type JobStatus = "idle" | "queued" | "running" | "completed" | "failed"
 type Result = {
