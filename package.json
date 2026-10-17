@@ -43,6 +43,7 @@
     "@types/react": "19",
     "@types/react-dom": "~19.1.0",
     "@webgpu/types": "^0.1.72",
+    "circuit-json-to-connectivity-map": "^0.0.35",
     "esbuild": "^0.25.2",
     "format-si-unit": "^0.0.12",
     "next": "^14.1.4",
