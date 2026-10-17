@@ -12,6 +12,7 @@ import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
 import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
 import { useGlobalStore } from "../global-store"
+import { getScreenSnappingPoints } from "lib/get-screen-snapping-points"
 import { DimensionSnapGuides } from "./DimensionSnapGuides"
 
 interface Props {
@@ -209,16 +210,16 @@ export const DimensionOverlay = ({
   }, [elementBoundingBoxes, primitiveSnappingPoints])
 
   const snappingPointsWithScreen = useMemo(() => {
-    return snappingPoints.map((snap, index) => ({
-      ...snap,
-      id: `${index}-${snap.anchor}`,
-      screenPoint: applyToPoint(transform!, snap.point),
-    }))
-  }, [snappingPoints, transform])
+    return getScreenSnappingPoints({
+      snappingPoints,
+      realToScreenTransform: transform!,
+      isEnabled: dimensionToolStretching,
+    })
+  }, [snappingPoints, transform, dimensionToolStretching])
 
   const findSnap = useCallback(
     (rwPoint: { x: number; y: number }) => {
-      if (snappingPointsWithScreen.length === 0) {
+      if (snappingPoints.length === 0) {
         return { point: rwPoint, id: null as string | null }
       }
 
@@ -229,16 +230,17 @@ export const DimensionOverlay = ({
         point: { x: number; y: number }
       } | null = null
 
-      for (const snap of snappingPointsWithScreen) {
-        const dx = snap.screenPoint.x - screenPoint.x
-        const dy = snap.screenPoint.y - screenPoint.y
+      for (const [index, snap] of snappingPoints.entries()) {
+        const snapScreenPoint = applyToPoint(transform!, snap.point)
+        const dx = snapScreenPoint.x - screenPoint.x
+        const dy = snapScreenPoint.y - screenPoint.y
         const distance = Math.hypot(dx, dy)
 
         if (distance > SNAP_THRESHOLD_PX) continue
         if (!bestMatch || distance < bestMatch.distance) {
           bestMatch = {
             distance,
-            id: snap.id,
+            id: `${index}-${snap.anchor}`,
             point: snap.point,
           }
         }
@@ -250,7 +252,7 @@ export const DimensionOverlay = ({
 
       return { point: bestMatch.point, id: bestMatch.id }
     },
-    [snappingPointsWithScreen, transform],
+    [snappingPoints, transform],
   )
 
   useEffect(() => {
