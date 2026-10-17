@@ -10,6 +10,8 @@ export function applyEditEvents({
   circuitJson: CircuitJson
   editEvents: ManualEditEvent[]
 }): CircuitJson {
+  if (editEvents.length === 0) return circuitJson
+
   let editedCircuitJson = structuredClone(circuitJson)
 
   for (const editEvent of editEvents) {
