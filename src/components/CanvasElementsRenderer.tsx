@@ -401,7 +401,11 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             onViewSchematicComponent={props.onViewSchematicComponent}
           >
             <ErrorOverlay transform={transform} elements={elements}>
-              <RatsNestOverlay transform={transform} soup={elements}>
+              <RatsNestOverlay
+                transform={transform}
+                soup={elements}
+                connectivityMap={connectivityMap}
+              >
                 <PcbGroupOverlay
                   transform={transform}
                   elements={elements}
