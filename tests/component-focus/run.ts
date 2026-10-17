@@ -57,6 +57,108 @@ try {
   await page.waitForSelector('[data-pending="true"]', { state: "attached" })
   await page.getByRole("button", { name: "Mount and focus U1" }).click()
   await assertFocused("component_0")
+  await page.clock.install()
+  const search = page.getByRole("button", { name: "Search components" })
+  const input = page.getByRole("combobox", { name: "Component name" })
+  await search.click()
+  await input.waitFor()
+  assert.equal(
+    await input.evaluate((element) => element === document.activeElement),
+    true,
+  )
+  await input.click()
+  assert.equal(
+    await input.evaluate((element) => element === document.activeElement),
+    true,
+    "clicking the search input retains focus",
+  )
+  await page.keyboard.type("u2")
+  assert.equal(
+    await input.inputValue(),
+    "u2",
+    "typing reaches the clicked input",
+  )
+  await input.fill(" u ")
+  const results = page.getByRole("listbox", { name: "Matching components" })
+  assert.equal(await results.getByRole("option").count(), 2)
+  await search.click()
+  assert.equal(await input.count(), 0)
+  await search.click()
+  await input.fill("missing")
+  await page.getByText("No matching components.").waitFor()
+  await input.fill("u2")
+  assert.equal(await results.getByRole("option").count(), 1)
+  await results.getByRole("option", { name: "U2 bottom" }).click()
+  const movingOutline = page.locator(
+    '[data-focused-pcb-component-id="component_1"]',
+  )
+  const startBounds = (await movingOutline.boundingBox())!
+  await page.clock.runFor(200)
+  const intermediateBounds = (await movingOutline.boundingBox())!
+  assert(
+    intermediateBounds.width < startBounds.width,
+    "zoom progresses gradually",
+  )
+  await page.clock.runFor(300)
+  await assertFocused("component_1")
+  assert.equal(await input.count(), 0)
+  const focused = page.locator('[data-focused-pcb-component-id="component_1"]')
+  const bounds = (await focused.boundingBox())!
+  assert(
+    bounds.width < 800 * 0.5 && bounds.height < 600 * 0.5,
+    "search leaves surrounding context",
+  )
+  await page.clock.fastForward(2000)
+  assert.equal(await focused.count(), 1)
+  await search.click()
+  await input.fill("u2")
+  await input.press("Enter")
+  await page.clock.fastForward(2900)
+  assert.equal(
+    await focused.count(),
+    1,
+    "reselection restarts highlight duration",
+  )
+  await page.clock.fastForward(200)
+  assert.equal(await focused.count(), 0, "highlight clears after three seconds")
+  await search.click()
+  await input.press("Escape")
+  assert.equal(await input.count(), 0)
+  await search.click()
+  await page
+    .locator("canvas")
+    .first()
+    .click({ position: { x: 700, y: 500 } })
+  assert.equal(await input.count(), 0, "outside click closes search")
+  await search.click()
+  await input.fill("u1")
+  await input.press("Enter")
+  await page.clock.runFor(100)
+  const u1Outline = page.locator(
+    '[data-focused-pcb-component-id="component_0"]',
+  )
+  await page
+    .locator("canvas")
+    .first()
+    .click({ position: { x: 700, y: 500 } })
+  const stoppedBounds = await u1Outline.boundingBox()
+  await page.clock.runFor(500)
+  assert.deepEqual(
+    await u1Outline.boundingBox(),
+    stoppedBounds,
+    "manual interaction cancels animation",
+  )
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await search.click()
+  await input.fill("u2")
+  await input.press("Enter")
+  await assertFocused("component_1")
+  await page.getByRole("button", { name: "Rename U1" }).click()
+  await search.click()
+  await input.fill("ic1")
+  await results.getByRole("option", { name: "IC1 top" }).waitFor()
+  await input.fill("u1")
+  await page.getByText("No matching components.").waitFor()
   assert.deepEqual(errors, [])
   console.log(
     "PCB focus queues across mounting, changes targets, and acknowledges requests.",

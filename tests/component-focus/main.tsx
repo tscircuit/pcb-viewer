@@ -1,7 +1,7 @@
+import type { AnyCircuitElement } from "circuit-json"
 import { useState } from "react"
 import { createRoot } from "react-dom/client"
 import { PCBViewer, usePcbViewerController } from "../../src/index"
-import type { AnyCircuitElement } from "circuit-json"
 
 const circuitJson = [
   {
@@ -45,11 +45,13 @@ const circuitJson = [
 ] as AnyCircuitElement[]
 
 function Harness() {
+  const [renamed, setRenamed] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { controller, focusPcbComponent } = usePcbViewerController()
   return (
     <>
       <button
+        type="button"
         onClick={() => {
           focusPcbComponent("component_0")
           setMounted(true)
@@ -57,13 +59,28 @@ function Harness() {
       >
         Mount and focus U1
       </button>
-      <button onClick={() => focusPcbComponent("component_1")}>Focus U2</button>
-      <button onClick={() => setMounted(false)}>Unmount</button>
+      <button type="button" onClick={() => focusPcbComponent("component_1")}>
+        Focus U2
+      </button>
+      <button type="button" onClick={() => setMounted(false)}>
+        Unmount
+      </button>
+      <button type="button" onClick={() => setRenamed(true)}>
+        Rename U1
+      </button>
       <output data-pending={controller.focusRequest !== null} />
       {mounted && (
         <PCBViewer
           renderer="canvas"
-          circuitJson={circuitJson}
+          circuitJson={
+            renamed
+              ? circuitJson.map((element) =>
+                  element.type === "source_component" && element.name === "U1"
+                    ? { ...element, name: "IC1" }
+                    : element,
+                )
+              : circuitJson
+          }
           height={600}
           controller={controller}
         />
