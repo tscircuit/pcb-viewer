@@ -67,7 +67,7 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
-    "@tscircuit/alphabet": "^0.0.25",
+    "@tscircuit/alphabet": "https://pkg.pr.new/@tscircuit/alphabet@61bf8c6",
     "@tscircuit/math-utils": "^0.0.36",
     "@vitejs/plugin-react": "^5.0.2",
     "circuit-json": "^0.0.518",

@@ -6,7 +6,7 @@
       "name": "@tscircuit/pcb-viewer",
       "dependencies": {
         "@emotion/css": "^11.11.2",
-        "@tscircuit/alphabet": "^0.0.25",
+        "@tscircuit/alphabet": "https://pkg.pr.new/@tscircuit/alphabet@61bf8c6",
         "@tscircuit/math-utils": "^0.0.36",
         "@vitejs/plugin-react": "^5.0.2",
         "circuit-json": "^0.0.518",
@@ -413,7 +413,7 @@
 
     "@thednp/dommatrix": ["@thednp/dommatrix@2.0.12", "", {}, "sha512-eOshhlSShBXLfrMQqqhA450TppJXhKriaQdN43mmniOCMn9sD60QKF1Axsj7bKl339WH058LuGFS6H84njYH5w=="],
 
-    "@tscircuit/alphabet": ["@tscircuit/alphabet@0.0.25", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-PWLjptI6AlLEtF/wjN1N8uC+n3G7vtg0j3xKE1fgWHDhahtnlQRqHDrtPSLlkIR9aJjRfjplzLuaUEaCRvJmZA=="],
+    "@tscircuit/alphabet": ["@tscircuit/alphabet@https://pkg.pr.new/@tscircuit/alphabet@61bf8c6", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-B6+KmI1Q1GnZZImXiQOgXGQWOzdvufewN5tILwaGARS1b7Czgb68I1pNzlnCZP5OeBcdN0kO0Pl9+tf6y0X7Hg=="],
 
     "@tscircuit/capacity-autorouter": ["@tscircuit/capacity-autorouter@0.0.815", "", { "dependencies": { "fast-json-stable-stringify": "^2.1.0", "object-hash": "^3.0.0", "stack-svgs": "^0.0.1" } }, "sha512-L6zEHSf3jXAWh1o5qr0qbgDfy8zYo72lIvkiWYRn6Rhkna0BzOBp8bdLcsLijPq5xvrkwNpxpEExMACUrHsUXA=="],
 
