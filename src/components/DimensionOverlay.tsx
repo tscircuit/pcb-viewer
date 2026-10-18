@@ -20,6 +20,7 @@ interface Props {
   children: any
   focusOnHover?: boolean
   primitives?: Primitive[]
+  initialStickyDimensions?: StickyDimension[]
   onBoundsSelected?: (bounds: BoundsSelection) => void
   cancelPanDrag?: () => void
 }
@@ -72,6 +73,7 @@ export const DimensionOverlay = ({
   transform,
   focusOnHover = false,
   primitives = EMPTY_PRIMITIVES,
+  initialStickyDimensions = [],
   onBoundsSelected,
   cancelPanDrag,
 }: Props) => {
@@ -79,7 +81,7 @@ export const DimensionOverlay = ({
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
   const [stickyDimensions, setStickyDimensions] = useState<StickyDimension[]>(
-    [],
+    initialStickyDimensions,
   )
   const nextStickyIdRef = useRef(0)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
