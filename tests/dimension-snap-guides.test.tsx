@@ -30,26 +30,31 @@ test("handles coincident endpoints and stale selections after geometry changes",
 })
 
 test("DimensionOverlay renders multiple sticky dimension arrows with transformed coordinates", async () => {
+  const { ContextProviders } = await import(
+    "../src/components/ContextProviders"
+  )
   const { DimensionOverlay } = await import(
     "../src/components/DimensionOverlay"
   )
   const html = renderToStaticMarkup(
-    <DimensionOverlay
-      initialStickyDimensions={[
-        {
-          id: "sticky-1",
-          start: { x: 0, y: 0 },
-          end: { x: 30, y: 40 },
-        },
-        {
-          id: "sticky-2",
-          start: { x: 10, y: 15 },
-          end: { x: 25, y: 35 },
-        },
-      ]}
-    >
-      <div />
-    </DimensionOverlay>,
+    <ContextProviders>
+      <DimensionOverlay
+        initialStickyDimensions={[
+          {
+            id: "sticky-1",
+            start: { x: 0, y: 0 },
+            end: { x: 30, y: 40 },
+          },
+          {
+            id: "sticky-2",
+            start: { x: 10, y: 15 },
+            end: { x: 25, y: 35 },
+          },
+        ]}
+      >
+        <div />
+      </DimensionOverlay>
+    </ContextProviders>,
   )
 
   expect(html).toContain('data-dimension-arrow="sticky-1"')
