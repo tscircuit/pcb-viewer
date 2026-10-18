@@ -1,16 +1,17 @@
-import { zIndexMap } from "lib/util/z-index-map"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { Matrix } from "transformation-matrix"
-import { applyToPoint, identity, inverse } from "transformation-matrix"
-import type { Primitive } from "lib/types"
 import type { NinePointAnchor } from "circuit-json"
+import { useDiagonalLabel } from "hooks/useDiagonalLabel"
+import type { Primitive } from "lib/types"
+import { calculateDiagonalLabel } from "lib/util/calculate-diagonal-label"
 import {
   getPrimitiveBoundingBox,
   mergeBoundingBoxes,
 } from "lib/util/get-primitive-bounding-box"
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
-import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
+import { zIndexMap } from "lib/util/z-index-map"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { Matrix } from "transformation-matrix"
+import { applyToPoint, identity, inverse } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import { DimensionSnapGuides } from "./DimensionSnapGuides"
 
@@ -32,6 +33,12 @@ export interface BoundsSelection {
   minY: number
   maxX: number
   maxY: number
+}
+
+export interface StickyDimension {
+  id: string
+  start: { x: number; y: number }
+  end: { x: number; y: number }
 }
 
 const shouldExcludePrimitiveFromSnapping = (primitive: Primitive) => {
@@ -71,6 +78,10 @@ export const DimensionOverlay = ({
   if (!transform) transform = DEFAULT_TRANSFORM
   const [dimensionToolVisible, setDimensionToolVisible] = useState(false)
   const [dimensionToolStretching, setDimensionToolStretching] = useState(false)
+  const [stickyDimensions, setStickyDimensions] = useState<StickyDimension[]>(
+    [],
+  )
+  const nextStickyIdRef = useRef(0)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
   const [boundsToolArmed, setBoundsToolArmed] = useState(false)
   const [boundsToolVisible, setBoundsToolVisible] = useState(false)
@@ -98,6 +109,21 @@ export const DimensionOverlay = ({
   const [dStart, setDStart] = useState({ x: 0, y: 0 })
   // End of dimension tool line in real-world coordinates (not screen)
   const [dEnd, setDEnd] = useState({ x: 0, y: 0 })
+  const stickDimension = useCallback(
+    (start: { x: number; y: number }, end: { x: number; y: number }) => {
+      if (start.x === end.x && start.y === end.y) return
+      nextStickyIdRef.current += 1
+      setStickyDimensions((prev) => [
+        ...prev,
+        {
+          id: `sticky-dimension-${nextStickyIdRef.current}`,
+          start: { x: start.x, y: start.y },
+          end: { x: end.x, y: end.y },
+        },
+      ])
+    },
+    [],
+  )
   const [boundsStart, setBoundsStart] = useState({ x: 0, y: 0 })
   const [boundsEnd, setBoundsEnd] = useState({ x: 0, y: 0 })
   const mousePosRef = useRef({ x: 0, y: 0 })
@@ -275,15 +301,22 @@ export const DimensionOverlay = ({
           y: mousePosRef.current.y,
         })
 
-        setDStart({ x: snap.point.x, y: snap.point.y })
-        setDEnd({ x: snap.point.x, y: snap.point.y })
-        setActiveSnapIds({ start: snap.id, end: snap.id })
-
-        if (dimensionToolVisible) {
-          setDimensionToolVisible(false)
-          setDimensionToolStretching(false)
-          setActiveSnapIds({ start: null, end: null })
+        if (dimensionToolVisible && dimensionToolStretching) {
+          if (dStart.x !== dEnd.x || dStart.y !== dEnd.y) {
+            setDimensionToolStretching(false)
+            setActiveSnapIds((prev) => ({ ...prev, end: null }))
+          } else {
+            setDimensionToolVisible(false)
+            setDimensionToolStretching(false)
+            setActiveSnapIds({ start: null, end: null })
+          }
         } else {
+          if (dimensionToolVisible && !dimensionToolStretching) {
+            stickDimension(dStart, dEnd)
+          }
+          setDStart({ x: snap.point.x, y: snap.point.y })
+          setDEnd({ x: snap.point.x, y: snap.point.y })
+          setActiveSnapIds({ start: snap.id, end: snap.id })
           setDimensionToolVisible(true)
           setDimensionToolStretching(true)
         }
@@ -292,6 +325,7 @@ export const DimensionOverlay = ({
       if (e.key === "Escape") {
         setDimensionToolVisible(false)
         setDimensionToolStretching(false)
+        setStickyDimensions([])
         setActiveSnapIds({ start: null, end: null })
         setBoundsToolVisible(false)
         setBoundsToolDragging(false)
@@ -328,6 +362,10 @@ export const DimensionOverlay = ({
   }, [
     isMouseOverContainer,
     dimensionToolVisible,
+    dimensionToolStretching,
+    dStart,
+    dEnd,
+    stickDimension,
     disarmMeasure,
     disarmBounds,
     findSnap,
@@ -392,6 +430,167 @@ export const DimensionOverlay = ({
     flipX: arrowScreenBounds.flipX,
     flipY: arrowScreenBounds.flipY,
   })
+
+  const renderDimensionArrow = (
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+    keyPrefix: string,
+  ) => {
+    const sStart = applyToPoint(transform!, start)
+    const sEnd = applyToPoint(transform!, end)
+    const bounds = {
+      left: Math.min(sStart.x, sEnd.x),
+      right: Math.max(sStart.x, sEnd.x),
+      top: Math.min(sStart.y, sEnd.y),
+      bottom: Math.max(sStart.y, sEnd.y),
+      flipX: sStart.x > sEnd.x,
+      flipY: sStart.y > sEnd.y,
+      width: Math.abs(sStart.x - sEnd.x),
+      height: Math.abs(sStart.y - sEnd.y),
+    }
+    const diag = calculateDiagonalLabel({
+      dimensionStart: start,
+      dimensionEnd: end,
+      screenDimensionStart: sStart,
+      screenDimensionEnd: sEnd,
+      flipX: bounds.flipX,
+      flipY: bounds.flipY,
+    })
+    const markerId = `head-${keyPrefix}`
+
+    return (
+      <div
+        key={keyPrefix}
+        data-dimension-arrow={keyPrefix}
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+        }}
+      >
+        {diag.show && (
+          <div
+            style={{
+              position: "absolute",
+              left: diag.x,
+              top: diag.y,
+              color: "red",
+              mixBlendMode: "difference",
+              pointerEvents: "none",
+              fontSize: 12,
+              fontFamily: "sans-serif",
+              whiteSpace: "nowrap",
+              zIndex: zIndexMap.dimensionOverlay,
+            }}
+          >
+            {diag.distance.toFixed(2)}
+          </div>
+        )}
+
+        <div
+          style={{
+            position: "absolute",
+            left: bounds.left,
+            width: bounds.width,
+            textAlign: "center",
+            top: sStart.y + 2,
+            color: "red",
+            mixBlendMode: "difference",
+            pointerEvents: "none",
+            marginTop: bounds.flipY ? 0 : -20,
+            fontSize: 12,
+            fontFamily: "sans-serif",
+            zIndex: zIndexMap.dimensionOverlay,
+          }}
+        >
+          {Math.abs(start.x - end.x).toFixed(2)}
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            left: sEnd.x,
+            height: bounds.height,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            top: bounds.top,
+            color: "red",
+            pointerEvents: "none",
+            mixBlendMode: "difference",
+            fontSize: 12,
+            fontFamily: "sans-serif",
+            zIndex: zIndexMap.dimensionOverlay,
+          }}
+        >
+          <div
+            style={{
+              marginLeft: bounds.flipX ? "-100%" : 4,
+              paddingRight: 4,
+            }}
+          >
+            {Math.abs(start.y - end.y).toFixed(2)}
+          </div>
+        </div>
+        {/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
+        <svg
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            pointerEvents: "none",
+            mixBlendMode: "difference",
+            zIndex: zIndexMap.dimensionOverlay,
+          }}
+          width={containerBounds?.width}
+          height={containerBounds?.height}
+        >
+          <defs>
+            <marker
+              id={markerId}
+              orient="auto"
+              markerWidth="3"
+              markerHeight="4"
+              refX="2"
+              refY="2"
+            >
+              <path d="M0,0 V4 L2,2 Z" fill="red" />
+            </marker>
+          </defs>
+          <line
+            x1={sStart.x}
+            y1={sStart.y}
+            x2={sEnd.x}
+            y2={sEnd.y}
+            markerEnd={`url(#${markerId})`}
+            strokeWidth={1.5}
+            fill="none"
+            stroke="red"
+          />
+          <line
+            x1={sStart.x}
+            y1={sStart.y}
+            x2={sEnd.x}
+            y2={sStart.y}
+            strokeWidth={1.5}
+            fill="none"
+            strokeDasharray={"2,2"}
+            stroke="red"
+          />
+          <line
+            x1={sEnd.x}
+            y1={sStart.y}
+            x2={sEnd.x}
+            y2={sEnd.y}
+            strokeWidth={1.5}
+            fill="none"
+            strokeDasharray={"2,2"}
+            stroke="red"
+          />
+        </svg>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -471,7 +670,10 @@ export const DimensionOverlay = ({
           setBoundsToolVisible(true)
           setBoundsToolDragging(true)
           disarmBounds()
-        } else if (measureToolArmed && !dimensionToolVisible) {
+        } else if (measureToolArmed) {
+          if (dimensionToolVisible && !dimensionToolStretching) {
+            stickDimension(dStart, dEnd)
+          }
           const snap = findSnap(rwPoint)
           setDStart({ x: snap.point.x, y: snap.point.y })
           setDEnd({ x: snap.point.x, y: snap.point.y })
@@ -517,8 +719,8 @@ export const DimensionOverlay = ({
               mixBlendMode: "difference",
               zIndex: zIndexMap.dimensionOverlay,
             }}
-            width={containerBounds.width}
-            height={containerBounds.height}
+            width={containerBounds?.width}
+            height={containerBounds?.height}
           >
             <rect
               x={boundsScreenRect.left}
@@ -552,6 +754,9 @@ export const DimensionOverlay = ({
             {selectedBounds.maxY.toFixed(2)}
           </div>
         </>
+      )}
+      {stickyDimensions.map((dim) =>
+        renderDimensionArrow(dim.start, dim.end, dim.id),
       )}
       {dimensionToolVisible && (
         <>
@@ -629,8 +834,8 @@ export const DimensionOverlay = ({
               mixBlendMode: "difference",
               zIndex: zIndexMap.dimensionOverlay,
             }}
-            width={containerBounds.width}
-            height={containerBounds.height}
+            width={containerBounds?.width}
+            height={containerBounds?.height}
           >
             <defs>
               <marker
