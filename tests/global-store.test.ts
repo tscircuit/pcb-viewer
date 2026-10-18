@@ -119,3 +119,17 @@ test("copper pour opacity preserves defaults and is independent of layer visibil
   store.getState().setCopperPourOpacity(2)
   expect(store.getState().copper_pour_opacity).toBe(1)
 })
+
+test("snapping is enabled by default and can be toggled or initialized", () => {
+  const store = createStore()
+  expect(store.getState().is_snapping_enabled).toBe(true)
+
+  store.getState().setIsSnappingEnabled(false)
+  expect(store.getState().is_snapping_enabled).toBe(false)
+
+  store.getState().setIsSnappingEnabled(true)
+  expect(store.getState().is_snapping_enabled).toBe(true)
+
+  const disabledStore = createStore({ is_snapping_enabled: false })
+  expect(disabledStore.getState().is_snapping_enabled).toBe(false)
+})

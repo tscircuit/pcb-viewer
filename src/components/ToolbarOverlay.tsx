@@ -1,29 +1,29 @@
+import { css } from "@emotion/css"
+import type { LayerRef } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
+import { useHotKey } from "hooks/useHotKey"
+import { useIsSmallScreen } from "hooks/useIsSmallScreen"
+import { useMobileTouch } from "hooks/useMobileTouch"
+import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
+import { getCopperLayerRefsFromElements } from "lib/copper-layers"
+import { zIndexMap } from "lib/util/z-index-map"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
+import packageJson from "../../package.json"
+import { useGlobalStore } from "../global-store"
 import type {
   PadComponent,
   ViewSchematicComponentEvent,
 } from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
-import {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useLayoutEffect,
-} from "react"
-import { css } from "@emotion/css"
-import { type LayerRef } from "circuit-json"
-import type { AnyCircuitElement } from "circuit-json"
-import { getCopperLayerRefsFromElements } from "lib/copper-layers"
-import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
-import { useGlobalStore } from "../global-store"
-import packageJson from "../../package.json"
-import { useHotKey } from "hooks/useHotKey"
-import { zIndexMap } from "lib/util/z-index-map"
-import { useIsSmallScreen } from "hooks/useIsSmallScreen"
-import { useMobileTouch } from "hooks/useMobileTouch"
-import { VisibilityContextMenu } from "./VisibilityContextMenu"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
+import { VisibilityContextMenu } from "./VisibilityContextMenu"
 
 interface Props {
   getComponentAtPoint?: (point: { x: number; y: number }) =>
@@ -181,6 +181,7 @@ export const ToolbarOverlay = ({
     setIsShowingSilkscreen,
     setIsShowingFabricationNotes,
     setIsShowingPcbNotes,
+    setIsSnappingEnabled,
     setPcbGroupViewMode,
     setHoveredErrorId,
     setFocusedErrorId,
@@ -203,6 +204,7 @@ export const ToolbarOverlay = ({
       is_showing_silkscreen: s.is_showing_silkscreen,
       is_showing_fabrication_notes: s.is_showing_fabrication_notes,
       is_showing_pcb_notes: s.is_showing_pcb_notes,
+      is_snapping_enabled: s.is_snapping_enabled,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setIsShowingRatsNest: s.setIsShowingRatsNest,
@@ -218,6 +220,7 @@ export const ToolbarOverlay = ({
     setIsShowingSilkscreen: s.setIsShowingSilkscreen,
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
     setIsShowingPcbNotes: s.setIsShowingPcbNotes,
+    setIsSnappingEnabled: s.setIsSnappingEnabled,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
     setFocusedErrorId: s.setFocusedErrorId,
@@ -736,6 +739,13 @@ export const ToolbarOverlay = ({
                   checked={viewSettings.is_showing_pcb_notes}
                   onClick={() => {
                     setIsShowingPcbNotes(!viewSettings.is_showing_pcb_notes)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Enable Snapping"
+                  checked={viewSettings.is_snapping_enabled}
+                  onClick={() => {
+                    setIsSnappingEnabled(!viewSettings.is_snapping_enabled)
                   }}
                 />
                 <CheckboxMenuItem
