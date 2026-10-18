@@ -1,8 +1,14 @@
-import type { AnyCircuitElement, PcbPanel, PcbBoard, Point } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbPanel,
+  PcbBoard,
+  PcbComponent,
+  Point,
+} from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../../global-store"
 import type { HighlightedPrimitive } from "../MouseElementTracker"
-import { isPcbPanel, isPcbBoard } from "./common/guards"
+import { isPcbPanel, isPcbBoard, isPcbComponent } from "./common/guards"
 import {
   type AnchorOffsetTarget,
   AnchorOffsetOverlay,
@@ -31,6 +37,18 @@ export const PanelAnchorOffsetOverlay = ({
       if (isPcbBoard(primitive._element)) {
         return primitive._element.pcb_board_id
       }
+      const comp = isPcbComponent(primitive._parent_pcb_component)
+        ? primitive._parent_pcb_component
+        : isPcbComponent(primitive._element)
+          ? primitive._element
+          : null
+      if (comp) {
+        return (
+          comp.positioned_relative_to_pcb_board_id ??
+          (comp as PcbComponent & { pcb_board_id?: string }).pcb_board_id ??
+          null
+        )
+      }
       return null
     })
     .filter((id): id is string => Boolean(id))
@@ -48,7 +66,7 @@ export const PanelAnchorOffsetOverlay = ({
     .map((board) => {
       const panelId = board.pcb_panel_id
       const positionMode = board.position_mode
-      if (!panelId || positionMode !== "relative_to_panel_anchor") return null
+      if (!panelId || positionMode === "none") return null
 
       const panel = panels.find((p) => p.pcb_panel_id === panelId)
       return panel ? { board, panel, type: "board" as const } : null
@@ -78,12 +96,16 @@ export const PanelAnchorOffsetOverlay = ({
 
   const sharedTargets: AnchorOffsetTarget[] = targetEntries
     .map((target): AnchorOffsetTarget | null => {
-      if (!target.board.center) return null
+      const boardTarget = target.board.anchor_position ?? target.board.center
+      const panelAnchor =
+        (target.panel as PcbPanel & { anchor_position?: Point })
+          .anchor_position ?? target.panel.center
+      if (!boardTarget || !panelAnchor) return null
       return {
         id: `${target.panel.pcb_panel_id}-${target.board.pcb_board_id}-${target.type}`,
-        anchor: target.panel.center,
+        anchor: panelAnchor,
         anchor_id: target.panel.pcb_panel_id,
-        target: target.board.center,
+        target: boardTarget,
         type: "board",
         display_offset_x: target.board.display_offset_x,
         display_offset_y: target.board.display_offset_y,

@@ -101,12 +101,19 @@ export const AnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText = `${
-            target.display_offset_x ?? offsetX.toFixed(2)
-          }mm`
-          const yLabelText = `${
-            target.display_offset_y ?? offsetY.toFixed(2)
-          }mm`
+          const formatOffsetLabel = (
+            displayOffset: string | number | undefined,
+            fallbackOffset: number,
+          ) => {
+            if (displayOffset === undefined || displayOffset === null) {
+              return `${fallbackOffset.toFixed(2)}mm`
+            }
+            const text = String(displayOffset)
+            return text.endsWith("mm") ? text : `${text}mm`
+          }
+
+          const xLabelText = formatOffsetLabel(target.display_offset_x, offsetX)
+          const yLabelText = formatOffsetLabel(target.display_offset_y, offsetY)
 
           return (
             <g key={target.id}>

@@ -51,12 +51,28 @@ export const BoardAnchorOffsetOverlay = ({
     })
     .filter((id): id is string => Boolean(id))
 
+  const collectParentGroups = (groupId: string, collected: Set<string>) => {
+    if (collected.has(groupId)) return
+    collected.add(groupId)
+    const group = groups.find((g) => g.pcb_group_id === groupId)
+    if (group?.positioned_relative_to_pcb_group_id) {
+      collectParentGroups(group.positioned_relative_to_pcb_group_id, collected)
+    }
+  }
+
   // Track hovered groups by checking if any components in the group are hovered
   const hoveredGroupIds = new Set<string>()
   hoveredComponentIds.forEach((componentId) => {
     const component = components.find((c) => c.pcb_component_id === componentId)
-    if (component?.pcb_group_id) {
-      hoveredGroupIds.add(component.pcb_group_id)
+    if (!component) return
+    if (component.positioned_relative_to_pcb_group_id) {
+      collectParentGroups(
+        component.positioned_relative_to_pcb_group_id,
+        hoveredGroupIds,
+      )
+    }
+    if (component.pcb_group_id) {
+      collectParentGroups(component.pcb_group_id, hoveredGroupIds)
     }
   })
 
@@ -71,11 +87,15 @@ export const BoardAnchorOffsetOverlay = ({
   // Component-to-board targets
   const componentTargets = components
     .map((component) => {
-      const boardId = component.positioned_relative_to_pcb_board_id
+      const boardId =
+        component.positioned_relative_to_pcb_board_id ??
+        (component as PcbComponent & { pcb_board_id?: string }).pcb_board_id
       if (!boardId) return null
 
       const board = boards.find((b) => b.pcb_board_id === boardId)
-      return board ? { component, board, type: "component" as const } : null
+      return board && (board.anchor_position || board.center)
+        ? { component, board, type: "component" as const }
+        : null
     })
     .filter(
       (
@@ -90,11 +110,15 @@ export const BoardAnchorOffsetOverlay = ({
   // Group-to-board targets
   const groupTargets = groups
     .map((group) => {
-      const boardId = group.positioned_relative_to_pcb_board_id
-      if (!boardId || !group.center) return null
+      const boardId =
+        group.positioned_relative_to_pcb_board_id ??
+        (group as PcbGroup & { pcb_board_id?: string }).pcb_board_id
+      if (!boardId || !(group.anchor_position || group.center)) return null
 
       const board = boards.find((b) => b.pcb_board_id === boardId)
-      return board ? { group, board, type: "group" as const } : null
+      return board && (board.anchor_position || board.center)
+        ? { group, board, type: "group" as const }
+        : null
     })
     .filter(
       (target): target is { group: PcbGroup; board: PcbBoard; type: "group" } =>
@@ -125,10 +149,14 @@ export const BoardAnchorOffsetOverlay = ({
 
   const sharedTargets: AnchorOffsetTarget[] = targetEntries
     .map((target): AnchorOffsetTarget | null => {
+      const boardAnchor = target.board.anchor_position ?? target.board.center
+      if (!boardAnchor) return null
+
       if (target.type === "component") {
+        if (!target.component.center) return null
         return {
           id: `${target.board.pcb_board_id}-${target.component.pcb_component_id}-${target.type}`,
-          anchor: target.board.center,
+          anchor: boardAnchor,
           anchor_id: target.board.pcb_board_id,
           target: target.component.center as Point,
           type: "component",
@@ -137,13 +165,15 @@ export const BoardAnchorOffsetOverlay = ({
         }
       }
       // group
+      const groupTarget = target.group.anchor_position ?? target.group.center
+      if (!groupTarget) return null
       return {
         id: `${target.board.pcb_board_id}-${target.group.pcb_group_id}-${target.type}`,
-        anchor: target.board.center,
+        anchor: boardAnchor,
         anchor_id: target.board.pcb_board_id,
         target: {
-          x: target.group.anchor_position?.x ?? target.group.center.x,
-          y: target.group.anchor_position?.y ?? target.group.center.y,
+          x: groupTarget.x,
+          y: groupTarget.y,
         },
         type: "group",
         display_offset_x: target.group.display_offset_x,

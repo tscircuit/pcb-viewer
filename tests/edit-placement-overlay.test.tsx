@@ -11,6 +11,7 @@ const component: PcbComponent = {
   rotation: 0,
   width: 4,
   height: 2,
+  obstructs_within_bounds: true,
 }
 
 test("isInsideOf detects points within component bounds and positive/negative scale padding", () => {
