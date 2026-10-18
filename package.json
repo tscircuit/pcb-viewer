@@ -9,6 +9,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "prepare": "tsc -p tsconfig.webgpu.json",
     "start": "cosmos",
     "build": "tsup ./src/index.tsx --platform browser --dts --sourcemap --format esm --outDir dist",
     "yalc": "npm run build && yalc push",
@@ -34,7 +35,7 @@
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@swc/core": "^1.4.12",
     "@tscircuit/circuit-json-util": "^0.0.120",
-    "@tscircuit/circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#08f8a79c88d42ae8816905e33b63a801f25a23cb",
+    "@tscircuit/circuit-json-webgpu": "github:tscircuit/circuit-json-webgpu#10608f609ad3482e0f441724683392789dd42acd",
     "@tscircuit/core": "^0.0.1701",
     "@tscircuit/eagle-xml-converter": "^1.0.0",
     "@types/bun": "latest",
