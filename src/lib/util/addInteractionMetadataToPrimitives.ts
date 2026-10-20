@@ -1,4 +1,4 @@
-import { Primitive } from "lib/types"
+import type { Primitive } from "lib/types"
 
 export function addInteractionMetadataToPrimitives({
   primitivesWithoutInteractionMetadata,
@@ -10,6 +10,7 @@ export function addInteractionMetadataToPrimitives({
   primitiveIdsInMousedOverNet: string[]
 }): Primitive[] {
   const newPrimitives = []
+  const highlightedPrimitiveIds = new Set(primitiveIdsInMousedOverNet)
   for (const primitive of primitivesWithoutInteractionMetadata) {
     const newPrimitive = { ...primitive }
     const primitiveElement = primitive._element
@@ -24,22 +25,16 @@ export function addInteractionMetadataToPrimitives({
     } else if (
       primitiveElement &&
       (("pcb_trace_id" in primitiveElement &&
-        primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_trace_id!)) ||
+        highlightedPrimitiveIds.has(primitiveElement.pcb_trace_id!)) ||
         ("pcb_port_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(
-            primitiveElement.pcb_port_id!,
-          )) ||
+          highlightedPrimitiveIds.has(primitiveElement.pcb_port_id!)) ||
         ("pcb_via_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(primitiveElement.pcb_via_id!)) ||
+          highlightedPrimitiveIds.has(primitiveElement.pcb_via_id!)) ||
         ("pcb_component_id" in primitiveElement &&
-          primitiveIdsInMousedOverNet.includes(
-            primitiveElement.pcb_component_id!,
-          )) ||
+          highlightedPrimitiveIds.has(primitiveElement.pcb_component_id!)) ||
         (parentComponent &&
           "pcb_component_id" in parentComponent &&
-          primitiveIdsInMousedOverNet.includes(
-            parentComponent.pcb_component_id!,
-          )))
+          highlightedPrimitiveIds.has(parentComponent.pcb_component_id!)))
     ) {
       newPrimitive.is_in_highlighted_net = true
     } else {

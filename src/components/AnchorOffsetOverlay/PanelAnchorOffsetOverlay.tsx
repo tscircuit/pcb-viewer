@@ -1,12 +1,12 @@
-import type { AnyCircuitElement, PcbPanel, PcbBoard, Point } from "circuit-json"
+import type { AnyCircuitElement, PcbBoard, PcbPanel, Point } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../../global-store"
 import type { HighlightedPrimitive } from "../MouseElementTracker"
-import { isPcbPanel, isPcbBoard } from "./common/guards"
 import {
-  type AnchorOffsetTarget,
   AnchorOffsetOverlay,
+  type AnchorOffsetTarget,
 } from "./AnchorOffsetOverlay"
+import { isPcbBoard, isPcbPanel } from "./common/guards"
 
 interface PanelAnchorOffsetOverlayProps {
   elements: AnyCircuitElement[]
@@ -23,8 +23,9 @@ export const PanelAnchorOffsetOverlay = ({
   containerWidth,
   containerHeight,
 }: PanelAnchorOffsetOverlayProps) => {
-  const panels = elements.filter((el): el is PcbPanel => isPcbPanel(el))
-  const boards = elements.filter((el): el is PcbBoard => isPcbBoard(el))
+  const isShowingAnchorOffsets = useGlobalStore(
+    (state) => state.is_showing_group_anchor_offsets,
+  )
 
   const hoveredBoardIds = highlightedPrimitives
     .map((primitive) => {
@@ -35,13 +36,12 @@ export const PanelAnchorOffsetOverlay = ({
     })
     .filter((id): id is string => Boolean(id))
 
-  const isShowingAnchorOffsets = useGlobalStore(
-    (state) => state.is_showing_group_anchor_offsets,
-  )
-
   if (!isShowingAnchorOffsets && hoveredBoardIds.length === 0) {
     return null
   }
+
+  const panels = elements.filter((el): el is PcbPanel => isPcbPanel(el))
+  const boards = elements.filter((el): el is PcbBoard => isPcbBoard(el))
 
   // Board-to-panel targets
   const boardTargets = boards

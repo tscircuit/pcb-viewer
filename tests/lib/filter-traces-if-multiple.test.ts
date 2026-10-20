@@ -2,6 +2,7 @@ import { expect, it } from "bun:test"
 import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 import type { HighlightedPrimitive } from "../../src/components/MouseElementTracker"
 import { filterTracesIfMultiple } from "../../src/lib/filter-traces-if-multiple"
+import { createTraceOverlayElementIndex } from "../../src/lib/get-trace-overlay-text"
 
 it("keeps named trace overlays visible when ordinary trace lengths are hidden", () => {
   const pcbTrace: PcbTrace = {
@@ -27,7 +28,7 @@ it("keeps named trace overlays visible when ordinary trace lengths are hidden", 
     filterTracesIfMultiple({
       primitives: [primitive],
       is_showing_multiple_traces_length: false,
-      elements,
+      traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
     }),
   ).toEqual([primitive])
 })

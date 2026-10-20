@@ -3,12 +3,13 @@ import type { AnyCircuitElement } from "circuit-json"
 import { su } from "@tscircuit/circuit-json-util"
 import { useGlobalStore } from "../global-store"
 import { zIndexMap } from "lib/util/z-index-map"
-import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { useMemo } from "react"
 
 interface Props {
   transform?: Matrix
   soup?: AnyCircuitElement[]
+  connectivityMap: ConnectivityMap
   children: any
 }
 
@@ -20,13 +21,14 @@ type RatsNestLine = {
   isInNet: boolean
 }
 
-export const RatsNestOverlay = ({ transform, soup, children }: Props) => {
+export const RatsNestOverlay = ({
+  transform,
+  soup,
+  connectivityMap,
+  children,
+}: Props) => {
   const isShowingRatsNest = useGlobalStore((s) => s.is_showing_rats_nest)
-
-  const { netMap, idToNetMap } = useMemo(
-    () => getFullConnectivityMapFromCircuitJson(soup || []),
-    [soup],
-  )
+  const { netMap, idToNetMap } = connectivityMap
 
   const ratsNestLines = useMemo(() => {
     if (!soup || !isShowingRatsNest) return []

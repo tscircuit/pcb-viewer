@@ -7,11 +7,11 @@ import type {
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../../global-store"
 import type { HighlightedPrimitive } from "../MouseElementTracker"
-import { isPcbBoard, isPcbComponent, isPcbGroup } from "./common/guards"
 import {
-  type AnchorOffsetTarget,
   AnchorOffsetOverlay,
+  type AnchorOffsetTarget,
 } from "./AnchorOffsetOverlay"
+import { isPcbBoard, isPcbComponent, isPcbGroup } from "./common/guards"
 
 type Point = {
   x: number
@@ -33,11 +33,9 @@ export const BoardAnchorOffsetOverlay = ({
   containerWidth,
   containerHeight,
 }: Props) => {
-  const boards = elements.filter((el): el is PcbBoard => isPcbBoard(el))
-  const components = elements.filter((el): el is PcbComponent =>
-    isPcbComponent(el),
+  const isShowingAnchorOffsets = useGlobalStore(
+    (state) => state.is_showing_group_anchor_offsets,
   )
-  const groups = elements.filter((el): el is PcbGroup => isPcbGroup(el))
 
   const hoveredComponentIds = highlightedPrimitives
     .map((primitive) => {
@@ -51,6 +49,16 @@ export const BoardAnchorOffsetOverlay = ({
     })
     .filter((id): id is string => Boolean(id))
 
+  if (!isShowingAnchorOffsets && hoveredComponentIds.length === 0) {
+    return null
+  }
+
+  const boards = elements.filter((el): el is PcbBoard => isPcbBoard(el))
+  const components = elements.filter((el): el is PcbComponent =>
+    isPcbComponent(el),
+  )
+  const groups = elements.filter((el): el is PcbGroup => isPcbGroup(el))
+
   // Track hovered groups by checking if any components in the group are hovered
   const hoveredGroupIds = new Set<string>()
   hoveredComponentIds.forEach((componentId) => {
@@ -59,14 +67,6 @@ export const BoardAnchorOffsetOverlay = ({
       hoveredGroupIds.add(component.pcb_group_id)
     }
   })
-
-  const isShowingAnchorOffsets = useGlobalStore(
-    (state) => state.is_showing_group_anchor_offsets,
-  )
-
-  if (!isShowingAnchorOffsets && hoveredComponentIds.length === 0) {
-    return null
-  }
 
   // Component-to-board targets
   const componentTargets = components

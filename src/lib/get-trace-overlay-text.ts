@@ -1,9 +1,21 @@
-import { su } from "@tscircuit/circuit-json-util"
-import type { AnyCircuitElement, PcbTrace } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbTrace,
+  SourceNet,
+  SourceTrace,
+} from "circuit-json"
+
+type SourceNetId = SourceNet["source_net_id"]
+type SourceTraceId = SourceTrace["source_trace_id"]
+
+export interface TraceOverlayElementIndex {
+  sourceNetById: Map<SourceNetId, SourceNet>
+  sourceTraceById: Map<SourceTraceId, SourceTrace>
+}
 
 interface TraceTextContext {
   primitiveElement: PcbTrace
-  elements: AnyCircuitElement[]
+  traceOverlayElementIndex: TraceOverlayElementIndex
 }
 
 interface TraceOverlayInfo {
@@ -14,26 +26,43 @@ interface TraceOverlayInfo {
 
 const getNonEmptyName = (name?: string) => name?.trim() || null
 
+export function createTraceOverlayElementIndex(
+  elements: AnyCircuitElement[],
+): TraceOverlayElementIndex {
+  const sourceNetById = new Map<SourceNetId, SourceNet>()
+  const sourceTraceById = new Map<SourceTraceId, SourceTrace>()
+
+  for (const element of elements) {
+    if (element.type === "source_net") {
+      sourceNetById.set(element.source_net_id, element)
+    } else if (element.type === "source_trace") {
+      sourceTraceById.set(element.source_trace_id, element)
+    }
+  }
+
+  return { sourceNetById, sourceTraceById }
+}
+
 export function getAssociatedTraceName({
   primitiveElement,
-  elements,
+  traceOverlayElementIndex,
 }: TraceTextContext): string | null {
   const sourceElementId = primitiveElement.source_trace_id
   if (!sourceElementId) return null
 
-  const circuitJson = su(elements)
-  const sourceTrace = circuitJson.source_trace.get(sourceElementId)
+  const sourceTrace =
+    traceOverlayElementIndex.sourceTraceById.get(sourceElementId)
 
   const sourceTraceName = getNonEmptyName(sourceTrace?.name)
   if (sourceTraceName) return sourceTraceName
 
-  const sourceNet = circuitJson.source_net.get(sourceElementId)
+  const sourceNet = traceOverlayElementIndex.sourceNetById.get(sourceElementId)
   const sourceNetName = getNonEmptyName(sourceNet?.name)
   if (sourceNetName) return sourceNetName
 
   for (const sourceNetId of sourceTrace?.connected_source_net_ids ?? []) {
     const connectedSourceNetName = getNonEmptyName(
-      circuitJson.source_net.get(sourceNetId)?.name,
+      traceOverlayElementIndex.sourceNetById.get(sourceNetId)?.name,
     )
     if (connectedSourceNetName) return connectedSourceNetName
   }
@@ -43,11 +72,12 @@ export function getAssociatedTraceName({
 
 export function getTraceOverlayInfo({
   primitiveElement,
-  elements,
+  traceOverlayElementIndex,
 }: TraceTextContext): TraceOverlayInfo | null {
-  const trace = su(elements).source_trace.get(
-    primitiveElement?.source_trace_id!,
-  )
+  const sourceTraceId = primitiveElement.source_trace_id
+  const trace = sourceTraceId
+    ? traceOverlayElementIndex.sourceTraceById.get(sourceTraceId)
+    : undefined
   const traceLength = primitiveElement.trace_length
   const hasTraceLength = typeof traceLength === "number"
   const maxLength = trace?.max_length
@@ -57,8 +87,10 @@ export function getTraceOverlayInfo({
       } mm`
     : ""
   const name =
-    getAssociatedTraceName({ primitiveElement, elements }) ??
-    getNonEmptyName(trace?.display_name)
+    getAssociatedTraceName({
+      primitiveElement,
+      traceOverlayElementIndex,
+    }) ?? getNonEmptyName(trace?.display_name)
 
   if (!text && !name) return null
 

@@ -22,13 +22,13 @@ export const getPcbTraceAtPoint = ({
   selectedLayer: LayerRef
   includeHiddenTraces?: boolean
 }): PcbTrace | undefined => {
-  const hits = getPrimitivesUnderPoint(
+  const hits = getPrimitivesUnderPoint({
     primitives,
-    point,
+    rwPoint: point,
     transform,
     selectedLayer,
     includeHiddenTraces,
-  ).filter(
+  }).filter(
     (primitive) =>
       primitive._element?.type === "pcb_trace" && primitive.layer !== "drill",
   )
