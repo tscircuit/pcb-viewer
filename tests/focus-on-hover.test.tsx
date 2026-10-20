@@ -13,9 +13,9 @@ test("PCBViewer accepts focusOnHover={false} and rejects legacy disableAutoFocus
     focusOnHover: false,
   }
 
-  // @ts-expect-error disableAutoFocus has been removed in favor of focusOnHover={false}
   const legacyProps: PCBViewerProps = {
     circuitJson: [],
+    // @ts-expect-error disableAutoFocus has been removed in favor of focusOnHover={false}
     disableAutoFocus: true,
   }
 
