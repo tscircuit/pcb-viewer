@@ -203,8 +203,6 @@ export const GroupAnchorOffsetOverlay = ({
           anchor_id: target.parentGroup.pcb_group_id,
           target: target.component.center,
           type: "component",
-          display_offset_x: target.component.display_offset_x,
-          display_offset_y: target.component.display_offset_y,
         }
       }
       // group - use anchor_position for anchor-to-anchor offsets
