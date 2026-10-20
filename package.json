@@ -1,0 +1,24 @@
+{
+  "name": "return-current-cloud-service",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "typecheck:container": "tsc -p services/return-current/container/tsconfig.json",
+    "test": "bun test services/return-current/worker"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "0.3.7",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/bun": "1.2.21",
+    "@cloudflare/workers-types": "5.20261019.1",
+    "typescript": "5.9.3",
+    "wrangler": "4.151.3",
+    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8"
+  },
+  "license": "MIT"
+}

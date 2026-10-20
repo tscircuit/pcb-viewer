@@ -1,0 +1,54 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "return-current-simulation-service",
+  "main": "services/return-current/worker/index.ts",
+  "compatibility_date": "2026-10-20",
+  "containers": [
+    {
+      "class_name": "ReturnCurrentContainer",
+      "image": "services/return-current/container/Dockerfile",
+      "image_build_context": ".",
+      "instance_type": "standard-4",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "COORDINATOR",
+        "class_name": "ReturnCurrentCoordinator"
+      },
+      {
+        "name": "SIMULATOR",
+        "class_name": "ReturnCurrentContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "ReturnCurrentCoordinator",
+        "ReturnCurrentContainer"
+      ]
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "JOBS",
+      "bucket_name": "return-current-simulation-jobs"
+    }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://pcb-viewer-git-feat-return-current-dev-experiment-tscircuit.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3030,http://127.0.0.1:3030",
+    "MAX_DAILY_JOBS": "24",
+    "MAX_QUEUED_JOBS": "4",
+    "JOB_TIMEOUT_MS": "900000"
+  },
+  "limits": {
+    "cpu_ms": 30000
+  },
+  "observability": {
+    "enabled": true
+  }
+}

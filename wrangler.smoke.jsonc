@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "return-current-protocol-smoke",
+  "main": "services/return-current/worker/smoke-entry.ts",
+  "compatibility_date": "2026-10-20",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "COORDINATOR",
+        "class_name": "ReturnCurrentCoordinator"
+      },
+      {
+        "name": "SIMULATOR",
+        "class_name": "ProtocolSmokeContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "ReturnCurrentCoordinator",
+        "ProtocolSmokeContainer"
+      ]
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "JOBS",
+      "bucket_name": "return-current-simulation-jobs"
+    }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:3000",
+    "MAX_DAILY_JOBS": "3",
+    "MAX_QUEUED_JOBS": "2",
+    "JOB_TIMEOUT_MS": "60000"
+  }
+}

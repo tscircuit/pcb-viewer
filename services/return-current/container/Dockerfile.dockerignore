@@ -1,0 +1,12 @@
+**
+!scripts/
+!scripts/return-current/
+!scripts/return-current/native-runner.ts
+!scripts/return-current/protocol.ts
+!services/
+!services/return-current/
+!services/return-current/container/
+!services/return-current/container/*.ts
+!services/return-current/container/package.json
+!services/return-current/container/bun.lock
+!services/return-current/container/python-requirements.txt
