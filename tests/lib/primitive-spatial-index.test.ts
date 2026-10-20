@@ -68,3 +68,28 @@ it("includes traces within their screen-space hit target", () => {
     }),
   ).toContain(nearbyTrace)
 })
+
+it("preserves primitive priority for overlapping hit candidates", () => {
+  const firstPad: Circle = {
+    ...distantPad,
+    _pcb_drawing_object_id: "first_pad",
+    x: 0,
+    y: 0,
+  }
+  const secondPad: Circle = {
+    ...distantPad,
+    _pcb_drawing_object_id: "second_pad",
+    x: 0,
+    y: 0,
+    r: 100,
+  }
+  const spatialIndex = createPrimitiveSpatialIndex([firstPad, secondPad])
+
+  expect(
+    getPrimitivesNearPoint({
+      point: { x: 0, y: 0 },
+      realToScreenScale: 40,
+      spatialIndex,
+    }),
+  ).toEqual([firstPad, secondPad])
+})

@@ -8,6 +8,7 @@ import {
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import {
+  type PrimitiveSpatialIndex,
   createPrimitiveSpatialIndex,
   getPrimitivesNearPoint,
 } from "lib/primitive-spatial-index"
@@ -72,6 +73,27 @@ export interface CanvasElementsRendererProps {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+}
+
+function getHitTestCandidates({
+  primitiveSpatialIndex,
+  screenPoint,
+  transform,
+}: {
+  primitiveSpatialIndex: PrimitiveSpatialIndex
+  screenPoint: { x: number; y: number }
+  transform: Matrix | undefined
+}) {
+  if (!transform) return null
+  const realWorldPoint = applyToPoint(inverse(transform), screenPoint)
+  return {
+    primitives: getPrimitivesNearPoint({
+      point: realWorldPoint,
+      realToScreenScale: transform.a,
+      spatialIndex: primitiveSpatialIndex,
+    }),
+    realWorldPoint,
+  }
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
@@ -152,21 +174,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     [primitivesWithoutInteractionMetadata],
   )
 
-  const getNearbyPrimitives = (point: { x: number; y: number }) => {
-    if (!transform) return []
-    const rwPoint = applyToPoint(inverse(transform), point)
-    return getPrimitivesNearPoint({
-      point: rwPoint,
-      realToScreenScale: transform.a,
-      spatialIndex: primitiveSpatialIndex,
-    })
-  }
-
   const getComponentAtPoint = (point: { x: number; y: number }) => {
-    if (!transform) return
+    const hitTestCandidates = getHitTestCandidates({
+      primitiveSpatialIndex,
+      screenPoint: point,
+      transform,
+    })
+    if (!hitTestCandidates || !transform) return
     const hits = getPrimitivesUnderPoint({
-      primitives: getNearbyPrimitives(point),
-      rwPoint: applyToPoint(inverse(transform), point),
+      primitives: hitTestCandidates.primitives,
+      rwPoint: hitTestCandidates.realWorldPoint,
       selectedLayer,
       transform,
     }).filter(
@@ -182,7 +199,12 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   }
 
   const getNetAtPoint = (point: { x: number; y: number }) => {
-    if (!transform) return undefined
+    const hitTestCandidates = getHitTestCandidates({
+      primitiveSpatialIndex,
+      screenPoint: point,
+      transform,
+    })
+    if (!hitTestCandidates || !transform) return undefined
     const describeNet = (netId: string, element: AnyCircuitElement) => ({
       netId,
       displayName: getXRayDisplayName(element, elements, connectivityMap),
@@ -200,8 +222,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     }
     const hits = getPrimitivesUnderPoint({
       includeHiddenTraces: xRayNetIds.length > 0,
-      primitives: getNearbyPrimitives(point),
-      rwPoint: applyToPoint(inverse(transform), point),
+      primitives: hitTestCandidates.primitives,
+      rwPoint: hitTestCandidates.realWorldPoint,
       selectedLayer,
       transform,
     })

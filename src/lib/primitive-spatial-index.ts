@@ -7,6 +7,7 @@ export type PrimitiveSpatialIndex = {
   cellSize: number
   globalPrimitives: Primitive[]
   maxTraceWidth: number
+  primitiveIndexByPrimitive: Map<Primitive, number>
   primitives: Primitive[]
   primitivesByCell: Map<PrimitiveGridCellKey, Primitive[]>
 }
@@ -54,10 +55,12 @@ export function createPrimitiveSpatialIndex(
 ): PrimitiveSpatialIndex {
   const cellSize = getCellSize(primitives)
   const primitivesByCell = new Map<PrimitiveGridCellKey, Primitive[]>()
+  const primitiveIndexByPrimitive = new Map<Primitive, number>()
   const globalPrimitives: Primitive[] = []
   let maxTraceWidth = 0
 
-  for (const primitive of primitives) {
+  for (const [primitiveIndex, primitive] of primitives.entries()) {
+    primitiveIndexByPrimitive.set(primitive, primitiveIndex)
     if (
       primitive.pcb_drawing_type === "line" &&
       primitive._element?.type === "pcb_trace"
@@ -96,6 +99,7 @@ export function createPrimitiveSpatialIndex(
     cellSize,
     globalPrimitives,
     maxTraceWidth,
+    primitiveIndexByPrimitive,
     primitives,
     primitivesByCell,
   }
@@ -132,5 +136,11 @@ export function getPrimitivesNearPoint({
     }
   }
 
-  return [...nearbyPrimitives]
+  return [...nearbyPrimitives].sort(
+    (firstPrimitive, secondPrimitive) =>
+      (spatialIndex.primitiveIndexByPrimitive.get(firstPrimitive) ??
+        Number.MAX_SAFE_INTEGER) -
+      (spatialIndex.primitiveIndexByPrimitive.get(secondPrimitive) ??
+        Number.MAX_SAFE_INTEGER),
+  )
 }
