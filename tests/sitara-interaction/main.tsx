@@ -1,4 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
+import { Profiler } from "react"
 import { createRoot } from "react-dom/client"
 import { PCBViewer } from "../../src"
 
@@ -6,6 +7,9 @@ type SitaraInteractionStats = {
   elementCount: number
   firstPaintMs: number | null
   frames: number
+  interactionCommitCount: number
+  interactionRenderMs: number
+  maxInteractionRenderMs: number
 }
 
 declare global {
@@ -23,6 +27,9 @@ const stats: SitaraInteractionStats = {
   elementCount: 0,
   firstPaintMs: null,
   frames: 0,
+  interactionCommitCount: 0,
+  interactionRenderMs: 0,
+  maxInteractionRenderMs: 0,
 }
 
 const OriginalWorker = window.Worker
@@ -61,15 +68,28 @@ async function mount() {
   const mountStartedAt = performance.now()
 
   root.render(
-    <PCBViewer
-      circuitJson={circuitJson}
-      renderer="webgpu"
-      allowEditing={false}
-      height={window.innerHeight}
-      onRenderComplete={() => {
-        stats.firstPaintMs ??= performance.now() - mountStartedAt
+    <Profiler
+      id="sitara-viewer"
+      onRender={(_id, phase, actualDuration) => {
+        if (phase !== "update") return
+        stats.interactionCommitCount++
+        stats.interactionRenderMs += actualDuration
+        stats.maxInteractionRenderMs = Math.max(
+          stats.maxInteractionRenderMs,
+          actualDuration,
+        )
       }}
-    />,
+    >
+      <PCBViewer
+        circuitJson={circuitJson}
+        renderer="webgpu"
+        allowEditing={false}
+        height={window.innerHeight}
+        onRenderComplete={() => {
+          stats.firstPaintMs ??= performance.now() - mountStartedAt
+        }}
+      />
+    </Profiler>,
   )
 }
 
