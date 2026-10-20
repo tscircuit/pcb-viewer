@@ -4,6 +4,20 @@ This example starts with the PCB alone. Right-click DATA0 and choose **Simulate 
 
 Backend availability, configuration, job status and result controls live inside the dialog. Closing it preserves edited settings and lets an active job continue. The compact **Return current simulation** button reopens the same configuration and job. Once complete, choose **View result on PCB** to close the dialog and inspect the heatmap, layer-coloured signal trace and physical GND terminals. Reopen the dialog to change heatmap opacity or arrow visibility.
 
+**Simulate** is the last context-menu entry. The dialog uses Tailwind's default light palette and loads the pinned Tailwind CDN runtime on first use. Its prefixed styles are scoped to the dialog so the PCB viewer and host page retain their existing styles. A light fallback keeps the controls usable if the CDN is blocked.
+
+## Hosted preview and cloud execution
+
+The Cloudflare Containers service is in [`services/return-current`](../../services/return-current/README.md). It runs the same real Palace solver directly inside a native container; the browser only submits and observes a job. Circuit JSON input, job status and completed results are stored in R2 so they survive container shutdown.
+
+Deploy the service following that directory's instructions, then set `VITE_RETURN_CURRENT_API_URL` to the deployed API prefix in the Vercel **Preview** environment and rebuild the preview. Add that preview's exact origin to the service's `ALLOWED_ORIGINS`. For example, with your deployed hostname:
+
+```sh
+VITE_RETURN_CURRENT_API_URL=https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/api bun run cosmos-export
+```
+
+The endpoint is a build-time setting, not a solver or credential embedded in the viewer. Without it, the example uses `/api`, proxied to the local CLI server during development. A static preview without a configured service reports an unavailable backend in the dialog.
+
 ## Run locally
 
 Install the JavaScript dependencies and a Python environment for the simulator. Docker must be running; the simulator uses its pinned Palace image.
@@ -77,7 +91,7 @@ For bounded dialog checks without starting an EM solve:
 bun tests/return-current-dev/lifecycle.ts
 ```
 
-This uses an injected typed client to check backend unavailability/retry, submission and job errors, focus trapping, Escape/focus restoration, edited settings, and closing/reopening a running job without duplicate submission. It deliberately produces no simulation result; its screenshots and receipt are UI/transport evidence only.
+This uses an injected typed client to check backend unavailability/retry, submission and job errors, focus trapping, Escape/focus restoration, edited settings, and closing/reopening a running job without duplicate submission. It also checks that Simulate is the last context-menu entry, keyboard submenu navigation, and near-bottom placement at desktop and small-screen sizes. The styling check loads the actual pinned Tailwind CDN through the runtime's normal TLS/proxy trust, verifies lazy singleton loading and unchanged host styles/configuration, then blocks the CDN to exercise the usable light fallback. It deliberately produces no simulation result; its screenshots and receipt are UI/transport evidence only.
 
 To check the modal and PCB against an already completed **real** local job, supply its request ID:
 

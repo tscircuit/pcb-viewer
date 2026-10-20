@@ -1,0 +1,9 @@
+{
+  "name": "return-current-native-container",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8",
+    "zod": "3.25.76"
+  }
+}
