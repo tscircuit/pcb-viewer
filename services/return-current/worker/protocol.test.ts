@@ -200,6 +200,48 @@ describe("durable cloud job protocol", () => {
     expect(h.objects.has(resultKey("timeout"))).toBe(false)
   })
 
+  test("waits for initial provisioning without starting a duplicate job or extending its deadline", async () => {
+    const h = harness()
+    const native = h.containers.fetch
+    let posts = 0
+    h.containers.fetch = async (...args) => {
+      if (args[1] === "/jobs") {
+        posts++
+        if (posts <= 2)
+          return json({ error: "Provisioning" }, posts === 1 ? 503 : 429)
+      }
+      return native(...args)
+    }
+    await h.queue.enqueue(body(submission()))
+    await h.queue.alarm()
+    const original = h.values.get("job:protocol-job") as { deadline: number }
+    expect((await h.queue.getJob("protocol-job"))?.message).toContain(
+      "provisioning",
+    )
+    h.advance(60_000)
+    h.restart()
+    await h.queue.alarm()
+    expect(
+      (h.values.get("job:protocol-job") as { deadline: number }).deadline,
+    ).toBe(original.deadline)
+    await h.queue.alarm()
+    expect(h.calls.filter((call) => call.startsWith("POST"))).toHaveLength(1)
+    await h.queue.alarm()
+    expect(posts).toBe(3)
+    expect(h.calls.filter((call) => call.startsWith("POST"))).toHaveLength(1)
+
+    const expired = harness()
+    expired.containers.fetch = async () => json({ error: "Provisioning" }, 503)
+    await expired.queue.enqueue(body(submission()))
+    await expired.queue.alarm()
+    expired.advance(900_001)
+    await expired.queue.alarm()
+    expect((await expired.queue.getJob("protocol-job"))?.status).toBe("failed")
+    expect((await expired.queue.getJob("protocol-job"))?.message).toContain(
+      "runtime limit",
+    )
+  })
+
   test("restarts a lost native container once; never claims an unsaved result completed", async () => {
     const h = harness()
     await h.queue.enqueue(body(submission()))

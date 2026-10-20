@@ -243,6 +243,14 @@ export class DurableJobQueue {
             }),
           },
         )
+        if (response.status === 503 || response.status === 429) {
+          // A new Cloudflare application can take minutes to provision. Keep
+          // the same immutable job and original deadline while capacity warms.
+          job.message = `Waiting for cloud container capacity or initial provisioning (HTTP ${response.status})`
+          job.transportFailures = 0
+          await this.save(job)
+          return
+        }
         if (!response.ok)
           throw new Error(
             `Solver container rejected the job (HTTP ${response.status}): ${(await response.text()).slice(0, 2_000)}`,

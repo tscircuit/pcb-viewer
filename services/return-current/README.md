@@ -4,9 +4,17 @@ This service runs the same native Palace EM solver used by the local viewer. It 
 
 A Worker exposes the browser API. A singleton SQLite Durable Object owns a bounded queue and polls the native job using durable alarms. Each job gets its own Container Durable Object and private token. The native image contains Palace, Gmsh, Python and the simulator; there is no Docker daemon inside the deployed container and internet access is disabled. Inputs, public status and completed Circuit JSON are stored in R2. Closing the page does not cancel a job. A restarted container can be retried once from the stored input; a native solver failure remains failed.
 
+Initial image provisioning or temporary capacity/rate limits (HTTP 503/429) wait within the same job's original deadline. They do not start another native job or reset its runtime budget.
+
 The configured `standard-4` instance provides **12 GiB RAM, 4 vCPU and 20 GB disk**, with at most one running container. The queue accepts four waiting jobs and 24 new jobs per UTC day; jobs have a 15-minute deadline. Cloudflare Containers require the Workers Paid plan and incur usage charges. These are bounded public preview limits, not user authentication: exact CORS origins restrict browser access, while non-browser callers can still submit jobs against the same global budget.
 
-## Deploy
+## Sign in and deploy from GitHub
+
+Open [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/tscircuit/pcb-viewer/tree/return-current-service-template). This uses a standalone template branch with the service and its shared native runner. Cloudflare's setup lets you sign in, choose the target account, and create a repository named `return-current-simulation-service`. Cloudflare manages the GitHub connection and deployment credentials. Enable Workers Paid and R2 on that account.
+
+After deployment, use the public Worker URL **including `/api`** as the frontend API prefix. The Worker URL is public configuration; it is not an API token.
+
+## Deploy with the CLI
 
 From this directory:
 
