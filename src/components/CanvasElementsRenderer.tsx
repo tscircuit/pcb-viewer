@@ -1,7 +1,3 @@
-import {
-  getPadComponent,
-  type ViewSchematicComponentEvent,
-} from "../lib/get-pad-component"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
@@ -10,6 +6,11 @@ import {
   convertElementToPrimitives,
   createPrimitiveMetadataIndex,
 } from "lib/convert-element-to-primitive"
+import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
+import {
+  createPrimitiveSpatialIndex,
+  getPrimitivesNearPoint,
+} from "lib/primitive-spatial-index"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 import {
@@ -23,31 +24,34 @@ import {
   animateTransform,
   cancelTransformAnimation,
 } from "lib/util/transform-animation"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { applyToPoint, inverse, type Matrix } from "transformation-matrix"
 import {
   getElementNetId,
   getXRayDisplayName,
   getXRayGroups,
   isXRayCopper,
 } from "lib/x-ray-net"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type Matrix, applyToPoint, inverse } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
-import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
-import { WebGpuElementsRenderer } from "./WebGpuElementsRenderer"
+import {
+  type ViewSchematicComponentEvent,
+  getPadComponent,
+} from "../lib/get-pad-component"
 import { CanvasPrimitiveRenderer } from "./CanvasPrimitiveRenderer"
 import { DebugGraphicsOverlay } from "./DebugGraphicsOverlay"
 import { type BoundsSelection, DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
+import { FocusedPcbComponentOverlay } from "./FocusedPcbComponentOverlay"
 import {
-  getPrimitivesUnderPoint,
   MouseElementTracker,
+  getPrimitivesUnderPoint,
 } from "./MouseElementTracker"
 import { PcbGroupOverlay } from "./PcbGroupOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
-import { FocusedPcbComponentOverlay } from "./FocusedPcbComponentOverlay"
+import { WebGpuElementsRenderer } from "./WebGpuElementsRenderer"
 
 export interface CanvasElementsRendererProps {
   elements: AnyCircuitElement[]
@@ -143,15 +147,29 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         selectedElements.has(primitive._element),
     )
   }, [primitivesWithoutInteractionMetadata, xRayElements])
+  const primitiveSpatialIndex = useMemo(
+    () => createPrimitiveSpatialIndex(primitivesWithoutInteractionMetadata),
+    [primitivesWithoutInteractionMetadata],
+  )
+
+  const getNearbyPrimitives = (point: { x: number; y: number }) => {
+    if (!transform) return []
+    const rwPoint = applyToPoint(inverse(transform), point)
+    return getPrimitivesNearPoint({
+      point: rwPoint,
+      realToScreenScale: transform.a,
+      spatialIndex: primitiveSpatialIndex,
+    })
+  }
 
   const getComponentAtPoint = (point: { x: number; y: number }) => {
     if (!transform) return
-    const hits = getPrimitivesUnderPoint(
-      primitivesWithoutInteractionMetadata,
-      applyToPoint(inverse(transform), point),
-      transform,
+    const hits = getPrimitivesUnderPoint({
+      primitives: getNearbyPrimitives(point),
+      rwPoint: applyToPoint(inverse(transform), point),
       selectedLayer,
-    ).filter(
+      transform,
+    }).filter(
       (p) =>
         p._element?.type === "pcb_smtpad" ||
         p._element?.type === "pcb_plated_hole",
@@ -180,13 +198,13 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         if (net) return describeNet(net, pour)
       }
     }
-    const hits = getPrimitivesUnderPoint(
-      primitivesWithoutInteractionMetadata,
-      applyToPoint(inverse(transform), point),
-      transform,
+    const hits = getPrimitivesUnderPoint({
+      includeHiddenTraces: xRayNetIds.length > 0,
+      primitives: getNearbyPrimitives(point),
+      rwPoint: applyToPoint(inverse(transform), point),
       selectedLayer,
-      xRayNetIds.length > 0,
-    )
+      transform,
+    })
     const copper = hits.filter(
       (p) => isXRayCopper(p._element) && p.layer !== "drill",
     )
