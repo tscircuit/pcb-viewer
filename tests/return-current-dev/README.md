@@ -1,6 +1,6 @@
 # PCB viewer return-current development prototype
 
-This example starts with the PCB alone. Right-click DATA0 and choose **Simulate → Return Current Simulation** to open the configuration dialog. Review the actual signal/GND terminals, frequency and electrical model, then choose **Run simulation**. The development event server executes a fresh Palace EM solve and returns official Circuit JSON result/field/heatmap/marker records.
+This example starts with the PCB alone. Right-click DATA0 and choose **Simulate → Return Current Simulation** to open the configuration dialog. Review the actual signal/GND terminals, frequency and electrical model, then choose **Run simulation**. The configured service executes a fresh Palace EM solve and returns official Circuit JSON result/field/heatmap/marker records.
 
 Backend availability, configuration, job status and result controls live inside the dialog. Closing it preserves edited settings and lets an active job continue. The compact **Return current simulation** button reopens the same configuration and job. Once complete, choose **View result on PCB** to close the dialog and inspect the heatmap, layer-coloured signal trace and physical GND terminals. Reopen the dialog to change heatmap opacity or arrow visibility.
 
@@ -9,6 +9,8 @@ Backend availability, configuration, job status and result controls live inside 
 ## Hosted preview and cloud execution
 
 The Cloudflare Containers service is in [`services/return-current`](../../services/return-current/README.md), deployed at [`return-current-simulation-service.seve.workers.dev`](https://return-current-simulation-service.seve.workers.dev/api/health). It runs the same real Palace solver directly inside a native container; the browser only submits and observes a job. Circuit JSON input, job status and completed results are stored in R2 so they survive container shutdown.
+
+[Open the completed 400 MHz cloud result](https://pcb-viewer-git-feat-return-current-dev-experiment-tscircuit.vercel.app/renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2F2026%2Freturn-current.fixture.tsx%22%7D&locked=true&return_current_request_id=d508bd9e-dc83-46cf-a436-d4a5c799a813). This loads the saved result without starting another simulation; use the viewer's simulation button to open its dialog.
 
 Production builds use that public service by default. Local development uses `/api`, proxied to the local CLI event server. To use another deployment, set `VITE_RETURN_CURRENT_API_URL` to its API prefix and rebuild the preview. Add that preview's exact origin to the service's `ALLOWED_ORIGINS`. For example, with your deployed hostname:
 
@@ -51,9 +53,9 @@ Defaults are 400 MHz, 5 mA peak excitation, 25 Ω source and 100 Ω load, 0.01 m
 
 ## Prototype boundary
 
-Only `pcb-viewer` changes. The development CLI transport provides `POST /api/events/create`, sequence-based `GET /api/events/list`, durable `GET /api/jobs/<id>` status, and `GET /api/files/get` for results. It queues real simulations serially and deduplicates request IDs. Original board geometry is preserved when result records are appended. Large native files stay in ignored `.tscircuit/return-current-dev/` directories.
+This repository contains the viewer workflow, local event adapter, and independently deployed Cloudflare service. CLI and Runframe are unchanged. The development transport provides `POST /api/events/create`, sequence-based `GET /api/events/list`, durable `GET /api/jobs/<id>` status, and `GET /api/files/get` for results. It queues real simulations serially and deduplicates request IDs. Original board geometry is preserved when result records are appended. Large native files stay in ignored `.tscircuit/return-current-dev/` directories.
 
-The viewer owns the dialog and its state. Its `returnCurrentSimulationDialog` option accepts a typed client, an optional request ID to resume, and callbacks for request IDs and completed results. The example supplies the local HTTP client; another host can inject the same interface. The existing context-menu callback remains available for hosts with a custom simulation workflow.
+The viewer owns the dialog and its state. Its `returnCurrentSimulationDialog` option accepts a typed client, an optional request ID to resume, and callbacks for request IDs and completed results. The example supplies an HTTP client for the configured service; another host can inject the same interface. The existing context-menu callback remains available for hosts with a custom simulation workflow.
 
 ```tsx
 import {
@@ -101,7 +103,7 @@ bun tests/return-current-dev/lifecycle.ts --reopen-existing YOUR_COMPLETED_REQUE
 
 This reads the durable result, exercises its heatmap/arrow controls, and reloads it while asserting zero new solve submissions. It does not replace the fresh native workflow test above. Both bounded checks save their distinctly named screenshots and receipts under `actual/`.
 
-The screenshots show the dialog and the completed real 400 MHz result at the defaults above (103,848 tetrahedra, P2, 800 × 600 samples). The modal UI was checked by reopening that durable result without a new solve. This is a workflow check; no mesh-convergence claim is made.
+The screenshots show the light dialog and a fresh real Cloudflare Palace result from 2026-10-20, request `d508bd9e-dc83-46cf-a436-d4a5c799a813`. Exactly one simulation was submitted through the hosted page, using the defaults above. It completed in about six minutes. Its nine official simulation records, 800 × 600 complex-current grid, conductor mask, original PCB and distinct physical GND terminals passed validation. The public page's heatmap/arrow controls, closing/reopening, and refresh passed with no additional submissions or page errors. This is a workflow check; no mesh-convergence claim is made.
 
 ![Return-current simulation configuration and result controls](./dialog.png)
 
