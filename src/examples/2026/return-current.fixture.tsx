@@ -2,8 +2,15 @@ import { PCBViewer } from "../../PCBViewer"
 import { returnCurrentDemoBoard } from "../../assets/return-current-board"
 import { createReturnCurrentSimulationClient } from "../../lib/return-current-client"
 
+declare const __RETURN_CURRENT_API_URL__: string
+
 const simulationDialog = {
-  client: createReturnCurrentSimulationClient(),
+  client: createReturnCurrentSimulationClient({
+    baseUrl:
+      typeof __RETURN_CURRENT_API_URL__ === "string"
+        ? __RETURN_CURRENT_API_URL__
+        : "/api",
+  }),
   resumeRequestId:
     typeof window === "undefined"
       ? undefined

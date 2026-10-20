@@ -96,7 +96,7 @@ const readJob = (
 }
 
 /** Browser HTTP adapter. baseUrl is the API prefix, such as /api or
- * https://localhost:3031/api. Native solver execution stays in the server. */
+ * https://return-current.example.workers.dev/api. Native execution stays on the server. */
 export const createReturnCurrentSimulationClient = ({
   baseUrl = "/api",
   fetch: fetchOverride,
@@ -124,7 +124,7 @@ export const createReturnCurrentSimulationClient = ({
     } catch (error) {
       if (isAborted(error, signal)) throw error
       throw new Error(
-        "Unable to reach the simulation server. Start the local CLI event server.",
+        "Unable to reach the simulation server. Check the service URL and connection.",
       )
     }
     throwIfAborted(signal)
@@ -135,7 +135,7 @@ export const createReturnCurrentSimulationClient = ({
       .toLowerCase()
     if (mediaType !== "application/json" && !mediaType?.endsWith("+json")) {
       throw new Error(
-        `Simulation server returned a non-JSON response (HTTP ${response.status}). Check its API URL and start the local CLI event server.`,
+        `Simulation server returned a non-JSON response (HTTP ${response.status}). Check its API URL.`,
       )
     }
     let body: unknown
@@ -178,7 +178,7 @@ export const createReturnCurrentSimulationClient = ({
             typeof body.message === "string" && body.message
               ? body.message
               : body.available
-                ? "Local simulation server is ready"
+                ? "Simulation server is ready"
                 : "The simulation runtime is unavailable",
         }
       } catch (error) {

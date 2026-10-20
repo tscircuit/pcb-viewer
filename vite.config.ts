@@ -19,6 +19,9 @@ export default defineConfig({
   },
   define: {
     global: {},
+    __RETURN_CURRENT_API_URL__: JSON.stringify(
+      process.env.VITE_RETURN_CURRENT_API_URL ?? "/api",
+    ),
   },
   resolve: {
     alias: {

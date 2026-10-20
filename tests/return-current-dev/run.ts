@@ -83,7 +83,7 @@ try {
   await setup.waitFor()
   await setup
     .getByTestId("cli-health")
-    .filter({ hasText: "Local CLI event server available" })
+    .filter({ hasText: "Simulation service available" })
     .waitFor({ timeout: 30_000 })
   assert.match(await setup.innerText(), /DATA0/)
   assert.match(await setup.innerText(), /U1\.DATA0/)

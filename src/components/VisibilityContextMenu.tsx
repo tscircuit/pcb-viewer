@@ -1,13 +1,13 @@
+import { css } from "@emotion/css"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import { useGlobalStore } from "../global-store"
 import type {
   PadComponent,
   ViewSchematicComponentEvent,
 } from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
 import { useRenderingEngine } from "./RenderingEngineContext"
-import { css } from "@emotion/css"
-import { useEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
-import { useGlobalStore } from "../global-store"
 
 const menuStyle = css`
   background: #222;
@@ -70,8 +70,10 @@ export const VisibilityContextMenu = ({
   const effectiveCopperPourOpacity = showCopperPours ? copperPourOpacity : 0
   const [visibilityOpen, setVisibilityOpen] = useState(false)
   const [opacityOpen, setOpacityOpen] = useState(false)
+  const [heightRequiresStacking, setHeightRequiresStacking] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const stacked = window.innerWidth < 480
+  const pendingSubmenuFocus = useRef<HTMLButtonElement | null>(null)
+  const stacked = window.innerWidth < 480 || heightRequiresStacking
   const openLeft = !stacked && position.x + 460 > window.innerWidth
   const submenuStyle = stacked
     ? { position: "relative" as const }
@@ -80,6 +82,36 @@ export const VisibilityContextMenu = ({
         top: 0,
         ...(openLeft ? { right: "100%" } : { left: "100%" }),
       }
+
+  useLayoutEffect(() => {
+    const menu = ref.current
+    if (!menu) return
+    if (!stacked && menu.scrollHeight > window.innerHeight - 8) {
+      setHeightRequiresStacking(true)
+      return
+    }
+    const height = menu.getBoundingClientRect().height
+    menu.style.top = `${Math.max(4, Math.min(position.y, window.innerHeight - height - 4))}px`
+  }, [
+    position.y,
+    stacked,
+    rendererOpen,
+    simulationOpen,
+    visibilityOpen,
+    opacityOpen,
+    copperPourOpacityOpen,
+  ])
+
+  useLayoutEffect(() => {
+    const firstItem =
+      pendingSubmenuFocus.current?.parentElement?.querySelector<HTMLButtonElement>(
+        ':scope > [role="menu"] button',
+      )
+    if (firstItem) {
+      pendingSubmenuFocus.current = null
+      firstItem.focus()
+    }
+  })
 
   useEffect(() => {
     const dismiss = (event: PointerEvent) => {
@@ -95,16 +127,23 @@ export const VisibilityContextMenu = ({
         onClose()
       }
     }
+    const onScroll = (event: Event) => {
+      if (
+        !(event.target instanceof Node) ||
+        !ref.current?.contains(event.target)
+      )
+        onClose()
+    }
     ref.current?.focus()
     window.addEventListener("pointerdown", dismiss, true)
     window.addEventListener("keydown", onKeyDown)
     window.addEventListener("resize", onClose)
-    window.addEventListener("scroll", onClose, true)
+    window.addEventListener("scroll", onScroll, true)
     return () => {
       window.removeEventListener("pointerdown", dismiss, true)
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("resize", onClose)
-      window.removeEventListener("scroll", onClose, true)
+      window.removeEventListener("scroll", onScroll, true)
     }
   }, [onClose])
 
@@ -140,12 +179,16 @@ export const VisibilityContextMenu = ({
           button?.hasAttribute("aria-haspopup")
         ) {
           event.preventDefault()
+          pendingSubmenuFocus.current = button as HTMLButtonElement
           button.click()
-          requestAnimationFrame(() =>
-            button.parentElement
-              ?.querySelector<HTMLElement>('[role="menu"] button')
-              ?.focus(),
-          )
+          const firstItem =
+            button.parentElement?.querySelector<HTMLButtonElement>(
+              ':scope > [role="menu"] button',
+            )
+          if (firstItem) {
+            pendingSubmenuFocus.current = null
+            firstItem.focus()
+          }
         } else if (event.key === "ArrowLeft") {
           event.preventDefault()
           menu.parentElement
@@ -179,54 +222,10 @@ export const VisibilityContextMenu = ({
         ),
         width: stacked ? 230 : 150,
         maxHeight: window.innerHeight - 8,
+        boxSizing: "border-box",
         ...(stacked ? { overflowY: "auto" } : {}),
       }}
     >
-      {onSimulateReturnCurrent && (
-        <div
-          style={{ position: "relative" }}
-          onMouseEnter={() => {
-            setSimulationOpen(true)
-            setVisibilityOpen(false)
-            setRendererOpen(false)
-          }}
-        >
-          <button
-            type="button"
-            role="menuitem"
-            aria-haspopup="menu"
-            aria-expanded={simulationOpen}
-            className={itemStyle}
-            onClick={() => {
-              setSimulationOpen(true)
-              setVisibilityOpen(false)
-              setRendererOpen(false)
-            }}
-          >
-            Simulate ▸
-          </button>
-          {simulationOpen && (
-            <div
-              role="menu"
-              aria-label="Simulate"
-              className={menuStyle}
-              style={submenuStyle}
-            >
-              <button
-                type="button"
-                role="menuitem"
-                className={itemStyle}
-                onClick={() => {
-                  onClose()
-                  onSimulateReturnCurrent()
-                }}
-              >
-                Return Current Simulation
-              </button>
-            </div>
-          )}
-        </div>
-      )}
       {onXRayNet && (
         <button
           type="button"
@@ -513,6 +512,54 @@ export const VisibilityContextMenu = ({
         >
           MPN: {component.manufacturer_part_number}
         </button>
+      )}
+      {onSimulateReturnCurrent && (
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => {
+            setSimulationOpen(true)
+            setVisibilityOpen(false)
+            setRendererOpen(false)
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            aria-haspopup="menu"
+            aria-expanded={simulationOpen}
+            className={itemStyle}
+            onClick={() => {
+              setSimulationOpen(true)
+              setVisibilityOpen(false)
+              setRendererOpen(false)
+            }}
+          >
+            Simulate ▸
+          </button>
+          {simulationOpen && (
+            <div
+              role="menu"
+              aria-label="Simulate"
+              className={menuStyle}
+              style={{
+                ...submenuStyle,
+                ...(!stacked ? { top: "auto", bottom: 0 } : {}),
+              }}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                className={itemStyle}
+                onClick={() => {
+                  onClose()
+                  onSimulateReturnCurrent()
+                }}
+              >
+                Return Current Simulation
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>,
     document.body,

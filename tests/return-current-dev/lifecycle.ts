@@ -24,8 +24,11 @@ import React from "react"
 import { createRoot } from "react-dom/client"
 import { PCBViewer } from "/src/PCBViewer.tsx"
 import { returnCurrentDemoBoard } from "/src/assets/return-current-board.ts"
+import { VisibilityContextMenu } from "/src/components/VisibilityContextMenu.tsx"
+import { RenderingEngineContext } from "/src/components/RenderingEngineContext.tsx"
+import { ContextProviders } from "/src/components/ContextProviders.tsx"
 import type { ReturnCurrentSimulationClient, ReturnCurrentSimulationRequest } from "/src/lib/return-current-client.ts"
-const state = { available: false, checks: 0, submissions: [] as ReturnCurrentSimulationRequest[], polls: 0, submitError: false, status: "running" as "running" | "failed", requestIds: [] as string[] }
+const state = { available: false, checks: 0, submissions: [] as ReturnCurrentSimulationRequest[], polls: 0, submitError: false, status: "running" as "running" | "failed", requestIds: [] as string[], menuActions: 0 }
 const client: ReturnCurrentSimulationClient = {
   async checkAvailability() {
     state.checks++
@@ -44,9 +47,22 @@ const client: ReturnCurrentSimulationClient = {
   async loadResult() { throw new Error("This transport fixture never generates EM results") }
 }
 window.__returnCurrentLifecycle = state
-createRoot(document.getElementById("root")!).render(
+function CompleteMenuHarness() {
+  const [open, setOpen] = React.useState(false)
+  return <main><button type="button" onClick={() => setOpen(true)}>Open complete context menu</button>
+    {open && <ContextProviders><RenderingEngineContext.Provider value={{ renderer: "canvas", setRenderer: () => {} }}>
+      <VisibilityContextMenu position={{ x: window.innerWidth - 8, y: window.innerHeight - 8 }}
+        component={{ refdes: "U1", pcb_component_id: "pcb_component_u1", source_component_id: "source_component_u1", manufacturer_part_number: "EXAMPLE-LONG-MANUFACTURER-PART-NUMBER" }}
+        onViewSchematicComponent={() => {}} onXRayNet={() => {}} onExitXRayNet={() => {}}
+        xRayGroups={Array.from({ length: 4 }, (_, index) => ({ id: String(index), name: "Example group " + index, netIds: [] }))}
+        onXRayGroup={() => {}} onClose={() => setOpen(false)} onSimulateReturnCurrent={() => { state.menuActions++ }} />
+    </RenderingEngineContext.Provider></ContextProviders>}
+  </main>
+}
+createRoot(document.getElementById("root")!).render(new URLSearchParams(window.location.search).has("menu_geometry") ? <CompleteMenuHarness /> :
   <main>
     <h1>UI lifecycle test · injected transport · no EM solver</h1>
+    <button type="button" data-testid="host-style-sentinel">Host style sentinel</button>
     <PCBViewer circuitJson={returnCurrentDemoBoard} renderer="canvas" height={650} allowEditing={false}
       returnCurrentSimulationDialog={{ client, onRequestIdChange: id => state.requestIds.push(id) }} />
   </main>
@@ -61,6 +77,7 @@ type HarnessState = {
   submitError: boolean
   status: "running" | "failed"
   requestIds: string[]
+  menuActions: number
 }
 declare global {
   interface Window {
@@ -86,10 +103,48 @@ const openFromTrace = async (page: Page) => {
     bounds.y + bounds.height / 2,
     { button: "right" },
   )
-  await page.getByRole("menuitem", { name: /^Simulate/ }).hover()
-  await page
-    .getByRole("menuitem", { name: "Return Current Simulation", exact: true })
-    .click()
+  const menu = page.getByRole("menu", { name: "PCB context menu", exact: true })
+  const labels = await menu.evaluate((element) =>
+    Array.from(element.querySelectorAll<HTMLButtonElement>("button"))
+      .filter((button) => button.closest('[role="menu"]') === element)
+      .map((button) => button.textContent?.trim()),
+  )
+  assert.match(
+    labels.at(-1) ?? "",
+    /^Simulate/,
+    "Simulate must be the last context-menu entry",
+  )
+  const simulate = menu.getByRole("menuitem", { name: /^Simulate/ })
+  await menu.focus()
+  await page.keyboard.press("ArrowUp")
+  assert(
+    await simulate.evaluate((element) => element === document.activeElement),
+  )
+  await page.keyboard.press("ArrowDown")
+  assert.equal(
+    await page.evaluate(() => document.activeElement?.textContent?.trim()),
+    labels[0],
+  )
+  await page.keyboard.press("ArrowUp")
+  await page.keyboard.press("ArrowRight")
+  await page.waitForFunction(
+    () =>
+      document.activeElement?.textContent?.trim() ===
+      "Return Current Simulation",
+  )
+  await page.keyboard.press("ArrowLeft")
+  assert(
+    await simulate.evaluate((element) => element === document.activeElement),
+  )
+  assert.equal(await simulate.getAttribute("aria-expanded"), "false")
+  await page.keyboard.press("ArrowRight")
+  await page.waitForFunction(
+    () =>
+      document.activeElement?.textContent?.trim() ===
+      "Return Current Simulation",
+  )
+  await page.keyboard.press("Enter")
+  await menu.waitFor({ state: "hidden" })
 }
 
 const assertNoOutsideForm = async (page: Page) => {
@@ -107,6 +162,99 @@ const assertNoOutsideForm = async (page: Page) => {
     0,
     "Configuration inputs must be inside the dialog",
   )
+}
+
+const tailwindCdnUrl = "https://cdn.tailwindcss.com/3.4.17"
+const hostStyleState = (page: Page) =>
+  page.getByTestId("host-style-sentinel").evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      color: style.color,
+      backgroundColor: style.backgroundColor,
+      fontFamily: style.fontFamily,
+      fontSize: style.fontSize,
+      borderTopWidth: style.borderTopWidth,
+      paddingTop: style.paddingTop,
+      paddingLeft: style.paddingLeft,
+      tailwind: JSON.stringify(Reflect.get(window, "tailwind")),
+    }
+  })
+
+const seedHostTailwindConfig = (page: Page) =>
+  page.addInitScript(() => {
+    if (window === window.top)
+      Reflect.set(window, "tailwind", { config: { prefix: "host-test-" } })
+  })
+
+const verifyMenuGeometry = async (page: Page, baseUrl: string) => {
+  for (const viewport of [
+    { width: 900, height: 480 },
+    { width: 390, height: 300 },
+    { width: 740, height: 300 },
+  ]) {
+    console.log(
+      `Checking complete menu at ${viewport.width}×${viewport.height}`,
+    )
+    await page.setViewportSize(viewport)
+    const url = new URL(harnessPath, baseUrl)
+    url.searchParams.set("menu_geometry", "1")
+    await page.goto(url.toString())
+    await page
+      .getByRole("button", { name: "Open complete context menu", exact: true })
+      .click()
+    const menu = page.getByRole("menu", {
+      name: "PCB context menu",
+      exact: true,
+    })
+    const bounds = await menu.boundingBox()
+    assert(bounds)
+    assert(
+      bounds.x >= 0 &&
+        bounds.y >= 0 &&
+        bounds.x + bounds.width <= viewport.width &&
+        bounds.y + bounds.height <= viewport.height,
+      `The complete context menu must fit ${viewport.width}×${viewport.height}: ${JSON.stringify(bounds)}`,
+    )
+    const lastLabel = await menu.evaluate((element) =>
+      Array.from(element.querySelectorAll("button"))
+        .filter((button) => button.closest('[role="menu"]') === element)
+        .at(-1)
+        ?.textContent?.trim(),
+    )
+    assert.match(
+      lastLabel ?? "",
+      /^Simulate/,
+      "Simulate follows schematic, MPN and every optional entry",
+    )
+    await menu.focus()
+    await page.keyboard.press("ArrowUp")
+    await page.keyboard.press("ArrowRight")
+    const action = page.getByRole("menuitem", {
+      name: "Return Current Simulation",
+      exact: true,
+    })
+    await action.waitFor()
+    await page.waitForFunction(
+      () =>
+        document.activeElement?.textContent?.trim() ===
+        "Return Current Simulation",
+    )
+    const actionBounds = await action.boundingBox()
+    assert(actionBounds)
+    assert(
+      actionBounds.x >= 0 &&
+        actionBounds.y >= 0 &&
+        actionBounds.x + actionBounds.width <= viewport.width &&
+        actionBounds.y + actionBounds.height <= viewport.height,
+      `The final submenu must fit ${viewport.width}×${viewport.height}: ${JSON.stringify(actionBounds)}`,
+    )
+    await page.keyboard.press("Enter")
+    await menu.waitFor({ state: "hidden" })
+    assert.equal(
+      await page.evaluate(() => window.__returnCurrentLifecycle.menuActions),
+      1,
+    )
+  }
 }
 
 try {
@@ -186,6 +334,41 @@ try {
   page.setDefaultTimeout(15_000)
   const errors: string[] = []
   let httpSubmissions = 0
+  let tailwindRequests = 0
+  const tailwindFailures: string[] = []
+  // Fetch the actual public CDN bytes using the runtime's proxy/CA trust.
+  // Chromium's trust store need not contain the managed environment CA.
+  await page.route(tailwindCdnUrl, async (route) => {
+    tailwindRequests++
+    try {
+      const response = await fetch(route.request().url(), {
+        signal: AbortSignal.timeout(20_000),
+      })
+      if (!response.ok)
+        throw new Error(`Tailwind CDN returned HTTP ${response.status}`)
+      const headers = Object.fromEntries(
+        [...response.headers].filter(
+          ([name]) =>
+            ![
+              "content-encoding",
+              "content-length",
+              "transfer-encoding",
+            ].includes(name),
+        ),
+      )
+      await route.fulfill({
+        status: response.status,
+        headers,
+        body: Buffer.from(await response.arrayBuffer()),
+      })
+    } catch (error) {
+      tailwindFailures.push(
+        error instanceof Error ? error.message : String(error),
+      )
+      await route.abort("failed")
+    }
+  })
+  if (!existingRequestId) await seedHostTailwindConfig(page)
   page.on("pageerror", (error) => errors.push(error.message))
   page.on("request", (request) => {
     if (
@@ -219,6 +402,10 @@ try {
       { timeout: 60_000 },
     )
     if (!(await dialog.isVisible())) await launcher.click()
+    await page
+      .locator('[data-return-current-dialog][data-style-state="ready"]')
+      .waitFor({ state: "attached", timeout: 30_000 })
+    assert.deepEqual(tailwindFailures, [])
     assert.equal(
       await dialog.getByTestId("simulation-status").getAttribute("data-status"),
       "completed",
@@ -318,12 +505,51 @@ try {
       "Existing real Palace result reopened in the dialog and on the PCB; zero new solves submitted",
     )
   } else {
+    const geometryPage = await browser.newPage()
+    geometryPage.on("pageerror", (error) =>
+      console.error("Menu fixture error:", error.message),
+    )
+    geometryPage.on("response", (response) => {
+      if (response.status() >= 400)
+        console.error(
+          "Menu fixture response:",
+          response.status(),
+          response.url(),
+        )
+    })
+    geometryPage.setDefaultTimeout(15_000)
+    activePage = geometryPage
+    await verifyMenuGeometry(geometryPage, baseUrl)
+    await geometryPage.close()
+    activePage = page
     await page.goto(new URL(harnessPath, baseUrl).toString())
     await page.locator("canvas").first().waitFor()
     assert.equal(await dialog.count(), 0)
+    assert.equal(
+      tailwindRequests,
+      0,
+      "The CDN must not load before the dialog is used",
+    )
+    assert.equal(
+      await page
+        .locator("iframe[data-return-current-tailwind-compiler]")
+        .count(),
+      0,
+    )
+    const hostBefore = await hostStyleState(page)
     await assertNoOutsideForm(page)
     await openFromTrace(page)
     await dialog.waitFor()
+    await page
+      .locator('[data-return-current-dialog][data-style-state="ready"]')
+      .waitFor({ state: "attached", timeout: 30_000 })
+    assert.deepEqual(tailwindFailures, [])
+    assert.equal(tailwindRequests, 1, "Use the actual pinned Tailwind CDN once")
+    assert.deepEqual(
+      await hostStyleState(page),
+      hostBefore,
+      "Widget styling must preserve host styles and Tailwind config",
+    )
     await dialog
       .getByTestId("cli-health")
       .filter({ hasText: "backend unavailable" })
@@ -343,7 +569,7 @@ try {
       .click()
     await dialog
       .getByTestId("cli-health")
-      .filter({ hasText: "Local CLI event server available" })
+      .filter({ hasText: "Simulation service available" })
       .waitFor()
     await dialog.getByLabel("Frequency (MHz)", { exact: true }).fill("875")
     await dialog.getByLabel("Peak current (mA)", { exact: true }).fill("6.5")
@@ -393,6 +619,24 @@ try {
         document.querySelector("[data-return-current-launcher]"),
     )
     await launcher.click()
+    await page
+      .locator('[data-return-current-dialog][data-style-state="ready"]')
+      .waitFor({ state: "attached" })
+    assert.equal(
+      tailwindRequests,
+      1,
+      "Reopening must reuse the loaded compiler",
+    )
+    assert.equal(
+      await page
+        .locator("iframe[data-return-current-tailwind-compiler]")
+        .count(),
+      1,
+    )
+    assert.equal(
+      await page.locator("style[data-return-current-tailwind]").count(),
+      1,
+    )
     assert.equal(
       await dialog.getByLabel("Frequency (MHz)", { exact: true }).inputValue(),
       "875",
@@ -500,6 +744,71 @@ try {
       path: `${output}/transport-lifecycle.png`,
       fullPage: true,
     })
+    const fallbackPage = await browser.newPage({
+      viewport: { width: 1440, height: 1050 },
+    })
+    await seedHostTailwindConfig(fallbackPage)
+    let blockedAttempts = 0
+    const fallbackErrors: string[] = []
+    fallbackPage.on("pageerror", (error) => fallbackErrors.push(error.message))
+    await fallbackPage.route(tailwindCdnUrl, async (route) => {
+      blockedAttempts++
+      await route.abort("failed")
+    })
+    await fallbackPage.goto(new URL(harnessPath, baseUrl).toString())
+    await fallbackPage.locator("canvas").first().waitFor()
+    const fallbackHostBefore = await hostStyleState(fallbackPage)
+    await openFromTrace(fallbackPage)
+    const fallbackDialog = fallbackPage.getByRole("dialog", {
+      name: "Return current simulation",
+      exact: true,
+    })
+    await fallbackPage
+      .locator('[data-return-current-dialog][data-style-state="fallback"]')
+      .waitFor({ state: "attached", timeout: 20_000 })
+    assert.equal(blockedAttempts, 1)
+    assert.equal(
+      await fallbackDialog.evaluate(
+        (element) => getComputedStyle(element).backgroundColor,
+      ),
+      "rgb(255, 255, 255)",
+    )
+    assert.deepEqual(await hostStyleState(fallbackPage), fallbackHostBefore)
+    await fallbackDialog
+      .getByLabel("Frequency (MHz)", { exact: true })
+      .fill("450")
+    assert.equal(
+      await fallbackDialog
+        .getByLabel("Frequency (MHz)", { exact: true })
+        .inputValue(),
+      "450",
+    )
+    await fallbackPage.evaluate(() => {
+      window.__returnCurrentLifecycle.available = true
+    })
+    await fallbackDialog
+      .getByRole("button", { name: "Retry backend connection", exact: true })
+      .click()
+    await fallbackDialog
+      .getByTestId("cli-health")
+      .filter({ hasText: "Simulation service available" })
+      .waitFor()
+    assert.equal(
+      await fallbackDialog
+        .getByRole("button", { name: "Run simulation", exact: true })
+        .isEnabled(),
+      true,
+    )
+    assert.equal(
+      await fallbackPage.locator("[data-return-current-overlay]").count(),
+      0,
+    )
+    assert.deepEqual(fallbackErrors, [])
+    await fallbackPage.screenshot({
+      path: `${output}/transport-fallback.png`,
+      fullPage: true,
+    })
+    await fallbackPage.close()
     await writeFile(
       `${output}/transport-lifecycle-receipt.json`,
       `${JSON.stringify(
@@ -510,6 +819,10 @@ try {
           explicit_submissions: 3,
           polling_continued_while_closed: true,
           focus_trap_escape_restore: true,
+          simulate_is_last_with_keyboard_navigation: true,
+          actual_tailwind_cdn_requests: tailwindRequests,
+          host_styles_preserved: true,
+          blocked_cdn_fallback: true,
           passed: true,
         },
         null,
@@ -525,6 +838,12 @@ try {
     ?.screenshot({ path: `${output}/lifecycle-failure.png`, fullPage: true })
     .catch(() => {})
   if (activePage) {
+    console.error(
+      "Focused element on failure:",
+      await activePage.evaluate(() =>
+        document.activeElement?.outerHTML.slice(0, 400),
+      ),
+    )
     console.error(
       "Dialog state on failure:",
       await activePage

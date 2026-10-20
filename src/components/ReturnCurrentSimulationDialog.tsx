@@ -10,7 +10,6 @@ import {
   simulation_return_current_excitation,
 } from "circuit-json"
 import {
-  type CSSProperties,
   useCallback,
   useEffect,
   useId,
@@ -34,6 +33,7 @@ import {
   type ReturnCurrentPortCandidate,
 } from "../lib/return-current-experiment"
 import { loadReturnCurrentFields } from "../lib/return-current-overlay"
+import { loadReturnCurrentDialogTailwind } from "../lib/return-current-tailwind"
 
 export interface ReturnCurrentSimulationDialogResult {
   circuitJson: AnyCircuitElement[]
@@ -89,28 +89,45 @@ interface CompletedSimulation {
   resumed: boolean
 }
 
-const controlStyle: CSSProperties = {
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "8px 10px",
-  border: "1px solid #4a606a",
-  borderRadius: 5,
-  background: "#10232b",
-  color: "#f2f7f8",
-  font: "inherit",
-  minHeight: 36,
-}
-const gridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-  gap: 14,
-}
-const buttonStyle: CSSProperties = {
-  ...controlStyle,
-  width: "auto",
-  cursor: "pointer",
-  background: "#17616c",
-}
+const controlClassName =
+  "rc-dialog-control rctw-mt-1 rctw-block rctw-box-border rctw-min-h-10 rctw-w-full rctw-rounded-md rctw-border rctw-border-solid rctw-border-gray-300 rctw-bg-white rctw-px-3 rctw-py-2 rctw-font-sans rctw-text-sm rctw-text-gray-900 rctw-shadow-sm focus:rctw-border-blue-500 focus:rctw-outline-none focus:rctw-ring-2 focus:rctw-ring-blue-500/20 disabled:rctw-cursor-not-allowed disabled:rctw-bg-gray-100 disabled:rctw-text-gray-500"
+const gridClassName =
+  "rc-dialog-grid rctw-grid rctw-grid-cols-1 rctw-gap-4 sm:rctw-grid-cols-2"
+const labelClassName =
+  "rc-dialog-label rctw-block rctw-min-w-0 rctw-text-sm rctw-font-medium rctw-text-gray-700"
+const buttonClassName =
+  "rc-dialog-button rctw-inline-flex rctw-cursor-pointer rctw-items-center rctw-justify-center rctw-rounded-md rctw-border rctw-border-solid rctw-border-gray-300 rctw-bg-white rctw-px-3 rctw-py-2 rctw-font-sans rctw-text-sm rctw-font-medium rctw-text-gray-700 rctw-shadow-sm hover:rctw-bg-gray-50 focus:rctw-outline-none focus:rctw-ring-2 focus:rctw-ring-blue-500 focus:rctw-ring-offset-2 disabled:rctw-cursor-not-allowed disabled:rctw-opacity-50"
+const primaryButtonClassName =
+  "rc-dialog-button rc-dialog-primary rctw-inline-flex rctw-cursor-pointer rctw-items-center rctw-justify-center rctw-rounded-md rctw-border rctw-border-solid rctw-border-transparent rctw-bg-blue-600 rctw-px-4 rctw-py-2 rctw-font-sans rctw-text-sm rctw-font-semibold rctw-text-white rctw-shadow-sm hover:rctw-bg-blue-700 focus:rctw-outline-none focus:rctw-ring-2 focus:rctw-ring-blue-500 focus:rctw-ring-offset-2 disabled:rctw-cursor-not-allowed disabled:rctw-opacity-50"
+
+// Critical, scoped light styling keeps the modal usable while the optional CDN
+// is loading or unavailable. Ready dialogs use the generated Tailwind utilities.
+const fallbackStyles = `
+[data-return-current-dialog] { color-scheme: light; }
+[data-return-current-dialog] *, [data-return-current-dialog] ::before, [data-return-current-dialog] ::after { box-sizing: border-box; }
+[data-return-current-dialog]:not([data-style-state="ready"]) { font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; color: #111827; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-backdrop { position: fixed; inset: 0; z-index: 20000; display: grid; place-items: center; padding: 1rem; background: rgb(17 24 39 / .5); }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-panel { position: relative; width: 100%; max-width: 48rem; max-height: 90vh; overflow-y: auto; padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: .75rem; background: white; box-shadow: 0 20px 25px -5px rgb(0 0 0 / .1); outline: none; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; padding-bottom: 1rem; background: white; }
+[data-return-current-dialog]:not([data-style-state="ready"]) h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+[data-return-current-dialog]:not([data-style-state="ready"]) h3 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 600; }
+[data-return-current-dialog]:not([data-style-state="ready"]) p { margin: .75rem 0; color: #4b5563; }
+[data-return-current-dialog]:not([data-style-state="ready"]) fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-label { display: block; min-width: 0; color: #374151; font-weight: 500; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-control { display: block; width: 100%; min-height: 2.5rem; margin-top: .25rem; padding: .5rem .75rem; border: 1px solid #d1d5db; border-radius: .375rem; color: #111827; background: white; font: inherit; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-button { display: inline-flex; align-items: center; justify-content: center; padding: .5rem .75rem; border: 1px solid #d1d5db; border-radius: .375rem; background: white; color: #374151; font: inherit; font-weight: 500; cursor: pointer; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-primary { border-color: transparent; background: #2563eb; color: white; }
+[data-return-current-dialog]:not([data-style-state="ready"]) :disabled { cursor: not-allowed; opacity: .5; }
+[data-return-current-dialog]:not([data-style-state="ready"]) :focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-top: 1.25rem; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-status { margin: 1rem 0; padding: .75rem 1rem; border: 1px solid #e5e7eb; border-radius: .5rem; background: #f9fafb; color: #4b5563; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-section { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #e5e7eb; }
+[data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-options { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+[data-return-current-dialog]:not([data-style-state="ready"]) details { margin-top: 1.25rem; }
+[data-return-current-dialog]:not([data-style-state="ready"]) summary { cursor: pointer; font-weight: 500; }
+@media (min-width: 640px) { [data-return-current-dialog]:not([data-style-state="ready"]) .rc-dialog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+`
 
 const componentForPort = (
   circuitJson: AnyCircuitElement[],
@@ -281,6 +298,10 @@ export const ReturnCurrentSimulationDialog = ({
 }: ReturnCurrentSimulationDialogProps) => {
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
+  const styleRootRef = useRef<HTMLDivElement>(null)
+  const [styleState, setStyleState] = useState<
+    "loading" | "ready" | "fallback"
+  >("loading")
   const callbacks = useRef({
     onResult,
     onRequestIdChange,
@@ -304,6 +325,29 @@ export const ReturnCurrentSimulationDialog = ({
   latestBoard.current = circuitJson
   const expectedTrace = useRef(sessionTraceId)
   expectedTrace.current = sessionTraceId
+
+  useEffect(() => {
+    if (!open || !styleRootRef.current) return
+    let active = true
+    let dispose: (() => void) | undefined
+    setStyleState((previous) => (previous === "ready" ? previous : "loading"))
+    void loadReturnCurrentDialogTailwind(styleRootRef.current)
+      .then((release) => {
+        if (!active) {
+          release()
+          return
+        }
+        dispose = release
+        setStyleState("ready")
+      })
+      .catch(() => {
+        if (active) setStyleState("fallback")
+      })
+    return () => {
+      active = false
+      dispose?.()
+    }
+  }, [open])
 
   const processResult = useCallback(
     async (
@@ -842,10 +886,10 @@ export const ReturnCurrentSimulationDialog = ({
       | "airPadding"
       | "processes",
   ) => (
-    <label>
+    <label className={labelClassName}>
       {label}
       <input
-        style={controlStyle}
+        className={controlClassName}
         type="number"
         min="0"
         step={key === "processes" ? "1" : "any"}
@@ -860,10 +904,10 @@ export const ReturnCurrentSimulationDialog = ({
     layers: LayerRef[],
     onChange: (value: string) => void,
   ) => (
-    <label>
+    <label className={labelClassName}>
       {label}
       <select
-        style={controlStyle}
+        className={controlClassName}
         value={value}
         onChange={(event) => onChange(event.currentTarget.value)}
       >
@@ -881,10 +925,10 @@ export const ReturnCurrentSimulationDialog = ({
     key: "returnSink" | "returnSource",
     layerKey: "returnSinkLayer" | "returnSourceLayer",
   ) => (
-    <label>
+    <label className={labelClassName}>
       {label}
       <select
-        style={controlStyle}
+        className={controlClassName}
         value={form[key]}
         onChange={(event) => {
           const value = event.currentTarget.value
@@ -911,426 +955,410 @@ export const ReturnCurrentSimulationDialog = ({
 
   return createPortal(
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 20000,
-        background: "#000a",
-        display: "grid",
-        placeItems: "center",
-        padding: 16,
-      }}
-      onPointerDown={(event) => event.stopPropagation()}
-      onMouseDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
-      onTouchStart={(event) => event.stopPropagation()}
-      onTouchMove={(event) => event.stopPropagation()}
-      onWheel={(event) => event.stopPropagation()}
-      onContextMenu={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-      }}
-      onKeyDown={(event) => {
-        event.stopPropagation()
-        if (event.key === "Escape") {
-          event.preventDefault()
-          onClose()
-          return
-        }
-        if (event.key !== "Tab") return
-        const focusable = [
-          ...(dialogRef.current?.querySelectorAll<HTMLElement>(
-            'button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a[href], [tabindex="0"]',
-          ) ?? []),
-        ].filter((element) => element.getClientRects().length > 0)
-        const first = focusable[0],
-          last = focusable.at(-1)
-        if (!first) {
-          event.preventDefault()
-          dialogRef.current?.focus()
-          return
-        }
-        if (
-          event.shiftKey &&
-          (document.activeElement === first ||
-            !focusable.includes(document.activeElement as HTMLElement))
-        ) {
-          event.preventDefault()
-          last?.focus()
-        } else if (
-          !event.shiftKey &&
-          (document.activeElement === last ||
-            !focusable.includes(document.activeElement as HTMLElement))
-        ) {
-          event.preventDefault()
-          first.focus()
-        }
-      }}
+      ref={styleRootRef}
+      data-return-current-dialog=""
+      data-style-state={styleState}
     >
+      <style>{fallbackStyles}</style>
       <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
-        style={{
-          width: "min(760px, 100%)",
-          maxHeight: "min(90vh, 950px)",
-          overflowY: "auto",
-          color: "#edf5f8",
-          background: "#142b33",
-          border: "1px solid #54717e",
-          borderRadius: 10,
-          padding: 22,
-          boxSizing: "border-box",
-          font: "14px/1.45 system-ui, sans-serif",
-          outline: "none",
+        className="rc-dialog-backdrop rctw-fixed rctw-inset-0 rctw-z-[20000] rctw-grid rctw-place-items-center rctw-bg-gray-900/50 rctw-p-4 rctw-font-sans rctw-antialiased"
+        onPointerDown={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+        onTouchStart={(event) => event.stopPropagation()}
+        onTouchMove={(event) => event.stopPropagation()}
+        onWheel={(event) => event.stopPropagation()}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+        }}
+        onKeyDown={(event) => {
+          event.stopPropagation()
+          if (event.key === "Escape") {
+            event.preventDefault()
+            onClose()
+            return
+          }
+          if (event.key !== "Tab") return
+          const focusable = [
+            ...(dialogRef.current?.querySelectorAll<HTMLElement>(
+              'button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a[href], [tabindex="0"]',
+            ) ?? []),
+          ].filter((element) => element.getClientRects().length > 0)
+          const first = focusable[0],
+            last = focusable.at(-1)
+          if (!first) {
+            event.preventDefault()
+            dialogRef.current?.focus()
+            return
+          }
+          if (
+            event.shiftKey &&
+            (document.activeElement === first ||
+              !focusable.includes(document.activeElement as HTMLElement))
+          ) {
+            event.preventDefault()
+            last?.focus()
+          } else if (
+            !event.shiftKey &&
+            (document.activeElement === last ||
+              !focusable.includes(document.activeElement as HTMLElement))
+          ) {
+            event.preventDefault()
+            first.focus()
+          }
         }}
       >
-        <header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-            position: "sticky",
-            top: 0,
-            background: "#142b33",
-            zIndex: 1,
-            paddingBottom: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          <h2 id={titleId} style={{ margin: 0, fontSize: 22 }}>
-            Return current simulation
-          </h2>
-          <button
-            style={buttonStyle}
-            type="button"
-            aria-label="Close return current simulation"
-            onClick={onClose}
-          >
-            Close
-          </button>
-          {run.result && (
-            <button type="button" style={buttonStyle} onClick={onClose}>
-              View result on PCB
-            </button>
-          )}
-        </header>
-        <p>
-          {setup.terminals
-            ? `${setup.terminals.source.label} ↔ ${setup.terminals.load.label}`
-            : "Select a routed PCB connection."}
-        </p>
-        {setup.terminals && (
-          <p style={{ color: "#afc6cf" }}>
-            Signal net:{" "}
-            {[
-              ...new Set(
-                [
-                  ...setup.terminals.source.sourceNets,
-                  ...setup.terminals.load.sourceNets,
-                ].map((net) => net.label),
-              ),
-            ].join(", ") || "Point-to-point connection"}
-          </p>
-        )}
         <div
-          data-testid="cli-health"
-          role="status"
-          style={{ marginBottom: 14 }}
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
+          className="rc-dialog-panel rctw-relative rctw-box-border rctw-max-h-[90vh] rctw-w-full rctw-max-w-3xl rctw-overflow-y-auto rctw-rounded-xl rctw-border rctw-border-solid rctw-border-gray-200 rctw-bg-white rctw-p-6 rctw-text-sm rctw-leading-6 rctw-text-gray-900 rctw-shadow-xl focus:rctw-outline-none"
         >
-          {health
-            ? health.available
-              ? "Local CLI event server available"
-              : `Simulation backend unavailable: ${health.message}`
-            : "Checking simulation backend…"}
-          {health && !health.available && (
-            <button
-              type="button"
-              style={{ ...buttonStyle, marginLeft: 8 }}
-              onClick={() => setHealthAttempt((value) => value + 1)}
+          <header className="rc-dialog-header rctw-sticky rctw-top-0 rctw-z-10 rctw-flex rctw-flex-wrap rctw-items-center rctw-justify-between rctw-gap-3 rctw-bg-white rctw-pb-4">
+            <h2
+              id={titleId}
+              className="rctw-m-0 rctw-text-xl rctw-font-semibold rctw-tracking-tight rctw-text-gray-900"
             >
-              Retry backend connection
+              Return current simulation
+            </h2>
+            <button
+              className={buttonClassName}
+              type="button"
+              aria-label="Close return current simulation"
+              onClick={onClose}
+            >
+              Close
             </button>
-          )}
-        </div>
-        {setup.error && <p role="alert">{setup.error}</p>}
-        <form
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault()
-            start()
-          }}
-        >
-          <fieldset
-            disabled={
-              run.busy ||
-              run.failureKind === "submission" ||
-              run.failureKind === "transport" ||
-              run.failureKind === "result"
-            }
-            style={{ border: 0, padding: 0, margin: 0 }}
-          >
-            <div style={gridStyle}>
-              <label>
-                Driver signal pad
-                <select
-                  style={controlStyle}
-                  value={form.driver}
-                  onChange={(event) =>
-                    chooseContacts(form.ground, event.currentTarget.value)
-                  }
-                >
-                  {!setup.terminals && (
-                    <option value="">Choose signal trace</option>
-                  )}
-                  {setup.terminals &&
-                    [setup.terminals.source, setup.terminals.load].map(
-                      (port) => (
-                        <option key={port.pcbPortId} value={port.pcbPortId}>
-                          {port.label}
-                        </option>
-                      ),
-                    )}
-                </select>
-              </label>
-              <label>
-                Ground net
-                <select
-                  style={controlStyle}
-                  value={form.ground}
-                  onChange={(event) =>
-                    chooseContacts(event.currentTarget.value, form.driver)
-                  }
-                >
-                  <option value="">Choose ground reference net</option>
-                  {groundNets.map((net) => (
-                    <option key={net.sourceNetId} value={net.sourceNetId}>
-                      {net.label}
-                      {net.isGround ? " (GND)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <p>
-              Signal: {driver?.label ?? "driver"} → {load?.label ?? "load"}.
-              Return: load-side ground → driver-side ground.
+            {run.result && (
+              <button
+                type="button"
+                className={buttonClassName}
+                onClick={onClose}
+              >
+                View result on PCB
+              </button>
+            )}
+          </header>
+          <p className="rctw-my-3 rctw-text-sm rctw-text-gray-600">
+            {setup.terminals
+              ? `${setup.terminals.source.label} ↔ ${setup.terminals.load.label}`
+              : "Select a routed PCB connection."}
+          </p>
+          {setup.terminals && (
+            <p className="rctw-my-3 rctw-text-sm rctw-text-gray-500">
+              Signal net:{" "}
+              {[
+                ...new Set(
+                  [
+                    ...setup.terminals.source.sourceNets,
+                    ...setup.terminals.load.sourceNets,
+                  ].map((net) => net.label),
+                ),
+              ].join(", ") || "Point-to-point connection"}
             </p>
-            <div style={gridStyle}>
-              {groundField(
-                "Driver-side ground pad",
-                "returnSink",
-                "returnSinkLayer",
-              )}
-              {layerField(
-                "Driver-side ground layer",
-                form.returnSinkLayer,
-                sink?.layers ?? [],
-                (value) => setValue("returnSinkLayer", value),
-              )}
-              {groundField(
-                "Load-side ground pad",
-                "returnSource",
-                "returnSourceLayer",
-              )}
-              {layerField(
-                "Load-side ground layer",
-                form.returnSourceLayer,
-                returnSource?.layers ?? [],
-                (value) => setValue("returnSourceLayer", value),
-              )}
-              {numberField("Frequency (MHz)", "frequencyMHz")}
-              {numberField("Peak current (mA)", "currentMa")}
-              {numberField("Source resistance (Ω)", "sourceResistance")}
-              {numberField("Load resistance (Ω)", "loadResistance")}
-              <label>
-                Return layer
-                <select
-                  style={controlStyle}
-                  value={form.sampleLayer}
-                  onChange={(event) =>
-                    setValue(
-                      "sampleLayer",
-                      layer_ref.parse(event.currentTarget.value),
-                    )
-                  }
-                >
-                  {boardLayers.map((layer) => (
-                    <option key={layer} value={layer}>
-                      {layer}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <details style={{ marginTop: 18 }}>
-              <summary style={{ cursor: "pointer" }}>
-                Advanced solver settings
-              </summary>
-              <p>Frequency-domain EM with surface-impedance copper.</p>
-              <div style={gridStyle}>
-                {numberField("Sampling cell size (mm)", "cellSize")}
-                {numberField("FEM mesh size (mm)", "meshSize")}
-                <label>
-                  FEM order
+          )}
+          <div
+            data-testid="cli-health"
+            role="status"
+            className="rc-dialog-status rctw-my-4 rctw-rounded-lg rctw-border rctw-border-solid rctw-border-gray-200 rctw-bg-gray-50 rctw-px-4 rctw-py-3 rctw-text-sm rctw-text-gray-600"
+          >
+            {health
+              ? health.available
+                ? "Simulation service available"
+                : `Simulation backend unavailable: ${health.message}`
+              : "Checking simulation backend…"}
+            {health && !health.available && (
+              <button
+                type="button"
+                className={`${buttonClassName} rctw-ml-2`}
+                onClick={() => setHealthAttempt((value) => value + 1)}
+              >
+                Retry backend connection
+              </button>
+            )}
+          </div>
+          {setup.error && (
+            <p
+              role="alert"
+              className="rctw-my-3 rctw-text-sm rctw-text-red-700"
+            >
+              {setup.error}
+            </p>
+          )}
+          <form
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault()
+              start()
+            }}
+          >
+            <fieldset
+              disabled={
+                run.busy ||
+                run.failureKind === "submission" ||
+                run.failureKind === "transport" ||
+                run.failureKind === "result"
+              }
+              className="rctw-m-0 rctw-min-w-0 rctw-border-0 rctw-p-0"
+            >
+              <div className={gridClassName}>
+                <label className={labelClassName}>
+                  Driver signal pad
                   <select
-                    style={controlStyle}
-                    value={form.order}
+                    className={controlClassName}
+                    value={form.driver}
+                    onChange={(event) =>
+                      chooseContacts(form.ground, event.currentTarget.value)
+                    }
+                  >
+                    {!setup.terminals && (
+                      <option value="">Choose signal trace</option>
+                    )}
+                    {setup.terminals &&
+                      [setup.terminals.source, setup.terminals.load].map(
+                        (port) => (
+                          <option key={port.pcbPortId} value={port.pcbPortId}>
+                            {port.label}
+                          </option>
+                        ),
+                      )}
+                  </select>
+                </label>
+                <label className={labelClassName}>
+                  Ground net
+                  <select
+                    className={controlClassName}
+                    value={form.ground}
+                    onChange={(event) =>
+                      chooseContacts(event.currentTarget.value, form.driver)
+                    }
+                  >
+                    <option value="">Choose ground reference net</option>
+                    {groundNets.map((net) => (
+                      <option key={net.sourceNetId} value={net.sourceNetId}>
+                        {net.label}
+                        {net.isGround ? " (GND)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <p className="rctw-my-3 rctw-text-sm rctw-text-gray-600">
+                Signal: {driver?.label ?? "driver"} → {load?.label ?? "load"}.
+                Return: load-side ground → driver-side ground.
+              </p>
+              <div className={gridClassName}>
+                {groundField(
+                  "Driver-side ground pad",
+                  "returnSink",
+                  "returnSinkLayer",
+                )}
+                {layerField(
+                  "Driver-side ground layer",
+                  form.returnSinkLayer,
+                  sink?.layers ?? [],
+                  (value) => setValue("returnSinkLayer", value),
+                )}
+                {groundField(
+                  "Load-side ground pad",
+                  "returnSource",
+                  "returnSourceLayer",
+                )}
+                {layerField(
+                  "Load-side ground layer",
+                  form.returnSourceLayer,
+                  returnSource?.layers ?? [],
+                  (value) => setValue("returnSourceLayer", value),
+                )}
+                {numberField("Frequency (MHz)", "frequencyMHz")}
+                {numberField("Peak current (mA)", "currentMa")}
+                {numberField("Source resistance (Ω)", "sourceResistance")}
+                {numberField("Load resistance (Ω)", "loadResistance")}
+                <label className={labelClassName}>
+                  Return layer
+                  <select
+                    className={controlClassName}
+                    value={form.sampleLayer}
                     onChange={(event) =>
                       setValue(
-                        "order",
-                        event.currentTarget.value === "2" ? 2 : 1,
+                        "sampleLayer",
+                        layer_ref.parse(event.currentTarget.value),
                       )
                     }
                   >
-                    <option value={1}>P1</option>
-                    <option value={2}>P2</option>
+                    {boardLayers.map((layer) => (
+                      <option key={layer} value={layer}>
+                        {layer}
+                      </option>
+                    ))}
                   </select>
                 </label>
-                {numberField("Air padding (mm)", "airPadding")}
-                {numberField("Solver processes", "processes")}
               </div>
-            </details>
-          </fieldset>
-          {formError && <p role="alert">{formError}</p>}
+              <details className="rctw-mt-5 rctw-rounded-lg rctw-border rctw-border-solid rctw-border-gray-200 rctw-bg-gray-50 rctw-p-4">
+                <summary className="rctw-cursor-pointer rctw-text-sm rctw-font-medium rctw-text-gray-700 focus:rctw-outline-none focus:rctw-ring-2 focus:rctw-ring-blue-500">
+                  Advanced solver settings
+                </summary>
+                <p className="rctw-my-3 rctw-text-sm rctw-text-gray-600">
+                  Frequency-domain EM with surface-impedance copper.
+                </p>
+                <div className={gridClassName}>
+                  {numberField("Sampling cell size (mm)", "cellSize")}
+                  {numberField("FEM mesh size (mm)", "meshSize")}
+                  <label className={labelClassName}>
+                    FEM order
+                    <select
+                      className={controlClassName}
+                      value={form.order}
+                      onChange={(event) =>
+                        setValue(
+                          "order",
+                          event.currentTarget.value === "2" ? 2 : 1,
+                        )
+                      }
+                    >
+                      <option value={1}>P1</option>
+                      <option value={2}>P2</option>
+                    </select>
+                  </label>
+                  {numberField("Air padding (mm)", "airPadding")}
+                  {numberField("Solver processes", "processes")}
+                </div>
+              </details>
+            </fieldset>
+            {formError && (
+              <p
+                role="alert"
+                className="rctw-my-3 rctw-text-sm rctw-text-red-700"
+              >
+                {formError}
+              </p>
+            )}
+            <div className="rc-dialog-actions rctw-mt-5 rctw-flex rctw-flex-wrap rctw-items-center rctw-gap-3">
+              <button
+                type="submit"
+                className={primaryButtonClassName}
+                disabled={
+                  run.busy ||
+                  !health?.available ||
+                  !setup.terminals ||
+                  (run.status === "failed" &&
+                    run.failureKind !== "solver" &&
+                    run.failureKind !== "submission")
+                }
+              >
+                {run.busy
+                  ? "Simulation running…"
+                  : run.failureKind === "solver" ||
+                      run.failureKind === "submission"
+                    ? "Retry simulation"
+                    : "Run simulation"}
+              </button>
+              {run.status === "failed" &&
+                run.failureKind !== "solver" &&
+                run.failureKind !== "submission" &&
+                run.requestId && (
+                  <button
+                    type="button"
+                    className={buttonClassName}
+                    onClick={() => run.resume(run.requestId!)}
+                  >
+                    Retry loading job
+                  </button>
+                )}
+            </div>
+          </form>
           <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-              marginTop: 18,
-            }}
+            data-testid="simulation-status"
+            data-status={run.status}
+            role="status"
+            aria-live="polite"
+            className="rc-dialog-status rctw-my-4 rctw-rounded-lg rctw-border rctw-border-solid rctw-border-gray-200 rctw-bg-gray-50 rctw-px-4 rctw-py-3 rctw-text-sm rctw-text-gray-700"
           >
-            <button
-              type="submit"
-              style={{
-                ...buttonStyle,
-                opacity:
-                  run.busy || !health?.available || !setup.terminals ? 0.55 : 1,
-              }}
-              disabled={
-                run.busy ||
-                !health?.available ||
-                !setup.terminals ||
-                (run.status === "failed" &&
-                  run.failureKind !== "solver" &&
-                  run.failureKind !== "submission")
-              }
-            >
-              {run.busy
-                ? "Simulation running…"
-                : run.failureKind === "solver" ||
-                    run.failureKind === "submission"
-                  ? "Retry simulation"
-                  : "Run simulation"}
-            </button>
-            {run.status === "failed" &&
-              run.failureKind !== "solver" &&
-              run.failureKind !== "submission" &&
-              run.requestId && (
-                <button
-                  type="button"
-                  style={buttonStyle}
-                  onClick={() => run.resume(run.requestId!)}
-                >
-                  Retry loading job
-                </button>
-              )}
+            {run.status}: {run.message}
           </div>
-        </form>
-        <div
-          data-testid="simulation-status"
-          data-status={run.status}
-          role="status"
-          aria-live="polite"
-          style={{ marginTop: 14 }}
-        >
-          {run.status}: {run.message}
-        </div>
-        {run.error && <p role="alert">{run.error}</p>}
-        {run.busy && (
-          <p style={{ color: "#afc6cf" }}>
-            You can close this dialog while the simulation continues.
-          </p>
-        )}
-        {run.result && (
-          <section
-            aria-label="Simulation result display"
-            style={{
-              marginTop: 20,
-              paddingTop: 18,
-              borderTop: "1px solid #48636f",
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>
-              Result · {run.result.frequencyHz / 1e6} MHz
-            </h3>
-            <div
-              style={{
-                display: "flex",
-                gap: 18,
-                flexWrap: "wrap",
-                marginBottom: 14,
-              }}
+          {run.error && (
+            <p
+              role="alert"
+              className="rctw-my-3 rctw-text-sm rctw-text-red-700"
             >
-              <label>
-                <input
-                  type="checkbox"
-                  checked={showHeatmap}
-                  onChange={(event) =>
-                    setShowHeatmap(event.currentTarget.checked)
-                  }
-                />{" "}
-                EM heatmap
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={showVectors}
-                  onChange={(event) =>
-                    setShowVectors(event.currentTarget.checked)
-                  }
-                />{" "}
-                Current direction arrows
-              </label>
-            </div>
-            <div style={gridStyle}>
-              <label>
-                Result layer
-                <select
-                  style={controlStyle}
-                  value={selectedResultLayer}
-                  onChange={(event) =>
-                    setResultLayer(layer_ref.parse(event.currentTarget.value))
-                  }
-                >
-                  {run.result.layers.map((layer) => (
-                    <option key={layer} value={layer}>
-                      {layer}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Heat opacity
-                <input
-                  style={{ width: "100%" }}
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={opacity}
-                  onChange={(event) =>
-                    setOpacity(Number(event.currentTarget.value))
-                  }
-                />
-              </label>
-            </div>
-          </section>
-        )}
+              {run.error}
+            </p>
+          )}
+          {run.busy && (
+            <p className="rctw-my-3 rctw-text-sm rctw-text-gray-500">
+              You can close this dialog while the simulation continues.
+            </p>
+          )}
+          {run.result && (
+            <section
+              aria-label="Simulation result display"
+              className="rc-dialog-section rctw-mt-6 rctw-border-0 rctw-border-t rctw-border-solid rctw-border-gray-200 rctw-pt-5"
+            >
+              <h3 className="rctw-m-0 rctw-mb-3 rctw-text-base rctw-font-semibold rctw-text-gray-900">
+                Result · {run.result.frequencyHz / 1e6} MHz
+              </h3>
+              <div className="rc-dialog-options rctw-mb-4 rctw-flex rctw-flex-wrap rctw-gap-4">
+                <label className="rctw-inline-flex rctw-items-center rctw-gap-2 rctw-text-sm rctw-font-medium rctw-text-gray-700">
+                  <input
+                    className="rctw-h-4 rctw-w-4 rctw-accent-blue-600"
+                    type="checkbox"
+                    checked={showHeatmap}
+                    onChange={(event) =>
+                      setShowHeatmap(event.currentTarget.checked)
+                    }
+                  />{" "}
+                  EM heatmap
+                </label>
+                <label className="rctw-inline-flex rctw-items-center rctw-gap-2 rctw-text-sm rctw-font-medium rctw-text-gray-700">
+                  <input
+                    className="rctw-h-4 rctw-w-4 rctw-accent-blue-600"
+                    type="checkbox"
+                    checked={showVectors}
+                    onChange={(event) =>
+                      setShowVectors(event.currentTarget.checked)
+                    }
+                  />{" "}
+                  Current direction arrows
+                </label>
+              </div>
+              <div className={gridClassName}>
+                <label className={labelClassName}>
+                  Result layer
+                  <select
+                    className={controlClassName}
+                    value={selectedResultLayer}
+                    onChange={(event) =>
+                      setResultLayer(layer_ref.parse(event.currentTarget.value))
+                    }
+                  >
+                    {run.result.layers.map((layer) => (
+                      <option key={layer} value={layer}>
+                        {layer}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={labelClassName}>
+                  Heat opacity
+                  <input
+                    className="rctw-mt-2 rctw-block rctw-w-full rctw-accent-blue-600"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={opacity}
+                    onChange={(event) =>
+                      setOpacity(Number(event.currentTarget.value))
+                    }
+                  />
+                </label>
+              </div>
+            </section>
+          )}
+        </div>
       </div>
     </div>,
     document.body,
