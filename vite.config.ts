@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
   server: {
     port: 3000,
@@ -20,7 +20,10 @@ export default defineConfig({
   define: {
     global: {},
     __RETURN_CURRENT_API_URL__: JSON.stringify(
-      process.env.VITE_RETURN_CURRENT_API_URL ?? "/api",
+      process.env.VITE_RETURN_CURRENT_API_URL ??
+        (command === "build"
+          ? "https://return-current-simulation-service.seve.workers.dev/api"
+          : "/api"),
     ),
   },
   resolve: {
@@ -30,4 +33,4 @@ export default defineConfig({
       pages: resolve(__dirname, "src/pages"),
     },
   },
-})
+}))

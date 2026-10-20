@@ -442,27 +442,35 @@ try {
     await dialog
       .getByRole("checkbox", { name: "EM heatmap", exact: true })
       .uncheck()
-    assert.equal(
-      await overlay
-        .locator('image[data-type="simulation_pcb_return_current_heatmap"]')
-        .count(),
-      0,
+    await page.waitForFunction(
+      () =>
+        !document.querySelector(
+          '[data-return-current-overlay] image[data-type="simulation_pcb_return_current_heatmap"]',
+        ),
     )
     await dialog
       .getByRole("checkbox", { name: "EM heatmap", exact: true })
       .check()
+    await overlay
+      .locator('image[data-type="simulation_pcb_return_current_heatmap"]')
+      .first()
+      .waitFor({ state: "attached" })
     await dialog
       .getByRole("checkbox", { name: "Current direction arrows", exact: true })
       .uncheck()
-    assert.equal(
-      await overlay
-        .locator('[data-type="simulation_pcb_return_current_vector"]')
-        .count(),
-      0,
+    await page.waitForFunction(
+      () =>
+        !document.querySelector(
+          '[data-return-current-overlay] [data-type="simulation_pcb_return_current_vector"]',
+        ),
     )
     await dialog
       .getByRole("checkbox", { name: "Current direction arrows", exact: true })
       .check()
+    await overlay
+      .locator('[data-type="simulation_pcb_return_current_vector"]')
+      .first()
+      .waitFor({ state: "attached" })
     await dialog.getByLabel("Frequency (MHz)", { exact: true }).fill("450")
     console.log(
       "Existing result: preserving edited settings across Escape/reopen",

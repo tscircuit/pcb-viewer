@@ -8,15 +8,15 @@ Backend availability, configuration, job status and result controls live inside 
 
 ## Hosted preview and cloud execution
 
-The Cloudflare Containers service is in [`services/return-current`](../../services/return-current/README.md). It runs the same real Palace solver directly inside a native container; the browser only submits and observes a job. Circuit JSON input, job status and completed results are stored in R2 so they survive container shutdown.
+The Cloudflare Containers service is in [`services/return-current`](../../services/return-current/README.md), deployed at [`return-current-simulation-service.seve.workers.dev`](https://return-current-simulation-service.seve.workers.dev/api/health). It runs the same real Palace solver directly inside a native container; the browser only submits and observes a job. Circuit JSON input, job status and completed results are stored in R2 so they survive container shutdown.
 
-Deploy the service following that directory's instructions, then set `VITE_RETURN_CURRENT_API_URL` to the deployed API prefix in the Vercel **Preview** environment and rebuild the preview. Add that preview's exact origin to the service's `ALLOWED_ORIGINS`. For example, with your deployed hostname:
+Production builds use that public service by default. Local development uses `/api`, proxied to the local CLI event server. To use another deployment, set `VITE_RETURN_CURRENT_API_URL` to its API prefix and rebuild the preview. Add that preview's exact origin to the service's `ALLOWED_ORIGINS`. For example, with your deployed hostname:
 
 ```sh
 VITE_RETURN_CURRENT_API_URL=https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/api bun run cosmos-export
 ```
 
-The endpoint is a build-time setting, not a solver or credential embedded in the viewer. Without it, the example uses `/api`, proxied to the local CLI server during development. A static preview without a configured service reports an unavailable backend in the dialog.
+The endpoint is public build-time configuration. The viewer contains no native solver or deployment credentials. A service connection failure is reported inside the dialog.
 
 ## Run locally
 
