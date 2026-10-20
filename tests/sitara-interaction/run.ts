@@ -42,13 +42,24 @@ try {
   assert(bounds, "PCB viewer must be visible")
   const centerX = bounds.x + bounds.width / 2
   const centerY = bounds.y + bounds.height / 2
+  const hoverStartedAt = performance.now()
+  await page.mouse.move(centerX, centerY)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  )
+  const hoverMs = performance.now() - hoverStartedAt
+  const hoverStats = await page.evaluate(
+    () => window.sitaraInteractionTest.stats,
+  )
   await page.evaluate(() => {
     window.sitaraInteractionTest.stats.interactionCommitCount = 0
     window.sitaraInteractionTest.stats.interactionRenderMs = 0
     window.sitaraInteractionTest.stats.maxInteractionRenderMs = 0
   })
 
-  await page.mouse.move(centerX, centerY)
   const zoomStartedAt = performance.now()
   for (let index = 0; index < 20; index++) {
     await page.mouse.wheel(0, -10)
@@ -81,6 +92,9 @@ try {
     JSON.stringify(
       {
         firstPaintMs: Math.round(stats.firstPaintMs!),
+        hoverMs: Math.round(hoverMs),
+        hoverRenderMs: Math.round(hoverStats.interactionRenderMs),
+        maxHoverRenderMs: Math.round(hoverStats.maxInteractionRenderMs),
         interactionCommitCount: stats.interactionCommitCount,
         interactionRenderMs: Math.round(stats.interactionRenderMs),
         maxInteractionRenderMs: Math.round(stats.maxInteractionRenderMs),
