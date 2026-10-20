@@ -9,7 +9,7 @@ const server = await createServer({
   resolve: {
     alias: [{ find: "../../src", replacement: `${root}dist/index.js` }],
   },
-  server: { host: "127.0.0.1", port: 0 },
+  server: { host: "127.0.0.1", port: 41739 },
   logLevel: "error",
 })
 
