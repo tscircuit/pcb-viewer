@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test"
 import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 import {
+  createTraceOverlayElementIndex,
   getAssociatedTraceName,
   getTraceOverlayInfo,
 } from "../../src/lib/get-trace-overlay-text"
@@ -26,7 +27,10 @@ describe("trace hover labels", () => {
     ] as AnyCircuitElement[]
 
     expect(
-      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+      getTraceOverlayInfo({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
+      }),
     ).toEqual({ text: "", name: "GND", isOverLength: false })
   })
 
@@ -48,7 +52,10 @@ describe("trace hover labels", () => {
     ] as AnyCircuitElement[]
 
     expect(
-      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+      getTraceOverlayInfo({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
+      }),
     ).toEqual({ text: "1.250 mm", name: "clock", isOverLength: false })
   })
 
@@ -66,7 +73,10 @@ describe("trace hover labels", () => {
     ] as AnyCircuitElement[]
 
     expect(
-      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+      getTraceOverlayInfo({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
+      }),
     ).toEqual({
       text: "",
       name: "U1.1 to U2.2",
@@ -89,7 +99,10 @@ describe("trace hover labels", () => {
     ] as AnyCircuitElement[]
 
     expect(
-      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+      getTraceOverlayInfo({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
+      }),
     ).toEqual({
       text: "",
       name: "U1.1 to U2.2",
@@ -114,7 +127,10 @@ describe("trace hover labels", () => {
     ] as AnyCircuitElement[]
 
     expect(
-      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements }),
+      getTraceOverlayInfo({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
+      }),
     ).toEqual({ text: "5.125 / 5 mm", name: null, isOverLength: true })
   })
 
@@ -132,7 +148,10 @@ describe("trace hover labels", () => {
     ] as AnyCircuitElement[]
 
     expect(
-      getAssociatedTraceName({ primitiveElement: pcbTrace, elements }),
+      getAssociatedTraceName({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
+      }),
     ).toBe("clock")
   })
 
@@ -155,7 +174,10 @@ describe("trace hover labels", () => {
     ] as AnyCircuitElement[]
 
     expect(
-      getAssociatedTraceName({ primitiveElement: pcbTrace, elements }),
+      getAssociatedTraceName({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex(elements),
+      }),
     ).toBe("VCC")
   })
 
@@ -163,7 +185,10 @@ describe("trace hover labels", () => {
     const pcbTrace = createPcbTrace()
 
     expect(
-      getTraceOverlayInfo({ primitiveElement: pcbTrace, elements: [pcbTrace] }),
+      getTraceOverlayInfo({
+        primitiveElement: pcbTrace,
+        traceOverlayElementIndex: createTraceOverlayElementIndex([pcbTrace]),
+      }),
     ).toBeNull()
   })
 })
