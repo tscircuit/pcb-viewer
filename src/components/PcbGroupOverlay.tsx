@@ -131,9 +131,24 @@ export const PcbGroupOverlay = ({
     if (hoveredComponentIds.length > 0) {
       for (const comp of pcbComponents) {
         if (!hoveredComponentIds.includes(comp.pcb_component_id)) continue
-        const targetGroupId =
-          comp.positioned_relative_to_pcb_group_id ?? comp.pcb_group_id
-        if (targetGroupId) hoveredGroupIds.add(targetGroupId)
+        const collectParentGroups = (groupId: string) => {
+          if (hoveredGroupIds.has(groupId)) return
+          hoveredGroupIds.add(groupId)
+          const group = pcbGroups.find((g) => g.pcb_group_id === groupId)
+          if (
+            (group?.position_mode === "relative_to_group_anchor" ||
+              (group?.position_mode as string) === "relative_to_pcb_group") &&
+            group?.positioned_relative_to_pcb_group_id
+          ) {
+            collectParentGroups(group.positioned_relative_to_pcb_group_id)
+          }
+        }
+        if (comp.positioned_relative_to_pcb_group_id) {
+          collectParentGroups(comp.positioned_relative_to_pcb_group_id)
+        }
+        if (comp.pcb_group_id) {
+          collectParentGroups(comp.pcb_group_id)
+        }
       }
     }
 
