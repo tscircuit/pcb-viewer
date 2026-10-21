@@ -17,8 +17,13 @@ const PCB_VIEWER_COLOR_MAP: PcbColorMap = {
   },
 }
 
-export function isFabricationNote(element: AnyCircuitElement) {
-  return element.type.includes("pcb_fabrication_note")
+export function isFabricationNote(
+  element: AnyCircuitElement,
+): element is Extract<
+  AnyCircuitElement,
+  { type: `pcb_fabrication_note_${string}` }
+> {
+  return element.type.startsWith("pcb_fabrication_note_")
 }
 
 export function drawFabricationNoteElementsForLayer({
@@ -40,7 +45,15 @@ export function drawFabricationNoteElementsForLayer({
 
   drawer.realToCanvasMat = realToCanvasMat
 
-  const fabricationElements = elements.filter(isFabricationNote)
+  // Some note types (notably dimensions) are not classified by the drawer's
+  // generic render-layer filter. Enforce the FAB side before drawing them.
+  const fabricationElements = elements
+    .filter(isFabricationNote)
+    .filter(
+      (element) =>
+        layers.length === 0 ||
+        layers.includes(`${element.layer}_fabrication_note` as PcbRenderLayer),
+    )
 
   drawer.drawElements(fabricationElements, { layers })
 }

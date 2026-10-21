@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import { createStore } from "../src/global-store"
 
-test("new viewers show fabrication polarity notes and keep explicit visibility choices", () => {
-  expect(createStore().getState().is_showing_fabrication_notes).toBe(true)
+test("fabrication notes are opt-in and preserve visibility choices", () => {
+  expect(createStore().getState().is_showing_fabrication_notes).toBe(false)
   expect(
     createStore({ is_showing_fabrication_notes: false }).getState()
       .is_showing_fabrication_notes,
@@ -22,7 +22,7 @@ test("new viewers show fabrication polarity notes and keep explicit visibility c
     },
   })
   try {
-    expect(createStore().getState().is_showing_fabrication_notes).toBe(true)
+    expect(createStore().getState().is_showing_fabrication_notes).toBe(false)
     createStore().getState().setIsShowingFabricationNotes(false)
     expect(createStore().getState().is_showing_fabrication_notes).toBe(false)
     createStore().getState().setIsShowingFabricationNotes(true)
