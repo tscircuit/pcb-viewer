@@ -2,11 +2,11 @@ import type { AnyCircuitElement, PcbComponent, PcbGroup } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../../global-store"
 import type { HighlightedPrimitive } from "../MouseElementTracker"
-import { isPcbComponent, isPcbGroup } from "./common/guards"
 import {
-  type AnchorOffsetTarget,
   AnchorOffsetOverlay,
+  type AnchorOffsetTarget,
 } from "./AnchorOffsetOverlay"
+import { isPcbComponent, isPcbGroup } from "./common/guards"
 
 type Point = {
   x: number
@@ -33,9 +33,8 @@ export const GroupAnchorOffsetOverlay = ({
   containerWidth,
   containerHeight,
 }: Props) => {
-  const groups = elements.filter((el): el is PcbGroup => isPcbGroup(el))
-  const components = elements.filter((el): el is PcbComponent =>
-    isPcbComponent(el),
+  const isShowingAnchorOffsets = useGlobalStore(
+    (state) => state.is_showing_group_anchor_offsets,
   )
 
   const hoveredComponentIds = highlightedPrimitives
@@ -49,6 +48,15 @@ export const GroupAnchorOffsetOverlay = ({
       return null
     })
     .filter((id): id is string => Boolean(id))
+
+  if (!isShowingAnchorOffsets && hoveredComponentIds.length === 0) {
+    return null
+  }
+
+  const groups = elements.filter((el): el is PcbGroup => isPcbGroup(el))
+  const components = elements.filter((el): el is PcbComponent =>
+    isPcbComponent(el),
+  )
 
   // Helper function to traverse up the group hierarchy and collect all parent groups
   const collectParentGroups = (groupId: string, collected: Set<string>) => {
@@ -89,14 +97,6 @@ export const GroupAnchorOffsetOverlay = ({
     }
   })
 
-  const isShowingAnchorOffsets = useGlobalStore(
-    (s) => s.is_showing_group_anchor_offsets,
-  )
-
-  if (!isShowingAnchorOffsets && hoveredComponentIds.length === 0) {
-    return null
-  }
-
   // Component-to-group targets
   const componentTargets = components
     .map((component) => {
@@ -109,7 +109,7 @@ export const GroupAnchorOffsetOverlay = ({
             group.pcb_group_id ===
             component.positioned_relative_to_pcb_group_id,
         )
-        return parentGroup && parentGroup.anchor_position
+        return parentGroup?.anchor_position
           ? { component, parentGroup, type: "component" as const }
           : null
       }
@@ -118,7 +118,7 @@ export const GroupAnchorOffsetOverlay = ({
         const parentGroup = groups.find(
           (group) => group.pcb_group_id === component.pcb_group_id,
         )
-        return parentGroup && parentGroup.anchor_position
+        return parentGroup?.anchor_position
           ? { component, parentGroup, type: "component" as const }
           : null
       }
@@ -145,11 +145,7 @@ export const GroupAnchorOffsetOverlay = ({
         const parentGroup = groups.find(
           (g) => g.pcb_group_id === group.positioned_relative_to_pcb_group_id,
         )
-        if (
-          parentGroup &&
-          parentGroup.anchor_position &&
-          group.anchor_position
-        ) {
+        if (parentGroup?.anchor_position && group.anchor_position) {
           return { group, parentGroup, type: "group" as const }
         }
       }

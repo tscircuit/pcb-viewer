@@ -1,14 +1,19 @@
-import type { AnyCircuitElement } from "circuit-json"
 import type { HighlightedPrimitive } from "../components/MouseElementTracker"
-import { getAssociatedTraceName } from "./get-trace-overlay-text"
+import {
+  type TraceOverlayElementIndex,
+  getAssociatedTraceName,
+} from "./get-trace-overlay-text"
 
 export function filterTracesIfMultiple(filterTraces: {
   primitives: HighlightedPrimitive[]
   is_showing_multiple_traces_length: boolean
-  elements: AnyCircuitElement[]
+  traceOverlayElementIndex: TraceOverlayElementIndex
 }): HighlightedPrimitive[] {
-  const { primitives, is_showing_multiple_traces_length, elements } =
-    filterTraces
+  const {
+    primitives,
+    is_showing_multiple_traces_length,
+    traceOverlayElementIndex,
+  } = filterTraces
 
   // Filter traces to get only PCB traces
   const traces = primitives.filter(
@@ -22,26 +27,24 @@ export function filterTracesIfMultiple(filterTraces: {
     } => p._element.type === "pcb_trace",
   )
 
-  // Find all source traces
-  const sourceTraces = elements.filter((e) => e.type === "source_trace")
-
   // Get non-trace primitives
   const nonTraces = primitives.filter((p) => p._element.type !== "pcb_trace")
 
   // Named traces and nets should always have a hover label, even when the
   // viewer is configured to hide ordinary trace-length overlays.
   const tracesWithPersistentOverlay = traces.filter((trace) => {
-    const hasMaxLength = sourceTraces.some(
-      (sourceTrace) =>
-        trace._element.source_trace_id === sourceTrace.source_trace_id &&
-        sourceTrace.max_length !== undefined,
-    )
+    const sourceTrace = trace._element.source_trace_id
+      ? traceOverlayElementIndex.sourceTraceById.get(
+          trace._element.source_trace_id,
+        )
+      : undefined
+    const hasMaxLength = sourceTrace?.max_length !== undefined
 
     return (
       hasMaxLength ||
       getAssociatedTraceName({
         primitiveElement: trace._element,
-        elements,
+        traceOverlayElementIndex,
       }) !== null
     )
   })

@@ -58,6 +58,7 @@ scope.onmessage = async (event) => {
       canvas = workerRequest.canvas
       drawer = await CircuitToWebGpuDrawer.create(canvas, {
         onDeviceLost: fail,
+        renderViasInHighDetail: false,
       })
       if (failed) {
         drawer.dispose()

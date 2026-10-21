@@ -3,7 +3,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { PCBViewer } from "../../PCBViewer"
 import circuitJson from "./repros/am3352-dev-board/circuit.json"
 
-export const WebGpuAm3352 = () => {
+export default function WebGpuAm3352() {
   const [renderer, setRenderer] = useState<"webgpu" | "canvas">("webgpu")
   return (
     <div

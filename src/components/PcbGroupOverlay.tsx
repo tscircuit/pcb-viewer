@@ -4,12 +4,12 @@ import type {
   PcbGroup,
   SourceGroup,
 } from "circuit-json"
+import { useEffect, useMemo, useRef } from "react"
+import { useMeasure } from "react-use"
 import { applyToPoint } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
 import { identity } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
-import { useRef, useEffect } from "react"
-import { useMeasure } from "react-use"
 import { zIndexMap } from "../lib/util/z-index-map"
 
 interface Props {
@@ -32,6 +32,45 @@ const GROUP_COLORS = [
   "rgb(255, 100, 150)",
 ]
 
+type SourceGroupId = SourceGroup["source_group_id"]
+
+function getParentSourceGroupId(
+  sourceGroup: SourceGroup,
+): SourceGroupId | undefined {
+  if (!("parent_source_group_id" in sourceGroup)) return undefined
+  return typeof sourceGroup.parent_source_group_id === "string"
+    ? sourceGroup.parent_source_group_id
+    : undefined
+}
+
+function getAllDescendantSourceGroups(
+  sourceGroupId: SourceGroupId,
+  sourceGroupHierarchy: Map<SourceGroupId, SourceGroupId[]>,
+): SourceGroupId[] {
+  const descendants: SourceGroupId[] = []
+  const children = sourceGroupHierarchy.get(sourceGroupId) ?? []
+
+  for (const child of children) {
+    descendants.push(child)
+    descendants.push(
+      ...getAllDescendantSourceGroups(child, sourceGroupHierarchy),
+    )
+  }
+
+  return descendants
+}
+
+function getGroupDepthLevel(
+  sourceGroupId: SourceGroupId,
+  sourceGroupById: Map<SourceGroupId, SourceGroup>,
+): number {
+  const sourceGroup = sourceGroupById.get(sourceGroupId)
+  if (!sourceGroup) return 0
+  const parentSourceGroupId = getParentSourceGroupId(sourceGroup)
+  if (!parentSourceGroupId) return 0
+  return 1 + getGroupDepthLevel(parentSourceGroupId, sourceGroupById)
+}
+
 export const PcbGroupOverlay = ({
   children,
   transform = identity(),
@@ -49,6 +88,19 @@ export const PcbGroupOverlay = ({
     pcb_group_view_mode: s.pcb_group_view_mode,
     is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
   }))
+  const { pcbComponents, pcbGroups, sourceGroups } = useMemo(() => {
+    const pcbComponents: PcbComponent[] = []
+    const pcbGroups: PcbGroup[] = []
+    const sourceGroups: SourceGroup[] = []
+
+    for (const element of elements) {
+      if (element.type === "pcb_component") pcbComponents.push(element)
+      else if (element.type === "pcb_group") pcbGroups.push(element)
+      else if (element.type === "source_group") sourceGroups.push(element)
+    }
+
+    return { pcbComponents, pcbGroups, sourceGroups }
+  }, [elements])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -63,19 +115,7 @@ export const PcbGroupOverlay = ({
 
     if (!is_showing_pcb_groups) return
 
-    const pcbGroups = elements.filter(
-      (el): el is PcbGroup => el.type === "pcb_group",
-    ) as PcbGroup[]
-
-    const pcbComponents = elements.filter(
-      (el): el is PcbComponent => el.type === "pcb_component",
-    ) as PcbComponent[]
-
-    const sourceGroups = elements.filter(
-      (el): el is SourceGroup => el.type === "source_group",
-    ) as SourceGroup[]
-
-    const sourceGroupById = new Map(
+    const sourceGroupById = new Map<SourceGroupId, SourceGroup>(
       sourceGroups.map((group) => [group.source_group_id, group]),
     )
 
@@ -91,41 +131,15 @@ export const PcbGroupOverlay = ({
       return sourceGroup.was_automatically_named !== true
     })
 
-    const sourceGroupHierarchy = new Map<string, string[]>()
+    const sourceGroupHierarchy = new Map<SourceGroupId, SourceGroupId[]>()
     sourceGroups.forEach((group) => {
-      const groupWithParent = group as any
-      if (groupWithParent.parent_source_group_id) {
-        const children =
-          sourceGroupHierarchy.get(groupWithParent.parent_source_group_id) || []
+      const parentSourceGroupId = getParentSourceGroupId(group)
+      if (parentSourceGroupId) {
+        const children = sourceGroupHierarchy.get(parentSourceGroupId) ?? []
         children.push(group.source_group_id)
-        sourceGroupHierarchy.set(
-          groupWithParent.parent_source_group_id,
-          children,
-        )
+        sourceGroupHierarchy.set(parentSourceGroupId, children)
       }
     })
-
-    const getAllDescendantSourceGroups = (sourceGroupId: string): string[] => {
-      const descendants: string[] = []
-      const children = sourceGroupHierarchy.get(sourceGroupId) || []
-
-      for (const child of children) {
-        descendants.push(child)
-        descendants.push(...getAllDescendantSourceGroups(child))
-      }
-
-      return descendants
-    }
-
-    const getGroupDepthLevel = (sourceGroupId: string): number => {
-      const groupWithParent = sourceGroups.find(
-        (g) => g.source_group_id === sourceGroupId,
-      ) as any
-      if (!groupWithParent?.parent_source_group_id) {
-        return 0
-      }
-      return 1 + getGroupDepthLevel(groupWithParent.parent_source_group_id)
-    }
 
     const hoveredGroupIds = new Set<string>()
     if (hoveredComponentIds.length > 0) {
@@ -145,6 +159,7 @@ export const PcbGroupOverlay = ({
       if (group.source_group_id) {
         const descendantSourceGroups = getAllDescendantSourceGroups(
           group.source_group_id,
+          sourceGroupHierarchy,
         )
 
         const childPcbGroups = pcbGroups.filter(
@@ -161,7 +176,10 @@ export const PcbGroupOverlay = ({
         }
       }
 
-      let minX: number, minY: number, maxX: number, maxY: number
+      let minX: number
+      let minY: number
+      let maxX: number
+      let maxY: number
       let isExplicitlySized = false
 
       if (group.center && group.width && group.height) {
@@ -202,10 +220,13 @@ export const PcbGroupOverlay = ({
       }
 
       const depthLevel = group.source_group_id
-        ? getGroupDepthLevel(group.source_group_id)
+        ? getGroupDepthLevel(group.source_group_id, sourceGroupById)
         : 0
       const hasChildren = group.source_group_id
-        ? getAllDescendantSourceGroups(group.source_group_id).length > 0
+        ? getAllDescendantSourceGroups(
+            group.source_group_id,
+            sourceGroupHierarchy,
+          ).length > 0
         : false
 
       if (!isExplicitlySized) {
@@ -246,7 +267,7 @@ export const PcbGroupOverlay = ({
 
       const baseFontSize = Math.max(8, Math.min(12, 10 * Math.abs(transform.a)))
       const fontSizeReduction =
-        depthLevel == 0 || depthLevel == 1 ? 0 : depthLevel * 0.11
+        depthLevel === 0 || depthLevel === 1 ? 0 : depthLevel * 0.11
       const fontSize = baseFontSize * (1 - fontSizeReduction)
       const labelPadding = 4
 
@@ -314,14 +335,16 @@ export const PcbGroupOverlay = ({
       }
     })
   }, [
-    elements,
-    transform,
-    width,
     height,
     is_showing_pcb_groups,
-    pcb_group_view_mode,
     is_showing_group_anchor_offsets,
     hoveredComponentIds,
+    pcbComponents,
+    pcbGroups,
+    pcb_group_view_mode,
+    sourceGroups,
+    transform,
+    width,
   ])
 
   return (
