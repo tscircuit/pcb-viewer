@@ -404,14 +404,27 @@ export class Drawer {
     }
   }
 
-  oval(x: number, y: number, rx: number, ry: number) {
+  oval({
+    x,
+    y,
+    rx,
+    ry,
+    ccwRotationDegrees = 0,
+  }: {
+    x: number
+    y: number
+    rx: number
+    ry: number
+    ccwRotationDegrees?: number
+  }) {
     const rx$ = scaleOnly(this.transform, rx)
     const ry$ = scaleOnly(this.transform, ry)
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     this.applyAperture()
     const ctx = this.getLayerCtx()
     ctx.beginPath()
-    ctx.ellipse(x$, y$, rx$, ry$, 0, 0, 2 * Math.PI)
+    const cwRotationRadians = (-ccwRotationDegrees * Math.PI) / 180
+    ctx.ellipse(x$, y$, rx$, ry$, cwRotationRadians, 0, 2 * Math.PI)
     ctx.fill()
     ctx.closePath()
   }

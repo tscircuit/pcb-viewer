@@ -130,11 +130,16 @@ export const getPrimitiveBoundingBox = (
       }
     }
     case "oval": {
+      const ccwRotationRadians = ((primitive.ccw_rotation ?? 0) * Math.PI) / 180
+      const cos = Math.cos(ccwRotationRadians)
+      const sin = Math.sin(ccwRotationRadians)
+      const halfWidth = Math.hypot(primitive.rX * cos, primitive.rY * sin)
+      const halfHeight = Math.hypot(primitive.rX * sin, primitive.rY * cos)
       return {
-        minX: primitive.x - primitive.rX,
-        maxX: primitive.x + primitive.rX,
-        minY: primitive.y - primitive.rY,
-        maxY: primitive.y + primitive.rY,
+        minX: primitive.x - halfWidth,
+        maxX: primitive.x + halfWidth,
+        minY: primitive.y - halfHeight,
+        maxY: primitive.y + halfHeight,
       }
     }
     case "pill": {

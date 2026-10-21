@@ -9,7 +9,7 @@ import { getPrimitiveSnapPoints } from "../../src/lib/util/get-primitive-snap-po
 import { getPrimitiveBoundingBox } from "../../src/lib/util/get-primitive-bounding-box"
 import { jaeShellPad } from "../fixtures/jae-usb-c/shell-pad"
 
-test.failing("rotates a polygon plated hole", async () => {
+test("rotates a polygon plated hole", async () => {
   const element = { ...jaeShellPad, ccw_rotation: 90 }
   const primitives = convertElementToPrimitives(element, [element])
   const pad = primitives.find((p) => p.pcb_drawing_type === "polygon")!
@@ -36,7 +36,7 @@ test.failing("rotates a polygon plated hole", async () => {
   })
 })
 
-test.failing("rotates an oval drill", async () => {
+test("rotates an oval drill", async () => {
   const element = {
     ...jaeShellPad,
     hole_shape: "oval" as const,

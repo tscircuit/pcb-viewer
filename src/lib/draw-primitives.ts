@@ -317,7 +317,13 @@ export const drawOval = (drawer: Drawer, oval: Oval) => {
     color: getColor(oval),
     layer: oval.layer,
   })
-  drawer.oval(oval.x, oval.y, oval.rX, oval.rY)
+  drawer.oval({
+    x: oval.x,
+    y: oval.y,
+    rx: oval.rX,
+    ry: oval.rY,
+    ccwRotationDegrees: oval.ccw_rotation,
+  })
 }
 
 export const drawPill = (drawer: Drawer, pill: Pill) => {

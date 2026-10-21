@@ -1,4 +1,10 @@
 import type { AnyCircuitElement } from "circuit-json"
+import {
+  applyToPoint,
+  compose,
+  rotateDEG,
+  translate,
+} from "transformation-matrix"
 import type { Primitive } from "./types"
 import { type Point, getExpandedStroke } from "./util/expand-stroke"
 import { distance } from "circuit-json"
@@ -496,6 +502,7 @@ export const convertElementToPrimitives = (
         const {
           x,
           y,
+          ccw_rotation,
           pad_outline,
           hole_shape,
           hole_diameter,
@@ -509,19 +516,22 @@ export const convertElementToPrimitives = (
         const parsed_hole_offset_x = distance.parse(hole_offset_x ?? 0)
         const parsed_hole_offset_y = distance.parse(hole_offset_y ?? 0)
 
-        const pcb_outline = pad_outline
+        const transformPadLocalToBoard = compose(
+          translate(x, y),
+          rotateDEG(ccw_rotation ?? 0),
+        )
 
         const padPrimitives: Primitive[] = []
-        if (pcb_outline && Array.isArray(pcb_outline)) {
-          const translatedPoints = normalizePolygonPoints(pcb_outline).map(
-            (p) => ({ x: p.x + x, y: p.y + y }),
+        if (Array.isArray(pad_outline)) {
+          const points = normalizePolygonPoints(pad_outline).map((p) =>
+            applyToPoint(transformPadLocalToBoard, p),
           )
 
           for (const layer of layers || ["top", "bottom"]) {
             padPrimitives.push({
               _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
               pcb_drawing_type: "polygon",
-              points: translatedPoints,
+              points,
               layer: layer,
               _element: element,
               _parent_pcb_component,
@@ -531,10 +541,10 @@ export const convertElementToPrimitives = (
           }
         }
 
-        const holeCenter = {
-          x: x + parsed_hole_offset_x,
-          y: y + parsed_hole_offset_y,
-        }
+        const holeCenter = applyToPoint(transformPadLocalToBoard, {
+          x: parsed_hole_offset_x,
+          y: parsed_hole_offset_y,
+        })
 
         const holePrimitives: Primitive[] = []
 
@@ -558,6 +568,7 @@ export const convertElementToPrimitives = (
             y: holeCenter.y,
             rX: (hole_width ?? 0) / 2,
             rY: (hole_height ?? 0) / 2,
+            ccw_rotation,
             layer: "drill",
             _element: element,
             _parent_pcb_component,
@@ -575,7 +586,7 @@ export const convertElementToPrimitives = (
             _element: element,
             _parent_pcb_component,
             _parent_source_component,
-            ccw_rotation: element.ccw_rotation,
+            ccw_rotation,
           })
         }
 
