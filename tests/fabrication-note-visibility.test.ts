@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import "bun-match-svg"
-import { createServer } from "vite"
-import { chromium } from "playwright"
 import { fileURLToPath } from "node:url"
+import { type Browser, chromium } from "playwright"
+import { createServer } from "vite"
 
 test("fabrication notes are opt-in and only paint their assigned board side", async () => {
   const server = await createServer({
@@ -11,7 +11,7 @@ test("fabrication notes are opt-in and only paint their assigned board side", as
     logLevel: "error",
   })
   await server.listen()
-  let browser
+  let browser: Browser | undefined
   try {
     browser = await chromium.launch({
       headless: true,

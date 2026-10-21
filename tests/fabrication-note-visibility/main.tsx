@@ -1,11 +1,13 @@
-import { createRoot } from "react-dom/client"
 import type { AnyCircuitElement } from "circuit-json"
+import { createRoot } from "react-dom/client"
 import { PCBViewer } from "../../src/index"
 
 const layer =
   new URLSearchParams(location.search).get("layer") === "bottom"
     ? "bottom"
     : "top"
+
+const isBottom = layer === "bottom"
 
 const circuitJson: AnyCircuitElement[] = [
   {
@@ -35,9 +37,9 @@ const circuitJson: AnyCircuitElement[] = [
     pcb_fabrication_note_dimension_id: "dimension",
     pcb_component_id: "component",
     layer,
-    from: { x: -3, y: 3 },
-    to: { x: 3, y: 3 },
-    text: "6 mm",
+    from: { x: isBottom ? -2 : -3, y: 3 },
+    to: { x: isBottom ? 2 : 3, y: 3 },
+    text: isBottom ? "BOTTOM 4 mm" : "TOP 6 mm",
     font: "tscircuit2024",
     font_size: 0.4,
     arrow_size: 0.3,
@@ -48,8 +50,8 @@ const circuitJson: AnyCircuitElement[] = [
     pcb_component_id: "component",
     layer,
     center: { x: 0, y: 0 },
-    width: 4,
-    height: 2,
+    width: isBottom ? 2 : 4,
+    height: isBottom ? 3 : 2,
     stroke_width: 0.12,
   },
   {
@@ -67,24 +69,32 @@ const circuitJson: AnyCircuitElement[] = [
     pcb_fabrication_note_text_id: "polarity",
     pcb_component_id: "component",
     layer,
-    text: "FAB +",
+    text: isBottom ? "BOTTOM FAB 1" : "TOP FAB +",
     font: "tscircuit2024",
-    anchor_position: { x: 0, y: 1 },
+    anchor_position: { x: 0, y: 1.8 },
     anchor_alignment: "center",
-    font_size: 1,
+    font_size: 0.7,
   },
   {
     type: "pcb_fabrication_note_path",
-    pcb_fabrication_note_path_id: "cathode",
+    pcb_fabrication_note_path_id: "orientation",
     pcb_component_id: "component",
     layer,
     stroke_width: 0.15,
-    route: [
-      { x: -2, y: -2 },
-      { x: 1, y: -3 },
-      { x: -2, y: -4 },
-      { x: -2, y: -2 },
-    ],
+    route: isBottom
+      ? [
+          { x: 0, y: -2 },
+          { x: 1, y: -3 },
+          { x: 0, y: -4 },
+          { x: -1, y: -3 },
+          { x: 0, y: -2 },
+        ]
+      : [
+          { x: -2, y: -2 },
+          { x: 1, y: -3 },
+          { x: -2, y: -4 },
+          { x: -2, y: -2 },
+        ],
   },
   {
     type: "pcb_fabrication_note_path",
