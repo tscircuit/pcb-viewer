@@ -6,6 +6,7 @@ import {
   getPrimitivesNearPoint,
 } from "lib/primitive-spatial-index"
 import type { Primitive } from "lib/types"
+import { getPrimitiveBoundingBox } from "lib/util/get-primitive-bounding-box"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
@@ -173,8 +174,9 @@ export const getPrimitivesUnderPoint = ({
       w = (primitive as any).r * 2
       h = (primitive as any).r * 2
     } else if ("rX" in primitive && "rY" in primitive) {
-      w = primitive.rX * 2
-      h = primitive.rY * 2
+      const bounds = getPrimitiveBoundingBox(primitive)!
+      w = bounds.maxX - bounds.minX
+      h = bounds.maxY - bounds.minY
     } else {
       continue
     }
