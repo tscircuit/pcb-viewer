@@ -736,14 +736,18 @@ export const ToolbarOverlay = ({
                   label="Show Top Components"
                   checked={viewSettings.is_showing_top_components}
                   onClick={() => {
-                    setIsShowingTopComponents(!viewSettings.is_showing_top_components)
+                    setIsShowingTopComponents(
+                      !viewSettings.is_showing_top_components,
+                    )
                   }}
                 />
                 <CheckboxMenuItem
                   label="Show Bottom Components"
                   checked={viewSettings.is_showing_bottom_components}
                   onClick={() => {
-                    setIsShowingBottomComponents(!viewSettings.is_showing_bottom_components)
+                    setIsShowingBottomComponents(
+                      !viewSettings.is_showing_bottom_components,
+                    )
                   }}
                 />
                 <CheckboxMenuItem

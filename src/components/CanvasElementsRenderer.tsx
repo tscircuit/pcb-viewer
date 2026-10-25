@@ -123,8 +123,15 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       filterElementsByComponentSideVisibility(elements, {
         showTopComponents: isShowingTopComponents,
         showBottomComponents: isShowingBottomComponents,
-      }).filter((element) => isShowingCopperPours || element.type !== "pcb_copper_pour"),
-    [elements, isShowingTopComponents, isShowingBottomComponents, isShowingCopperPours],
+      }).filter(
+        (element) => isShowingCopperPours || element.type !== "pcb_copper_pour",
+      ),
+    [
+      elements,
+      isShowingTopComponents,
+      isShowingBottomComponents,
+      isShowingCopperPours,
+    ],
   )
 
   const primitivesWithoutInteractionMetadata = useMemo(() => {
@@ -481,7 +488,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                         <WebGpuElementsRenderer
                           transform={transform}
                           primitives={primitives}
-                          elements={elements}
+                          elements={elementsToRender}
                           xRayElements={xRayElements}
                           width={props.width}
                           height={props.height}

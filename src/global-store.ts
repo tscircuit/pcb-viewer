@@ -239,7 +239,10 @@ export const createStore = (
           set({ is_showing_top_components: is_showing })
         },
         setIsShowingBottomComponents: (is_showing) => {
-          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_BOTTOM_COMPONENTS, is_showing)
+          setStoredBoolean(
+            STORAGE_KEYS.IS_SHOWING_BOTTOM_COMPONENTS,
+            is_showing,
+          )
           set({ is_showing_bottom_components: is_showing })
         },
         setPcbGroupViewMode: (mode) => {

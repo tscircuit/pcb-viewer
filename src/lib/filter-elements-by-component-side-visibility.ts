@@ -1,6 +1,6 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbComponent } from "circuit-json"
 
-type ComponentSideVisibility = {
+export type ComponentSideVisibility = {
   showTopComponents: boolean
   showBottomComponents: boolean
 }
@@ -53,15 +53,21 @@ const getComponentLayer = (
   return childElement ? getElementLayer(childElement) : undefined
 }
 
-const componentHasPlatedHole = (
-  componentId: string,
+export type PcbComponentId = PcbComponent["pcb_component_id"]
+
+export const getPlatedHoleComponentIds = (
   elements: AnyCircuitElement[],
-) => {
-  return elements.some(
-    (element) =>
+): Set<PcbComponentId> => {
+  const componentIds = new Set<PcbComponentId>()
+  for (const element of elements) {
+    if (
       element.type === "pcb_plated_hole" &&
-      getElementComponentId(element) === componentId,
-  )
+      element.pcb_component_id !== undefined
+    ) {
+      componentIds.add(element.pcb_component_id)
+    }
+  }
+  return componentIds
 }
 
 export const filterElementsByComponentSideVisibility = (
@@ -72,14 +78,15 @@ export const filterElementsByComponentSideVisibility = (
     return elements
   }
 
-  const hiddenComponentIds = new Set<string>()
+  const hiddenComponentIds = new Set<PcbComponentId>()
+  const platedHoleComponentIds = getPlatedHoleComponentIds(elements)
 
   for (const element of elements) {
     if (element.type !== "pcb_component") continue
 
     const componentId = getElementComponentId(element)
     if (!componentId) continue
-    if (componentHasPlatedHole(componentId, elements)) continue
+    if (platedHoleComponentIds.has(componentId)) continue
 
     const layer = getComponentLayer(element, elements)
     if (isLayerHidden(layer, visibility)) {
