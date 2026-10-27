@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer.svg)](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer)
 
-[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com) &middot; [Open in CodeSandbox](https://codesandbox.io/p/github/tscircuit/pcb-viewer)
+[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com)
 
 Render Printed Circuit Boards w/ React
 
@@ -16,31 +16,9 @@ If you want to render to an image, check out [circuit-to-png](https://github.com
 npm install @tscircuit/pcb-viewer
 ```
 
-There are two main ways to use the PCBViewer:
+`PCBViewer` renders [Circuit JSON](https://github.com/tscircuit/circuit-json) passed via the `circuitJson` prop.
 
-### 1. Using Circuit Components
-
-This approach allows you to declaratively define your circuit using React components:
-
-```tsx
-import React from "react"
-import { PCBViewer } from "@tscircuit/pcb-viewer"
-
-export default () => {
-  return (
-    <div style={{ backgroundColor: "black" }}>
-      <PCBViewer>
-        <resistor footprint="0805" resistance="10k" />
-        <capacitor footprint="0603" capacitance="100nF" />
-      </PCBViewer>
-    </div>
-  )
-}
-```
-
-### 2. Using Circuit JSON
-
-If you already have circuit JSON data, you can pass it directly:
+### 1. Passing Circuit JSON Directly
 
 ```tsx
 import React from "react"
@@ -48,13 +26,55 @@ import { PCBViewer } from "@tscircuit/pcb-viewer"
 
 const circuitJson = [
   {
-    type: "pcb_component",
-    pcb_component_id: "R1",
+    type: "pcb_board",
+    pcb_board_id: "pcb_board_0",
     center: { x: 0, y: 0 },
-    // ... other component properties
+    width: 20,
+    height: 20,
+    thickness: 1.6,
+    num_layers: 2,
+    material: "fr4",
   },
-  // ... more elements
+  {
+    type: "pcb_component",
+    pcb_component_id: "pcb_component_0",
+    source_component_id: "source_component_0",
+    center: { x: 0, y: 0 },
+    layer: "top",
+    rotation: 0,
+    width: 2,
+    height: 1.2,
+  },
 ]
+
+export default () => {
+  return (
+    <div style={{ backgroundColor: "black" }}>
+      <PCBViewer circuitJson={circuitJson} />
+    </div>
+  )
+}
+```
+
+### 2. Generating Circuit JSON from `@tscircuit/core`
+
+If you define your circuit with tscircuit JSX components, compile it to Circuit JSON with `@tscircuit/core` first and pass the resulting array to `PCBViewer`:
+
+```tsx
+import React from "react"
+import { Circuit } from "@tscircuit/core"
+import { PCBViewer } from "@tscircuit/pcb-viewer"
+
+const circuit = new Circuit()
+circuit.add(
+  <board width="10mm" height="10mm">
+    <resistor name="R1" footprint="0805" resistance="10k" pcbX={-2} />
+    <capacitor name="C1" footprint="0603" capacitance="100nF" pcbX={2} />
+    <trace from=".R1 > .pin1" to=".C1 > .pin1" />
+  </board>,
+)
+circuit.render()
+const circuitJson = circuit.getCircuitJson()
 
 export default () => {
   return (
@@ -67,26 +87,33 @@ export default () => {
 
 ### Props
 
-The PCBViewer component accepts these props:
+The `PCBViewer` component accepts these props:
 
-- `children`: Circuit components to render
-- `circuitJson`: Circuit JSON elements array (alternative to children)
-- `height`: Height of viewer in pixels (default: 600)
-- `allowEditing`: Enable/disable editing capabilities (default: true)
-- `editEvents`: Array of edit events to apply
-- `onEditEventsChanged`: Callback when edit events change
-- `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
-- `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
-- `initialState`: Initial state for the viewer
+- `circuitJson`: `AnyCircuitElement[]` — Circuit JSON elements array to render
+- `height`: `number` — Height of viewer in pixels (default: `600`)
+- `renderer`: `"webgpu" | "canvas"` — Initial rendering engine override (defaults to saved preference or `"webgpu"`)
+- `allowEditing`: `boolean` — Enable/disable interactive component placement editing (default: `true`)
+- `editEvents`: `ManualEditEvent[]` — Array of manual edit events to apply
+- `onEditEventsChanged`: `(editEvents: ManualEditEvent[]) => void` — Callback when manual edit events change
+- `onRenderComplete`: `() => void` — Called once after the active renderer first paints the current Circuit JSON
+- `onBoundsSelected`: `(bounds: BoundsSelection) => void` — Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
+- `onViewSchematicComponent`: `(event: ViewSchematicComponentEvent) => void` — Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
+- `focusOnHover`: `boolean` — Focus/highlight elements on hover (default: `false`)
+- `clickToInteractEnabled`: `boolean` — Require a click or tap overlay before enabling pan/zoom interaction (default: `false`)
+- `disablePcbGroups`: `boolean` — Hide PCB group overlays by default (default: `false`)
+- `debugGraphics`: `GraphicsObject | null` — Optional `graphics-debug` overlay object
+- `initialState`: `Partial<StateProps>` — Initial viewer state overrides
+- `controller`: `PcbViewerController` — Controller returned by `usePcbViewerController()` for programmatic actions such as `focusComponent(pcbComponentId)`
 
 ### Features
 
-- Interactive PCB viewing with pan and zoom
-- Multiple layer support (top, bottom, inner layers)
-- Component placement editing
-- Trace routing
-- DRC (Design Rule Check) visualization
-- Measurement tools
+- Interactive PCB viewing with pan, zoom, and layer visibility controls
+- Multiple layer support (top, bottom, and inner copper layers) with WebGPU and 2D Canvas rendering backends
+- X-Ray mode, net connectivity highlighting, and copper pour opacity controls
+- Interactive component placement editing (`editEvents` / `onEditEventsChanged`)
+- Trace, ratsnest, and DRC (Design Rule Check) error visualization
+- Dimension and bounds measurement tools
+- Programmatic component focusing (`usePcbViewerController`) and schematic cross-probing (`onViewSchematicComponent`)
 
 ### WebGPU rendering
 
@@ -124,7 +151,7 @@ The integration PR remains draft until these are resolved; existing diagnostics
 do not yet detect every visual mismatch.
 
 The WebGPU renderer is installed as a bundled devDependency from
-`https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.3.tgz`.
+`https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.10.tgz`.
 The renderer repository includes a TypeScript local render command and 597
 SVG-left/WebGPU-right feature snapshot tests.
 
