@@ -2,13 +2,41 @@ import assert from "node:assert/strict"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
 import { createServer } from "vite"
+import { createPendingCircuit } from "./pending-circuit"
 
 const root = fileURLToPath(new URL("../../", import.meta.url))
+const scenes = await Promise.all([
+  createPendingCircuit(),
+  createPendingCircuit(true),
+])
+assert(
+  scenes.every((scene) =>
+    scene.some((element) => element.type === "pcb_smtpad"),
+  ),
+)
 const server = await createServer({
   root,
   resolve: {
     alias: [{ find: "../../src/index", replacement: `${root}dist/index.js` }],
   },
+  plugins: [
+    {
+      name: "pending-circuit",
+      configureServer(server) {
+        server.middlewares.use((request, response, next) => {
+          const index =
+            request.url === "/pending-first"
+              ? 0
+              : request.url === "/pending-second"
+                ? 1
+                : -1
+          if (index < 0) return next()
+          response.setHeader("Content-Type", "application/json")
+          response.end(JSON.stringify(scenes[index]))
+        })
+      },
+    },
+  ],
   server: { host: "127.0.0.1", port: 0 },
   logLevel: "error",
 })
@@ -24,7 +52,7 @@ try {
   })
   const page = await browser.newPage({ viewport: { width: 800, height: 600 } })
   await page.goto(
-    `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=pending-render`,
+    `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=pending-render&circuitJsonUrl=/pending-first`,
   )
   await page.waitForFunction(() => window.gpuViewerTest.stats.ready === 1)
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 1)
@@ -40,7 +68,13 @@ try {
   assert.equal(await page.getByRole("status").count(), 0)
 
   await page.evaluate(() =>
-    window.gpuViewerTest.mount(false, "webgpu", false, true),
+    window.gpuViewerTest.mount(
+      false,
+      "webgpu",
+      false,
+      false,
+      "/pending-second",
+    ),
   )
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.latestSubmittedSceneGeneration > 1,

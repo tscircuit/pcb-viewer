@@ -144,12 +144,15 @@ async function mount(
   renderer: "webgpu" | "canvas" = "webgpu",
   strict = false,
   unsupported = false,
+  circuitJsonUrlOverride?: string,
 ) {
-  const shouldLoadCircuitJson = large || circuitJsonUrl !== null
+  const shouldLoadCircuitJson =
+    large || circuitJsonUrlOverride || circuitJsonUrl !== null
   elements = shouldLoadCircuitJson
     ? await (
         await fetch(
-          circuitJsonUrl ??
+          circuitJsonUrlOverride ??
+            circuitJsonUrl ??
             "/src/examples/2026/repros/am3352-dev-board/circuit.json",
         )
       ).json()
