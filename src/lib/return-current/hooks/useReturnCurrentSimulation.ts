@@ -32,6 +32,7 @@ export function useReturnCurrentSimulation<Result>({
   processResult: (
     circuitJson: AnyCircuitElement[],
     request?: ReturnCurrentSimulationRequest,
+    job?: ReturnCurrentSimulationJob,
   ) => Promise<Result> | Result
 }) {
   const [state, setState] = useState<RunState<Result>>(idle)
@@ -96,6 +97,7 @@ export function useReturnCurrentSimulation<Result>({
               submitted.current?.requestId === requestId
                 ? submitted.current
                 : undefined,
+              job,
             )
             if (!isCurrent()) return
             setState({

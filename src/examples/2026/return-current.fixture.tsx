@@ -1,3 +1,4 @@
+import type { AnyCircuitElement } from "circuit-json"
 import { PCBViewer } from "../../PCBViewer"
 import { returnCurrentDemoBoard } from "../../assets/return-current-board"
 import { createReturnCurrentSimulationClient } from "../../lib/return-current/client"
@@ -25,7 +26,9 @@ const simulationDialog = {
   },
 }
 
-export default function ReturnCurrentSimulationDemo() {
+export default function ReturnCurrentSimulationDemo({
+  circuitJson = returnCurrentDemoBoard,
+}: { circuitJson?: AnyCircuitElement[] } = {}) {
   return (
     <main
       style={{
@@ -42,7 +45,7 @@ export default function ReturnCurrentSimulationDemo() {
           Return current simulation
         </h1>
         <div>
-          Right-click DATA0, then choose{" "}
+          Right-click a signal trace, then choose{" "}
           <strong>Simulate → Return Current Simulation</strong> to configure and
           run it in the dialog.
         </div>
@@ -59,7 +62,7 @@ export default function ReturnCurrentSimulationDemo() {
         <PCBViewer
           renderer="canvas"
           height={640}
-          circuitJson={returnCurrentDemoBoard}
+          circuitJson={circuitJson}
           allowEditing={false}
           returnCurrentSimulationDialog={simulationDialog}
         />

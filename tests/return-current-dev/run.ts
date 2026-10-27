@@ -4,6 +4,13 @@ import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
 import { createServer as createViteServer } from "vite"
 
+const fourLayer = process.env.RETURN_CURRENT_FOUR_LAYER === "1"
+const traceId = fourLayer ? "pcb_trace_0" : "pcb_trace_data0"
+const groundIds = fourLayer
+  ? ["pcb_port_1", "pcb_port_3"]
+  : ["pcb_port_u1_gnd", "pcb_port_u2_gnd"]
+const sampleLayer = fourLayer ? "inner2" : "bottom"
+
 // An opt-in native test: every invocation submits a fresh real Palace job.
 const root = fileURLToPath(new URL("../../", import.meta.url))
 let baseUrl = process.env.RETURN_CURRENT_BROWSER_URL
@@ -47,7 +54,12 @@ page.on("request", (request) => {
 const output = `${root}tests/return-current-dev/actual`
 await mkdir(output, { recursive: true })
 try {
-  await page.goto(new URL("tests/return-current-dev/", baseUrl).toString())
+  await page.goto(
+    new URL(
+      `tests/return-current-dev/${fourLayer ? "?four_layer=1" : ""}`,
+      baseUrl,
+    ).toString(),
+  )
   const setup = page.getByRole("dialog", {
     name: "Return current simulation",
     exact: true,
@@ -66,7 +78,12 @@ try {
   const bounds = await canvas.boundingBox()
   assert(bounds)
   const signalPoint = {
-    x: bounds.x + bounds.width / 2,
+    x:
+      bounds.x +
+      bounds.width / 2 -
+      (fourLayer
+        ? 1.5 * Math.min(bounds.width / 8, bounds.height / 6, 100) * 0.75
+        : 0),
     y: bounds.y + bounds.height / 2,
   }
   await page.mouse.click(signalPoint.x, signalPoint.y, { button: "right" })
@@ -80,17 +97,18 @@ try {
     .getByTestId("cli-health")
     .filter({ hasText: "Simulation service available" })
     .waitFor({ timeout: 30_000 })
-  assert.match(await setup.innerText(), /DATA0/)
-  assert.match(await setup.innerText(), /U1\.DATA0/)
-  assert.match(await setup.innerText(), /U2\.DATA0/)
+  if (!fourLayer) assert.match(await setup.innerText(), /DATA0/)
+  assert.match(await setup.innerText(), fourLayer ? /U1\.OUT/ : /U1\.DATA0/)
+  assert.match(await setup.innerText(), fourLayer ? /U2\.IN/ : /U2\.DATA0/)
   assert.equal(
     await setup.getByLabel("Driver-side ground pad").inputValue(),
-    "pcb_port_u1_gnd",
+    groundIds[0],
   )
   assert.equal(
     await setup.getByLabel("Load-side ground pad").inputValue(),
-    "pcb_port_u2_gnd",
+    groundIds[1],
   )
+  if (fourLayer) await setup.getByLabel("Return layer").selectOption("inner2")
   await page.screenshot({ path: `${output}/before-run.png`, fullPage: true })
   const outgoing = page.waitForRequest(
     (request) =>
@@ -115,14 +133,15 @@ try {
     "Every native test must run a fresh solve",
   )
   assert.equal(request.frequency_hz, 400_000_000)
-  assert.equal(request.cell_size, 0.01)
-  assert.equal(request.order, 2)
-  assert.equal(request.mesh_size, 0.5)
+  assert.equal(request.cell_size, fourLayer ? 0.1 : 0.01)
+  assert.equal(request.order, fourLayer ? 1 : 2)
+  assert.equal(request.mesh_size, fourLayer ? 2 : 0.5)
+  if (fourLayer) assert.equal(request.stackup.layers.length, 7)
   const excitation = request.circuit_json.find(
     (element: { type: string }) =>
       element.type === "simulation_return_current_excitation",
   )
-  assert.equal(excitation.pcb_trace_id, "pcb_trace_data0")
+  assert.equal(excitation.pcb_trace_id, traceId)
   assert.notEqual(
     excitation.source_port.signal_pcb_port_id,
     excitation.source_port.reference_pcb_port_id,
@@ -138,7 +157,7 @@ try {
     ),
   )
   console.log(
-    `Submitted real EM job ${request.request_id}; 400 MHz, 0.01 mm samples, P2`,
+    `Submitted real EM job ${request.request_id}; ${request.frequency_hz / 1e6} MHz, ${request.cell_size} mm samples, P${request.order}`,
   )
   await page.waitForFunction(
     (requestId) =>
@@ -198,21 +217,21 @@ try {
     .getByRole("button", { name: "View result on PCB", exact: true })
     .click()
   await setup.waitFor({ state: "hidden" })
-  assert.equal(await overlay.getAttribute("data-return-layer"), "bottom")
+  assert.equal(await overlay.getAttribute("data-return-layer"), sampleLayer)
   assert.equal(
     await overlay
       .locator("[data-return-current-signal]")
       .getAttribute("data-pcb-trace-id"),
-    "pcb_trace_data0",
+    traceId,
   )
   const groundMarkers = overlay.locator(
     '[data-return-current-terminal][data-role^="return_"]',
   )
   assert.equal(await groundMarkers.count(), 2)
-  const groundIds = await groundMarkers.evaluateAll((elements) =>
+  const returnedGroundIds = await groundMarkers.evaluateAll((elements) =>
     elements.map((element) => element.getAttribute("data-target-id")),
   )
-  assert.deepEqual(groundIds.sort(), ["pcb_port_u1_gnd", "pcb_port_u2_gnd"])
+  assert.deepEqual(returnedGroundIds.sort(), groundIds)
   await page.screenshot({ path: `${output}/completed.png`, fullPage: true })
   const heat = overlay
     .locator('image[data-type="simulation_pcb_return_current_heatmap"]')
@@ -291,6 +310,15 @@ try {
     1,
     "Reopening and reloading must reuse the real result",
   )
+  if (fourLayer)
+    assert.deepEqual(
+      JSON.parse(
+        await setup
+          .getByLabel("Stackup dimensions and materials (JSON, mm)")
+          .inputValue(),
+      ),
+      request.stackup,
+    )
   assert.deepEqual(errors, [])
   await writeFile(
     `${output}/receipt.json`,

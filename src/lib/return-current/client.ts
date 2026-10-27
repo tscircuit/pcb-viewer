@@ -1,4 +1,8 @@
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
+import {
+  returnCurrentStackupSchema,
+  type ReturnCurrentStackup,
+} from "./stackup"
 
 export type ReturnCurrentSimulationJobStatus =
   | "queued"
@@ -16,11 +20,13 @@ export interface ReturnCurrentSimulationRequest {
   meshSize: number
   order: 1 | 2
   copperModel: "surface_impedance_copper"
+  stackup?: ReturnCurrentStackup
   airPadding: number
   processes: number
 }
 
 export interface ReturnCurrentSimulationJob {
+  stackup?: ReturnCurrentStackup
   requestId: string
   status: ReturnCurrentSimulationJobStatus
   message?: string
@@ -84,6 +90,9 @@ const readJob = (
   }
   return {
     requestId: value.request_id,
+    ...(value.stackup !== undefined
+      ? { stackup: returnCurrentStackupSchema.parse(value.stackup) }
+      : {}),
     status: value.status as ReturnCurrentSimulationJobStatus,
     ...(typeof value.message === "string" ? { message: value.message } : {}),
   }
@@ -200,6 +209,7 @@ export const createReturnCurrentSimulationClient = ({
             experiment_id: request.experimentId,
             frequency_hz: request.frequencyHz,
             copper_model: request.copperModel,
+            stackup: request.stackup,
             sample_layer: request.sampleLayer,
             cell_size: request.cellSize,
             mesh_size: request.meshSize,

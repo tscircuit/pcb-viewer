@@ -32,6 +32,12 @@ import {
   getReturnCurrentTraceTerminals,
   type ReturnCurrentPortCandidate,
 } from "../experiment"
+import {
+  defaultReturnCurrentStackup,
+  type ReturnCurrentStackup,
+  returnCurrentStackupSchema,
+} from "../stackup"
+import { ReturnCurrentStackupEditor } from "./ReturnCurrentStackupEditor"
 import { loadReturnCurrentFields } from "../overlay"
 import { loadReturnCurrentDialogTailwind } from "../tailwind"
 
@@ -60,6 +66,7 @@ export interface ReturnCurrentSimulationDialogProps {
 }
 
 interface FormState {
+  stackup: string
   driver: string
   ground: string
   returnSink: string
@@ -79,6 +86,7 @@ interface FormState {
 }
 
 interface CompletedSimulation {
+  stackup?: ReturnCurrentStackup
   circuitJson: AnyCircuitElement[]
   resultId: string
   pcbTraceId: string
@@ -191,7 +199,9 @@ function defaultForm(
   circuitJson: AnyCircuitElement[],
   pcbTraceId?: string,
 ): FormState {
+  const board = circuitJson.find((element) => element.type === "pcb_board")
   const initial: FormState = {
+    stackup: defaultReturnCurrentStackup(board?.num_layers, board?.thickness),
     driver: "",
     ground: "",
     returnSink: "",
@@ -203,9 +213,9 @@ function defaultForm(
     sourceResistance: "25",
     loadResistance: "100",
     sampleLayer: "bottom",
-    cellSize: "0.01",
-    meshSize: "0.5",
-    order: 2,
+    cellSize: board?.num_layers === 4 ? "0.1" : "0.01",
+    meshSize: board?.num_layers === 4 ? "2" : "0.5",
+    order: board?.num_layers === 4 ? 1 : 2,
     airPadding: "2",
     processes: "1",
   }
@@ -353,6 +363,7 @@ export const ReturnCurrentSimulationDialog = ({
     async (
       output: AnyCircuitElement[],
       request?: ReturnCurrentSimulationRequest,
+      job?: { stackup?: ReturnCurrentStackup },
     ): Promise<CompletedSimulation> => {
       if (
         physicalBoardSignature(output) !==
@@ -545,6 +556,7 @@ export const ReturnCurrentSimulationDialog = ({
         preferredLayer,
         excitation,
         resumed: !request,
+        stackup: request?.stackup ?? job?.stackup,
       }
     },
     [],
@@ -675,6 +687,7 @@ export const ReturnCurrentSimulationDialog = ({
       const excitation = result.excitation
       setForm((previous) => ({
         ...previous,
+        stackup: result.stackup ? JSON.stringify(result.stackup, null, 2) : "",
         driver: excitation.source_port!.signal_pcb_port_id,
         ground: excitation.ground_source_net_id,
         returnSource:
@@ -727,9 +740,12 @@ export const ReturnCurrentSimulationDialog = ({
       if (!sessionTraceId)
         return { error: "Choose a routed signal trace on the PCB." }
       const board = circuitJson.find((element) => element.type === "pcb_board")
-      if (board?.num_layers !== undefined && board.num_layers !== 2) {
+      if (
+        board?.num_layers !== undefined &&
+        ![2, 4].includes(board.num_layers)
+      ) {
         return {
-          error: `This board has ${board.num_layers} copper layers. The current surface-impedance solver supports two-layer boards only. Multilayer simulation is not available yet.`,
+          error: `This board has ${board.num_layers} copper layers. This simulation dialog supports two- and four-layer boards.`,
         }
       }
       return {
@@ -765,6 +781,9 @@ export const ReturnCurrentSimulationDialog = ({
       candidate.pcbPortId !== setup.terminals?.loadPcbPortId,
   )
   const boardLayers = getCopperLayerRefsFromElements(circuitJson)
+  const fourLayer = circuitJson.some(
+    (element) => element.type === "pcb_board" && element.num_layers === 4,
+  )
   const sink = groundCandidates.find(
     (candidate) => candidate.pcbPortId === form.returnSink,
   )
@@ -867,6 +886,13 @@ export const ReturnCurrentSimulationDialog = ({
         airPadding: positiveNumber(form.airPadding, "Air padding"),
         processes,
         copperModel: "surface_impedance_copper",
+        ...(fourLayer
+          ? {
+              stackup: returnCurrentStackupSchema.parse(
+                JSON.parse(form.stackup || "null"),
+              ),
+            }
+          : {}),
       }
       setResultLayer(undefined)
       void run.submit(request)
@@ -988,7 +1014,7 @@ export const ReturnCurrentSimulationDialog = ({
           if (event.key !== "Tab") return
           const focusable = [
             ...(dialogRef.current?.querySelectorAll<HTMLElement>(
-              'button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a[href], [tabindex="0"]',
+              'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, a[href], [tabindex="0"]',
             ) ?? []),
           ].filter((element) => element.getClientRects().length > 0)
           const first = focusable[0],
@@ -1203,6 +1229,20 @@ export const ReturnCurrentSimulationDialog = ({
                   </select>
                 </label>
               </div>
+              {fourLayer && (
+                <ReturnCurrentStackupEditor
+                  value={form.stackup}
+                  onChange={(value) => setValue("stackup", value)}
+                  controlClassName={controlClassName}
+                  buttonClassName={buttonClassName}
+                />
+              )}
+              {fourLayer && (
+                <p>
+                  Four-layer runs start with a coarse P1 mesh (2 mm) and 0.1 mm
+                  samples. Refine these settings to check convergence.
+                </p>
+              )}
               <details className="rctw-mt-5 rctw-rounded-lg rctw-border rctw-border-solid rctw-border-gray-200 rctw-bg-gray-50 rctw-p-4">
                 <summary className="rctw-cursor-pointer rctw-text-sm rctw-font-medium rctw-text-gray-700 focus:rctw-outline-none focus:rctw-ring-2 focus:rctw-ring-blue-500">
                   Advanced solver settings

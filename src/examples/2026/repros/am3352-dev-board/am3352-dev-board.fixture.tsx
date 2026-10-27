@@ -31,9 +31,10 @@ export default () => (
       1–8.
     </p>
     <p>
-      Right-click a trace and choose Simulate → Return Current Simulation. This
-      four-layer board requires multilayer solver support; the dialog explains
-      the current limitation.
+      Right-click a trace and choose Simulate → Return Current Simulation. The
+      dialog offers an assumed JLCPCB 1.2 mm four-layer stackup. This snapshot
+      has split routes and exceeds the hosted preview's 400 mm² board limit; a
+      stackup alone does not make it simulation-ready.
     </p>
     <PCBViewer
       circuitJson={circuitJson as any}

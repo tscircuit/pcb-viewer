@@ -96,6 +96,7 @@ await mkdir(output, { recursive: true })
 const openFromTrace = async (page: Page) => {
   const canvas = page.locator("canvas").first()
   await canvas.waitFor()
+  await page.waitForLoadState("networkidle")
   const bounds = await canvas.boundingBox()
   assert(bounds)
   await page.mouse.click(
@@ -270,11 +271,15 @@ const verifyAm3352 = async (page: Page, baseUrl: string) => {
   await page.route(tailwindCdnUrl, (route) => route.abort())
   await page.setViewportSize({ width: 1440, height: 1050 })
   await page.addInitScript(() =>
-    localStorage.setItem("pcb_viewer_rendering_engine", "canvas"),
+    localStorage.setItem(
+      "pcb_viewer_rendering_engine",
+      JSON.stringify("canvas"),
+    ),
   )
   await page.goto(new URL(`${harnessPath}?am3352=1`, baseUrl).toString())
   const canvas = page.locator("canvas").first()
   await canvas.waitFor()
+  await page.waitForLoadState("networkidle")
   const bounds = await canvas.boundingBox()
   assert(bounds)
   // Midpoint of the top-layer DDR_BYTE0 segment fr_source_net_106_0.
@@ -300,9 +305,17 @@ const verifyAm3352 = async (page: Page, baseUrl: string) => {
     .getByTestId("cli-health")
     .filter({ hasText: "Simulation service available" })
     .waitFor()
+  assert.equal(
+    JSON.parse(
+      await dialog
+        .getByLabel("Stackup dimensions and materials (JSON, mm)")
+        .inputValue(),
+    ).nominalBoardThicknessMm,
+    1.2,
+  )
   assert.match(
     await dialog.getByRole("alert").innerText(),
-    /4 copper layers.*two-layer boards only/,
+    /complete two-pin connection; split or branched routes/,
   )
   assert(
     await dialog
@@ -312,7 +325,7 @@ const verifyAm3352 = async (page: Page, baseUrl: string) => {
   assert.equal(
     submissions,
     0,
-    "Unsupported four-layer boards must not submit a paid job",
+    "Unresolved split routes must not submit a paid job",
   )
   await page.screenshot({
     path: `${output}/am3352-simulation-limitation.png`,
@@ -326,7 +339,13 @@ try {
     vite = await createViteServer({
       root,
       cacheDir: fixtureCache,
-      optimizeDeps: { entries: ["tests/return-current-dev/main.tsx"] },
+      optimizeDeps: {
+        entries: [
+          "tests/return-current-dev/main.tsx",
+          "src/examples/2026/repros/am3352-dev-board/am3352-dev-board.fixture.tsx",
+          "src/examples/2026/return-current-four-layer.fixture.tsx",
+        ],
+      },
       server: {
         host: "127.0.0.1",
         port: existingRequestId ? 3000 : 0,
