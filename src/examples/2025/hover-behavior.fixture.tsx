@@ -55,16 +55,16 @@ const HoverBehaviorDemo: React.FC<{ focusOnHover?: boolean }> = ({
 }
 
 // Story with hover focus disabled (default behavior)
-export const HoverDisabled = () => {
+export const FocusOnHoverDisabled = () => {
   return <HoverBehaviorDemo focusOnHover={false} />
 }
 
 // Story with hover focus enabled
-export const HoverEnabled = () => {
+export const FocusOnHoverEnabled = () => {
   return <HoverBehaviorDemo focusOnHover={true} />
 }
 
 export default {
-  HoverDisabled,
-  HoverEnabled,
+  FocusOnHoverDisabled,
+  FocusOnHoverEnabled,
 }
