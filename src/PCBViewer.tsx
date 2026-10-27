@@ -13,6 +13,15 @@ import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import { ContextProviders } from "./components/ContextProviders"
+import { ReturnCurrentSimulationOverlay } from "./lib/return-current/components/ReturnCurrentSimulationOverlay"
+import {
+  useReturnCurrentSimulationDialog,
+  type ReturnCurrentSimulationDialogOptions,
+} from "./lib/return-current/hooks/useReturnCurrentSimulationDialog"
+import type {
+  ReturnCurrentSimulationOptions,
+  SimulateReturnCurrentEvent,
+} from "./lib/return-current/types"
 import type { BoundsSelection } from "./components/DimensionOverlay"
 import {
   type RenderingEngine,
@@ -29,7 +38,14 @@ import type { PcbViewerController } from "./hooks/usePcbViewerController"
 import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
 import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
 
+export type {
+  ReturnCurrentSimulationOptions,
+  SimulateReturnCurrentEvent,
+} from "./lib/return-current/types"
+export type { ReturnCurrentSimulationDialogOptions } from "./lib/return-current/hooks/useReturnCurrentSimulationDialog"
+
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
+const emptyCircuitJson: AnyCircuitElement[] = []
 
 const getPreferredRenderer = (): RenderingEngine => {
   const stored = getStoredString(STORAGE_KEYS.RENDERING_ENGINE, "webgpu")
@@ -51,6 +67,12 @@ type Props = {
   onRenderComplete?: () => void
   /** Omit when the host has no enabled schematic tab. */
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
+  /** Custom simulation workflow when the built-in dialog is not configured. */
+  onSimulateReturnCurrent?: (event: SimulateReturnCurrentEvent) => void
+  /** Enable the self-contained trace simulation dialog using the host's job client. */
+  returnCurrentSimulationDialog?: ReturnCurrentSimulationDialogOptions
+  /** Display one completed result from the full Circuit JSON over the PCB. */
+  returnCurrentSimulation?: ReturnCurrentSimulationOptions
   onBoundsSelected?: (bounds: BoundsSelection) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
@@ -72,6 +94,9 @@ export const PCBViewer = ({
   onRenderComplete,
   onBoundsSelected,
   onViewSchematicComponent,
+  onSimulateReturnCurrent,
+  returnCurrentSimulationDialog,
+  returnCurrentSimulation,
   focusOnHover = false,
   clickToInteractEnabled = false,
   disablePcbGroups = false,
@@ -102,6 +127,28 @@ export const PCBViewer = ({
   const [ref, refDimensions] = useMeasure()
   const { transform, setTransform: setTransformOnAnimationFrame } =
     useAnimationFrameTransformState(defaultTransform)
+  let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
+  editEvents = editEventsProp ?? editEvents
+  const simulationCircuitJson = useMemo(
+    () =>
+      returnCurrentSimulationDialog && editEvents.length
+        ? applyEditEvents({
+            circuitJson: circuitJson ?? emptyCircuitJson,
+            editEvents,
+          })
+        : (circuitJson ?? emptyCircuitJson),
+    [circuitJson, editEvents, returnCurrentSimulationDialog?.client],
+  )
+  const simulationDialog = useReturnCurrentSimulationDialog({
+    circuitJson: simulationCircuitJson,
+    options: returnCurrentSimulationDialog,
+    onSimulateReturnCurrent,
+  })
+  const displayedSimulation =
+    returnCurrentSimulation ?? simulationDialog.overlay
+  const displayedSimulationCircuitJson = returnCurrentSimulation
+    ? (circuitJson ?? emptyCircuitJson)
+    : (simulationDialog.circuitJson ?? simulationCircuitJson)
   const shouldAllowCanvasInteraction = useCallback(
     (event: MouseEvent | TouchEvent | WheelEvent) => {
       if (contextMenuOpenRef.current) return false
@@ -125,7 +172,8 @@ export const PCBViewer = ({
   } = useMouseMatrixTransform({
     transform,
     onSetTransform: setTransformOnAnimationFrame,
-    enabled: isInteractionEnabled && !isContextMenuOpen,
+    enabled:
+      isInteractionEnabled && !isContextMenuOpen && !simulationDialog.isOpen,
     shouldDrag: shouldAllowCanvasInteraction,
   })
 
@@ -137,9 +185,6 @@ export const PCBViewer = ({
     },
     [cancelPanDrag],
   )
-
-  let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
-  editEvents = editEventsProp ?? editEvents
 
   const initialRenderCompleted = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
@@ -276,6 +321,7 @@ export const PCBViewer = ({
               focusOnHover={focusOnHover}
               onBoundsSelected={onBoundsSelected}
               onViewSchematicComponent={onViewSchematicComponent}
+              onSimulateReturnCurrent={simulationDialog.onSimulateReturnCurrent}
               focusedPcbComponent={focusedPcbComponent}
               cancelPanDrag={cancelPanDrag}
               onContextMenuOpenChange={onContextMenuOpenChange}
@@ -294,6 +340,17 @@ export const PCBViewer = ({
               elements={elements as SourceTrace[]}
               debugGraphics={debugGraphics}
             />
+            {displayedSimulation && (
+              <ReturnCurrentSimulationOverlay
+                circuitJson={displayedSimulationCircuitJson}
+                simulation={displayedSimulation}
+                transform={transform}
+                width={refDimensions.width}
+                height={height}
+              />
+            )}
+            {simulationDialog.launcher}
+            {simulationDialog.dialog}
             <ToastContainer />
           </ContextProviders>
         </div>

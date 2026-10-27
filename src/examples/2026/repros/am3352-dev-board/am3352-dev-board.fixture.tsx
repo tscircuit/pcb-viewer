@@ -2,7 +2,17 @@
 // Release 1dde7554-9eed-449f-a580-8b886cdedd9e (latest completed build; v0.1.2 was pending).
 // https://api.tscircuit.com/package_files/download?package_release_id=1dde7554-9eed-449f-a580-8b886cdedd9e&file_path=dist%2Findex%2Fcircuit.json
 import { PCBViewer } from "../../../../PCBViewer"
+import { createReturnCurrentSimulationClient } from "../../../../lib/return-current/client"
 import circuitJson from "./circuit.json"
+
+declare const __RETURN_CURRENT_API_URL__: string
+
+const client = createReturnCurrentSimulationClient({
+  baseUrl:
+    typeof __RETURN_CURRENT_API_URL__ === "string"
+      ? __RETURN_CURRENT_API_URL__
+      : "/api",
+})
 
 export default () => (
   <div style={{ background: "black", color: "white", padding: 20 }}>
@@ -20,6 +30,32 @@ export default () => (
       Compare Hide and the opacity percentages while switching layers with keys
       1–8.
     </p>
-    <PCBViewer circuitJson={circuitJson as any} />
+    <p>
+      Right-click a trace and choose Simulate → Return Current Simulation. The
+      dialog resolves each DDR connection across its routed sections and vias.
+      Use the existing inner1 ground pour beneath the signal pads and adjust the
+      local-region margin; compare larger margins to check boundary effects. The
+      offered JLCPCB 1.2 mm four-layer stackup is an editable assumption, not
+      fabrication data for this board.
+    </p>
+    <PCBViewer
+      circuitJson={circuitJson as any}
+      returnCurrentSimulationDialog={{
+        client,
+        resumeRequestId:
+          typeof window === "undefined"
+            ? undefined
+            : (new URLSearchParams(window.location.search).get(
+                "return_current_request_id",
+              ) ?? undefined),
+        onRequestIdChange: (requestId) => {
+          const url = new URL(window.location.href)
+          if (requestId)
+            url.searchParams.set("return_current_request_id", requestId)
+          else url.searchParams.delete("return_current_request_id")
+          window.history.replaceState(null, "", url)
+        },
+      }}
+    />
   </div>
 )

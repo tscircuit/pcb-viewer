@@ -7,6 +7,8 @@ import {
   createPrimitiveMetadataIndex,
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
+import { getPcbTraceAtPoint } from "lib/get-pcb-trace-at-point"
+import type { SimulateReturnCurrentEvent } from "lib/return-current/types"
 import {
   type PrimitiveSpatialIndex,
   createPrimitiveSpatialIndex,
@@ -67,6 +69,7 @@ export interface CanvasElementsRendererProps {
   focusOnHover?: boolean
   focusedPcbComponent?: { pcbComponentId: string } | null
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
+  onSimulateReturnCurrent?: (event: SimulateReturnCurrentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onRenderComplete?: () => void
@@ -244,6 +247,22 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       const net = getElementNetId(primitive._element, connectivityMap)
       if (net) return describeNet(net, primitive._element!)
     }
+  }
+
+  const getTraceAtPoint = (point: { x: number; y: number }) => {
+    const hitTestCandidates = getHitTestCandidates({
+      primitiveSpatialIndex,
+      screenPoint: point,
+      transform,
+    })
+    if (!hitTestCandidates || !transform) return
+    return getPcbTraceAtPoint({
+      primitives: hitTestCandidates.primitives,
+      point: hitTestCandidates.realWorldPoint,
+      transform,
+      selectedLayer,
+      includeHiddenTraces: xRayNetIds.length > 0,
+    })
   }
 
   const [hoverState, setHoverState] = useState({
@@ -439,6 +458,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
             onContextMenuOpenChange={props.onContextMenuOpenChange}
             getComponentAtPoint={getComponentAtPoint}
             onViewSchematicComponent={props.onViewSchematicComponent}
+            getTraceAtPoint={getTraceAtPoint}
+            onSimulateReturnCurrent={props.onSimulateReturnCurrent}
           >
             <ErrorOverlay transform={transform} elements={elements}>
               <RatsNestOverlay
