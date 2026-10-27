@@ -9,7 +9,7 @@ import {
   getReturnCurrentGroundCandidates,
   getReturnCurrentTraceTerminals,
   type CreateReturnCurrentExperimentFromTraceOptions,
-} from "../../src/lib/return-current-experiment"
+} from "../../../src/lib/return-current/experiment"
 
 function board(): AnyCircuitElement[] {
   const elements: AnyCircuitElement[] = [

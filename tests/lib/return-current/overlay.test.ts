@@ -10,7 +10,7 @@ import {
   getReturnCurrentHeatmapMatrix,
   getReturnCurrentVectorAt,
   loadReturnCurrentFields,
-} from "../../src/lib/return-current-overlay"
+} from "../../../src/lib/return-current/overlay"
 
 const realGrid: SimulationReturnCurrentGridJson = {
   field_type: "real",

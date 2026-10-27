@@ -26,7 +26,7 @@ import { returnCurrentDemoBoard } from "/src/assets/return-current-board.ts"
 import { VisibilityContextMenu } from "/src/components/VisibilityContextMenu.tsx"
 import { RenderingEngineContext } from "/src/components/RenderingEngineContext.tsx"
 import { ContextProviders } from "/src/components/ContextProviders.tsx"
-import type { ReturnCurrentSimulationClient, ReturnCurrentSimulationRequest } from "/src/lib/return-current-client.ts"
+import type { ReturnCurrentSimulationClient, ReturnCurrentSimulationRequest } from "/src/lib/return-current/client.ts"
 const state = { available: false, checks: 0, submissions: [] as ReturnCurrentSimulationRequest[], polls: 0, submitError: false, status: "running" as "running" | "failed", requestIds: [] as string[], menuActions: 0 }
 const client: ReturnCurrentSimulationClient = {
   async checkAvailability() {

@@ -2,7 +2,7 @@ import { expect, it } from "bun:test"
 import {
   RETURN_CURRENT_TAILWIND_CDN,
   scopeReturnCurrentTailwindSelector,
-} from "../../src/lib/return-current-tailwind"
+} from "../../../src/lib/return-current/tailwind"
 
 it("pins the lazy Tailwind runtime and scopes default rules without changing generated utility selectors", () => {
   expect(RETURN_CURRENT_TAILWIND_CDN).toBe("https://cdn.tailwindcss.com/3.4.17")

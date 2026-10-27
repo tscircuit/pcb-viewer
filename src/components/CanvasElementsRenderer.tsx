@@ -8,7 +8,7 @@ import {
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { getPcbTraceAtPoint } from "lib/get-pcb-trace-at-point"
-import type { SimulateReturnCurrentEvent } from "lib/return-current-simulation"
+import type { SimulateReturnCurrentEvent } from "lib/return-current/types"
 import {
   type PrimitiveSpatialIndex,
   createPrimitiveSpatialIndex,

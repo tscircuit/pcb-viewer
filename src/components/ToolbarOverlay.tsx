@@ -6,7 +6,7 @@ import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { useMobileTouch } from "hooks/useMobileTouch"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { getCopperLayerRefsFromElements } from "lib/copper-layers"
-import type { SimulateReturnCurrentEvent } from "lib/return-current-simulation"
+import type { SimulateReturnCurrentEvent } from "lib/return-current/types"
 import { zIndexMap } from "lib/util/z-index-map"
 import {
   useCallback,

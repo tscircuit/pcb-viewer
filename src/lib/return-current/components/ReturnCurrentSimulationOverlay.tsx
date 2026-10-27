@@ -13,9 +13,9 @@ import {
   getReturnCurrentHeatmapMatrix,
   getReturnCurrentVectorAt,
   loadReturnCurrentFields,
-} from "../lib/return-current-overlay"
-import type { ReturnCurrentSimulationOptions } from "../lib/return-current-simulation"
-import { zIndexMap } from "../lib/util/z-index-map"
+} from "../overlay"
+import type { ReturnCurrentSimulationOptions } from "../types"
+import { zIndexMap } from "../../util/z-index-map"
 
 const palette = [
   [0, 99, 235],

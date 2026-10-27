@@ -5,7 +5,7 @@ import type {
   ReturnCurrentSimulationJob,
   ReturnCurrentSimulationJobStatus,
   ReturnCurrentSimulationRequest,
-} from "../lib/return-current-client"
+} from "../client"
 
 interface RunState<Result> {
   status: ReturnCurrentSimulationJobStatus | "idle"

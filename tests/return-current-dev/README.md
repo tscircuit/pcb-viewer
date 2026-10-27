@@ -45,6 +45,10 @@ Keep the client stable across renders. The option also accepts a request ID to r
 
 The example stores the request ID in its URL. Reopening a completed result, reloading, and changing display controls do not submit another solve.
 
+## Code layout
+
+The feature lives in `src/lib/return-current/`: `client.ts` handles HTTP, `experiment.ts` builds Circuit JSON definitions, `overlay.ts` loads fields and maps coordinates, and `types.ts` defines viewer options. Its React components and hooks are contained in `components/` and `hooks/`; `tailwind.ts` owns dialog styling. Shared trace hit-testing and context-menu integration stay in the viewer. Unit tests are grouped under `tests/lib/return-current/`.
+
 ## Verification
 
 ```sh

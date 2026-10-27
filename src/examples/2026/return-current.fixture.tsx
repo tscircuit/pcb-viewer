@@ -1,6 +1,6 @@
 import { PCBViewer } from "../../PCBViewer"
 import { returnCurrentDemoBoard } from "../../assets/return-current-board"
-import { createReturnCurrentSimulationClient } from "../../lib/return-current-client"
+import { createReturnCurrentSimulationClient } from "../../lib/return-current/client"
 
 declare const __RETURN_CURRENT_API_URL__: string
 

@@ -7,12 +7,12 @@ import {
 import type {
   ReturnCurrentSimulationClient,
   ReturnCurrentSimulationJob,
-} from "../lib/return-current-client"
+} from "../client"
 import type {
   ReturnCurrentSimulationOptions,
   SimulateReturnCurrentEvent,
-} from "../lib/return-current-simulation"
-import { zIndexMap } from "../lib/util/z-index-map"
+} from "../types"
+import { zIndexMap } from "../../util/z-index-map"
 
 /** Transport and optional host persistence for the built-in simulation dialog. */
 export interface ReturnCurrentSimulationDialogOptions {

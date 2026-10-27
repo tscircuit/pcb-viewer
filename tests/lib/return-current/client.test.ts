@@ -4,7 +4,7 @@ import {
   createReturnCurrentSimulationClient,
   type ReturnCurrentSimulationJob,
   type ReturnCurrentSimulationRequest,
-} from "../../src/lib/return-current-client"
+} from "../../../src/lib/return-current/client"
 
 // Transport-only PCB data: no simulated current values or physics snapshots.
 const circuitJson = [

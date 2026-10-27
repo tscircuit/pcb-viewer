@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import { renderToStaticMarkup } from "react-dom/server"
-import { ReturnCurrentSimulationOverlay } from "../../src/components/ReturnCurrentSimulationOverlay"
+import { ReturnCurrentSimulationOverlay } from "../../../src/lib/return-current/components/ReturnCurrentSimulationOverlay"
 
 const circuitJson: AnyCircuitElement[] = [
   {

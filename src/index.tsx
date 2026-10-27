@@ -4,14 +4,14 @@ export {
   ReturnCurrentSimulationDialog,
   type ReturnCurrentSimulationDialogProps,
   type ReturnCurrentSimulationDialogResult,
-} from "./components/ReturnCurrentSimulationDialog"
+} from "./lib/return-current/components/ReturnCurrentSimulationDialog"
 export {
   createReturnCurrentSimulationClient,
   type ReturnCurrentSimulationClient,
   type ReturnCurrentSimulationRequest,
   type ReturnCurrentSimulationJob,
   type ReturnCurrentSimulationJobStatus,
-} from "./lib/return-current-client"
+} from "./lib/return-current/client"
 export type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
 export {
   usePcbViewerController,

@@ -13,15 +13,15 @@ import { compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
 import { ContextProviders } from "./components/ContextProviders"
-import { ReturnCurrentSimulationOverlay } from "./components/ReturnCurrentSimulationOverlay"
+import { ReturnCurrentSimulationOverlay } from "./lib/return-current/components/ReturnCurrentSimulationOverlay"
 import {
   useReturnCurrentSimulationDialog,
   type ReturnCurrentSimulationDialogOptions,
-} from "./hooks/useReturnCurrentSimulationDialog"
+} from "./lib/return-current/hooks/useReturnCurrentSimulationDialog"
 import type {
   ReturnCurrentSimulationOptions,
   SimulateReturnCurrentEvent,
-} from "./lib/return-current-simulation"
+} from "./lib/return-current/types"
 import type { BoundsSelection } from "./components/DimensionOverlay"
 import {
   type RenderingEngine,
@@ -41,8 +41,8 @@ import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
 export type {
   ReturnCurrentSimulationOptions,
   SimulateReturnCurrentEvent,
-} from "./lib/return-current-simulation"
-export type { ReturnCurrentSimulationDialogOptions } from "./hooks/useReturnCurrentSimulationDialog"
+} from "./lib/return-current/types"
+export type { ReturnCurrentSimulationDialogOptions } from "./lib/return-current/hooks/useReturnCurrentSimulationDialog"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 const emptyCircuitJson: AnyCircuitElement[] = []

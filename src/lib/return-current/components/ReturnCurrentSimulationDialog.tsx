@@ -20,20 +20,20 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import { useReturnCurrentSimulation } from "../hooks/useReturnCurrentSimulation"
-import { getCopperLayerRefsFromElements } from "../lib/copper-layers"
+import { getCopperLayerRefsFromElements } from "../../copper-layers"
 import type {
   ReturnCurrentSimulationClient,
   ReturnCurrentSimulationJobStatus,
   ReturnCurrentSimulationRequest,
-} from "../lib/return-current-client"
+} from "../client"
 import {
   createReturnCurrentExperimentFromTrace,
   getReturnCurrentGroundCandidates,
   getReturnCurrentTraceTerminals,
   type ReturnCurrentPortCandidate,
-} from "../lib/return-current-experiment"
-import { loadReturnCurrentFields } from "../lib/return-current-overlay"
-import { loadReturnCurrentDialogTailwind } from "../lib/return-current-tailwind"
+} from "../experiment"
+import { loadReturnCurrentFields } from "../overlay"
+import { loadReturnCurrentDialogTailwind } from "../tailwind"
 
 export interface ReturnCurrentSimulationDialogResult {
   circuitJson: AnyCircuitElement[]
