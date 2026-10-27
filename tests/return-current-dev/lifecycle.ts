@@ -58,7 +58,9 @@ function CompleteMenuHarness() {
     </RenderingEngineContext.Provider></ContextProviders>}
   </main>
 }
-createRoot(document.getElementById("root")!).render(new URLSearchParams(window.location.search).has("menu_geometry") ? <CompleteMenuHarness /> :
+createRoot(document.getElementById("root")!).render(new URLSearchParams(window.location.search).has("am3352")
+  ? React.createElement((await import("/src/examples/2026/repros/am3352-dev-board/am3352-dev-board.fixture.tsx")).default)
+  : new URLSearchParams(window.location.search).has("menu_geometry") ? <CompleteMenuHarness /> :
   <main>
     <h1>UI lifecycle test · injected transport · no EM solver</h1>
     <button type="button" data-testid="host-style-sentinel">Host style sentinel</button>
@@ -253,6 +255,69 @@ const verifyMenuGeometry = async (page: Page, baseUrl: string) => {
       1,
     )
   }
+}
+
+const verifyAm3352 = async (page: Page, baseUrl: string) => {
+  console.log("Checking simulation entry point on the actual AM3352 fixture")
+  let submissions = 0
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().endsWith("/jobs"))
+      submissions++
+  })
+  await page.route("**/api/simulations/v1/return-current/health", (route) =>
+    route.fulfill({ json: { available: true, message: "Test service ready" } }),
+  )
+  await page.route(tailwindCdnUrl, (route) => route.abort())
+  await page.setViewportSize({ width: 1440, height: 1050 })
+  await page.addInitScript(() =>
+    localStorage.setItem("pcb_viewer_rendering_engine", "canvas"),
+  )
+  await page.goto(new URL(`${harnessPath}?am3352=1`, baseUrl).toString())
+  const canvas = page.locator("canvas").first()
+  await canvas.waitFor()
+  const bounds = await canvas.boundingBox()
+  assert(bounds)
+  // Midpoint of the top-layer DDR_BYTE0 segment fr_source_net_106_0.
+  // The snapshot's fitted PCB bounds are 72.66 x 60 mm, centered at (1.33, 0).
+  const scale = Math.min(bounds.width / 72.66, bounds.height / 60, 100) * 0.75
+  await canvas.click({
+    button: "right",
+    position: {
+      x: bounds.width / 2 + (3.6 - 1.33) * scale,
+      y: bounds.height / 2 + 8.6625 * scale,
+    },
+  })
+  await page.getByRole("menuitem", { name: /^Simulate/ }).hover()
+  await page
+    .getByRole("menuitem", { name: "Return Current Simulation", exact: true })
+    .click()
+  const dialog = page.getByRole("dialog", {
+    name: "Return current simulation",
+    exact: true,
+  })
+  await dialog.waitFor()
+  await dialog
+    .getByTestId("cli-health")
+    .filter({ hasText: "Simulation service available" })
+    .waitFor()
+  assert.match(
+    await dialog.getByRole("alert").innerText(),
+    /4 copper layers.*two-layer boards only/,
+  )
+  assert(
+    await dialog
+      .getByRole("button", { name: "Run simulation", exact: true })
+      .isDisabled(),
+  )
+  assert.equal(
+    submissions,
+    0,
+    "Unsupported four-layer boards must not submit a paid job",
+  )
+  await page.screenshot({
+    path: `${output}/am3352-simulation-limitation.png`,
+    fullPage: true,
+  })
 }
 
 try {
@@ -518,6 +583,7 @@ try {
     geometryPage.setDefaultTimeout(15_000)
     activePage = geometryPage
     await verifyMenuGeometry(geometryPage, baseUrl)
+    await verifyAm3352(geometryPage, baseUrl)
     await geometryPage.close()
     activePage = page
     await page.goto(new URL(harnessPath, baseUrl).toString())

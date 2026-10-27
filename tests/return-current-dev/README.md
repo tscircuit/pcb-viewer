@@ -68,7 +68,7 @@ bun tests/return-current-dev/lifecycle.ts --reopen-existing YOUR_COMPLETED_REQUE
 
 Defaults are 400 MHz, 5 mA peak, 25 Ω source/100 Ω load, 0.01 mm field sampling, 0.5 mm mesh target, and second-order elements. **The full-resolution preset exceeded the hosted service's 15-minute limit.** A coarser hosted run completed and passed result/reload checks; see the [deployment verification and saved result](https://github.com/tscircuit/simulate.tscircuit.com/blob/main/docs/deployment.md). Neither is evidence of mesh convergence.
 
-The fixture contains one complete two-layer signal connection and its distinct GND returns. Four-layer support and unrelated board copper remain backend work. CLI and Runframe are unchanged.
+The return-current fixture contains one complete two-layer signal connection and its distinct GND returns. The AM3352 repro also exposes the trace simulation dialog, but its four-layer board is rejected before submission with an explicit explanation. Four-layer support and unrelated board copper remain backend work. CLI and Runframe are unchanged.
 
 The following screenshots are historical real-Palace results captured before the service extraction:
 

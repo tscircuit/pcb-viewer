@@ -726,6 +726,12 @@ export const ReturnCurrentSimulationDialog = ({
     try {
       if (!sessionTraceId)
         return { error: "Choose a routed signal trace on the PCB." }
+      const board = circuitJson.find((element) => element.type === "pcb_board")
+      if (board?.num_layers !== undefined && board.num_layers !== 2) {
+        return {
+          error: `This board has ${board.num_layers} copper layers. The current surface-impedance solver supports two-layer boards only. Multilayer simulation is not available yet.`,
+        }
+      }
       return {
         terminals: getReturnCurrentTraceTerminals(circuitJson, sessionTraceId),
       }

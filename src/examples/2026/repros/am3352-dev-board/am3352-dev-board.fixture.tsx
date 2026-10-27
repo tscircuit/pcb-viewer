@@ -2,7 +2,17 @@
 // Release 1dde7554-9eed-449f-a580-8b886cdedd9e (latest completed build; v0.1.2 was pending).
 // https://api.tscircuit.com/package_files/download?package_release_id=1dde7554-9eed-449f-a580-8b886cdedd9e&file_path=dist%2Findex%2Fcircuit.json
 import { PCBViewer } from "../../../../PCBViewer"
+import { createReturnCurrentSimulationClient } from "../../../../lib/return-current/client"
 import circuitJson from "./circuit.json"
+
+declare const __RETURN_CURRENT_API_URL__: string
+
+const client = createReturnCurrentSimulationClient({
+  baseUrl:
+    typeof __RETURN_CURRENT_API_URL__ === "string"
+      ? __RETURN_CURRENT_API_URL__
+      : "/api",
+})
 
 export default () => (
   <div style={{ background: "black", color: "white", padding: 20 }}>
@@ -20,6 +30,14 @@ export default () => (
       Compare Hide and the opacity percentages while switching layers with keys
       1–8.
     </p>
-    <PCBViewer circuitJson={circuitJson as any} />
+    <p>
+      Right-click a trace and choose Simulate → Return Current Simulation. This
+      four-layer board requires multilayer solver support; the dialog explains
+      the current limitation.
+    </p>
+    <PCBViewer
+      circuitJson={circuitJson as any}
+      returnCurrentSimulationDialog={{ client }}
+    />
   </div>
 )
