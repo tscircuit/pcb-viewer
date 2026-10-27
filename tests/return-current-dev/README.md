@@ -96,3 +96,8 @@ P1 / 2 mm mesh, 0.1 mm samples, 2 mm air padding and four processes. The
 This is an execution check, not a converged reference: dense traces or larger
 margins can exceed the hosted 30-minute budget. The AM3352 fixture stores the
 job ID in its URL so refresh restores the result without resubmitting.
+
+The same DDR_DQSn1 case also completed through the hosted Cloudflare service in
+about **19 minutes**, with 1,264 valid inner1 samples. Its saved result passed
+public-preview heatmap, vector, ground-contact, display-control and reload checks
+with zero new submissions. [Open the saved AM3352 result](https://pcb-viewer-git-feat-return-current-dev-experiment-tscircuit.vercel.app/renderer.html?fixtureId=%7B%22path%22%3A%22src%2Fexamples%2F2026%2Frepros%2Fam3352-dev-board%2Fam3352-dev-board.fixture.tsx%22%7D&locked=true&return_current_request_id=2043d62d-e533-4bca-bd82-51ae52e4bc69).
