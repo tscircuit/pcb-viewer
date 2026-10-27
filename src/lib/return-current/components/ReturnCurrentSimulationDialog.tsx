@@ -887,30 +887,6 @@ export const ReturnCurrentSimulationDialog = ({
       }
     }
   })()
-  const chooseNearestGroundPads = () => {
-    if (!driver || !load) return
-    const nearest = (signal: ReturnCurrentPortCandidate) =>
-      groundCandidates
-        .filter(
-          (candidate) =>
-            componentForPort(circuitJson, candidate.sourcePortId) ===
-            componentForPort(circuitJson, signal.sourcePortId),
-        )
-        .sort(
-          (a, b) =>
-            Math.hypot(a.x - signal.x, a.y - signal.y) -
-            Math.hypot(b.x - signal.x, b.y - signal.y),
-        )[0]
-    const sink = nearest(driver),
-      source = nearest(load)
-    setForm((previous) => ({
-      ...previous,
-      returnSink: sink?.pcbPortId ?? "",
-      returnSinkLayer: sink?.layers.length === 1 ? sink.layers[0] : "",
-      returnSource: source?.pcbPortId ?? "",
-      returnSourceLayer: source?.layers.length === 1 ? source.layers[0] : "",
-    }))
-  }
 
   const setValue = <Key extends keyof FormState>(
     key: Key,
@@ -1353,22 +1329,6 @@ export const ReturnCurrentSimulationDialog = ({
                   directly beneath it. This models the PCB interconnect relative
                   to that plane; package ground-pin paths are excluded.
                 </p>
-              )}
-              {!form.returnPour && (
-                <>
-                  <button
-                    type="button"
-                    className={buttonClassName}
-                    disabled={!driver || !load || !form.ground}
-                    onClick={chooseNearestGroundPads}
-                  >
-                    Use nearest GND pads on the signal components
-                  </button>
-                  <p>
-                    Verify the selected return pads. The solver checks their
-                    physical connection to the return copper.
-                  </p>
-                </>
               )}
               <div className={gridClassName}>
                 {!form.returnPour && (

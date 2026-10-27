@@ -326,11 +326,8 @@ const verifyAm3352 = async (page: Page, baseUrl: string) => {
     "pcb_copper_pour_0",
   )
   await dialog.getByLabel(/^Ground contact method/).selectOption("")
-  await dialog
-    .getByRole("button", {
-      name: "Use nearest GND pads on the signal components",
-    })
-    .click()
+  await dialog.getByLabel(/^Driver-side ground pad/).selectOption("pcb_port_17")
+  await dialog.getByLabel(/^Load-side ground pad/).selectOption("pcb_port_393")
   assert.equal(
     await dialog.getByLabel(/^Driver-side ground pad/).inputValue(),
     "pcb_port_17",
