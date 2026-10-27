@@ -22,7 +22,10 @@
     "test:measurement-context-menu": "bun run build && bun tests/measurement-context-menu/run.ts",
     "test:sitara-interaction": "bun run build && bun tests/sitara-interaction/run.ts",
     "test:copper-pour-opacity": "bun run build && bun tests/copper-pour-opacity/run.ts",
-    "test:webgpu": "bun run build && bun tests/webgpu/run.ts"
+    "test:webgpu": "bun run build && bun tests/webgpu/run.ts",
+    "dev:cli": "bun scripts/return-current-dev-server.ts",
+    "dev:return-current": "vite --host 127.0.0.1",
+    "test:return-current": "bun tests/return-current-dev/run.ts"
   },
   "files": [
     "dist"
@@ -56,6 +59,7 @@
     "react-cosmos-plugin-vite": "7.0.0-beta.0",
     "react-dom": "19.1.0",
     "react-use": "^17.4.0",
+    "simulate-return-current": "https://pkg.pr.new/tscircuit/simulate-return-current@6a7c84cb4f9f66c2cb54199aee50d3c7453748e8",
     "tscircuit": "^0.0.2354",
     "tsup": "^8.0.2",
     "type-fest": "^3.0.0",
@@ -72,7 +76,7 @@
     "@tscircuit/alphabet": "^0.0.25",
     "@tscircuit/math-utils": "^0.0.36",
     "@vitejs/plugin-react": "^5.0.2",
-    "circuit-json": "^0.0.518",
+    "circuit-json": "^0.0.525",
     "circuit-to-canvas": "0.0.138",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",

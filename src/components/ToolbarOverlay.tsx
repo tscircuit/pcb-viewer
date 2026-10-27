@@ -1,11 +1,12 @@
 import { css } from "@emotion/css"
 import type { LayerRef } from "circuit-json"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 import { useHotKey } from "hooks/useHotKey"
 import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { useMobileTouch } from "hooks/useMobileTouch"
 import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
 import { getCopperLayerRefsFromElements } from "lib/copper-layers"
+import type { SimulateReturnCurrentEvent } from "lib/return-current-simulation"
 import { zIndexMap } from "lib/util/z-index-map"
 import {
   useCallback,
@@ -31,6 +32,8 @@ interface Props {
     | PadComponent
     | undefined
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
+  getTraceAtPoint?: (point: { x: number; y: number }) => PcbTrace | undefined
+  onSimulateReturnCurrent?: (event: SimulateReturnCurrentEvent) => void
   getNetAtPoint?: (point: { x: number; y: number }) =>
     | { netId: string; displayName: string; groups: XRayGroup[] }
     | undefined
@@ -158,6 +161,8 @@ export const ToolbarOverlay = ({
   getNetAtPoint,
   getComponentAtPoint,
   onViewSchematicComponent,
+  getTraceAtPoint,
+  onSimulateReturnCurrent,
   xRayNetIds = [],
   onXRayNetsChange,
 }: Props) => {
@@ -232,6 +237,14 @@ export const ToolbarOverlay = ({
   const [contextNetId, setContextNetId] = useState<string>()
   const [contextNetDisplayName, setContextNetDisplayName] = useState("Net")
   const [contextComponent, setContextComponent] = useState<PadComponent>()
+  const [contextTraceId, setContextTraceId] = useState<string>()
+  const traceAtEvent = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return getTraceAtPoint?.({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    })
+  }
   const componentAtEvent = (event: React.MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect()
     return getComponentAtPoint?.({
@@ -250,6 +263,7 @@ export const ToolbarOverlay = ({
   }
   const closeContextMenu = useCallback(() => {
     setContextMenuPosition(null)
+    setContextTraceId(undefined)
     onContextMenuOpenChange?.(false)
   }, [onContextMenuOpenChange])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
@@ -458,7 +472,8 @@ export const ToolbarOverlay = ({
           return
         const hit = netAtEvent(event)
         const component = componentAtEvent(event)
-        if (!hit && !component) return
+        const trace = onSimulateReturnCurrent ? traceAtEvent(event) : undefined
+        if (!hit && !component && !trace) return
         const net = hit?.netId
         if (net && xRayNetIds.includes(net)) {
           onXRayNetsChange?.(xRayNetIds.filter((id) => id !== net))
@@ -468,6 +483,7 @@ export const ToolbarOverlay = ({
           setContextNetDisplayName(hit?.displayName ?? "Net")
           setContextGroups(hit?.groups ?? [])
           setContextComponent(component)
+          setContextTraceId(trace?.pcb_trace_id)
           onContextMenuOpenChange?.(true)
           setContextMenuPosition({ x: event.clientX, y: event.clientY })
         }
@@ -480,6 +496,11 @@ export const ToolbarOverlay = ({
         event.preventDefault()
         event.stopPropagation()
         const hit = netAtEvent(event)
+        setContextTraceId(
+          onSimulateReturnCurrent
+            ? traceAtEvent(event)?.pcb_trace_id
+            : undefined,
+        )
         setContextComponent(componentAtEvent(event))
         setContextNetId(hit?.netId)
         setContextNetDisplayName(hit?.displayName ?? "Net")
@@ -498,6 +519,11 @@ export const ToolbarOverlay = ({
           position={contextMenuPosition}
           component={contextComponent}
           onViewSchematicComponent={onViewSchematicComponent}
+          onSimulateReturnCurrent={
+            contextTraceId && onSimulateReturnCurrent
+              ? () => onSimulateReturnCurrent({ pcbTraceId: contextTraceId })
+              : undefined
+          }
           onClose={closeContextMenu}
           xRayDisplayName={contextNetDisplayName}
           xRayGroups={contextGroups.filter((group) =>
