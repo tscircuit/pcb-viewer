@@ -103,7 +103,7 @@ window.Worker = class extends OriginalWorker {
       }
     }
     if (message.type === "view") stats.lastView = message
-    if (scenario === "controlled-xray") {
+    if (scenario === "controlled-xray" || scenario === "pending-render") {
       if (message.type === "init") {
         queueMicrotask(() =>
           this.dispatchEvent(
@@ -112,7 +112,7 @@ window.Worker = class extends OriginalWorker {
             }),
           ),
         )
-      } else if (message.type === "view") {
+      } else if (message.type === "view" && scenario === "controlled-xray") {
         queueMicrotask(() =>
           this.dispatchEvent(
             new MessageEvent("message", {
@@ -221,6 +221,16 @@ Object.assign(window, {
     stats,
     mount,
     metadataBenchmark,
+    finishPendingRender: () => {
+      dispatchRenderedResponse({
+        type: "rendered",
+        xRayActive: false,
+        geometryUploads: 1,
+        frames: 1,
+        compileMs: 0,
+        sceneGeneration: stats.latestSubmittedSceneGeneration,
+      })
+    },
     holdRenderedResponses: () => {
       holdRenderedResponses = true
     },
@@ -244,6 +254,7 @@ declare global {
       stats: typeof stats
       mount: typeof mount
       metadataBenchmark: typeof metadataBenchmark
+      finishPendingRender(): void
       holdRenderedResponses(): void
       releaseRenderedResponse(sceneGeneration: number): void
       unmount(): void
