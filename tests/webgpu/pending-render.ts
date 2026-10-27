@@ -30,7 +30,7 @@ const server = await createServer({
               : request.url === "/pending-second"
                 ? 1
                 : -1
-          if (index < 0) return next()
+          if (index === -1) return next()
           response.setHeader("Content-Type", "application/json")
           response.end(JSON.stringify(scenes[index]))
         })
