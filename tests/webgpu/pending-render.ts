@@ -104,7 +104,7 @@ try {
     "switching to Canvas releases the pending worker",
   )
   await page.goto(
-    `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=unavailable`,
+    `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=unavailable&circuitJsonUrl=/pending-first`,
   )
   await page.getByRole("alert").waitFor()
   assert.equal(await page.getByRole("status").count(), 0)
