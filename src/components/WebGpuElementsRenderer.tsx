@@ -31,6 +31,7 @@ export function WebGpuElementsRenderer(props: Props) {
   const ready = useRef(false)
   const [supportsXRayNet, setSupportsXRayNet] = useState<boolean | null>(null)
   const [failure, setFailure] = useState<string>()
+  const [renderPending, setRenderPending] = useState(true)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
@@ -116,6 +117,7 @@ export function WebGpuElementsRenderer(props: Props) {
   useLayoutEffect(() => {
     const sceneGeneration = sceneRef.current.sceneGeneration + 1
     sceneRef.current = { elements, sceneGeneration }
+    setRenderPending(true)
     if (!ready.current || !workerRef.current) return
     latestSubmittedSceneGenerationRef.current = sceneGeneration
     workerRef.current.postMessage({
@@ -172,6 +174,7 @@ export function WebGpuElementsRenderer(props: Props) {
               latestSubmittedSceneGenerationRef.current
             )
               return
+            setRenderPending(false)
             if (holder.current)
               holder.current.dataset.xRayNetActive = String(
                 workerResponse.xRayActive,
@@ -265,6 +268,24 @@ export function WebGpuElementsRenderer(props: Props) {
             transform={transform!}
             stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
           />
+          {renderPending && (
+            <div
+              role="status"
+              style={{
+                position: "absolute",
+                top: 16,
+                left: 16,
+                zIndex: 1,
+                padding: 8,
+                color: "white",
+                background: "rgba(0, 0, 0, 0.8)",
+                pointerEvents: "none",
+              }}
+            >
+              Rendering PCB… Large boards may take longer. To switch engines,
+              use Rendering Engine in the context menu.
+            </div>
+          )}
           {xRayUnavailable && (
             <div
               role="status"

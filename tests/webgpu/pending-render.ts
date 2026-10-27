@@ -103,8 +103,13 @@ try {
     terminated,
     "switching to Canvas releases the pending worker",
   )
+  await page.goto(
+    `${server.resolvedUrls!.local[0]}tests/webgpu/?scenario=unavailable`,
+  )
+  await page.getByRole("alert").waitFor()
+  assert.equal(await page.getByRole("status").count(), 0)
   console.log(
-    "Pending WebGPU render status, completion, scene changes and Canvas selection passed",
+    "Pending WebGPU render status, completion, scene changes, Canvas selection and failure passed",
   )
 } finally {
   await browser?.close()
