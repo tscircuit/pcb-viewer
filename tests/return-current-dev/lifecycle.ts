@@ -3,11 +3,10 @@ import { mkdir, rm, writeFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { type Page, chromium } from "playwright"
 import { createServer as createViteServer, transformWithEsbuild } from "vite"
-import { createReturnCurrentDevServer } from "../../scripts/return-current-dev-server"
 
 // Bounded UI/transport checks. The injected client never executes a solver or
 // produces simulation fields. --reopen-existing reads a separately completed,
-// real job from the development server and explicitly forbids new submissions.
+// real job from the configured service and explicitly forbids new submissions.
 const root = fileURLToPath(new URL("../../", import.meta.url))
 const args = process.argv.slice(2)
 const existingRequestId = args[0] === "--reopen-existing" ? args[1] : undefined
@@ -85,7 +84,6 @@ declare global {
   }
 }
 
-let api: Awaited<ReturnType<typeof createReturnCurrentDevServer>> | undefined
 let vite: Awaited<ReturnType<typeof createViteServer>> | undefined
 let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined
 let activePage: Page | undefined
@@ -258,15 +256,6 @@ const verifyMenuGeometry = async (page: Page, baseUrl: string) => {
 }
 
 try {
-  if (existingRequestId && !process.env.RETURN_CURRENT_BROWSER_URL) {
-    api = await createReturnCurrentDevServer({ projectDirectory: root })
-    await new Promise<void>((resolve) => api!.listen(0, "127.0.0.1", resolve))
-  }
-  const address = api?.address()
-  const apiOrigin =
-    address && typeof address === "object"
-      ? `http://127.0.0.1:${address.port}`
-      : undefined
   if (!existingRequestId || !process.env.RETURN_CURRENT_BROWSER_URL) {
     console.log("Starting bounded lifecycle fixture server")
     vite = await createViteServer({
@@ -275,8 +264,8 @@ try {
       optimizeDeps: { entries: ["tests/return-current-dev/main.tsx"] },
       server: {
         host: "127.0.0.1",
-        port: 0,
-        ...(apiOrigin ? { proxy: { "/api": apiOrigin } } : {}),
+        port: existingRequestId ? 3000 : 0,
+        strictPort: true,
       },
       logLevel: "error",
       plugins: [
@@ -866,5 +855,4 @@ try {
   await browser?.close()
   await vite?.close()
   await rm(fixtureCache, { recursive: true, force: true })
-  if (api) await new Promise<void>((resolve) => api!.close(() => resolve()))
 }

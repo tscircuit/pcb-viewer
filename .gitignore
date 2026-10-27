@@ -15,5 +15,4 @@ bun.lockb
 package-lock.json
 
 tests/webgpu/actual/
-.tscircuit/
 tests/return-current-dev/actual/

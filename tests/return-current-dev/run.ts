@@ -3,24 +3,18 @@ import { mkdir, writeFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
 import { createServer as createViteServer } from "vite"
-import { createReturnCurrentDevServer } from "../../scripts/return-current-dev-server"
 
 // An opt-in native test: every invocation submits a fresh real Palace job.
 const root = fileURLToPath(new URL("../../", import.meta.url))
 let baseUrl = process.env.RETURN_CURRENT_BROWSER_URL
-let api: Awaited<ReturnType<typeof createReturnCurrentDevServer>> | undefined
 let vite: Awaited<ReturnType<typeof createViteServer>> | undefined
 if (!baseUrl) {
-  api = await createReturnCurrentDevServer({ projectDirectory: root })
-  await new Promise<void>((resolve) => api!.listen(0, "127.0.0.1", resolve))
-  const address = api.address()
-  assert(address && typeof address === "object")
   vite = await createViteServer({
     root,
     server: {
       host: "127.0.0.1",
-      port: 0,
-      proxy: { "/api": `http://127.0.0.1:${address.port}` },
+      port: 3000,
+      strictPort: true,
     },
     logLevel: "error",
   })
@@ -329,5 +323,4 @@ try {
 } finally {
   await browser.close()
   await vite?.close()
-  if (api) await new Promise<void>((resolve) => api!.close(() => resolve()))
 }

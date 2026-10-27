@@ -24,7 +24,6 @@ export interface ReturnCurrentSimulationJob {
   requestId: string
   status: ReturnCurrentSimulationJobStatus
   message?: string
-  resultFilePath?: string
 }
 
 interface RequestOptions {
@@ -76,9 +75,7 @@ const readJob = (
     typeof value.request_id !== "string" ||
     typeof value.status !== "string" ||
     !["queued", "running", "completed", "failed"].includes(value.status) ||
-    (value.message !== undefined && typeof value.message !== "string") ||
-    (value.result_file_path !== undefined &&
-      typeof value.result_file_path !== "string")
+    (value.message !== undefined && typeof value.message !== "string")
   ) {
     throw new Error("Simulation server returned an invalid job response")
   }
@@ -89,9 +86,6 @@ const readJob = (
     requestId: value.request_id,
     status: value.status as ReturnCurrentSimulationJobStatus,
     ...(typeof value.message === "string" ? { message: value.message } : {}),
-    ...(typeof value.result_file_path === "string"
-      ? { resultFilePath: value.result_file_path }
-      : {}),
   }
 }
 

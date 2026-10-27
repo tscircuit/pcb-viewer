@@ -38,7 +38,6 @@ const simulationRequest: ReturnCurrentSimulationRequest = {
 const completedJob: ReturnCurrentSimulationJob = {
   requestId: "job-1",
   status: "completed",
-  resultFilePath: ".tscircuit/return-current-dev/job-1/result.circuit.json",
 }
 
 test("maps browser requests and durable jobs to the namespaced hosted/local simulation protocol", async () => {
@@ -53,7 +52,6 @@ test("maps browser requests and durable jobs to the namespaced hosted/local simu
         request_id: "job-1",
         status: "completed",
         message: "Ready",
-        result_file_path: completedJob.resultFilePath,
       },
     }),
     Response.json(circuitJson),
@@ -277,7 +275,6 @@ test("same API base contract works with a CLI origin or hosted origin without us
       await client.loadResult({
         requestId: "job-1",
         status: "completed",
-        resultFilePath: "https://untrusted.example/secret",
       }),
     ).toEqual(circuitJson)
     expect(calls).toEqual([
