@@ -94,5 +94,5 @@ margin**, inner1 pour contacts, 5 mA peak current, 50 Ω source/load ports,
 P1 / 2 mm mesh, 0.1 mm samples, 2 mm air padding and four processes. The
 201,459-tetrahedron solve and field export took about 11 minutes locally.
 This is an execution check, not a converged reference: dense traces or larger
-margins can exceed the hosted 15-minute budget. The AM3352 fixture stores the
+margins can exceed the hosted 30-minute budget. The AM3352 fixture stores the
 job ID in its URL so refresh restores the result without resubmitting.
