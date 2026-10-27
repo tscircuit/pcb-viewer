@@ -227,7 +227,7 @@ function defaultForm(
     meshSize: board?.num_layers === 4 ? "2" : "0.5",
     order: board?.num_layers === 4 ? 1 : 2,
     airPadding: "2",
-    processes: "1",
+    processes: board?.num_layers === 4 ? "4" : "1",
   }
   if (!pcbTraceId) return initial
   try {

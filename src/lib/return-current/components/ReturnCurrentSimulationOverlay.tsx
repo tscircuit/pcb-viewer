@@ -2,6 +2,7 @@ import { getReturnCurrentTraceTerminals } from "../experiment"
 import {
   type AnyCircuitElement,
   type PcbTrace,
+  type SimulationReturnCurrentExcitation,
   type SimulationPcbReturnCurrentHeatmap,
   simulation_pcb_return_current_heatmap,
   simulation_pcb_return_current_marker,
@@ -153,6 +154,13 @@ export const ReturnCurrentSimulationOverlay = ({
           return heatmap
         })
       const excitationTraceIds = new Set<string>()
+      const pourContacts: Array<{
+        role: "return_source" | "return_sink"
+        contact: Extract<
+          SimulationReturnCurrentExcitation["return_source"],
+          { contact_type: "pcb_copper_pour" }
+        >
+      }> = []
       for (const id of result.simulation_return_current_excitation_ids) {
         const excitation = circuitJson.find(
           (element) =>
@@ -174,6 +182,23 @@ export const ReturnCurrentSimulationOverlay = ({
           )
         }
         excitationTraceIds.add(excitation.pcb_trace_id)
+        for (const role of ["return_source", "return_sink"] as const) {
+          const contact = excitation[role]
+          if (contact.contact_type === "pcb_copper_pour") {
+            if (
+              !circuitJson.some(
+                (element) =>
+                  element.type === "pcb_copper_pour" &&
+                  element.pcb_copper_pour_id === contact.pcb_copper_pour_id &&
+                  element.layer === contact.layer,
+              )
+            )
+              throw new Error(
+                "Simulation return contact references a missing ground pour",
+              )
+            pourContacts.push({ role, contact })
+          }
+        }
       }
       if (
         simulation?.pcbTraceId &&
@@ -238,6 +263,7 @@ export const ReturnCurrentSimulationOverlay = ({
           return resolved ? { ...trace, route: resolved.route } : trace
         }),
         markers,
+        pourContacts,
         error: undefined,
       }
     } catch (error) {
@@ -570,6 +596,29 @@ export const ReturnCurrentSimulationOverlay = ({
               >
                 {label.length > 40 ? `${label.slice(0, 39)}…` : label}
               </text>
+            </g>
+          )
+        })}
+        {selection.pourContacts?.map(({ role, contact }, index) => {
+          const center = applyToPoint(transform, contact)
+          return (
+            <g
+              key={`pour:${index}`}
+              data-return-current-terminal
+              data-role={role}
+              data-target-type="pcb_copper_pour"
+              data-target-id={contact.pcb_copper_pour_id}
+            >
+              <title>{`${role.replaceAll("_", " ")} · ${contact.layer} ground pour`}</title>
+              <circle
+                cx={center.x}
+                cy={center.y}
+                r={11}
+                fill="none"
+                stroke="#ed80e6"
+                strokeWidth={2.5}
+                strokeDasharray="3 2"
+              />
             </g>
           )
         })}

@@ -165,3 +165,39 @@ test("the signal legend names the actual inner routing layer", () => {
   expect(svg).not.toContain("Bottom signal")
   expect(svg).not.toContain("bottom signal")
 })
+
+test("ground-pour contacts remain visible when results have no ground-pad markers", () => {
+  const elements = structuredClone(circuitJson).filter(
+    (e) => e.type !== "simulation_pcb_return_current_marker",
+  )
+  const excitation = elements.find(
+    (e) => e.type === "simulation_return_current_excitation",
+  )!
+  if (excitation.type !== "simulation_return_current_excitation")
+    throw new Error("Missing excitation")
+  excitation.return_source = {
+    contact_type: "pcb_copper_pour",
+    pcb_copper_pour_id: "plane",
+    x: -1,
+    y: 0.5,
+    layer: "bottom",
+  }
+  excitation.return_sink = { ...excitation.return_source, x: 1 }
+  expect(render(elements)).toContain("missing ground pour")
+  elements.push({
+    type: "pcb_copper_pour",
+    pcb_copper_pour_id: "plane",
+    covered_with_solder_mask: true,
+    source_net_id: "ground",
+    layer: "bottom",
+    shape: "rect",
+    center: { x: 0, y: 0 },
+    width: 4,
+    height: 2,
+  })
+  const svg = render(elements)
+  expect(svg.match(/data-target-type="pcb_copper_pour"/g)).toHaveLength(2)
+  expect(svg).toContain('cx="90" cy="95" r="11"')
+  expect(svg).toContain('cx="110" cy="95" r="11"')
+  expect(svg).toContain("bottom ground pour")
+})

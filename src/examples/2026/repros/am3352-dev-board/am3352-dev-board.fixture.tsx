@@ -40,7 +40,22 @@ export default () => (
     </p>
     <PCBViewer
       circuitJson={circuitJson as any}
-      returnCurrentSimulationDialog={{ client }}
+      returnCurrentSimulationDialog={{
+        client,
+        resumeRequestId:
+          typeof window === "undefined"
+            ? undefined
+            : (new URLSearchParams(window.location.search).get(
+                "return_current_request_id",
+              ) ?? undefined),
+        onRequestIdChange: (requestId) => {
+          const url = new URL(window.location.href)
+          if (requestId)
+            url.searchParams.set("return_current_request_id", requestId)
+          else url.searchParams.delete("return_current_request_id")
+          window.history.replaceState(null, "", url)
+        },
+      }}
     />
   </div>
 )
