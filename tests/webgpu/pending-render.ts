@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { mkdir } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
 import { createServer } from "vite"
@@ -57,6 +58,12 @@ try {
   await page.waitForFunction(() => window.gpuViewerTest.stats.ready === 1)
   assert.equal(await page.locator(".pcb-webgpu-canvas").count(), 1)
   assert.equal(await page.evaluate(() => window.gpuViewerTest.stats.frames), 0)
+  await mkdir(new URL("./actual/", import.meta.url), { recursive: true })
+  await page.screenshot({
+    path: fileURLToPath(
+      new URL("./actual/pending-render.png", import.meta.url),
+    ),
+  })
   await page
     .getByRole("status")
     .getByText("Rendering PCB", { exact: false })
