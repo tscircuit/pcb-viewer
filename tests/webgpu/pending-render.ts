@@ -39,7 +39,9 @@ try {
   )
   assert.equal(await page.getByRole("status").count(), 0)
 
-  await page.evaluate(() => window.gpuViewerTest.mount())
+  await page.evaluate(() =>
+    window.gpuViewerTest.mount(false, "webgpu", false, true),
+  )
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.latestSubmittedSceneGeneration > 1,
   )
