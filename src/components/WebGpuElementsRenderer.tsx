@@ -11,6 +11,7 @@ import { useGlobalStore } from "../global-store"
 type Props = {
   elements: AnyCircuitElement[]
   primitives: Primitive[]
+  highlightedCopperPourIds?: string[]
   xRayElements?: AnyCircuitElement[]
   transform?: Matrix
   width?: number
@@ -44,16 +45,17 @@ export function WebGpuElementsRenderer(props: Props) {
   const showCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const highlightedElementIds = useMemo(
     () => [
-      ...new Set(
-        primitives.flatMap((p) => {
+      ...new Set([
+        ...(props.highlightedCopperPourIds ?? []),
+        ...primitives.flatMap((p) => {
           if (!p.is_mouse_over && !p.is_in_highlighted_net) return []
           const element = p._element as Record<string, any> | undefined
           const id = element?.[`${element.type}_id`]
           return id ? [id as string] : []
         }),
-      ),
+      ]),
     ],
-    [primitives],
+    [primitives, props.highlightedCopperPourIds],
   )
   const xRayElementIds = useMemo(
     () =>
