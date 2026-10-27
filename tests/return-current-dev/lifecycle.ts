@@ -460,8 +460,10 @@ try {
     exact: true,
   })
   if (existingRequestId) {
+    const fourLayer = process.env.RETURN_CURRENT_FOUR_LAYER === "1"
     const url = new URL("tests/return-current-dev/", baseUrl)
     url.searchParams.set("return_current_request_id", existingRequestId)
+    if (fourLayer) url.searchParams.set("four_layer", "1")
     await page.goto(url.toString())
     const overlay = page.locator(
       "[data-return-current-overlay][data-state=ready]",
@@ -486,12 +488,28 @@ try {
     )
     assert.equal(
       await dialog.getByLabel("Driver-side ground pad").inputValue(),
-      "pcb_port_u1_gnd",
+      fourLayer ? "pcb_port_1" : "pcb_port_u1_gnd",
     )
     assert.equal(
       await dialog.getByLabel("Load-side ground pad").inputValue(),
-      "pcb_port_u2_gnd",
+      fourLayer ? "pcb_port_3" : "pcb_port_u2_gnd",
     )
+    if (fourLayer) {
+      assert.equal(await overlay.getAttribute("data-return-layer"), "inner2")
+      const job = await (
+        await fetch(
+          `https://simulate.tscircuit.com/api/simulations/v1/return-current/jobs/${existingRequestId}`,
+        )
+      ).json()
+      assert.deepEqual(
+        JSON.parse(
+          await dialog
+            .getByLabel("Stackup dimensions and materials (JSON, mm)")
+            .inputValue(),
+        ),
+        job.job.stackup,
+      )
+    }
     await assertNoOutsideForm(page)
     const resultId = await overlay.getAttribute("data-result-id")
     assert.equal(

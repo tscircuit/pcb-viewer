@@ -593,8 +593,19 @@ export const ReturnCurrentSimulationOverlay = ({
           </span>
         ))}
         <span>
-          <span style={{ color: "#08d9ef" }}>Top signal</span> ·{" "}
-          <span style={{ color: "#ff941f" }}>Bottom signal</span> ·{" "}
+          {[
+            ...new Set(
+              selection.traces?.flatMap((trace) =>
+                trace.route.flatMap((point) =>
+                  point.route_type === "wire" ? [point.layer] : [],
+                ),
+              ) ?? [],
+            ),
+          ].map((signalLayer) => (
+            <span key={signalLayer} style={{ color: layerColor(signalLayer) }}>
+              {signalLayer} signal ·{" "}
+            </span>
+          ))}
           <span style={{ color: "#ed80e6" }}>GND terminal</span>
         </span>
         {simulation.showVectors !== false && fields.length > 0 && (

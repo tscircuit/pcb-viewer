@@ -259,6 +259,7 @@ try {
   await setup
     .getByRole("checkbox", { name: "EM heatmap", exact: true })
     .uncheck()
+  await heat.waitFor({ state: "detached" })
   assert.equal(
     await overlay
       .locator('image[data-type="simulation_pcb_return_current_heatmap"]')

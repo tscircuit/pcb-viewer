@@ -148,3 +148,20 @@ test("missing GND marker targets surface an error instead of inventing a return 
   )
   expect(svg).not.toContain("data-return-current-terminal")
 })
+
+test("the signal legend names the actual inner routing layer", () => {
+  const elements = structuredClone(circuitJson)
+  const trace = elements.find((element) => element.type === "pcb_trace")!
+  if (trace.type !== "pcb_trace") throw new Error("Missing test trace")
+  trace.route = trace.route.map((point) =>
+    point.route_type === "wire" && point.layer === "bottom"
+      ? { ...point, layer: "inner1" }
+      : point.route_type === "via"
+        ? { ...point, to_layer: "inner1" }
+        : point,
+  )
+  const svg = render(elements)
+  expect(svg).toContain("inner1 signal")
+  expect(svg).not.toContain("Bottom signal")
+  expect(svg).not.toContain("bottom signal")
+})
