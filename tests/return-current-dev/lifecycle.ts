@@ -313,22 +313,91 @@ const verifyAm3352 = async (page: Page, baseUrl: string) => {
     ).nominalBoardThicknessMm,
     1.2,
   )
-  assert.match(
-    await dialog.getByRole("alert").innerText(),
-    /complete two-pin connection; split or branched routes/,
+  assert.equal(
+    await dialog.getByLabel("Driver signal pad").inputValue(),
+    "pcb_port_13",
+  )
+  assert.equal(
+    await dialog.getByLabel(/^Ground net/).inputValue(),
+    "source_net_4",
+  )
+  assert.equal(
+    await dialog.getByLabel(/^Ground contact method/).inputValue(),
+    "pcb_copper_pour_0",
+  )
+  await dialog.getByLabel(/^Ground contact method/).selectOption("")
+  await dialog
+    .getByRole("button", {
+      name: "Use nearest GND pads on the signal components",
+    })
+    .click()
+  assert.equal(
+    await dialog.getByLabel(/^Driver-side ground pad/).inputValue(),
+    "pcb_port_17",
+  )
+  assert.equal(
+    await dialog.getByLabel(/^Load-side ground pad/).inputValue(),
+    "pcb_port_393",
   )
   assert(
     await dialog
-      .getByRole("button", { name: "Run simulation", exact: true })
-      .isDisabled(),
+      .getByLabel("Simulate a local region around this connection")
+      .isChecked(),
+  )
+  const size = dialog.getByTestId("simulation-region-size")
+  assert.match(await size.innerText(), /11.58.*12.45/)
+  await dialog.getByLabel("Region margin (mm)").fill("2")
+  assert.match(await size.innerText(), /13.58.*14.45/)
+  await dialog
+    .getByLabel(/^Ground contact method/)
+    .selectOption("pcb_copper_pour_0")
+  assert.equal(await dialog.getByLabel(/^Return layer/).inputValue(), "inner1")
+  let submitted: any
+  await page.route(
+    "**/api/simulations/v1/return-current/jobs",
+    async (route) => {
+      submitted = route.request().postDataJSON()
+      await route.fulfill({
+        status: 400,
+        json: {
+          error: "Transport fixture: request verified; no solver executed",
+        },
+      })
+    },
+  )
+  await dialog
+    .getByRole("button", { name: "Run simulation", exact: true })
+    .click()
+  await dialog
+    .getByRole("alert")
+    .filter({ hasText: "Transport fixture: request verified" })
+    .waitFor()
+  assert.equal(submissions, 1)
+  assert.equal(submitted.region.marginMm, 2)
+  const excitation = submitted.circuit_json.find(
+    (e: any) => e.type === "simulation_return_current_excitation",
+  )
+  assert.equal(excitation.return_source.contact_type, "pcb_copper_pour")
+  assert.equal(excitation.return_source.layer, "inner1")
+  assert.equal(
+    submitted.signal_trace.route.filter((p: any) => p.route_type === "via")
+      .length,
+    3,
   )
   assert.equal(
-    submissions,
-    0,
-    "Unresolved split routes must not submit a paid job",
+    submitted.circuit_json.find((e: any) => e.type === "pcb_board").width,
+    70,
   )
+  assert.equal(
+    submitted.circuit_json.find(
+      (e: any) =>
+        e.pcb_trace_id === "fr_source_net_106_0" && e.type === "pcb_trace",
+    ).route.length,
+    11,
+  )
+
   await page.screenshot({
-    path: `${output}/am3352-simulation-limitation.png`,
+    path: `${output}/am3352-simulation-region.png`,
     fullPage: true,
   })
 }

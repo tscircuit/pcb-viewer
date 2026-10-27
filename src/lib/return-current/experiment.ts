@@ -1,3 +1,5 @@
+import { getReturnCurrentPourContact } from "./pour-contact"
+import { resolveSignalRoute, type ResolvedSignalRoute } from "./signal-route"
 import {
   simulation_experiment,
   simulation_return_current_excitation,
@@ -23,6 +25,7 @@ export interface ReturnCurrentPortCandidate {
 }
 
 export interface ReturnCurrentTraceTerminals {
+  signalTrace?: ResolvedSignalRoute
   pcbTraceId: PcbTrace["pcb_trace_id"]
   /** Route-first and route-last are initial choices, not inferred driver roles. */
   sourcePcbPortId: PcbPort["pcb_port_id"]
@@ -178,7 +181,7 @@ function describePort(
 /** Return the two real pads at a complete, unbranched trace's route endpoints.
  * Coordinates/layers come from emitted PCB records; no transforms are reapplied.
  */
-export function getReturnCurrentTraceTerminals(
+function getDirectTraceTerminals(
   circuitJson: readonly AnyCircuitElement[],
   pcbTraceId: PcbTrace["pcb_trace_id"],
 ): ReturnCurrentTraceTerminals {
@@ -260,6 +263,81 @@ export function getReturnCurrentTraceTerminals(
   }
 }
 
+/** Resolve routed fragments only within the selected source trace. */
+export function getReturnCurrentTraceTerminals(
+  circuitJson: readonly AnyCircuitElement[],
+  pcbTraceId: string,
+): ReturnCurrentTraceTerminals {
+  const selected = circuitJson.filter(
+    (element): element is PcbTrace =>
+      element.type === "pcb_trace" && element.pcb_trace_id === pcbTraceId,
+  )
+  if (selected.length !== 1)
+    throw new Error("Select one existing routed PCB trace.")
+  const trace = selected[0]
+  const sources = circuitJson.filter(
+    (element) =>
+      element.type === "source_trace" &&
+      element.source_trace_id === trace.source_trace_id,
+  )
+  const source = sources[0]
+  if (sources.length !== 1 || source.type !== "source_trace")
+    throw new Error(
+      "The selected trace needs one unambiguous source connection.",
+    )
+  const fragments = circuitJson.filter(
+    (element) =>
+      element.type === "pcb_trace" &&
+      element.source_trace_id === trace.source_trace_id,
+  )
+  if (fragments.length === 1 && source.connected_source_port_ids.length === 2)
+    return getDirectTraceTerminals(circuitJson, pcbTraceId)
+  const lookup = createSourceNetLookup(circuitJson)
+  const netIds = new Set([
+    ...source.connected_source_net_ids,
+    ...source.connected_source_port_ids.flatMap(lookup),
+  ])
+  const sourcePortIds = new Set([
+    ...source.connected_source_port_ids,
+    ...circuitJson.flatMap((element) =>
+      element.type === "source_port" &&
+      (source.connected_source_port_ids.includes(element.source_port_id) ||
+        lookup(element.source_port_id).some((id) => netIds.has(id)))
+        ? [element.source_port_id]
+        : [],
+    ),
+  ])
+  if (sourcePortIds.size !== 2)
+    throw new Error(
+      "Return-current simulation needs a two-pin signal net; branched multi-terminal nets require explicit terminations.",
+    )
+  const ports = circuitJson.filter(
+    (element): element is PcbPort =>
+      element.type === "pcb_port" &&
+      sourcePortIds.has(element.source_port_id) &&
+      hasPhysicalPad(circuitJson, element),
+  )
+  const resolved = resolveSignalRoute(circuitJson, trace, ports)
+  const first = getPhysicalPort(
+    circuitJson,
+    resolved.source.pcb_port_id,
+    "First signal",
+  )
+  const last = getPhysicalPort(
+    circuitJson,
+    resolved.load.pcb_port_id,
+    "Last signal",
+  )
+  return {
+    pcbTraceId,
+    sourcePcbPortId: first.pcb_port_id,
+    loadPcbPortId: last.pcb_port_id,
+    source: describePort(circuitJson, first, lookup),
+    load: describePort(circuitJson, last, lookup),
+    signalTrace: { pcb_trace_id: pcbTraceId, route: resolved.trace.route },
+  }
+}
+
 /** List actual net-connected pads. Passing a net filters by electrical
  * connectivity; omitting it lets the caller choose a net without assuming GND.
  */
@@ -284,6 +362,7 @@ export interface CreateReturnCurrentExperimentFromTraceOptions {
   pcbTraceId: PcbTrace["pcb_trace_id"]
   sourcePcbPortId: PcbPort["pcb_port_id"]
   loadPcbPortId: PcbPort["pcb_port_id"]
+  returnPourId?: string
   returnSourcePcbPortId: PcbPort["pcb_port_id"]
   returnSinkPcbPortId: PcbPort["pcb_port_id"]
   groundSourceNetId: string
@@ -306,6 +385,7 @@ export function createReturnCurrentExperimentFromTrace(
   circuitJson: AnyCircuitElement[]
   experimentId: string
   excitationId: string
+  signalTrace?: ResolvedSignalRoute
 } {
   const { circuitJson } = options
   const existingIds = new Set<string>()
@@ -341,6 +421,7 @@ export function createReturnCurrentExperimentFromTrace(
       "Choose the driver and load from the selected trace endpoints.",
     )
   if (
+    !options.returnPourId &&
     new Set([
       options.sourcePcbPortId,
       options.loadPcbPortId,
@@ -409,16 +490,30 @@ export function createReturnCurrentExperimentFromTrace(
       layer,
     }
   }
-  const returnSource = contact(
-    options.returnSourcePcbPortId,
-    options.returnSourceLayer,
-    "Load-side ground",
-  )
-  const returnSink = contact(
-    options.returnSinkPcbPortId,
-    options.returnSinkLayer,
-    "Driver-side ground",
-  )
+  const returnSource = options.returnPourId
+    ? getReturnCurrentPourContact(
+        circuitJson,
+        options.returnPourId,
+        options.groundSourceNetId,
+        signalLoad,
+      )
+    : contact(
+        options.returnSourcePcbPortId,
+        options.returnSourceLayer,
+        "Load-side ground",
+      )
+  const returnSink = options.returnPourId
+    ? getReturnCurrentPourContact(
+        circuitJson,
+        options.returnPourId,
+        options.groundSourceNetId,
+        signalSource,
+      )
+    : contact(
+        options.returnSinkPcbPortId,
+        options.returnSinkLayer,
+        "Driver-side ground",
+      )
   for (const [signal, reference] of [
     [signalSource, returnSink],
     [signalLoad, returnSource],
@@ -468,13 +563,19 @@ export function createReturnCurrentExperimentFromTrace(
     return_sink: returnSink,
     source_port: {
       signal_pcb_port_id: signalSource.pcb_port_id,
-      reference_pcb_port_id: returnSink.pcb_port_id,
+      reference_pcb_port_id:
+        returnSink.contact_type === "pcb_port"
+          ? returnSink.pcb_port_id
+          : undefined,
       reference_layer: returnSink.layer,
       resistance: options.sourceResistanceOhms,
     },
     load_port: {
       signal_pcb_port_id: signalLoad.pcb_port_id,
-      reference_pcb_port_id: returnSource.pcb_port_id,
+      reference_pcb_port_id:
+        returnSource.contact_type === "pcb_port"
+          ? returnSource.pcb_port_id
+          : undefined,
       reference_layer: returnSource.layer,
       resistance: options.loadResistanceOhms,
     },
@@ -483,5 +584,6 @@ export function createReturnCurrentExperimentFromTrace(
     circuitJson: [...circuitJson, experiment, excitation],
     experimentId: experiment.simulation_experiment_id,
     excitationId: excitation.simulation_return_current_excitation_id,
+    signalTrace: terminals.signalTrace,
   }
 }

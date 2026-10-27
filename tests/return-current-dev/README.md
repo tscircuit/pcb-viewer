@@ -72,10 +72,19 @@ The `2026/return-current-four-layer` fixture (or `?four_layer=1` in the developm
 
 For a 1.2 mm four-layer board, the dialog offers **JLCPCB JLC04121H-7628 (assumed)**. The dimensions and dielectric constants come from [JLCPCB's published stackup](https://jlcpcb.com/impedance), retrieved 2026-10-27. Loss tangent 0.02 is a separate assumption. All fields are editable. Physical layers sum to 1.1212 mm and are not stretched to the nominal board thickness. Other board thicknesses require explicit input; a layer count does not identify a fabrication stackup.
 
-The AM3352 repro now exposes this four-layer configuration, but its split routes are still unsupported and its 70 × 60 mm board exceeds the hosted preview's 400 mm² limit. This snapshot also only contains a bottom copper pour; the stackup does not invent missing inner planes. The four-layer fixture validates multilayer simulation independently of those remaining AM3352 restrictions. CLI and Runframe are unchanged.
+The AM3352 repro resolves all 22 DDR signals across their seven physical trace
+records, including standalone via records. Selecting any of the 154 fragments
+identifies the same U1/U3 terminal pair. Branched nets and broken routes still
+fail explicitly.
 
-The following screenshots are historical real-Palace results captured before the service extraction:
+Its existing **inner1 ground pour** is the default reference beneath the signal
+pads. This models the PCB interconnect relative to that plane; package ground-pin
+paths are excluded. Physical ground-pad contacts remain selectable, but an
+aperture crossing unrelated copper is rejected by the native solver.
 
-![Simulation dialog](./dialog.png)
-
-![Real Palace result over the PCB](./screenshot.png)
+The 70 × 60 mm board defaults to a local region with an adjustable margin
+(0.25–20 mm). The dialog shows its dimensions; the hosted 400 mm² limit applies
+to this region. All modeled nets within the rectangle are retained. Compare
+larger margins for boundary effects. The original Circuit JSON board remains
+unchanged, and saved jobs restore the region and fabrication stackup. CLI and
+Runframe are unchanged.

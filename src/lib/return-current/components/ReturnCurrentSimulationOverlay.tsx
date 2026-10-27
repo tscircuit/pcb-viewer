@@ -1,3 +1,4 @@
+import { getReturnCurrentTraceTerminals } from "../experiment"
 import {
   type AnyCircuitElement,
   type PcbTrace,
@@ -217,7 +218,28 @@ export const ReturnCurrentSimulationOverlay = ({
           }
           return { marker, target }
         })
-      return { result, heatmaps, traces, markers, error: undefined }
+      return {
+        result,
+        heatmaps,
+        traces: traces.map((trace) => {
+          if (
+            !trace.source_trace_id ||
+            circuitJson.filter(
+              (element) =>
+                element.type === "pcb_trace" &&
+                element.source_trace_id === trace.source_trace_id,
+            ).length < 2
+          )
+            return trace
+          const resolved = getReturnCurrentTraceTerminals(
+            circuitJson,
+            trace.pcb_trace_id,
+          ).signalTrace
+          return resolved ? { ...trace, route: resolved.route } : trace
+        }),
+        markers,
+        error: undefined,
+      }
     } catch (error) {
       return { error: error instanceof Error ? error.message : String(error) }
     }

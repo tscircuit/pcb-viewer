@@ -32,9 +32,11 @@ export default () => (
     </p>
     <p>
       Right-click a trace and choose Simulate → Return Current Simulation. The
-      dialog offers an assumed JLCPCB 1.2 mm four-layer stackup. This snapshot
-      has split routes and exceeds the hosted preview's 400 mm² board limit; a
-      stackup alone does not make it simulation-ready.
+      dialog resolves each DDR connection across its routed sections and vias.
+      Use the existing inner1 ground pour beneath the signal pads and adjust the
+      local-region margin; compare larger margins to check boundary effects. The
+      offered JLCPCB 1.2 mm four-layer stackup is an editable assumption, not
+      fabrication data for this board.
     </p>
     <PCBViewer
       circuitJson={circuitJson as any}

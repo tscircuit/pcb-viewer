@@ -1,3 +1,5 @@
+import { getReturnCurrentPourContact } from "../pour-contact"
+import { getReturnCurrentRegion, type ReturnCurrentRegion } from "../region"
 import {
   type AnyCircuitElement,
   type LayerRef,
@@ -66,6 +68,9 @@ export interface ReturnCurrentSimulationDialogProps {
 }
 
 interface FormState {
+  returnPour: string
+  localRegion: boolean
+  regionMargin: string
   stackup: string
   driver: string
   ground: string
@@ -86,6 +91,7 @@ interface FormState {
 }
 
 interface CompletedSimulation {
+  region?: ReturnCurrentRegion
   stackup?: ReturnCurrentStackup
   circuitJson: AnyCircuitElement[]
   resultId: string
@@ -201,6 +207,10 @@ function defaultForm(
 ): FormState {
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const initial: FormState = {
+    returnPour: "",
+    localRegion:
+      board?.num_layers === 4 && (board.width ?? 0) * (board.height ?? 0) > 400,
+    regionMargin: "1",
     stackup: defaultReturnCurrentStackup(board?.num_layers, board?.thickness),
     driver: "",
     ground: "",
@@ -253,6 +263,37 @@ function defaultForm(
         ),
       ]
       if (pourLayers.length === 1) initial.sampleLayer = pourLayers[0]
+      if (initial.localRegion) {
+        const validPours = circuitJson.filter((element) => {
+          if (
+            element.type !== "pcb_copper_pour" ||
+            element.source_net_id !== initial.ground
+          )
+            return false
+          try {
+            for (const id of [
+              terminals.sourcePcbPortId,
+              terminals.loadPcbPortId,
+            ]) {
+              const port = circuitJson.find(
+                (e) => e.type === "pcb_port" && e.pcb_port_id === id,
+              )
+              if (port?.type !== "pcb_port") return false
+              getReturnCurrentPourContact(
+                circuitJson,
+                element.pcb_copper_pour_id,
+                initial.ground,
+                port,
+              )
+            }
+            return true
+          } catch {
+            return false
+          }
+        })
+        if (validPours.length === 1 && validPours[0].type === "pcb_copper_pour")
+          initial.returnPour = validPours[0].pcb_copper_pour_id
+      }
     }
   } catch {
     /* The dialog presents the endpoint diagnostic before submission. */
@@ -363,7 +404,7 @@ export const ReturnCurrentSimulationDialog = ({
     async (
       output: AnyCircuitElement[],
       request?: ReturnCurrentSimulationRequest,
-      job?: { stackup?: ReturnCurrentStackup },
+      job?: { stackup?: ReturnCurrentStackup; region?: ReturnCurrentRegion },
     ): Promise<CompletedSimulation> => {
       if (
         physicalBoardSignature(output) !==
@@ -463,8 +504,14 @@ export const ReturnCurrentSimulationDialog = ({
       if (
         !excitation.source_port ||
         !excitation.load_port ||
-        excitation.return_source.contact_type !== "pcb_port" ||
-        excitation.return_sink.contact_type !== "pcb_port"
+        !(
+          (excitation.return_source.contact_type === "pcb_port" &&
+            excitation.return_sink.contact_type === "pcb_port") ||
+          (excitation.return_source.contact_type === "pcb_copper_pour" &&
+            excitation.return_sink.contact_type === "pcb_copper_pour" &&
+            excitation.return_source.pcb_copper_pour_id ===
+              excitation.return_sink.pcb_copper_pour_id)
+        )
       )
         throw new Error(
           "The result needs explicit driver, load and physical ground pad terminals.",
@@ -475,8 +522,18 @@ export const ReturnCurrentSimulationDialog = ({
         pcbTraceId: excitation.pcb_trace_id,
         sourcePcbPortId: excitation.source_port.signal_pcb_port_id,
         loadPcbPortId: excitation.load_port.signal_pcb_port_id,
-        returnSourcePcbPortId: excitation.return_source.pcb_port_id,
-        returnSinkPcbPortId: excitation.return_sink.pcb_port_id,
+        returnPourId:
+          excitation.return_source.contact_type === "pcb_copper_pour"
+            ? excitation.return_source.pcb_copper_pour_id
+            : undefined,
+        returnSourcePcbPortId:
+          excitation.return_source.contact_type === "pcb_port"
+            ? excitation.return_source.pcb_port_id
+            : "",
+        returnSinkPcbPortId:
+          excitation.return_sink.contact_type === "pcb_port"
+            ? excitation.return_sink.pcb_port_id
+            : "",
         groundSourceNetId: excitation.ground_source_net_id,
         sourceCurrentA: excitation.current,
         sourceResistanceOhms: excitation.source_port.resistance,
@@ -557,6 +614,7 @@ export const ReturnCurrentSimulationDialog = ({
         excitation,
         resumed: !request,
         stackup: request?.stackup ?? job?.stackup,
+        region: request?.region ?? job?.region,
       }
     },
     [],
@@ -688,6 +746,12 @@ export const ReturnCurrentSimulationDialog = ({
       setForm((previous) => ({
         ...previous,
         stackup: result.stackup ? JSON.stringify(result.stackup, null, 2) : "",
+        returnPour:
+          excitation.return_source.contact_type === "pcb_copper_pour"
+            ? excitation.return_source.pcb_copper_pour_id
+            : "",
+        localRegion: Boolean(result.region),
+        regionMargin: String(result.region?.marginMm ?? 1),
         driver: excitation.source_port!.signal_pcb_port_id,
         ground: excitation.ground_source_net_id,
         returnSource:
@@ -799,6 +863,55 @@ export const ReturnCurrentSimulationDialog = ({
       ? setup.terminals?.load
       : setup.terminals?.source
 
+  const regionPreview = (() => {
+    if (!form.localRegion || !sessionTraceId || !setup.terminals)
+      return undefined
+    try {
+      const original = circuitJson.find(
+        (element) =>
+          element.type === "pcb_trace" &&
+          element.pcb_trace_id === sessionTraceId,
+      )
+      if (original?.type !== "pcb_trace") return undefined
+      return {
+        region: getReturnCurrentRegion(
+          circuitJson,
+          setup.terminals.signalTrace?.route ?? original.route,
+          form.returnPour ? [] : [form.returnSource, form.returnSink],
+          Number(form.regionMargin),
+        ),
+      }
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "Invalid region",
+      }
+    }
+  })()
+  const chooseNearestGroundPads = () => {
+    if (!driver || !load) return
+    const nearest = (signal: ReturnCurrentPortCandidate) =>
+      groundCandidates
+        .filter(
+          (candidate) =>
+            componentForPort(circuitJson, candidate.sourcePortId) ===
+            componentForPort(circuitJson, signal.sourcePortId),
+        )
+        .sort(
+          (a, b) =>
+            Math.hypot(a.x - signal.x, a.y - signal.y) -
+            Math.hypot(b.x - signal.x, b.y - signal.y),
+        )[0]
+    const sink = nearest(driver),
+      source = nearest(load)
+    setForm((previous) => ({
+      ...previous,
+      returnSink: sink?.pcbPortId ?? "",
+      returnSinkLayer: sink?.layers.length === 1 ? sink.layers[0] : "",
+      returnSource: source?.pcbPortId ?? "",
+      returnSourceLayer: source?.layers.length === 1 ? source.layers[0] : "",
+    }))
+  }
+
   const setValue = <Key extends keyof FormState>(
     key: Key,
     value: FormState[Key],
@@ -816,6 +929,7 @@ export const ReturnCurrentSimulationDialog = ({
     setForm((previous) => ({
       ...previous,
       ground,
+      returnPour: "",
       driver: selectedDriver,
       ...defaults,
     }))
@@ -840,11 +954,14 @@ export const ReturnCurrentSimulationDialog = ({
       if (!setup.terminals || !driver || !load)
         throw new Error(setup.error || "Choose a supported signal trace.")
       if (!form.ground) throw new Error("Choose the ground reference net.")
-      if (!form.returnSink || !form.returnSource)
+      if (!form.returnPour && (!form.returnSink || !form.returnSource))
         throw new Error(
           "Choose both physical ground pads; ambiguous pads are never selected automatically.",
         )
-      if (!form.returnSinkLayer || !form.returnSourceLayer)
+      if (
+        !form.returnPour &&
+        (!form.returnSinkLayer || !form.returnSourceLayer)
+      )
         throw new Error("Choose a contact layer for each physical ground pad.")
       if (!boardLayers.includes(form.sampleLayer))
         throw new Error("Choose a return layer present on this PCB.")
@@ -853,6 +970,7 @@ export const ReturnCurrentSimulationDialog = ({
         pcbTraceId: sessionTraceId,
         sourcePcbPortId: driver.pcbPortId,
         loadPcbPortId: load.pcbPortId,
+        returnPourId: form.returnPour || undefined,
         returnSourcePcbPortId: form.returnSource,
         returnSinkPcbPortId: form.returnSink,
         groundSourceNetId: form.ground,
@@ -865,16 +983,24 @@ export const ReturnCurrentSimulationDialog = ({
           form.loadResistance,
           "Load resistance",
         ),
-        returnSourceLayer: layer_ref.parse(form.returnSourceLayer),
-        returnSinkLayer: layer_ref.parse(form.returnSinkLayer),
+        returnSourceLayer: form.returnPour
+          ? undefined
+          : layer_ref.parse(form.returnSourceLayer),
+        returnSinkLayer: form.returnPour
+          ? undefined
+          : layer_ref.parse(form.returnSinkLayer),
       })
       const processes = positiveNumber(form.processes, "Solver processes")
       if (!Number.isInteger(processes) || processes > 4)
         throw new Error("Solver processes must be an integer from 1 to 4.")
+      if (form.localRegion && !regionPreview?.region)
+        throw new Error(regionPreview?.error || "Choose a valid local region.")
       const request: ReturnCurrentSimulationRequest = {
+        ...(form.localRegion ? { region: regionPreview!.region } : {}),
         requestId: crypto.randomUUID(),
         circuitJson: experiment.circuitJson,
         experimentId: experiment.experimentId,
+        signalTrace: experiment.signalTrace,
         frequencyHz: positiveNumber(
           String(positiveNumber(form.frequencyMHz, "Frequency") * 1e6),
           "Frequency",
@@ -1182,28 +1308,94 @@ export const ReturnCurrentSimulationDialog = ({
                 Signal: {driver?.label ?? "driver"} → {load?.label ?? "load"}.
                 Return: load-side ground → driver-side ground.
               </p>
+              {fourLayer && (
+                <label className={labelClassName}>
+                  Ground contact method
+                  <select
+                    className={controlClassName}
+                    value={form.returnPour}
+                    onChange={(event) => {
+                      const id = event.currentTarget.value
+                      const pour = circuitJson.find(
+                        (e) =>
+                          e.type === "pcb_copper_pour" &&
+                          e.pcb_copper_pour_id === id,
+                      )
+                      setForm((previous) => ({
+                        ...previous,
+                        returnPour: id,
+                        ...(pour?.type === "pcb_copper_pour"
+                          ? { sampleLayer: pour.layer }
+                          : {}),
+                      }))
+                    }}
+                  >
+                    <option value="">Physical ground pads</option>
+                    {circuitJson.flatMap((e) =>
+                      e.type === "pcb_copper_pour" &&
+                      e.source_net_id === form.ground
+                        ? [
+                            <option
+                              key={e.pcb_copper_pour_id}
+                              value={e.pcb_copper_pour_id}
+                            >
+                              Ground pour beneath signal pads ({e.layer})
+                            </option>,
+                          ]
+                        : [],
+                    )}
+                  </select>
+                </label>
+              )}
+              {form.returnPour && (
+                <p>
+                  Ports connect each signal pad to the existing ground pour
+                  directly beneath it. This models the PCB interconnect relative
+                  to that plane; package ground-pin paths are excluded.
+                </p>
+              )}
+              {!form.returnPour && (
+                <>
+                  <button
+                    type="button"
+                    className={buttonClassName}
+                    disabled={!driver || !load || !form.ground}
+                    onClick={chooseNearestGroundPads}
+                  >
+                    Use nearest GND pads on the signal components
+                  </button>
+                  <p>
+                    Verify the selected return pads. The solver checks their
+                    physical connection to the return copper.
+                  </p>
+                </>
+              )}
               <div className={gridClassName}>
-                {groundField(
-                  "Driver-side ground pad",
-                  "returnSink",
-                  "returnSinkLayer",
-                )}
-                {layerField(
-                  "Driver-side ground layer",
-                  form.returnSinkLayer,
-                  sink?.layers ?? [],
-                  (value) => setValue("returnSinkLayer", value),
-                )}
-                {groundField(
-                  "Load-side ground pad",
-                  "returnSource",
-                  "returnSourceLayer",
-                )}
-                {layerField(
-                  "Load-side ground layer",
-                  form.returnSourceLayer,
-                  returnSource?.layers ?? [],
-                  (value) => setValue("returnSourceLayer", value),
+                {!form.returnPour && (
+                  <>
+                    {groundField(
+                      "Driver-side ground pad",
+                      "returnSink",
+                      "returnSinkLayer",
+                    )}
+                    {layerField(
+                      "Driver-side ground layer",
+                      form.returnSinkLayer,
+                      sink?.layers ?? [],
+                      (value) => setValue("returnSinkLayer", value),
+                    )}
+                    {groundField(
+                      "Load-side ground pad",
+                      "returnSource",
+                      "returnSourceLayer",
+                    )}
+                    {layerField(
+                      "Load-side ground layer",
+                      form.returnSourceLayer,
+                      returnSource?.layers ?? [],
+                      (value) => setValue("returnSourceLayer", value),
+                    )}
+                  </>
                 )}
                 {numberField("Frequency (MHz)", "frequencyMHz")}
                 {numberField("Peak current (mA)", "currentMa")}
@@ -1229,6 +1421,63 @@ export const ReturnCurrentSimulationDialog = ({
                   </select>
                 </label>
               </div>
+              {fourLayer && (
+                <section className="rc-dialog-section rctw-mt-6 rctw-border-t rctw-pt-5">
+                  <h3>Simulation region</h3>
+                  <label className={labelClassName}>
+                    <input
+                      type="checkbox"
+                      checked={form.localRegion}
+                      onChange={(event) =>
+                        setValue("localRegion", event.currentTarget.checked)
+                      }
+                    />{" "}
+                    Simulate a local region around this connection
+                  </label>
+                  {form.localRegion && (
+                    <>
+                      <label className={labelClassName}>
+                        Region margin (mm)
+                        <input
+                          type="number"
+                          min="0.25"
+                          max="20"
+                          step="0.25"
+                          className={controlClassName}
+                          value={form.regionMargin}
+                          onChange={(event) =>
+                            setValue("regionMargin", event.currentTarget.value)
+                          }
+                        />
+                      </label>
+                      {regionPreview?.region && (
+                        <p data-testid="simulation-region-size">
+                          {(
+                            regionPreview.region.maxX -
+                            regionPreview.region.minX
+                          ).toFixed(2)}{" "}
+                          ×{" "}
+                          {(
+                            regionPreview.region.maxY -
+                            regionPreview.region.minY
+                          ).toFixed(2)}{" "}
+                          mm, including the complete signal and selected ground
+                          contacts.
+                        </p>
+                      )}
+                      {regionPreview?.error && (
+                        <p role="alert">{regionPreview.error}</p>
+                      )}
+                      <p>
+                        Local approximation: nearby copper from every net is
+                        retained, then cut at the region boundary. Remote return
+                        paths are omitted; compare larger margins to check the
+                        effect.
+                      </p>
+                    </>
+                  )}
+                </section>
+              )}
               {fourLayer && (
                 <ReturnCurrentStackupEditor
                   value={form.stackup}

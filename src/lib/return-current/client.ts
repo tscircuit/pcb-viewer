@@ -1,3 +1,5 @@
+import type { ReturnCurrentRegion } from "./region"
+import type { ResolvedSignalRoute } from "./signal-route"
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import {
   returnCurrentStackupSchema,
@@ -20,12 +22,15 @@ export interface ReturnCurrentSimulationRequest {
   meshSize: number
   order: 1 | 2
   copperModel: "surface_impedance_copper"
+  region?: ReturnCurrentRegion
   stackup?: ReturnCurrentStackup
+  signalTrace?: ResolvedSignalRoute
   airPadding: number
   processes: number
 }
 
 export interface ReturnCurrentSimulationJob {
+  region?: ReturnCurrentRegion
   stackup?: ReturnCurrentStackup
   requestId: string
   status: ReturnCurrentSimulationJobStatus
@@ -88,8 +93,15 @@ const readJob = (
   if (value.request_id !== expectedRequestId) {
     throw new Error("Simulation server returned a different simulation job")
   }
+  const region = value.region
   return {
     requestId: value.request_id,
+    ...(isObject(region) &&
+    ["minX", "minY", "maxX", "maxY", "marginMm"].every(
+      (key) => typeof region[key] === "number" && Number.isFinite(region[key]),
+    )
+      ? { region: value.region as unknown as ReturnCurrentRegion }
+      : {}),
     ...(value.stackup !== undefined
       ? { stackup: returnCurrentStackupSchema.parse(value.stackup) }
       : {}),
@@ -210,6 +222,8 @@ export const createReturnCurrentSimulationClient = ({
             frequency_hz: request.frequencyHz,
             copper_model: request.copperModel,
             stackup: request.stackup,
+            signal_trace: request.signalTrace,
+            region: request.region,
             sample_layer: request.sampleLayer,
             cell_size: request.cellSize,
             mesh_size: request.meshSize,
