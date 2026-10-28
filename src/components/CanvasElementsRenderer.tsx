@@ -8,6 +8,7 @@ import {
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { filterElementsByComponentSideVisibility } from "lib/filter-elements-by-component-side-visibility"
+import { getHighlightedCopperPourIds } from "lib/get-highlighted-copper-pour-ids"
 import {
   type PrimitiveSpatialIndex,
   createPrimitiveSpatialIndex,
@@ -263,6 +264,17 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     drawingObjectIdsWithMouseOver: new Set<string>(),
     primitiveIdsInMousedOverNet: [] as string[],
   })
+  const highlightedCopperPourIds = useMemo(
+    () =>
+      xRayNetIds.length > 0
+        ? []
+        : getHighlightedCopperPourIds(
+            elementsToRender,
+            hoverState.primitiveIdsInMousedOverNet,
+            connectivityMap,
+          ),
+    [elementsToRender, hoverState, connectivityMap, xRayNetIds],
+  )
   const [hoveredComponentIds, setHoveredComponentIds] = useState<string[]>([])
   const currentTransformRef = useRef<Matrix | null>(transform ?? null)
   const zoomAnimationFrameRef = useRef<number | null>(null)
@@ -486,6 +498,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                         />
                       ) : (
                         <WebGpuElementsRenderer
+                          highlightedCopperPourIds={highlightedCopperPourIds}
                           transform={transform}
                           primitives={primitives}
                           elements={elementsToRender}

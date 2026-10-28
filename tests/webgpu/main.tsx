@@ -19,10 +19,16 @@ const stats = {
   renderCompletions: 0,
   latestSubmittedSceneGeneration: 0,
   heldSceneGenerations: [] as number[],
+  sceneElements: [] as AnyCircuitElement[],
   errors: [] as string[],
   lastView: null as {
     transform: Record<string, number>
-    options: { copperPourOpacity?: number; showCopperPours?: boolean }
+    options: {
+      copperPourOpacity?: number
+      showCopperPours?: boolean
+      highlightedElementIds?: string[]
+      xRayElementIds?: string[]
+    }
   } | null,
 }
 const searchParams = new URLSearchParams(location.search)
@@ -87,8 +93,10 @@ window.Worker = class extends OriginalWorker {
     message: any,
     transfer?: Transferable[] | StructuredSerializeOptions,
   ) {
-    if (message.type === "scene")
+    if (message.type === "scene") {
       stats.latestSubmittedSceneGeneration = message.sceneGeneration
+      stats.sceneElements = message.elements
+    }
     if (message.type === "init") {
       if (scenario === "timeout") return
       if (scenario === "worker-error" || scenario === "message-error") {
@@ -196,7 +204,52 @@ async function mount(
           : []),
       ] as AnyCircuitElement[])
   if (scenario === "xray-unsupported" || scenario === "controlled-xray")
-    elements = xRayScene
+    elements = [
+      ...xRayScene,
+      ...(scenario === "controlled-xray"
+        ? ([
+            {
+              type: "source_component",
+              source_component_id: "source_shared_component",
+              name: "U_SHARED",
+              ftype: "simple_chip",
+            },
+            {
+              type: "pcb_component",
+              pcb_component_id: "shared_component",
+              source_component_id: "source_shared_component",
+              center: { x: -10, y: -4 },
+              width: 4,
+              height: 12,
+              rotation: 0,
+              obstructs_within_bounds: true,
+              layer: "top",
+            },
+          ] as AnyCircuitElement[])
+        : []),
+      ...["top", "bottom"].map((layer) => ({
+        type: "pcb_copper_pour" as const,
+        pcb_copper_pour_id: `pour_a_${layer}`,
+        source_net_id: "net_a",
+        layer: layer as "top" | "bottom",
+        shape: "rect" as const,
+        center: { x: 0, y: 10 },
+        width: 4,
+        height: 4,
+        covered_with_solder_mask: false,
+      })),
+      {
+        type: "pcb_copper_pour",
+        pcb_copper_pour_id: "pour_b",
+        source_net_id: "net_b",
+        layer: "top",
+        shape: "rect",
+        center: { x: 10, y: 10 },
+        width: 4,
+        height: 4,
+        covered_with_solder_mask: false,
+      },
+    ]
   const view = (
     <PCBViewer
       circuitJson={elements}
@@ -209,8 +262,8 @@ async function mount(
   root.render(strict ? <StrictMode>{view}</StrictMode> : view)
 }
 function metadataBenchmark() {
-  const start = performance.now(),
-    index = createPrimitiveMetadataIndex(elements)
+  const start = performance.now()
+  const index = createPrimitiveMetadataIndex(elements)
   const primitives = elements.flatMap((e) =>
     convertElementToPrimitives(e, elements, index),
   )

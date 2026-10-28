@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { createServer } from "vite"
-import { chromium } from "playwright"
+import { type Browser, chromium } from "playwright"
 import { fileURLToPath } from "node:url"
 import { writeFile, mkdir } from "node:fs/promises"
 const root = fileURLToPath(new URL("../../", import.meta.url))
@@ -14,7 +14,7 @@ const server = await createServer({
   logLevel: "error",
 })
 await server.listen()
-let browser
+let browser: Browser | undefined
 try {
   browser = await chromium.launch({
     headless: true,
@@ -46,9 +46,46 @@ try {
     () => window.gpuViewerTest.stats.renderCompletions === 1,
   )
   assert.equal(await page.locator('[data-x-ray-net-active="false"]').count(), 1)
+  // Pours have no interaction primitives, but must follow hovered electrical nets.
+  const highlightedIds = () =>
+    page.evaluate(
+      () =>
+        window.gpuViewerTest.stats.lastView?.options.highlightedElementIds ??
+        [],
+    )
+  await page.mouse.move(250, 300)
+  await page.waitForFunction(() =>
+    window.gpuViewerTest.stats.lastView?.options.highlightedElementIds?.includes(
+      "pour_a_top",
+    ),
+  )
+  assert((await highlightedIds()).includes("pour_a_bottom"))
+  assert(
+    !(await highlightedIds()).includes("pour_b"),
+    "other pads on the same component must not highlight unrelated pours",
+  )
+  await page.mouse.move(250, 420)
+  await page.waitForFunction(() =>
+    window.gpuViewerTest.stats.lastView?.options.highlightedElementIds?.includes(
+      "pour_b",
+    ),
+  )
+  assert(!(await highlightedIds()).includes("pour_a_top"))
+  await page.mouse.move(650, 550)
+  await page.waitForFunction(
+    () =>
+      (window.gpuViewerTest.stats.lastView?.options.highlightedElementIds
+        ?.length ?? 0) === 0,
+  )
   await page.mouse.click(250, 300)
   await page.getByRole("menuitem", { name: "X-Ray CLK", exact: true }).click()
   await page.waitForSelector('[data-x-ray-net-active="true"]')
+  const xRayIds = await page.evaluate(
+    () => window.gpuViewerTest.stats.lastView?.options.xRayElementIds ?? [],
+  )
+  assert(xRayIds.includes("pour_a_top"))
+  assert(xRayIds.includes("pour_a_bottom"))
+  assert(!xRayIds.includes("pour_b"))
   assert.equal(
     await page.evaluate(() => window.gpuViewerTest.stats.renderCompletions),
     1,
@@ -61,6 +98,62 @@ try {
     1,
     "X-Ray exit must not complete the same scene again",
   )
+
+  // Hide the hovered component without moving the pointer away from its pad.
+  // The tracker must clear its old hover while the connected pour stays in
+  // the WebGPU scene; a mousemove alone would make this a false-positive test.
+  await page.mouse.move(250, 300)
+  await page.waitForFunction(() =>
+    window.gpuViewerTest.stats.lastView?.options.highlightedElementIds?.includes(
+      "pour_a_top",
+    ),
+  )
+  const sceneGenerationBeforeHide = await page.evaluate(
+    () => window.gpuViewerTest.stats.latestSubmittedSceneGeneration,
+  )
+  await page
+    .locator("[data-view-menu] > div > div")
+    .first()
+    .evaluate((element: HTMLElement) => element.click())
+  const showTop = page.getByText("Show Top Components", { exact: true })
+  const showTopCheckbox = showTop.locator("..").locator("input[type=checkbox]")
+  assert(await showTopCheckbox.isChecked(), "top components start visible")
+  await showTop.evaluate((element: HTMLElement) => element.click())
+  await page.waitForFunction((previousGeneration) => {
+    const { stats } = window.gpuViewerTest
+    return (
+      stats.latestSubmittedSceneGeneration > previousGeneration &&
+      !stats.sceneElements.some(
+        (element) =>
+          element.type === "pcb_smtpad" && element.pcb_smtpad_id === "pad_a",
+      ) &&
+      stats.sceneElements.some(
+        (element) =>
+          element.type === "pcb_copper_pour" &&
+          element.pcb_copper_pour_id === "pour_a_top",
+      ) &&
+      !stats.lastView?.options.highlightedElementIds?.includes("pour_a_top")
+    )
+  }, sceneGenerationBeforeHide)
+  assert(!(await showTopCheckbox.isChecked()), "top components are hidden")
+
+  // Restore the persisted preference before the remaining upstream checks.
+  const sceneGenerationBeforeRestore = await page.evaluate(
+    () => window.gpuViewerTest.stats.latestSubmittedSceneGeneration,
+  )
+  await page.waitForTimeout(350) // The toolbar suppresses clicks within 300 ms.
+  await showTop.evaluate((element: HTMLElement) => element.click())
+  await page.waitForFunction((previousGeneration) => {
+    const { stats } = window.gpuViewerTest
+    return (
+      stats.latestSubmittedSceneGeneration > previousGeneration &&
+      stats.sceneElements.some(
+        (element) =>
+          element.type === "pcb_smtpad" && element.pcb_smtpad_id === "pad_a",
+      )
+    )
+  }, sceneGenerationBeforeRestore)
+  assert(await showTopCheckbox.isChecked(), "top components are restored")
 
   await open()
   await page.evaluate(() => window.gpuViewerTest.mount(false, "canvas"))
@@ -168,9 +261,9 @@ try {
   )
   await page.mouse.move(400, 300)
   const navigation = await page.evaluate(async () => {
-    const target = document.querySelector(".pcb-webgpu-canvas")!,
-      samples = [],
-      startFrames = window.gpuViewerTest.stats.frames
+    const target = document.querySelector(".pcb-webgpu-canvas")!
+    const samples = []
+    const startFrames = window.gpuViewerTest.stats.frames
     let previous = performance.now()
     for (let i = 0; i < 60; i++) {
       await new Promise(requestAnimationFrame)
