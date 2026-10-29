@@ -43,6 +43,8 @@ export interface State {
   is_showing_solder_mask: boolean
   is_showing_silkscreen: boolean
   is_showing_fabrication_notes: boolean
+  is_showing_top_components: boolean
+  is_showing_bottom_components: boolean
   is_showing_pcb_notes: boolean
   pcb_group_view_mode: "all" | "named_only"
 
@@ -65,6 +67,8 @@ export interface State {
   setIsShowingSolderMask: (is_showing: boolean) => void
   setIsShowingSilkscreen: (is_showing: boolean) => void
   setIsShowingFabricationNotes: (is_showing: boolean) => void
+  setIsShowingTopComponents: (is_showing: boolean) => void
+  setIsShowingBottomComponents: (is_showing: boolean) => void
   setIsShowingPcbNotes: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
@@ -151,6 +155,14 @@ export const createStore = (
           STORAGE_KEYS.IS_SHOWING_PCB_NOTES,
           true,
         ),
+        is_showing_top_components: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_TOP_COMPONENTS,
+          true,
+        ),
+        is_showing_bottom_components: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_BOTTOM_COMPONENTS,
+          true,
+        ),
         pcb_group_view_mode: disablePcbGroups
           ? "all"
           : (getStoredString(
@@ -221,6 +233,17 @@ export const createStore = (
         setIsShowingPcbNotes: (is_showing) => {
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_PCB_NOTES, is_showing)
           set({ is_showing_pcb_notes: is_showing })
+        },
+        setIsShowingTopComponents: (is_showing) => {
+          setStoredBoolean(STORAGE_KEYS.IS_SHOWING_TOP_COMPONENTS, is_showing)
+          set({ is_showing_top_components: is_showing })
+        },
+        setIsShowingBottomComponents: (is_showing) => {
+          setStoredBoolean(
+            STORAGE_KEYS.IS_SHOWING_BOTTOM_COMPONENTS,
+            is_showing,
+          )
+          set({ is_showing_bottom_components: is_showing })
         },
         setPcbGroupViewMode: (mode) => {
           if (disablePcbGroups) return

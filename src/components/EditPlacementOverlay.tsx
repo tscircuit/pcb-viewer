@@ -1,9 +1,10 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
 import { useGlobalStore } from "../global-store"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
+import { getPickablePcbComponents } from "lib/get-pickable-pcb-components"
 
 interface Props {
   transform?: Matrix
@@ -52,11 +53,54 @@ export const EditPlacementOverlay = ({
     edit_event_id: string
   } | null>(null)
   const isPcbComponentActive = activePcbComponentId !== null
-  const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
 
+  const selectedLayer = useGlobalStore((s) => s.selected_layer)
+  const showTopComponents = useGlobalStore((s) => s.is_showing_top_components)
+  const showBottomComponents = useGlobalStore(
+    (s) => s.is_showing_bottom_components,
+  )
   const disabled = disabledProp || !in_move_footprint_mode
+  const pickablePcbComponents = useMemo(
+    () =>
+      getPickablePcbComponents(soup, selectedLayer, {
+        showTopComponents,
+        showBottomComponents,
+      }),
+    [soup, selectedLayer, showTopComponents, showBottomComponents],
+  )
+  const pickablePcbComponentIds = useMemo(
+    () =>
+      new Set(
+        pickablePcbComponents.map((component) => component.pcb_component_id),
+      ),
+    [pickablePcbComponents],
+  )
+
+  useEffect(() => {
+    if (
+      !activePcbComponentId ||
+      (!disabled && pickablePcbComponentIds.has(activePcbComponentId))
+    )
+      return
+    if (dragState) {
+      onModifyEditEvent({
+        edit_event_id: dragState.edit_event_id,
+        in_progress: false,
+      })
+    }
+    setActivePcbComponent(null)
+    setDragState(null)
+    setIsMovingComponent(false)
+  }, [
+    activePcbComponentId,
+    disabled,
+    pickablePcbComponentIds,
+    dragState,
+    onModifyEditEvent,
+    setIsMovingComponent,
+  ])
 
   return (
     <div
@@ -74,11 +118,8 @@ export const EditPlacementOverlay = ({
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
 
         let foundActiveComponent = false
-        for (const e of soup) {
-          if (
-            e.type === "pcb_component" &&
-            isInsideOf(e, rwMousePoint, 10 / transform.a)
-          ) {
+        for (const e of pickablePcbComponents) {
+          if (isInsideOf(e, rwMousePoint, 10 / transform.a)) {
             cancelPanDrag()
             setActivePcbComponent(e.pcb_component_id)
             foundActiveComponent = true
@@ -115,7 +156,13 @@ export const EditPlacementOverlay = ({
         }
       }}
       onMouseMove={(e) => {
-        if (!activePcbComponentId || !dragState) return
+        if (
+          disabled ||
+          !activePcbComponentId ||
+          !dragState ||
+          !pickablePcbComponentIds.has(activePcbComponentId)
+        )
+          return
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
@@ -154,33 +201,32 @@ export const EditPlacementOverlay = ({
     >
       {children}
       {!disabled &&
-        soup
-          .filter((e): e is PcbComponent => e.type === "pcb_component")
-          .map((e) => {
-            if (!e?.center) return null
-            const projectedCenter = applyToPoint(transform, e.center)
+        pickablePcbComponents.map((e) => {
+          if (!e?.center) return null
+          const projectedCenter = applyToPoint(transform, e.center)
 
-            return (
-              <div
-                key={e.pcb_component_id}
-                style={{
-                  position: "absolute",
-                  pointerEvents: "none",
-                  // b/c of transform, this is actually center not left/top
-                  left: projectedCenter.x,
-                  top: projectedCenter.y,
-                  width: e.width * transform.a + 20,
-                  height: e.height * transform.a + 20,
-                  transform: "translate(-50%, -50%)",
-                  background:
-                    isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
-                      ? "rgba(255, 0, 0, 0.2)"
-                      : "",
-                }}
-              />
-            )
-          })}
+          return (
+            <div
+              key={e.pcb_component_id}
+              data-component-picking-target={e.pcb_component_id}
+              style={{
+                position: "absolute",
+                pointerEvents: "none",
+                // b/c of transform, this is actually center not left/top
+                left: projectedCenter.x,
+                top: projectedCenter.y,
+                width: e.width * transform.a + 20,
+                height: e.height * transform.a + 20,
+                transform: "translate(-50%, -50%)",
+                background:
+                  isPcbComponentActive &&
+                  activePcbComponentId === e.pcb_component_id
+                    ? "rgba(255, 0, 0, 0.2)"
+                    : "",
+              }}
+            />
+          )
+        })}
     </div>
   )
 }

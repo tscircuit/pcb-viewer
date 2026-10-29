@@ -7,6 +7,7 @@ import {
   createPrimitiveMetadataIndex,
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
+import { filterElementsByComponentSideVisibility } from "lib/filter-elements-by-component-side-visibility"
 import { getHighlightedCopperPourIds } from "lib/get-highlighted-copper-pour-ids"
 import {
   type PrimitiveSpatialIndex,
@@ -103,12 +104,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
+    isShowingTopComponents,
+    isShowingBottomComponents,
     copperPourOpacity,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
+    isShowingTopComponents: state.is_showing_top_components,
+    isShowingBottomComponents: state.is_showing_bottom_components,
     copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
   }))
@@ -116,10 +121,18 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
 
   const elementsToRender = useMemo(
     () =>
-      isShowingCopperPours
-        ? elements
-        : elements.filter((elm) => elm.type !== "pcb_copper_pour"),
-    [elements, isShowingCopperPours],
+      filterElementsByComponentSideVisibility(elements, {
+        showTopComponents: isShowingTopComponents,
+        showBottomComponents: isShowingBottomComponents,
+      }).filter(
+        (element) => isShowingCopperPours || element.type !== "pcb_copper_pour",
+      ),
+    [
+      elements,
+      isShowingTopComponents,
+      isShowingBottomComponents,
+      isShowingCopperPours,
+    ],
   )
 
   const primitivesWithoutInteractionMetadata = useMemo(() => {
@@ -488,7 +501,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           highlightedCopperPourIds={highlightedCopperPourIds}
                           transform={transform}
                           primitives={primitives}
-                          elements={elements}
+                          elements={elementsToRender}
                           xRayElements={xRayElements}
                           width={props.width}
                           height={props.height}
