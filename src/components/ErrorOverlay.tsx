@@ -1,16 +1,17 @@
-import React, { useRef, Fragment } from "react"
 import { css } from "@emotion/css"
 import type { AnyCircuitElement, PcbTraceError } from "circuit-json"
-import { zIndexMap } from "lib/util/z-index-map"
-import { type Matrix, applyToPoint, identity } from "transformation-matrix"
-import { useGlobalStore } from "../global-store"
-import { getPopupPosition } from "lib/util/getPopupPosition"
 import type { PcbViaClearanceError } from "circuit-json"
-import { findErrorElementById, getErrorId } from "lib/util/get-error-id"
 import {
   buildErrorPreviewElementIndexes,
   getErrorFocusPoint,
 } from "lib/util/error-preview"
+import { findErrorElementById, getErrorId } from "lib/util/get-error-id"
+import { getPopupPosition } from "lib/util/getPopupPosition"
+import { zIndexMap } from "lib/util/z-index-map"
+import type React from "react"
+import { Fragment, useMemo, useRef } from "react"
+import { type Matrix, applyToPoint, identity } from "transformation-matrix"
+import { useGlobalStore } from "../global-store"
 import { FocusMarkerSVG } from "./FocusMarkerSVG"
 
 interface Props {
@@ -68,6 +69,16 @@ const errorMessageStyles = css`
   color: red;
 `
 
+const EMPTY_ELEMENTS: AnyCircuitElement[] = []
+
+function getComponentElementId(component: AnyCircuitElement): string {
+  if (component.type === "source_component") {
+    return component.source_component_id
+  }
+  if (component.type === "pcb_component") return component.pcb_component_id
+  return "component"
+}
+
 export const ErrorOverlay = ({
   children,
   transform = identity(),
@@ -83,6 +94,71 @@ export const ErrorOverlay = ({
     }),
   )
   const activeErrorId = focusedErrorId ?? hoveredErrorId
+  const overlayElements = elements ?? EMPTY_ELEMENTS
+  const traceErrors = useMemo(
+    () =>
+      overlayElements.filter(
+        (element): element is PcbTraceError =>
+          element.type === "pcb_trace_error" &&
+          !element.message?.includes("Multiple components found with name"),
+      ),
+    [overlayElements],
+  )
+  const viaClearanceErrors = useMemo(
+    () =>
+      overlayElements.filter(
+        (element): element is PcbViaClearanceError =>
+          element.type === "pcb_via_clearance_error",
+      ),
+    [overlayElements],
+  )
+  const componentErrors = useMemo(
+    () =>
+      overlayElements.filter(
+        (element): element is PcbTraceError =>
+          element.type === "pcb_trace_error" &&
+          Boolean(
+            element.message?.includes("Multiple components found with name"),
+          ),
+      ),
+    [overlayElements],
+  )
+  const elementIndexes = useMemo(
+    () => buildErrorPreviewElementIndexes(overlayElements),
+    [overlayElements],
+  )
+  const focusedErrorElement = useMemo(
+    () => findErrorElementById(overlayElements, activeErrorId),
+    [activeErrorId, overlayElements],
+  )
+  const componentErrorTargets = useMemo(
+    () =>
+      componentErrors.map((error, errorIndex) => {
+        const componentName =
+          ("component_name" in error && typeof error.component_name === "string"
+            ? error.component_name
+            : undefined) ?? error.message?.match(/name "([^"]+)"/)?.[1]
+        if (!componentName) {
+          return { components: [], error, errorIndex }
+        }
+
+        const components = overlayElements.filter(
+          (component) =>
+            (component.type === "source_component" &&
+              component.name === componentName) ||
+            (component.type === "pcb_component" &&
+              overlayElements.some(
+                (sourceComponent) =>
+                  sourceComponent.type === "source_component" &&
+                  sourceComponent.source_component_id ===
+                    component.source_component_id &&
+                  sourceComponent.name === componentName,
+              )),
+        )
+        return { components, error, errorIndex }
+      }),
+    [componentErrors, overlayElements],
+  )
 
   if (!elements) {
     return (
@@ -92,24 +168,6 @@ export const ErrorOverlay = ({
     )
   }
 
-  const traceErrors = elements.filter(
-    (el): el is PcbTraceError =>
-      el.type === "pcb_trace_error" &&
-      !el.message?.includes("Multiple components found with name"),
-  )
-  const viaClearanceErrors = elements.filter(
-    (el): el is PcbViaClearanceError => el.type === "pcb_via_clearance_error",
-  )
-
-  const componentErrors = elements.filter(
-    (el): el is PcbTraceError =>
-      el.type === "pcb_trace_error" &&
-      el.message?.includes("Multiple components found with name"),
-  )
-
-  const elementIndexes = buildErrorPreviewElementIndexes(elements)
-
-  const focusedErrorElement = findErrorElementById(elements, activeErrorId)
   const getScreenErrorCenter = (error: AnyCircuitElement) => {
     const focusCenter = getErrorFocusPoint({
       error,
@@ -308,31 +366,13 @@ export const ErrorOverlay = ({
           </Fragment>
         )
       })}
-      {componentErrors.map((el: any, index) => {
-        const componentName =
-          el.component_name || el.message?.match(/name "([^"]+)"/)?.[1]
-        if (!componentName) return null
-
-        const components =
-          elements?.filter(
-            (comp) =>
-              (comp.type === "source_component" &&
-                comp.name === componentName) ||
-              (comp.type === "pcb_component" &&
-                elements?.find(
-                  (src) =>
-                    src.type === "source_component" &&
-                    src.source_component_id === comp.source_component_id &&
-                    src.name === componentName,
-                )),
-          ) || []
-
-        const errorId = getErrorId(el, index)
+      {componentErrorTargets.map(({ components, error, errorIndex }) => {
+        const errorId = getErrorId(error, errorIndex)
         const isHighlighted = activeErrorId === errorId
 
         if (!isHighlighted && !isShowingDRCErrors) return null
 
-        return components.map((comp, compIndex) => {
+        return components.map((comp) => {
           let center = { x: 0, y: 0 }
 
           if (comp.type === "pcb_component") {
@@ -363,7 +403,9 @@ export const ErrorOverlay = ({
           const popupPosition = getPopupPosition(screenCenter, containerRef)
 
           return (
-            <Fragment key={`${errorId}_${compIndex}`}>
+            <Fragment
+              key={`${errorId}_${comp.type}_${getComponentElementId(comp)}`}
+            >
               <svg
                 style={{
                   position: "absolute",
@@ -459,7 +501,7 @@ export const ErrorOverlay = ({
                     border: `1px solid ${isHighlighted ? "#ff4444" : "red"}`,
                   }}
                 >
-                  {el.message}
+                  {error.message}
                 </div>
               </div>
             </Fragment>

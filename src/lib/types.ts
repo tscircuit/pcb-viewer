@@ -112,6 +112,7 @@ export interface Oval extends PCBDrawingObject {
   y: number
   rX: number
   rY: number
+  ccw_rotation?: number
 }
 
 export interface Pill extends PCBDrawingObject {

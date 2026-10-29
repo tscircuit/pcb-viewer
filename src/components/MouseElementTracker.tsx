@@ -1,7 +1,12 @@
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import { distance } from "circuit-json"
+import {
+  createPrimitiveSpatialIndex,
+  getPrimitivesNearPoint,
+} from "lib/primitive-spatial-index"
 import type { Primitive } from "lib/types"
+import { getPrimitiveBoundingBox } from "lib/util/get-primitive-bounding-box"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
@@ -68,13 +73,19 @@ const isPointInsidePolygon = (
   return isInside
 }
 
-export const getPrimitivesUnderPoint = (
-  primitives: Primitive[],
-  rwPoint: { x: number; y: number },
-  transform: Matrix,
-  selectedLayer: LayerRef,
+export const getPrimitivesUnderPoint = ({
   includeHiddenTraces = false,
-): Primitive[] => {
+  primitives,
+  rwPoint,
+  selectedLayer,
+  transform,
+}: {
+  includeHiddenTraces?: boolean
+  primitives: Primitive[]
+  rwPoint: { x: number; y: number }
+  selectedLayer: LayerRef
+  transform: Matrix
+}): Primitive[] => {
   const newMousedPrimitives: Primitive[] = []
 
   for (const primitive of primitives) {
@@ -163,8 +174,9 @@ export const getPrimitivesUnderPoint = (
       w = (primitive as any).r * 2
       h = (primitive as any).r * 2
     } else if ("rX" in primitive && "rY" in primitive) {
-      w = primitive.rX * 2
-      h = primitive.rY * 2
+      const bounds = getPrimitiveBoundingBox(primitive)!
+      w = bounds.maxX - bounds.minX
+      h = bounds.maxY - bounds.minY
     } else {
       continue
     }
@@ -198,6 +210,10 @@ export const MouseElementTracker = ({
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
+  const primitiveSpatialIndex = useMemo(
+    () => createPrimitiveSpatialIndex(primitives),
+    [primitives],
+  )
 
   useEffect(() => {
     setMousedPrimitives([])
@@ -295,20 +311,27 @@ export const MouseElementTracker = ({
     return highlightedPrimitives
   }, [mousedPrimitives, transform])
 
-  const handleInteraction = (
-    x: number,
-    y: number,
-    transform: Matrix,
-    primitives: Primitive[],
-  ) => {
+  const handleInteraction = ({
+    screenPoint,
+    transform,
+  }: {
+    screenPoint: { x: number; y: number }
+    transform: Matrix
+  }) => {
+    const { x, y } = screenPoint
     setMousePos({ x, y })
     const rwPoint = applyToPoint(inverse(transform), { x, y })
-    const newMousedPrimitives = getPrimitivesUnderPoint(
-      primitives,
+    const nearbyPrimitives = getPrimitivesNearPoint({
+      point: rwPoint,
+      realToScreenScale: transform.a,
+      spatialIndex: primitiveSpatialIndex,
+    })
+    const newMousedPrimitives = getPrimitivesUnderPoint({
+      primitives: nearbyPrimitives,
       rwPoint,
-      transform,
       selectedLayer,
-    )
+      transform,
+    })
 
     if (
       ifSetsMatchExactly(
@@ -328,11 +351,12 @@ export const MouseElementTracker = ({
       ref={containerRef}
       style={{ position: "relative", width: "100%", height: "100%" }}
       onMouseMove={(e) => {
+        if (e.buttons !== 0) return
         if (transform) {
           const rect = e.currentTarget.getBoundingClientRect()
           const x = e.clientX - rect.left
           const y = e.clientY - rect.top
-          handleInteraction(x, y, transform, primitives)
+          handleInteraction({ screenPoint: { x, y }, transform })
         }
       }}
       onTouchStart={(e) => {
@@ -341,7 +365,7 @@ export const MouseElementTracker = ({
           const rect = e.currentTarget.getBoundingClientRect()
           const x = touch.clientX - rect.left
           const y = touch.clientY - rect.top
-          handleInteraction(x, y, transform, primitives)
+          handleInteraction({ screenPoint: { x, y }, transform })
         }
       }}
     >

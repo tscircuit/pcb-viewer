@@ -12,6 +12,7 @@ import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
 import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
 import { useGlobalStore } from "../global-store"
+import { getScreenSnappingPoints } from "lib/get-screen-snapping-points"
 import { DimensionSnapGuides } from "./DimensionSnapGuides"
 
 interface Props {
@@ -209,16 +210,25 @@ export const DimensionOverlay = ({
   }, [elementBoundingBoxes, primitiveSnappingPoints])
 
   const snappingPointsWithScreen = useMemo(() => {
-    return snappingPoints.map((snap, index) => ({
-      ...snap,
-      id: `${index}-${snap.anchor}`,
-      screenPoint: applyToPoint(transform!, snap.point),
-    }))
-  }, [snappingPoints, transform])
+    return getScreenSnappingPoints({
+      snappingPoints,
+      realToScreenTransform: transform!,
+      isEnabled: measureToolArmed || dimensionToolStretching,
+    })
+  }, [snappingPoints, transform, measureToolArmed, dimensionToolStretching])
 
   const findSnap = useCallback(
     (rwPoint: { x: number; y: number }) => {
-      if (snappingPointsWithScreen.length === 0) {
+      let screenSnappingPoints = snappingPointsWithScreen
+      if (screenSnappingPoints.length === 0) {
+        screenSnappingPoints = getScreenSnappingPoints({
+          snappingPoints,
+          realToScreenTransform: transform!,
+          isEnabled: true,
+        })
+      }
+
+      if (screenSnappingPoints.length === 0) {
         return { point: rwPoint, id: null as string | null }
       }
 
@@ -229,7 +239,7 @@ export const DimensionOverlay = ({
         point: { x: number; y: number }
       } | null = null
 
-      for (const snap of snappingPointsWithScreen) {
+      for (const snap of screenSnappingPoints) {
         const dx = snap.screenPoint.x - screenPoint.x
         const dy = snap.screenPoint.y - screenPoint.y
         const distance = Math.hypot(dx, dy)
@@ -250,7 +260,7 @@ export const DimensionOverlay = ({
 
       return { point: bestMatch.point, id: bestMatch.id }
     },
-    [snappingPointsWithScreen, transform],
+    [snappingPoints, snappingPointsWithScreen, transform],
   )
 
   useEffect(() => {

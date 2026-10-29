@@ -19,16 +19,16 @@ import {
   RenderingEngineContext,
 } from "./components/RenderingEngineContext"
 import type { StateProps } from "./global-store"
+import { useAnimationFrameTransformState } from "./hooks/useAnimationFrameTransformState"
 import {
   STORAGE_KEYS,
   getStoredString,
   setStoredString,
 } from "./hooks/useLocalStorage"
+import { usePcbComponentSearchFocus } from "./hooks/usePcbComponentSearchFocus"
 import type { PcbViewerController } from "./hooks/usePcbViewerController"
 import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
 import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
-
-import { usePcbComponentSearchFocus } from "./hooks/usePcbComponentSearchFocus"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -101,7 +101,8 @@ export const PCBViewer = ({
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false)
   const contextMenuOpenRef = useRef(false)
   const [ref, refDimensions] = useMeasure()
-  const [transform, setTransformInternal] = useState(defaultTransform)
+  const { transform, setTransform: setTransformOnAnimationFrame } =
+    useAnimationFrameTransformState(defaultTransform)
   const shouldAllowCanvasInteraction = useCallback(
     (event: MouseEvent | TouchEvent | WheelEvent) => {
       if (contextMenuOpenRef.current) return false
@@ -124,7 +125,7 @@ export const PCBViewer = ({
     cancelDrag: cancelPanDrag,
   } = useMouseMatrixTransform({
     transform,
-    onSetTransform: setTransformInternal,
+    onSetTransform: setTransformOnAnimationFrame,
     enabled: isInteractionEnabled && !isContextMenuOpen,
     shouldDrag: shouldAllowCanvasInteraction,
   })

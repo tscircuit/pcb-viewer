@@ -4,9 +4,13 @@ import type {
   PcbSmtPadRotatedPill,
 } from "circuit-json"
 import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
-import { getTraceOverlayInfo } from "lib/get-trace-overlay-text"
+import {
+  type TraceOverlayElementIndex,
+  createTraceOverlayElementIndex,
+  getTraceOverlayInfo,
+} from "lib/get-trace-overlay-text"
 import { zIndexMap } from "lib/util/z-index-map"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useGlobalStore } from "../global-store"
 import type { HighlightedPrimitive } from "./MouseElementTracker"
 
@@ -89,11 +93,11 @@ const layerColorHightlightMap = {
 export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
-  elements,
+  traceOverlayElementIndex,
 }: {
-  elements: AnyCircuitElement[]
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
+  traceOverlayElementIndex: TraceOverlayElementIndex
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -144,7 +148,7 @@ export const HighlightedPrimitiveBoxWithText = ({
   }
   // In HighlightedPrimitiveBoxWithText component
   if (primitiveElement.type === "pcb_trace") {
-    const traceTextContext = { primitiveElement, elements }
+    const traceTextContext = { primitiveElement, traceOverlayElementIndex }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
     if (!overlayInfo) return null
 
@@ -265,6 +269,10 @@ export const ElementOverlayBox = ({
       s.is_moving_component,
       s.is_showing_multiple_traces_length,
     ])
+  const traceOverlayElementIndex = useMemo(
+    () => createTraceOverlayElementIndex(elements),
+    [elements],
+  )
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
@@ -278,7 +286,7 @@ export const ElementOverlayBox = ({
   primitives = filterTracesIfMultiple({
     primitives,
     is_showing_multiple_traces_length,
-    elements,
+    traceOverlayElementIndex,
   })
 
   return (
@@ -289,7 +297,7 @@ export const ElementOverlayBox = ({
             key={primitive._pcb_drawing_object_id}
             primitive={primitive}
             mousePos={mousePos}
-            elements={elements}
+            traceOverlayElementIndex={traceOverlayElementIndex}
           />
         ))}
     </div>

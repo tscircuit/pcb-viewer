@@ -1,30 +1,31 @@
+import { css } from "@emotion/css"
+import type { LayerRef } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
+import { useHotKey } from "hooks/useHotKey"
+import { useIsSmallScreen } from "hooks/useIsSmallScreen"
+import { useMobileTouch } from "hooks/useMobileTouch"
+import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
+import { getCopperLayerRefsFromElements } from "lib/copper-layers"
+import { zIndexMap } from "lib/util/z-index-map"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
+import packageJson from "../../package.json"
+import { useGlobalStore } from "../global-store"
 import type {
   PadComponent,
   ViewSchematicComponentEvent,
 } from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
-import {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useLayoutEffect,
-} from "react"
-import { css } from "@emotion/css"
-import { type LayerRef } from "circuit-json"
-import type { AnyCircuitElement } from "circuit-json"
-import { getCopperLayerRefsFromElements } from "lib/copper-layers"
-import { LAYER_NAME_TO_COLOR } from "lib/Drawer"
-import { useGlobalStore } from "../global-store"
-import packageJson from "../../package.json"
-import { useHotKey } from "hooks/useHotKey"
-import { zIndexMap } from "lib/util/z-index-map"
-import { useIsSmallScreen } from "hooks/useIsSmallScreen"
-import { useMobileTouch } from "hooks/useMobileTouch"
-import { VisibilityContextMenu } from "./VisibilityContextMenu"
 import { ComponentSearch } from "./ComponentSearch"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
+import { VisibilityContextMenu } from "./VisibilityContextMenu"
 
 interface Props {
   getComponentAtPoint?: (point: { x: number; y: number }) =>
@@ -277,7 +278,10 @@ export const ToolbarOverlay = ({
     }
   }, [])
 
-  const availableLayers = getCopperLayerRefsFromElements(elements ?? [])
+  const availableLayers = useMemo(
+    () => getCopperLayerRefsFromElements(elements ?? []),
+    [elements],
+  )
 
   const processedLayers = availableLayers
 

@@ -22,7 +22,12 @@ const stats = {
   errors: [] as string[],
   lastView: null as {
     transform: Record<string, number>
-    options: { copperPourOpacity?: number; showCopperPours?: boolean }
+    options: {
+      copperPourOpacity?: number
+      showCopperPours?: boolean
+      highlightedElementIds?: string[]
+      xRayElementIds?: string[]
+    }
   } | null,
 }
 const searchParams = new URLSearchParams(location.search)
@@ -196,7 +201,31 @@ async function mount(
           : []),
       ] as AnyCircuitElement[])
   if (scenario === "xray-unsupported" || scenario === "controlled-xray")
-    elements = xRayScene
+    elements = [
+      ...xRayScene,
+      ...["top", "bottom"].map((layer) => ({
+        type: "pcb_copper_pour" as const,
+        pcb_copper_pour_id: `pour_a_${layer}`,
+        source_net_id: "net_a",
+        layer: layer as "top" | "bottom",
+        shape: "rect" as const,
+        center: { x: 0, y: 10 },
+        width: 4,
+        height: 4,
+        covered_with_solder_mask: false,
+      })),
+      {
+        type: "pcb_copper_pour",
+        pcb_copper_pour_id: "pour_b",
+        source_net_id: "net_b",
+        layer: "top",
+        shape: "rect",
+        center: { x: 10, y: 10 },
+        width: 4,
+        height: 4,
+        covered_with_solder_mask: false,
+      },
+    ]
   const view = (
     <PCBViewer
       circuitJson={elements}

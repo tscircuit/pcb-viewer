@@ -46,9 +46,46 @@ try {
     () => window.gpuViewerTest.stats.renderCompletions === 1,
   )
   assert.equal(await page.locator('[data-x-ray-net-active="false"]').count(), 1)
+  // Pours have no interaction primitives, but must follow hovered electrical nets.
+  const highlightedIds = () =>
+    page.evaluate(
+      () =>
+        window.gpuViewerTest.stats.lastView?.options.highlightedElementIds ??
+        [],
+    )
+  await page.mouse.move(250, 300)
+  await page.waitForFunction(() =>
+    window.gpuViewerTest.stats.lastView?.options.highlightedElementIds?.includes(
+      "pour_a_top",
+    ),
+  )
+  assert((await highlightedIds()).includes("pour_a_bottom"))
+  assert(
+    !(await highlightedIds()).includes("pour_b"),
+    "other pads on the same component must not highlight unrelated pours",
+  )
+  await page.mouse.move(250, 420)
+  await page.waitForFunction(() =>
+    window.gpuViewerTest.stats.lastView?.options.highlightedElementIds?.includes(
+      "pour_b",
+    ),
+  )
+  assert(!(await highlightedIds()).includes("pour_a_top"))
+  await page.mouse.move(650, 550)
+  await page.waitForFunction(
+    () =>
+      (window.gpuViewerTest.stats.lastView?.options.highlightedElementIds
+        ?.length ?? 0) === 0,
+  )
   await page.mouse.click(250, 300)
   await page.getByRole("menuitem", { name: "X-Ray CLK", exact: true }).click()
   await page.waitForSelector('[data-x-ray-net-active="true"]')
+  const xRayIds = await page.evaluate(
+    () => window.gpuViewerTest.stats.lastView?.options.xRayElementIds ?? [],
+  )
+  assert(xRayIds.includes("pour_a_top"))
+  assert(xRayIds.includes("pour_a_bottom"))
+  assert(!xRayIds.includes("pour_b"))
   assert.equal(
     await page.evaluate(() => window.gpuViewerTest.stats.renderCompletions),
     1,

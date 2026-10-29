@@ -1,9 +1,10 @@
+import type { AnyCircuitElement } from "circuit-json"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
+  createTraceOverlayElementIndex,
   getAssociatedTraceName,
   getTraceOverlayInfo,
 } from "./get-trace-overlay-text"
-import type { AnyCircuitElement } from "circuit-json"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 /** Resolve copper through electrical connectivity, never through its component. */
 export function getElementNetId(
@@ -49,9 +50,13 @@ export function getXRayDisplayName(
   elements: AnyCircuitElement[],
   connectivityMap: ConnectivityMap,
 ): string {
+  const traceOverlayElementIndex = createTraceOverlayElementIndex(elements)
   const directName =
     element.type === "pcb_trace"
-      ? getAssociatedTraceName({ primitiveElement: element, elements })
+      ? getAssociatedTraceName({
+          primitiveElement: element,
+          traceOverlayElementIndex,
+        })
       : null
   if (directName) return directName
   const netId = getElementNetId(element, connectivityMap)
@@ -74,7 +79,7 @@ export function getXRayDisplayName(
   if (element.type === "pcb_trace") {
     const label = getTraceOverlayInfo({
       primitiveElement: element,
-      elements,
+      traceOverlayElementIndex,
     })?.name
     if (label) return label
   }

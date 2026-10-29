@@ -1,13 +1,14 @@
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
-import { zIndexMap } from "lib/util/z-index-map"
-import { useEffect, useRef } from "react"
-import { useMeasure } from "react-use"
-import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import colors from "lib/colors"
 import {
+  type HighlightablePcbWarning,
   getPcbWarningHighlightLabel,
   isHighlightablePcbWarning,
 } from "lib/util/get-pcb-warning-highlight"
+import { zIndexMap } from "lib/util/z-index-map"
+import { useEffect, useMemo, useRef } from "react"
+import { useMeasure } from "react-use"
+import { type Matrix, applyToPoint, identity } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 
 interface BaseCircuitElement {
@@ -26,6 +27,8 @@ interface PcbComponent extends BaseCircuitElement {
   obstructs_within_bounds: boolean
 }
 
+type PcbComponentId = PcbComponent["pcb_component_id"]
+
 interface Props {
   transform?: Matrix
   elements?: AnyCircuitElement[]
@@ -42,6 +45,20 @@ export const WarningGraphicsOverlay = ({
   const isShowingDrcWarnings = useGlobalStore(
     (state) => state.is_showing_drc_warnings,
   )
+  const { pcbComponentById, warnings } = useMemo(() => {
+    const pcbComponentById = new Map<PcbComponentId, PcbComponent>()
+    const warnings: HighlightablePcbWarning[] = []
+
+    for (const element of elements) {
+      if (element.type === "pcb_component") {
+        pcbComponentById.set(element.pcb_component_id, element)
+      } else if (isHighlightablePcbWarning(element)) {
+        warnings.push(element)
+      }
+    }
+
+    return { pcbComponentById, warnings }
+  }, [elements])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -54,19 +71,11 @@ export const WarningGraphicsOverlay = ({
 
     ctx.clearRect(0, 0, width, height)
 
-    const pcbComponents = elements.filter(
-      (el): el is PcbComponent => el.type === "pcb_component",
-    ) as PcbComponent[]
-
-    const warnings = elements.filter(isHighlightablePcbWarning)
-
     ctx.strokeStyle = colors.board.drc_warning
     ctx.lineWidth = 2
 
     warnings.forEach((warning) => {
-      const component = pcbComponents.find(
-        (comp) => comp.pcb_component_id === warning.pcb_component_id,
-      )
+      const component = pcbComponentById.get(warning.pcb_component_id)
 
       if (!component) return
 
@@ -108,7 +117,14 @@ export const WarningGraphicsOverlay = ({
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelWidth / 2, labelY + labelHeight / 2)
     })
-  }, [elements, transform, width, height, isShowingDrcWarnings])
+  }, [
+    height,
+    isShowingDrcWarnings,
+    pcbComponentById,
+    transform,
+    warnings,
+    width,
+  ])
 
   if (!isShowingDrcWarnings) {
     return (

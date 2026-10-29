@@ -120,7 +120,10 @@ export const getPrimitiveSnapPoints = (
           anchor: "oval_bottom",
           point: { x: primitive.x, y: primitive.y + primitive.rY },
         },
-      ]
+      ].map(({ anchor, point }) => ({
+        anchor,
+        point: rotatePoint(point, primitive, primitive.ccw_rotation ?? 0),
+      }))
     }
     case "line": {
       const midPoint = {
