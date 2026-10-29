@@ -1,6 +1,11 @@
 import type { AnyCircuitElement } from "circuit-json"
 import { useEffect } from "react"
-import { applyToPoint, type Matrix } from "transformation-matrix"
+import {
+  type Matrix,
+  applyToPoint,
+  compose,
+  rotateDEG,
+} from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import { getPcbComponentFocus } from "../lib/get-pcb-component-focus"
 import { zIndexMap } from "../lib/util/z-index-map"
@@ -25,18 +30,25 @@ export const FocusedPcbComponentOverlay = ({
   }, [focusRequest, layer, selectLayer])
 
   if (!focus || !transform) return null
-  const { bounds } = focus
-  const a = applyToPoint(transform, { x: bounds.minX, y: bounds.minY })
-  const b = applyToPoint(transform, { x: bounds.maxX, y: bounds.maxY })
+  const { outline } = focus
+  const center = applyToPoint(transform, outline.center)
+  const rotatedTransform = compose(transform, rotateDEG(outline.rotation ?? 0))
+  const width =
+    outline.width * Math.hypot(rotatedTransform.a, rotatedTransform.b) + 8
+  const height =
+    outline.height * Math.hypot(rotatedTransform.c, rotatedTransform.d) + 8
+  const rotation = Math.atan2(rotatedTransform.b, rotatedTransform.a)
   return (
     <div
       data-focused-pcb-component-id={componentId}
       style={{
         position: "absolute",
-        left: Math.min(a.x, b.x) - 4,
-        top: Math.min(a.y, b.y) - 4,
-        width: Math.abs(b.x - a.x) + 8,
-        height: Math.abs(b.y - a.y) + 8,
+        left: center.x - width / 2,
+        top: center.y - height / 2,
+        width,
+        height,
+        transform: `rotate(${rotation}rad)`,
+        transformOrigin: "center",
         border: "2px solid #3399ff",
         borderRadius: 4,
         boxSizing: "border-box",

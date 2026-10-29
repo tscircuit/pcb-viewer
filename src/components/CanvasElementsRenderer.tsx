@@ -66,6 +66,7 @@ export interface CanvasElementsRendererProps {
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
+  onSearchComponent?: (pcbComponentId: string) => void
   focusedPcbComponent?: { pcbComponentId: string } | null
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
@@ -445,6 +446,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         >
           <ToolbarOverlay
             elements={elements}
+            onSearchComponent={props.onSearchComponent}
             getNetAtPoint={getNetAtPoint}
             xRayNetIds={xRayNetIds}
             onXRayNetsChange={setXRayNetIds}

@@ -22,6 +22,7 @@ import type {
   ViewSchematicComponentEvent,
 } from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
+import { ComponentSearch } from "./ComponentSearch"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 import { VisibilityContextMenu } from "./VisibilityContextMenu"
@@ -37,6 +38,7 @@ interface Props {
   xRayNetIds?: readonly string[]
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
+  onSearchComponent?: (pcbComponentId: string) => void
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -154,6 +156,7 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
 export const ToolbarOverlay = ({
   children,
   elements,
+  onSearchComponent,
   onContextMenuOpenChange,
   getNetAtPoint,
   getComponentAtPoint,
@@ -534,6 +537,7 @@ export const ToolbarOverlay = ({
       </div>
       <div
         data-toolbar-overlay
+        className={css`&:focus-within { opacity: 1 !important; }`}
         onTouchStart={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
@@ -599,6 +603,12 @@ export const ToolbarOverlay = ({
             </div>
           )}
         </ToolbarButton>
+        {onSearchComponent && (
+          <ComponentSearch
+            elements={elements ?? []}
+            onSelect={onSearchComponent}
+          />
+        )}
         <ToolbarErrorDropdown
           elements={elements}
           isOpen={isErrorsOpen}

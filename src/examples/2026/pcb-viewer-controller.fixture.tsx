@@ -53,9 +53,13 @@ export default function PcbViewerControllerDemo() {
       <div style={{ padding: 16 }}>
         <h3 style={{ margin: "0 0 8px" }}>PCB viewer controller</h3>
         <p>
-          Focus U1 on the top layer or U2 on the bottom layer. The viewer
-          centers the component, selects its layer, and outlines it in blue. Pan
-          away and click the same button again to refocus.
+          Use Search in the viewer toolbar to find U1 or U2, then click a result
+          or press Enter. Search zooms with surrounding context and highlights
+          the component for three seconds. Click Search again or press Escape to
+          close it. You can also focus U1 on the top layer or U2 on the bottom
+          layer with the buttons below. The viewer centers the component,
+          selects its layer, and outlines it in blue. Pan away and click the
+          same button again to refocus.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => focusPcbComponent("component_0")}>

@@ -439,7 +439,10 @@ export const DimensionOverlay = ({
           containerRef.current.blur()
         }
       }}
-      onClick={() => {
+      onClick={(event) => {
+        // Toolbar controls keep their own focus for typing and keyboard navigation.
+        if ((event.target as HTMLElement).closest("[data-toolbar-overlay]"))
+          return
         if (containerRef.current) {
           containerRef.current.focus()
         }
