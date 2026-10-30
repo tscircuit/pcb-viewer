@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { PCBViewer } from "../../../PCBViewer"
+import { calculateBoardSizeKey } from "../../../lib/calculate-board-size-key"
 import type { AnyCircuitElement, PcbBoard, PcbSmtPad } from "circuit-json"
 
 // Helper to create a basic circuit with a board and some components
@@ -190,22 +191,15 @@ export const BoardSizeChange = () => {
  * This test displays the calculated boardSizeKey alongside the viewer
  * to help verify the key is changing correctly and triggering auto-resize.
  *
- * The boardSizeKey is calculated as:
- * - "empty" if circuitJson is undefined or empty
- * - "no-board" if no pcb_board element exists
- * - outline coordinates joined if board has outline
- * - "{width}_{height}" otherwise
+ * The boardSizeKey tracks the positions, dimensions and outlines of all boards
+ * and panels, while ignoring component updates.
  */
 export const BoardSizeKeyVerification = () => {
   const [width, setWidth] = useState(50)
   const [height, setHeight] = useState(50)
 
-  // Calculate what the boardSizeKey would be
-  const calculateExpectedKey = () => {
-    return `${width}_${height}`
-  }
-
   const circuit = createCircuit(width, height, 2)
+  const boardSizeKey = calculateBoardSizeKey(circuit)
 
   return (
     <div>
@@ -270,9 +264,9 @@ export const BoardSizeKeyVerification = () => {
             overflowX: "auto",
           }}
         >
-          <strong>Expected boardSizeKey:</strong>
+          <strong>boardSizeKey:</strong>
           <br />
-          <code style={{ color: "#4CAF50" }}>{calculateExpectedKey()}</code>
+          <code style={{ color: "#4CAF50" }}>{boardSizeKey}</code>
         </div>
       </div>
 
