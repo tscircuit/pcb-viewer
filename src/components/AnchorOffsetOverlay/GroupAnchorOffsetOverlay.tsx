@@ -21,6 +21,10 @@ interface Props {
   containerHeight: number
 }
 
+const isRelativeToGroupPositionMode = (positionMode?: string) =>
+  positionMode === "relative_to_group_anchor" ||
+  positionMode === "relative_to_pcb_group"
+
 /**
  * Overlay that shows offsets from group anchors to their components and groups.
  * When the view toggle is on, offsets are always shown. Hover narrows the
@@ -65,8 +69,8 @@ export const GroupAnchorOffsetOverlay = ({
 
     const group = groups.find((g) => g.pcb_group_id === groupId)
     if (
-      group?.position_mode === "relative_to_group_anchor" &&
-      group.positioned_relative_to_pcb_group_id
+      isRelativeToGroupPositionMode(group?.position_mode) &&
+      group?.positioned_relative_to_pcb_group_id
     ) {
       // This group is positioned relative to another group, so add that parent too
       collectParentGroups(group.positioned_relative_to_pcb_group_id, collected)
@@ -82,7 +86,7 @@ export const GroupAnchorOffsetOverlay = ({
 
     // If component is directly positioned relative to a group anchor
     if (
-      component.position_mode === "relative_to_group_anchor" &&
+      isRelativeToGroupPositionMode(component.position_mode) &&
       component.positioned_relative_to_pcb_group_id
     ) {
       collectParentGroups(
@@ -101,7 +105,7 @@ export const GroupAnchorOffsetOverlay = ({
   const componentTargets = components
     .map((component) => {
       if (
-        component.position_mode === "relative_to_group_anchor" &&
+        isRelativeToGroupPositionMode(component.position_mode) &&
         component.positioned_relative_to_pcb_group_id
       ) {
         const parentGroup = groups.find(
@@ -139,7 +143,7 @@ export const GroupAnchorOffsetOverlay = ({
   const groupTargets = groups
     .map((group) => {
       if (
-        group.position_mode === "relative_to_group_anchor" &&
+        isRelativeToGroupPositionMode(group.position_mode) &&
         group.positioned_relative_to_pcb_group_id
       ) {
         const parentGroup = groups.find(
@@ -188,7 +192,8 @@ export const GroupAnchorOffsetOverlay = ({
 
   const sharedTargets: AnchorOffsetTarget[] = targetEntries
     .map((target): AnchorOffsetTarget | null => {
-      const anchor = target.parentGroup.anchor_position
+      const anchor =
+        target.parentGroup.anchor_position ?? target.parentGroup.center
       if (!anchor) return null
 
       if (target.type === "component") {
@@ -203,13 +208,14 @@ export const GroupAnchorOffsetOverlay = ({
           display_offset_y: target.component.display_offset_y,
         }
       }
-      // group - use anchor_position for anchor-to-anchor offsets
-      if (!target.group.anchor_position) return null
+      // group - use anchor_position (fallback to center) for anchor-to-anchor offsets
+      const groupAnchor = target.group.anchor_position ?? target.group.center
+      if (!groupAnchor) return null
       return {
         id: `${target.parentGroup.pcb_group_id}-${target.group.pcb_group_id}-${target.type}`,
         anchor,
         anchor_id: target.parentGroup.pcb_group_id,
-        target: target.group.anchor_position,
+        target: groupAnchor,
         type: "group",
         display_offset_x: target.group.display_offset_x,
         display_offset_y: target.group.display_offset_y,
