@@ -1,5 +1,23 @@
-import type React from "react"
 import { useMobileTouch } from "hooks/useMobileTouch"
+import type React from "react"
+
+export const getToolbarButtonStyle = (
+  isSmallScreen: boolean,
+): React.CSSProperties => ({
+  backgroundColor: "#1F1F1F",
+  border: "1px solid #666",
+  margin: 0,
+  padding: 4,
+  paddingLeft: isSmallScreen ? 8 : 6,
+  paddingRight: isSmallScreen ? 8 : 6,
+  borderRadius: 2,
+  color: "#eee",
+  cursor: "pointer",
+  fontSize: 12,
+  height: "fit-content",
+  userSelect: "none",
+  whiteSpace: "nowrap",
+})
 
 export interface ToolbarButtonProps {
   children: React.ReactNode
@@ -24,19 +42,7 @@ export const ToolbarButton = ({
       {...props}
       {...touchHandlers}
       style={{
-        backgroundColor: "#1F1F1F",
-        border: "1px solid #666",
-        margin: 0,
-        padding: 4,
-        paddingLeft: isSmallScreen ? 8 : 6,
-        paddingRight: isSmallScreen ? 8 : 6,
-        borderRadius: 2,
-        color: "#eee",
-        cursor: "pointer",
-        fontSize: 12,
-        height: "fit-content",
-        userSelect: "none",
-        whiteSpace: "nowrap",
+        ...getToolbarButtonStyle(isSmallScreen),
         ...touchStyle,
         ...props.style,
       }}

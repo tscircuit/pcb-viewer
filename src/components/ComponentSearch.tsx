@@ -1,6 +1,8 @@
 import { css } from "@emotion/css"
 import type { AnyCircuitElement } from "circuit-json"
+import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { getToolbarButtonStyle } from "./ToolbarButton"
 
 const buttonClass = css`
   background: #1f1f1f;
@@ -20,6 +22,7 @@ export const ComponentSearch = ({
   elements: AnyCircuitElement[]
   onSelect: (pcbComponentId: string) => void
 }) => {
+  const isSmallScreen = useIsSmallScreen()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [activeComponentId, setActiveComponentId] = useState<string | null>(
@@ -123,14 +126,15 @@ export const ComponentSearch = ({
         className={buttonClass}
         aria-label="Search components"
         title="Search components"
-        style={{ display: "flex", alignItems: "center", padding: "4px 6px" }}
+        style={getToolbarButtonStyle(isSmallScreen)}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen(!open)}
       >
         <svg
-          width="14"
-          height="14"
+          width="1em"
+          height="1em"
+          style={{ verticalAlign: "middle" }}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
