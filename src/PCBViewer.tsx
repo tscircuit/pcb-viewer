@@ -1,10 +1,10 @@
+import { getPcbViewportBounds } from "lib/get-pcb-viewport-bounds"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import type { GraphicsObject } from "graphics-debug"
 import { applyEditEvents } from "lib/apply-edit-events"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
-import { getPcbViewportBounds } from "lib/get-pcb-viewport-bounds"
 import { ToastContainer } from "lib/toast"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -130,14 +130,13 @@ export const PCBViewer = ({
     shouldDrag: shouldAllowCanvasInteraction,
   })
 
-  const { focusComponent, cancelSearchAnimation, clearSearchFocus } =
-    usePcbComponentSearchFocus({
-      transform,
-      setTransform: setMouseTransform,
-      focusedPcbComponent,
-      setFocusedPcbComponent,
-      circuitJson,
-    })
+  const { focusComponent, cancelSearchAnimation } = usePcbComponentSearchFocus({
+    transform,
+    setTransform: setMouseTransform,
+    focusedPcbComponent,
+    setFocusedPcbComponent,
+    circuitJson,
+  })
 
   const setTransform = useCallback(
     (next: Matrix) => {
@@ -317,7 +316,6 @@ export const PCBViewer = ({
               onViewSchematicComponent={onViewSchematicComponent}
               focusedPcbComponent={focusedPcbComponent}
               onSearchComponent={focusSearchComponent}
-              onSearchDismiss={clearSearchFocus}
               cancelPanDrag={cancelPanDrag}
               onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}

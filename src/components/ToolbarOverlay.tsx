@@ -25,7 +25,6 @@ import type { XRayGroup } from "../lib/x-ray-net"
 import { ComponentSearch } from "./ComponentSearch"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
-import { ToolbarIconButton } from "./ToolbarIconButton"
 import { VisibilityContextMenu } from "./VisibilityContextMenu"
 
 interface Props {
@@ -40,7 +39,6 @@ interface Props {
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onSearchComponent?: (pcbComponentId: string) => void
-  onSearchDismiss?: () => void
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -159,7 +157,6 @@ export const ToolbarOverlay = ({
   children,
   elements,
   onSearchComponent,
-  onSearchDismiss,
   onContextMenuOpenChange,
   getNetAtPoint,
   getComponentAtPoint,
@@ -610,7 +607,6 @@ export const ToolbarOverlay = ({
           <ComponentSearch
             elements={elements ?? []}
             onSelect={onSearchComponent}
-            onDismiss={onSearchDismiss}
           />
         )}
         <ToolbarErrorDropdown
@@ -633,16 +629,13 @@ export const ToolbarOverlay = ({
           </div>
         </ToolbarButton>
 
-        <ToolbarIconButton
+        <ToolbarButton
           isSmallScreen={isSmallScreen}
-          aria-label="Measure distance"
-          title="Measure distance"
-          aria-pressed={measureToolArmed}
           style={measureToolArmed ? { backgroundColor: "#444" } : {}}
           onClick={handleMeasureToolClick}
         >
-          📏
-        </ToolbarIconButton>
+          <div>📏</div>
+        </ToolbarButton>
 
         <ToolbarButton
           isSmallScreen={isSmallScreen}

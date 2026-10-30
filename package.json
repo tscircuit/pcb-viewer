@@ -18,7 +18,7 @@
     "cosmos-export": "cosmos-export",
     "test:copper-pour-x-ray": "bun run build && bun tests/copper-pour-x-ray/run.ts",
     "test:x-ray-net": "bun run build && bun tests/x-ray-net/run.ts",
-    "test:component-focus": "bun run build && bun tests/component-focus/run.ts && bun tests/component-focus/toolbar-and-clip.ts",
+    "test:component-focus": "bun run build && bun tests/component-focus/run.ts",
     "test:measurement-context-menu": "bun run build && bun tests/measurement-context-menu/run.ts",
     "test:sitara-interaction": "bun run build && bun tests/sitara-interaction/run.ts",
     "test:copper-pour-opacity": "bun run build && bun tests/copper-pour-opacity/run.ts",

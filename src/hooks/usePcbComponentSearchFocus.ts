@@ -1,11 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
-import {
-  type Dispatch,
-  type SetStateAction,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { type Matrix, compose, scale, translate } from "transformation-matrix"
 import type { getPcbComponentFocus } from "../lib/get-pcb-component-focus"
 import {
@@ -26,7 +20,7 @@ export const usePcbComponentSearchFocus = ({
   transform: Matrix
   setTransform: (transform: Matrix) => void
   focusedPcbComponent: FocusRequest
-  setFocusedPcbComponent: Dispatch<SetStateAction<FocusRequest>>
+  setFocusedPcbComponent: (request: FocusRequest) => void
   circuitJson?: AnyCircuitElement[]
 }) => {
   const animationFrameRef = useRef<number | null>(null)
@@ -35,13 +29,6 @@ export const usePcbComponentSearchFocus = ({
     cancelTransformAnimation(animationFrameRef.current)
     animationFrameRef.current = null
   }, [])
-
-  const clearSearchFocus = useCallback(() => {
-    cancelSearchAnimation()
-    const request = searchRequestRef.current
-    searchRequestRef.current = null
-    setFocusedPcbComponent((current) => (current === request ? null : current))
-  }, [cancelSearchAnimation, setFocusedPcbComponent])
 
   useEffect(() => cancelSearchAnimation, [cancelSearchAnimation])
   useEffect(() => {
@@ -92,5 +79,5 @@ export const usePcbComponentSearchFocus = ({
     [transform, setTransform, cancelSearchAnimation, setFocusedPcbComponent],
   )
 
-  return { focusComponent, cancelSearchAnimation, clearSearchFocus }
+  return { focusComponent, cancelSearchAnimation }
 }
