@@ -1,4 +1,4 @@
-import { findBoundsAndCenter } from "@tscircuit/circuit-json-util"
+import { getPcbViewportBounds } from "lib/get-pcb-viewport-bounds"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import type { GraphicsObject } from "graphics-debug"
@@ -169,13 +169,7 @@ export const PCBViewer = ({
   const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
-    const { center, width, height } = elements.some((e) =>
-      e.type.startsWith("pcb_"),
-    )
-      ? findBoundsAndCenter(
-          elements.filter((e) => e.type.startsWith("pcb_")) as any,
-        )
-      : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
+    const { center, width, height } = getPcbViewportBounds(elements)
     const scaleFactor =
       Math.min(
         (elmBounds.width ?? 0) / width,
