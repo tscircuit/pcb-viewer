@@ -1,0 +1,20 @@
+name: PR package preview
+
+on:
+  push:
+    branches: [preview/physical-board-framing]
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bunx pkg-pr-new@0.0.37 publish --comment=off
