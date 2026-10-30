@@ -8,8 +8,10 @@ export function getPcbViewportBounds(elements: AnyCircuitElement[]) {
   if (pcbElements.length === 0) {
     return { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
   }
-  const pcbBoards = pcbElements.filter(
-    (element) => element.type === "pcb_board",
+  const boardsAndPanels = pcbElements.filter(
+    (element) => element.type === "pcb_board" || element.type === "pcb_panel",
   )
-  return findBoundsAndCenter(pcbBoards.length > 0 ? pcbBoards : pcbElements)
+  return findBoundsAndCenter(
+    boardsAndPanels.length > 0 ? boardsAndPanels : pcbElements,
+  )
 }
