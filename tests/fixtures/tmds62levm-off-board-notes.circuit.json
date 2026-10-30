@@ -1,0 +1,209 @@
+[
+  {
+    "type": "pcb_board",
+    "pcb_board_id": "pcb_board_0",
+    "source_board_id": "source_board_0",
+    "subcircuit_id": "subcircuit_source_group_0",
+    "center": {
+      "x": 68.00130671999999,
+      "y": 66.34479999999999
+    },
+    "thickness": 1.6,
+    "num_layers": 6,
+    "width": 136.02877543999998,
+    "height": 142.875762,
+    "outline": [
+      {
+        "x": 0,
+        "y": -5.093081
+      },
+      {
+        "x": 136.00261344,
+        "y": -5.093081
+      },
+      {
+        "x": 136.01569443999998,
+        "y": -5.08
+      },
+      {
+        "x": 136.01569443999998,
+        "y": 137.7696
+      },
+      {
+        "x": 136.00261344,
+        "y": 137.782681
+      },
+      {
+        "x": 0,
+        "y": 137.782681
+      },
+      {
+        "x": -0.013081,
+        "y": 137.7696
+      },
+      {
+        "x": 0,
+        "y": -5.093081
+      }
+    ],
+    "material": "fr4",
+    "min_trace_width": 0.1,
+    "min_via_hole_diameter": 0.2,
+    "min_via_pad_diameter": 0.3,
+    "min_via_hole_edge_to_via_hole_edge_clearance": 0.1,
+    "min_trace_to_hole_edge_clearance": 0.2,
+    "min_trace_to_pad_edge_clearance": 0.1,
+    "min_pad_edge_to_pad_edge_clearance": 0.1,
+    "min_plated_hole_drill_edge_to_drill_edge_clearance": 0.15,
+    "min_board_edge_clearance": 0.2
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1885",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 32.530206719999995,
+      "y": -28.7528
+    },
+    "font": "tscircuit2024",
+    "font_size": 2.54,
+    "layer": "top",
+    "text": "DOMLUR EXTENSION, BANGALORE-560 071",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1886",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 106.95220671999999,
+      "y": -35.1028
+    },
+    "font": "tscircuit2024",
+    "font_size": 2.54,
+    "layer": "top",
+    "text": "SCALE: 1",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1887",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 2.05528672,
+      "y": -25.826719999999998
+    },
+    "font": "tscircuit2024",
+    "font_size": 3.048,
+    "layer": "top",
+    "text": "MISTRAL",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1888",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 31.895206719999997,
+      "y": -23.0378
+    },
+    "font": "tscircuit2024",
+    "font_size": 2.54,
+    "layer": "top",
+    "text": "#60, ADARSH REGENT, 100'FT RING ROAD,",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1889",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 32.530206719999995,
+      "y": -16.6878
+    },
+    "font": "tscircuit2024",
+    "font_size": 3.9623999999999997,
+    "layer": "top",
+    "text": "MISTRAL SOLUTIONS PVT.LTD.,",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1890",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 88.581484,
+      "y": -33.584896
+    },
+    "font": "tscircuit2024",
+    "font_size": 2.54,
+    "layer": "top",
+    "text": "REV",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1891",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 95.02749599999999,
+      "y": -36.577016
+    },
+    "font": "tscircuit2024",
+    "font_size": 2.54,
+    "layer": "top",
+    "text": "E1-1",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_silkscreen_text",
+    "pcb_silkscreen_text_id": "pcb_silkscreen_text_1892",
+    "anchor_alignment": "bottom_left",
+    "anchor_position": {
+      "x": 0.9072067199999999,
+      "y": -35.1028
+    },
+    "font": "tscircuit2024",
+    "font_size": 2.54,
+    "layer": "top",
+    "text": "TITLE:",
+    "ccw_rotation": 0,
+    "pcb_component_id": "pcb_component_4852",
+    "subcircuit_id": "subcircuit_source_group_0"
+  },
+  {
+    "type": "pcb_component",
+    "pcb_component_id": "pcb_component_4852",
+    "center": {
+      "x": 32.542906720000005,
+      "y": 46.278800000000004
+    },
+    "width": 423.9419715199999,
+    "height": 180.6448,
+    "layer": "top",
+    "rotation": 0,
+    "source_component_id": "source_component_1585",
+    "subcircuit_id": "subcircuit_source_group_0",
+    "do_not_place": false,
+    "obstructs_within_bounds": false,
+    "is_allowed_to_be_off_board": false,
+    "position_mode": "relative_to_group_anchor",
+    "positioned_relative_to_pcb_board_id": "pcb_board_0",
+    "display_offset_x": -68.00130671999999,
+    "display_offset_y": -66.34479999999999
+  }
+]
