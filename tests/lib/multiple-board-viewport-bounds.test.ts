@@ -10,6 +10,7 @@ test("includes every physical board when fitting a multi-board scene", () => {
   const secondBoard = {
     ...board,
     pcb_board_id: "second_board",
+    outline: undefined,
     center: { x: board.center.x + 200, y: board.center.y },
   }
   expect(getPcbViewportBounds([...elements, secondBoard])).toEqual(
