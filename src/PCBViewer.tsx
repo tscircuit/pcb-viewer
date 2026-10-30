@@ -164,7 +164,10 @@ export const PCBViewer = ({
     () => calculateCircuitJsonKey(circuitJson),
     [circuitJson],
   )
-  const boardSizeKey = calculateBoardSizeKey(circuitJson)
+  const boardSizeKey = useMemo(
+    () => calculateBoardSizeKey(circuitJson),
+    [circuitJson],
+  )
 
   const resetTransform = () => {
     const elmBounds =

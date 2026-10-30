@@ -1,20 +1,27 @@
-import type { AnyCircuitElement, PcbBoard } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 
 export const calculateBoardSizeKey = (
   circuitJson?: AnyCircuitElement[],
 ): string => {
   if (!circuitJson) return "empty"
 
-  const board = circuitJson.find((e) => e.type === "pcb_board") as
-    | PcbBoard
-    | undefined
+  const boardSizeKeys = circuitJson
+    .filter(
+      (element) => element.type === "pcb_board" || element.type === "pcb_panel",
+    )
+    .map((element) =>
+      JSON.stringify([
+        element.type,
+        element.center.x,
+        element.center.y,
+        element.width,
+        element.height,
+        element.type === "pcb_board"
+          ? element.outline?.map(({ x, y }) => [x, y])
+          : undefined,
+      ]),
+    )
+    .sort()
 
-  if (!board) return "no-board"
-  const round = (n: number) => Math.round(n * 1000) / 1000
-
-  if (board.outline) {
-    return board.outline.map((o) => `${round(o.x)}_${round(o.y)}`).join(",")
-  }
-
-  return `${round(board.width!)}_${round(board.height!)}`
+  return boardSizeKeys.length > 0 ? boardSizeKeys.join(";") : "no-board"
 }
