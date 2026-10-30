@@ -1,6 +1,8 @@
 import { css } from "@emotion/css"
 import type { AnyCircuitElement } from "circuit-json"
+import { useIsSmallScreen } from "hooks/useIsSmallScreen"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { ToolbarIconButton } from "./ToolbarIconButton"
 
 const buttonClass = css`
   background: #1f1f1f;
@@ -16,10 +18,13 @@ const buttonClass = css`
 export const ComponentSearch = ({
   elements,
   onSelect,
+  onDismiss,
 }: {
   elements: AnyCircuitElement[]
   onSelect: (pcbComponentId: string) => void
+  onDismiss?: () => void
 }) => {
+  const isSmallScreen = useIsSmallScreen()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [activeComponentId, setActiveComponentId] = useState<string | null>(
@@ -71,11 +76,14 @@ export const ComponentSearch = ({
     setActiveComponentId(null)
     input.current?.focus()
     const closeOutside = (event: PointerEvent) => {
-      if (!container.current?.contains(event.target as Node)) setOpen(false)
+      if (!container.current?.contains(event.target as Node)) {
+        setOpen(false)
+        onDismiss?.()
+      }
     }
     document.addEventListener("pointerdown", closeOutside)
     return () => document.removeEventListener("pointerdown", closeOutside)
-  }, [open])
+  }, [open, onDismiss])
 
   const select = (id: string) => {
     onSelect(id)
@@ -113,20 +121,22 @@ export const ComponentSearch = ({
         if (event.key === "Escape") {
           event.stopPropagation()
           setOpen(false)
+          onDismiss?.()
           toggle.current?.focus()
         }
       }}
     >
-      <button
+      <ToolbarIconButton
         ref={toggle}
-        type="button"
-        className={buttonClass}
+        isSmallScreen={isSmallScreen}
         aria-label="Search components"
         title="Search components"
-        style={{ display: "flex", alignItems: "center", padding: "4px 6px" }}
         aria-expanded={open}
         aria-controls={panelId}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          setOpen(!open)
+          if (open) onDismiss?.()
+        }}
       >
         <svg
           width="14"
@@ -141,7 +151,7 @@ export const ComponentSearch = ({
           <circle cx="10.5" cy="10.5" r="6.5" />
           <path d="m16 16 5 5" />
         </svg>
-      </button>
+      </ToolbarIconButton>
       {open && (
         <div
           id={panelId}

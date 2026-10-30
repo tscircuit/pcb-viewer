@@ -40,21 +40,31 @@ export const FocusedPcbComponentOverlay = ({
   const rotation = Math.atan2(rotatedTransform.b, rotatedTransform.a)
   return (
     <div
-      data-focused-pcb-component-id={componentId}
+      data-pcb-focus-viewport
       style={{
         position: "absolute",
-        left: center.x - width / 2,
-        top: center.y - height / 2,
-        width,
-        height,
-        transform: `rotate(${rotation}rad)`,
-        transformOrigin: "center",
-        border: "2px solid #3399ff",
-        borderRadius: 4,
-        boxSizing: "border-box",
+        inset: 0,
+        overflow: "clip",
         pointerEvents: "none",
         zIndex: zIndexMap.elementOverlay,
       }}
-    />
+    >
+      <div
+        data-focused-pcb-component-id={componentId}
+        style={{
+          position: "absolute",
+          left: center.x - width / 2,
+          top: center.y - height / 2,
+          width,
+          height,
+          transform: `rotate(${rotation}rad)`,
+          transformOrigin: "center",
+          border: "2px solid #3399ff",
+          borderRadius: 4,
+          boxSizing: "border-box",
+          pointerEvents: "none",
+        }}
+      />
+    </div>
   )
 }
