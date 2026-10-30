@@ -28,3 +28,39 @@ test("handles coincident endpoints and stale selections after geometry changes",
   )
   expect(stale).toContain('d="" stroke="#66ccff"')
 })
+
+test("DimensionOverlay renders multiple sticky dimension arrows with transformed coordinates", async () => {
+  const { ContextProviders } = await import(
+    "../src/components/ContextProviders"
+  )
+  const { DimensionOverlay } = await import(
+    "../src/components/DimensionOverlay"
+  )
+  const html = renderToStaticMarkup(
+    <ContextProviders>
+      <DimensionOverlay
+        initialStickyDimensions={[
+          {
+            id: "sticky-1",
+            start: { x: 0, y: 0 },
+            end: { x: 30, y: 40 },
+          },
+          {
+            id: "sticky-2",
+            start: { x: 10, y: 15 },
+            end: { x: 25, y: 35 },
+          },
+        ]}
+      >
+        <div />
+      </DimensionOverlay>
+    </ContextProviders>,
+  )
+
+  expect(html).toContain('data-dimension-arrow="sticky-1"')
+  expect(html).toContain('data-dimension-arrow="sticky-2"')
+  expect(html).toContain("30.00")
+  expect(html).toContain("40.00")
+  expect(html).toContain("15.00")
+  expect(html).toContain("20.00")
+})
