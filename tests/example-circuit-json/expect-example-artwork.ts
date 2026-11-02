@@ -3,7 +3,6 @@ import "bun-match-svg"
 import { fileURLToPath } from "node:url"
 import { type Browser, chromium } from "playwright"
 import { createServer } from "vite"
-import viteConfig from "../../vite.config"
 
 type ExampleArtwork = {
   fixture: "keepout_rect" | "keepout_circle" | "transform"
@@ -15,8 +14,6 @@ export async function expectExampleArtwork({
   addComponents = 0,
 }: ExampleArtwork) {
   const server = await createServer({
-    ...viteConfig,
-    configFile: false,
     root: fileURLToPath(new URL("../../", import.meta.url)),
     server: { host: "127.0.0.1", port: 0 },
     logLevel: "error",
