@@ -1,30 +1,23 @@
 import { useState } from "react"
 import { PCBViewer } from "../../../PCBViewer"
-import { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
+import { createTransformExampleComponent } from "./create-transform-example-component"
 
 // Create a test component that maintains PCBViewer instance while updating circuit
 const PCBViewerTransformTest = () => {
   // Initial circuit with a single resistor
-  const [circuit, setCircuit] = useState([
-    { type: "pcb_component", pcb_component_id: "r1", x: 0, y: 0 },
+  const [circuit, setCircuit] = useState<AnyCircuitElement[]>([
     {
-      type: "pcb_smtpad",
-      pcb_component_id: "r1",
-      shape: "rect",
-      x: -1,
-      y: 0,
-      width: 0.8,
-      height: 1.2,
+      type: "pcb_board",
+      pcb_board_id: "transform_example_board",
+      center: { x: 10, y: 0 },
+      width: 40,
+      height: 20,
+      num_layers: 2,
+      material: "fr4",
+      thickness: 1.6,
     },
-    {
-      type: "pcb_smtpad",
-      pcb_component_id: "r1",
-      shape: "rect",
-      x: 1,
-      y: 0,
-      width: 0.8,
-      height: 1.2,
-    },
+    ...createTransformExampleComponent({ componentNumber: 1, pcbX: 0 }),
   ])
 
   // Track update count for debugging
@@ -32,35 +25,14 @@ const PCBViewerTransformTest = () => {
 
   // Add components to the right
   const addComponent = () => {
-    const newX = updateCount * 5 // Place each new component 5 units to the right
+    const pcbX = (updateCount + 1) * 5
     setCircuit((prev) => [
       ...prev,
-      {
-        type: "pcb_component",
-        pcb_component_id: `r${updateCount + 2}`,
-        x: newX,
-        y: 0,
-      },
-      {
-        type: "pcb_smtpad",
-        pcb_component_id: `r${updateCount + 2}`,
-        shape: "rect",
-        x: newX - 1,
-        y: 0,
-        width: 0.8,
-        height: 1.2,
-      },
-      {
-        type: "pcb_smtpad",
-        pcb_component_id: `r${updateCount + 2}`,
-        shape: "rect",
-        x: newX + 1,
-        y: 0,
-        width: 0.8,
-        height: 1.2,
-      },
+      ...createTransformExampleComponent({
+        componentNumber: updateCount + 2,
+        pcbX,
+      }),
     ])
-    console.log(circuit, "circuit")
     setUpdateCount((c) => c + 1)
   }
 
@@ -105,7 +77,7 @@ const PCBViewerTransformTest = () => {
       </div>
 
       <div style={{ height: "500px", border: "1px solid #ddd" }}>
-        <PCBViewer circuitJson={circuit as AnyCircuitElement[]} height={500} />
+        <PCBViewer circuitJson={circuit} height={500} />
       </div>
     </div>
   )
