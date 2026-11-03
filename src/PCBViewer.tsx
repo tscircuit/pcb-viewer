@@ -124,7 +124,7 @@ export const PCBViewer = ({
     setTransform: setMouseTransform,
     cancelDrag: cancelPanDrag,
   } = useMouseMatrixTransform({
-    transform,
+    initialTransform: defaultTransform,
     onSetTransform: setTransformOnAnimationFrame,
     enabled: isInteractionEnabled && !isContextMenuOpen,
     shouldDrag: shouldAllowCanvasInteraction,
