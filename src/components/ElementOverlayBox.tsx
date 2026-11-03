@@ -16,8 +16,8 @@ import type { HighlightedPrimitive } from "./MouseElementTracker"
 
 const containerStyle = {
   position: "absolute",
-  left: 0,
-  top: 0,
+  inset: 0,
+  overflow: "clip",
   pointerEvents: "none",
   color: "red",
   fontFamily: "sans-serif",
