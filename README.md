@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer.svg)](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer)
 
-[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com) &middot; [Open in CodeSandbox](https://codesandbox.io/p/github/tscircuit/pcb-viewer)
+[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com)
 
 Render Printed Circuit Boards w/ React
 
@@ -18,21 +18,40 @@ npm install @tscircuit/pcb-viewer
 
 There are two main ways to use the PCBViewer:
 
-### 1. Using Circuit Components
+`PCBViewer` does not take `children` — it renders `circuitJson`. There are two ways to get there.
 
-This approach allows you to declaratively define your circuit using React components:
+### 1. Compile JSX components with `@tscircuit/core` first
+
+```bash
+npm install @tscircuit/core
+```
+
+`Circuit` turns the declarative elements into circuit JSON; the viewer renders the result:
 
 ```tsx
-import React from "react"
+import React, { useEffect, useState } from "react"
+import { Circuit } from "@tscircuit/core"
+import type { AnyCircuitElement } from "circuit-json"
 import { PCBViewer } from "@tscircuit/pcb-viewer"
 
 export default () => {
+  const [circuitJson, setCircuitJson] = useState<AnyCircuitElement[]>([])
+
+  useEffect(() => {
+    const circuit = new Circuit()
+    circuit.add(
+      <board width="20mm" height="20mm">
+        <resistor name="R1" footprint="0805" resistance="10k" />
+        <capacitor name="C1" footprint="0603" capacitance="100nF" />
+      </board>,
+    )
+    circuit.render()
+    setCircuitJson(circuit.getCircuitJson())
+  }, [])
+
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer>
-        <resistor footprint="0805" resistance="10k" />
-        <capacitor footprint="0603" capacitance="100nF" />
-      </PCBViewer>
+      <PCBViewer circuitJson={circuitJson} />
     </div>
   )
 }
@@ -67,26 +86,35 @@ export default () => {
 
 ### Props
 
-The PCBViewer component accepts these props:
+The PCBViewer component accepts these props (see `Props` in `src/PCBViewer.tsx`):
 
-- `children`: Circuit components to render
-- `circuitJson`: Circuit JSON elements array (alternative to children)
+- `circuitJson`: Circuit JSON elements to render. Required for anything to appear.
 - `height`: Height of viewer in pixels (default: 600)
+- `renderer`: `"webgpu" | "canvas"` — initial engine override, otherwise the saved user preference
 - `allowEditing`: Enable/disable editing capabilities (default: true)
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
+- `focusOnHover`: Enable focus on hover for mouse/keyboard navigation (default: false)
+- `clickToInteractEnabled`: Render an interaction overlay so page scroll does not zoom/pan the board (default: false)
+- `debugGraphics`: `GraphicsObject | null` — draw autorouter debug overlay graphics
+- `disablePcbGroups`: Hide group containers and highlights (default: false)
+- `initialState`: Initial state for the viewer
+- `controller`: Controller returned by `usePcbViewerController`
+- `onRenderComplete`: Called once after the active renderer first paints the current circuit JSON
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
-- `initialState`: Initial state for the viewer
 
 ### Features
 
 - Interactive PCB viewing with pan and zoom
 - Multiple layer support (top, bottom, inner layers)
-- Component placement editing
-- Trace routing
+- Component placement editing and manual edits
+- Net connectivity highlighting
+- PCB group hierarchies, shown or suppressed via `disablePcbGroups`
+- Autoroute debug graphics via `debugGraphics`
 - DRC (Design Rule Check) visualization
 - Measurement tools
+- WebGPU and Canvas rendering engines, switchable at runtime
 
 ### WebGPU rendering
 
