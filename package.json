@@ -46,6 +46,7 @@
     "@webgpu/types": "^0.1.72",
     "bun-match-svg": "0.0.9",
     "circuit-json-to-connectivity-map": "^0.0.35",
+    "earcut": "3.2.4",
     "esbuild": "^0.25.2",
     "format-si-unit": "^0.0.12",
     "next": "^14.1.4",
