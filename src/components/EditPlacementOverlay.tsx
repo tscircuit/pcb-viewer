@@ -31,6 +31,28 @@ const isInsideOf = (
   return point.x > left && point.x < right && point.y > top && point.y < bottom
 }
 
+/**
+ * First component under `point` that is on the layer the user is actually looking at.
+ *
+ * The picker used to grab whatever was under the cursor, so with "bottom" selected a click on
+ * empty space could drag a top-side part you cannot see. Selected copper layers pin the picker to
+ * that side; inner layers leave components alone because parts are not placed on them.
+ */
+export const pickComponentAt = (
+  soup: AnyCircuitElement[],
+  point: { x: number; y: number },
+  tolerance: number,
+  selectedLayer: string,
+): PcbComponent | null => {
+  const sideOnly = selectedLayer === "top" || selectedLayer === "bottom"
+  for (const element of soup) {
+    if (element.type !== "pcb_component") continue
+    if (sideOnly && element.layer !== selectedLayer) continue
+    if (isInsideOf(element, point, tolerance)) return element
+  }
+  return null
+}
+
 export const EditPlacementOverlay = ({
   children,
   disabled: disabledProp,
@@ -55,6 +77,7 @@ export const EditPlacementOverlay = ({
   const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
+  const selectedLayer = useGlobalStore((s) => s.selected_layer)
 
   const disabled = disabledProp || !in_move_footprint_mode
 
@@ -74,11 +97,15 @@ export const EditPlacementOverlay = ({
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
 
         let foundActiveComponent = false
-        for (const e of soup) {
-          if (
-            e.type === "pcb_component" &&
-            isInsideOf(e, rwMousePoint, 10 / transform.a)
-          ) {
+        const picked = pickComponentAt(
+          soup,
+          rwMousePoint,
+          10 / transform.a,
+          selectedLayer,
+        )
+        if (picked) {
+          const e = picked
+          {
             cancelPanDrag()
             setActivePcbComponent(e.pcb_component_id)
             foundActiveComponent = true
@@ -102,7 +129,6 @@ export const EditPlacementOverlay = ({
             })
 
             setIsMovingComponent(true)
-            break
           }
         }
         if (!foundActiveComponent) {
@@ -155,7 +181,13 @@ export const EditPlacementOverlay = ({
       {children}
       {!disabled &&
         soup
-          .filter((e): e is PcbComponent => e.type === "pcb_component")
+          .filter(
+            (e): e is PcbComponent =>
+              e.type === "pcb_component" &&
+              (selectedLayer === "top" || selectedLayer === "bottom"
+                ? e.layer === selectedLayer
+                : true),
+          )
           .map((e) => {
             if (!e?.center) return null
             const projectedCenter = applyToPoint(transform, e.center)
