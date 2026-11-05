@@ -19,8 +19,43 @@ export function isCourtyardElement(element: AnyCircuitElement) {
   return (
     element.type === "pcb_courtyard_circle" ||
     element.type === "pcb_courtyard_rect" ||
-    element.type === "pcb_courtyard_outline"
+    element.type === "pcb_courtyard_outline" ||
+    element.type === "pcb_courtyard_polygon"
   )
+}
+
+export function getCourtyardElementsForLayer({
+  elements,
+  layers,
+}: {
+  elements: AnyCircuitElement[]
+  layers: PcbRenderLayer[]
+}): AnyCircuitElement[] {
+  return elements
+    .filter(isCourtyardElement)
+    .map((element) => {
+      const layer = ("layer" in element && element.layer) || "top"
+      if (element.type === "pcb_courtyard_polygon") {
+        return {
+          ...element,
+          type: "pcb_courtyard_outline",
+          pcb_courtyard_outline_id: element.pcb_courtyard_polygon_id,
+          outline: element.points,
+          layer,
+        } as AnyCircuitElement
+      }
+      return "layer" in element && element.layer
+        ? element
+        : ({ ...element, layer } as AnyCircuitElement)
+    })
+    .filter((element) => {
+      const layer = ("layer" in element && element.layer) || "top"
+      return (
+        layers.length === 0 ||
+        (layer === "top" && layers.includes("top_courtyard")) ||
+        (layer === "bottom" && layers.includes("bottom_courtyard"))
+      )
+    })
 }
 
 export function drawCourtyardElementsForLayer({
@@ -34,6 +69,9 @@ export function drawCourtyardElementsForLayer({
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
 }) {
+  const courtyardElements = getCourtyardElementsForLayer({ elements, layers })
+  if (courtyardElements.length === 0) return
+
   const drawer = new CircuitToCanvasDrawer(canvas)
 
   drawer.configure({
@@ -41,8 +79,6 @@ export function drawCourtyardElementsForLayer({
   })
 
   drawer.realToCanvasMat = realToCanvasMat
-
-  const courtyardElements = elements.filter(isCourtyardElement)
 
   drawer.drawElements(courtyardElements, { layers })
 }
