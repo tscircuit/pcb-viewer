@@ -1,6 +1,6 @@
 {
   "name": "@tscircuit/pcb-viewer",
-  "version": "1.11.448",
+  "version": "1.11.449",
   "main": "dist/index.js",
   "type": "module",
   "repository": {
