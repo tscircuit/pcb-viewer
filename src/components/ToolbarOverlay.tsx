@@ -185,6 +185,7 @@ export const ToolbarOverlay = ({
     setIsShowingSilkscreen,
     setIsShowingFabricationNotes,
     setIsShowingPcbNotes,
+    setIsSnappingEnabled,
     setPcbGroupViewMode,
     setHoveredErrorId,
     setFocusedErrorId,
@@ -207,6 +208,7 @@ export const ToolbarOverlay = ({
       is_showing_silkscreen: s.is_showing_silkscreen,
       is_showing_fabrication_notes: s.is_showing_fabrication_notes,
       is_showing_pcb_notes: s.is_showing_pcb_notes,
+      is_snapping_enabled: s.is_snapping_enabled,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setIsShowingRatsNest: s.setIsShowingRatsNest,
@@ -222,6 +224,7 @@ export const ToolbarOverlay = ({
     setIsShowingSilkscreen: s.setIsShowingSilkscreen,
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
     setIsShowingPcbNotes: s.setIsShowingPcbNotes,
+    setIsSnappingEnabled: s.setIsSnappingEnabled,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
     setFocusedErrorId: s.setFocusedErrorId,
@@ -750,6 +753,13 @@ export const ToolbarOverlay = ({
                   checked={viewSettings.is_showing_pcb_notes}
                   onClick={() => {
                     setIsShowingPcbNotes(!viewSettings.is_showing_pcb_notes)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Enable Snapping"
+                  checked={viewSettings.is_snapping_enabled}
+                  onClick={() => {
+                    setIsSnappingEnabled(!viewSettings.is_snapping_enabled)
                   }}
                 />
                 <CheckboxMenuItem

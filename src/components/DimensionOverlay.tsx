@@ -1,18 +1,18 @@
-import { zIndexMap } from "lib/util/z-index-map"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { Matrix } from "transformation-matrix"
-import { applyToPoint, identity, inverse } from "transformation-matrix"
-import type { Primitive } from "lib/types"
 import type { NinePointAnchor } from "circuit-json"
+import { useDiagonalLabel } from "hooks/useDiagonalLabel"
+import { getScreenSnappingPoints } from "lib/get-screen-snapping-points"
+import type { Primitive } from "lib/types"
 import {
   getPrimitiveBoundingBox,
   mergeBoundingBoxes,
 } from "lib/util/get-primitive-bounding-box"
 import type { BoundingBox } from "lib/util/get-primitive-bounding-box"
-import { useDiagonalLabel } from "hooks/useDiagonalLabel"
 import { getPrimitiveSnapPoints } from "lib/util/get-primitive-snap-points"
+import { zIndexMap } from "lib/util/z-index-map"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { Matrix } from "transformation-matrix"
+import { applyToPoint, identity, inverse } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
-import { getScreenSnappingPoints } from "lib/get-screen-snapping-points"
 import { DimensionSnapGuides } from "./DimensionSnapGuides"
 
 interface Props {
@@ -82,6 +82,7 @@ export const DimensionOverlay = ({
   })
 
   const isMouseOverContainer = useGlobalStore((s) => s.is_mouse_over_container)
+  const isSnappingEnabled = useGlobalStore((s) => s.is_snapping_enabled)
 
   const disarmMeasure = useCallback(() => {
     if (measureToolArmed) {
@@ -213,12 +214,23 @@ export const DimensionOverlay = ({
     return getScreenSnappingPoints({
       snappingPoints,
       realToScreenTransform: transform!,
-      isEnabled: measureToolArmed || dimensionToolStretching,
+      isEnabled:
+        isSnappingEnabled && (measureToolArmed || dimensionToolStretching),
     })
-  }, [snappingPoints, transform, measureToolArmed, dimensionToolStretching])
+  }, [
+    snappingPoints,
+    transform,
+    isSnappingEnabled,
+    measureToolArmed,
+    dimensionToolStretching,
+  ])
 
   const findSnap = useCallback(
     (rwPoint: { x: number; y: number }) => {
+      if (!isSnappingEnabled) {
+        return { point: rwPoint, id: null as string | null }
+      }
+
       let screenSnappingPoints = snappingPointsWithScreen
       if (screenSnappingPoints.length === 0) {
         screenSnappingPoints = getScreenSnappingPoints({
@@ -260,7 +272,7 @@ export const DimensionOverlay = ({
 
       return { point: bestMatch.point, id: bestMatch.id }
     },
-    [snappingPoints, snappingPointsWithScreen, transform],
+    [isSnappingEnabled, snappingPoints, snappingPointsWithScreen, transform],
   )
 
   useEffect(() => {
@@ -688,7 +700,7 @@ export const DimensionOverlay = ({
               stroke="red"
             />
           </svg>
-          {dimensionToolStretching && (
+          {dimensionToolStretching && isSnappingEnabled && (
             <DimensionSnapGuides
               points={snappingPointsWithScreen}
               startId={activeSnapIds.start}

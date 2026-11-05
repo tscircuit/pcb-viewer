@@ -119,3 +119,47 @@ test("copper pour opacity preserves defaults and is independent of layer visibil
   store.getState().setCopperPourOpacity(2)
   expect(store.getState().copper_pour_opacity).toBe(1)
 })
+
+test("snapping is enabled by default, can be toggled, and persists in storage", () => {
+  const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window")
+  const storageDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "localStorage",
+  )
+  const values = new Map<string, string>()
+  const key = "pcb_viewer_is_snapping_enabled"
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: {},
+  })
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => values.get(k) ?? null,
+      setItem: (k: string, value: string) => values.set(k, value),
+    },
+  })
+  try {
+    const store = createStore()
+    expect(store.getState().is_snapping_enabled).toBe(true)
+
+    store.getState().setIsSnappingEnabled(false)
+    expect(store.getState().is_snapping_enabled).toBe(false)
+    expect(values.get(key)).toBe("false")
+    expect(createStore().getState().is_snapping_enabled).toBe(false)
+
+    store.getState().setIsSnappingEnabled(true)
+    expect(store.getState().is_snapping_enabled).toBe(true)
+    expect(values.get(key)).toBe("true")
+
+    const initialDisabledStore = createStore({ is_snapping_enabled: false })
+    expect(initialDisabledStore.getState().is_snapping_enabled).toBe(false)
+  } finally {
+    if (windowDescriptor)
+      Object.defineProperty(globalThis, "window", windowDescriptor)
+    else Reflect.deleteProperty(globalThis, "window")
+    if (storageDescriptor)
+      Object.defineProperty(globalThis, "localStorage", storageDescriptor)
+    else Reflect.deleteProperty(globalThis, "localStorage")
+  }
+})
