@@ -1,10 +1,9 @@
-import { getPcbViewportBounds } from "lib/get-pcb-viewport-bounds"
-import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import type { GraphicsObject } from "graphics-debug"
-import { applyEditEvents } from "lib/apply-edit-events"
+import { type PcbManualEditEvent, applyEditEvents } from "lib/apply-edit-events"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
+import { getPcbViewportBounds } from "lib/get-pcb-viewport-bounds"
 import { ToastContainer } from "lib/toast"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -45,9 +44,9 @@ type Props = {
    * WebGPU runs in a worker and reports failures without changing engines. */
   renderer?: "webgpu" | "canvas"
   allowEditing?: boolean
-  editEvents?: ManualEditEvent[]
+  editEvents?: PcbManualEditEvent[]
   initialState?: Partial<StateProps>
-  onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  onEditEventsChanged?: (editEvents: PcbManualEditEvent[]) => void
   /** Called once after the active renderer first paints the current Circuit JSON. */
   onRenderComplete?: () => void
   /** Omit when the host has no enabled schematic tab. */
@@ -155,7 +154,7 @@ export const PCBViewer = ({
     [cancelPanDrag],
   )
 
-  let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
+  let [editEvents, setEditEvents] = useState<PcbManualEditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
   const initialRenderCompleted = useRef(false)
@@ -262,14 +261,14 @@ export const PCBViewer = ({
     [elements, refDimensions.width, height, cancelPanDrag, focusComponent],
   )
 
-  const onCreateEditEvent = (event: ManualEditEvent) => {
+  const onCreateEditEvent = (event: PcbManualEditEvent) => {
     setEditEvents([...editEvents, event])
     onEditEventsChanged?.([...editEvents, event])
   }
-  const onModifyEditEvent = (modifiedEvent: Partial<ManualEditEvent>) => {
-    const newEditEvents: ManualEditEvent[] = editEvents.map((e) =>
+  const onModifyEditEvent = (modifiedEvent: Partial<PcbManualEditEvent>) => {
+    const newEditEvents: PcbManualEditEvent[] = editEvents.map((e) =>
       e.edit_event_id === modifiedEvent.edit_event_id
-        ? ({ ...e, ...modifiedEvent } as ManualEditEvent)
+        ? ({ ...e, ...modifiedEvent } as PcbManualEditEvent)
         : e,
     )
     setEditEvents(newEditEvents)

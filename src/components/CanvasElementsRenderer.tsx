@@ -1,7 +1,7 @@
-import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import type { PcbManualEditEvent } from "lib/apply-edit-events"
 import {
   convertElementToPrimitives,
   createPrimitiveMetadataIndex,
@@ -73,8 +73,8 @@ export interface CanvasElementsRendererProps {
   onContextMenuOpenChange?: (open: boolean) => void
   onRenderComplete?: () => void
   cancelPanDrag: () => void
-  onCreateEditEvent: (event: ManualEditEvent) => void
-  onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  onCreateEditEvent: (event: PcbManualEditEvent) => void
+  onModifyEditEvent: (event: Partial<PcbManualEditEvent>) => void
 }
 
 function getHitTestCandidates({

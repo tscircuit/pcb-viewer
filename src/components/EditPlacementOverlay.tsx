@@ -1,9 +1,13 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
-import { useGlobalStore } from "../global-store"
-import { useEffect, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
-import type { ManualEditEvent } from "@tscircuit/props"
+import { useGlobalStore } from "../global-store"
+import {
+  type PcbManualEditEvent,
+  getGroupAndMemberIds,
+  getSelectablePcbGroupForComponent,
+} from "../lib/apply-edit-events"
 
 interface Props {
   transform?: Matrix
@@ -11,8 +15,8 @@ interface Props {
   soup: AnyCircuitElement[]
   disabled?: boolean
   cancelPanDrag: () => void
-  onCreateEditEvent: (event: ManualEditEvent) => void
-  onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  onCreateEditEvent: (event: PcbManualEditEvent) => void
+  onModifyEditEvent: (event: Partial<PcbManualEditEvent>) => void
 }
 
 const isInsideOf = (
@@ -45,18 +49,27 @@ export const EditPlacementOverlay = ({
   const [activePcbComponentId, setActivePcbComponent] = useState<null | string>(
     null,
   )
+  const [activePcbGroupId, setActivePcbGroup] = useState<null | string>(null)
   const [dragState, setDragState] = useState<{
     dragStart: { x: number; y: number }
     originalCenter: { x: number; y: number }
     dragEnd: { x: number; y: number }
     edit_event_id: string
   } | null>(null)
-  const isPcbComponentActive = activePcbComponentId !== null
+  const isPcbComponentActive =
+    activePcbComponentId !== null || activePcbGroupId !== null
   const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
 
   const disabled = disabledProp || !in_move_footprint_mode
+  const activeGroupMemberIds = useMemo(() => {
+    if (!activePcbGroupId) return new Set<string>()
+    return getGroupAndMemberIds({
+      circuitJson: soup,
+      pcbGroupId: activePcbGroupId,
+    }).pcbComponentIds
+  }, [activePcbGroupId, soup])
 
   return (
     <div
@@ -80,26 +93,54 @@ export const EditPlacementOverlay = ({
             isInsideOf(e, rwMousePoint, 10 / transform.a)
           ) {
             cancelPanDrag()
-            setActivePcbComponent(e.pcb_component_id)
+            const selectableGroup = getSelectablePcbGroupForComponent({
+              circuitJson: soup,
+              pcbComponent: e,
+            })
             foundActiveComponent = true
             const edit_event_id = Math.random().toString()
-            setDragState({
-              dragStart: rwMousePoint,
-              originalCenter: e.center,
-              dragEnd: rwMousePoint,
-              edit_event_id,
-            })
 
-            onCreateEditEvent({
-              edit_event_id,
-              edit_event_type: "edit_pcb_component_location",
-              pcb_edit_event_type: "edit_component_location",
-              pcb_component_id: e.pcb_component_id,
-              original_center: e.center,
-              new_center: e.center,
-              in_progress: true,
-              created_at: Date.now(),
-            })
+            if (selectableGroup) {
+              setActivePcbGroup(selectableGroup.pcb_group_id)
+              setActivePcbComponent(null)
+              setDragState({
+                dragStart: rwMousePoint,
+                originalCenter: selectableGroup.center,
+                dragEnd: rwMousePoint,
+                edit_event_id,
+              })
+
+              onCreateEditEvent({
+                edit_event_id,
+                edit_event_type: "edit_pcb_group_location",
+                pcb_edit_event_type: "edit_group_location",
+                pcb_group_id: selectableGroup.pcb_group_id,
+                original_center: selectableGroup.center,
+                new_center: selectableGroup.center,
+                in_progress: true,
+                created_at: Date.now(),
+              })
+            } else {
+              setActivePcbComponent(e.pcb_component_id)
+              setActivePcbGroup(null)
+              setDragState({
+                dragStart: rwMousePoint,
+                originalCenter: e.center,
+                dragEnd: rwMousePoint,
+                edit_event_id,
+              })
+
+              onCreateEditEvent({
+                edit_event_id,
+                edit_event_type: "edit_pcb_component_location",
+                pcb_edit_event_type: "edit_component_location",
+                pcb_component_id: e.pcb_component_id,
+                original_center: e.center,
+                new_center: e.center,
+                in_progress: true,
+                created_at: Date.now(),
+              })
+            }
 
             setIsMovingComponent(true)
             break
@@ -107,6 +148,7 @@ export const EditPlacementOverlay = ({
         }
         if (!foundActiveComponent) {
           setActivePcbComponent(null)
+          setActivePcbGroup(null)
         }
 
         if (foundActiveComponent) {
@@ -115,7 +157,7 @@ export const EditPlacementOverlay = ({
         }
       }}
       onMouseMove={(e) => {
-        if (!activePcbComponentId || !dragState) return
+        if ((!activePcbComponentId && !activePcbGroupId) || !dragState) return
         const rect = e.currentTarget.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
@@ -140,8 +182,9 @@ export const EditPlacementOverlay = ({
         })
       }}
       onMouseUp={(e) => {
-        if (!activePcbComponentId) return
+        if (!activePcbComponentId && !activePcbGroupId) return
         setActivePcbComponent(null)
+        setActivePcbGroup(null)
         setIsMovingComponent(false)
         if (dragState) {
           onModifyEditEvent({
@@ -174,7 +217,8 @@ export const EditPlacementOverlay = ({
                   transform: "translate(-50%, -50%)",
                   background:
                     isPcbComponentActive &&
-                    activePcbComponentId === e.pcb_component_id
+                    (activePcbComponentId === e.pcb_component_id ||
+                      activeGroupMemberIds.has(e.pcb_component_id))
                       ? "rgba(255, 0, 0, 0.2)"
                       : "",
                 }}
