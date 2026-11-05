@@ -62,6 +62,7 @@ test("HighlightedPrimitiveBoxWithText rotates overlay box for rect-pad plated ho
       rotation: 90,
       width: 4,
       height: 4,
+      obstructs_within_bounds: true,
     },
     {
       type: "pcb_plated_hole",
@@ -72,6 +73,8 @@ test("HighlightedPrimitiveBoxWithText rotates overlay box for rect-pad plated ho
       pad_shape: "rect",
       x: 0,
       y: 0,
+      hole_offset_x: 0,
+      hole_offset_y: 0,
       hole_diameter: 1,
       rect_pad_width: 2.4,
       rect_pad_height: 1.4,
