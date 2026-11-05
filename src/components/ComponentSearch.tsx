@@ -134,7 +134,7 @@ export const ComponentSearch = ({
         <svg
           width="1em"
           height="1em"
-          style={{ verticalAlign: "middle" }}
+          style={{ display: "inline-block", verticalAlign: "middle" }}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
