@@ -26,6 +26,10 @@ export function addInteractionMetadataToPrimitives({
       primitiveElement &&
       (("pcb_trace_id" in primitiveElement &&
         highlightedPrimitiveIds.has(primitiveElement.pcb_trace_id!)) ||
+        ("pcb_smtpad_id" in primitiveElement &&
+          highlightedPrimitiveIds.has(primitiveElement.pcb_smtpad_id!)) ||
+        ("pcb_plated_hole_id" in primitiveElement &&
+          highlightedPrimitiveIds.has(primitiveElement.pcb_plated_hole_id!)) ||
         ("pcb_port_id" in primitiveElement &&
           highlightedPrimitiveIds.has(primitiveElement.pcb_port_id!)) ||
         ("pcb_via_id" in primitiveElement &&

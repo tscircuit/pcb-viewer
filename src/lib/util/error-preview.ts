@@ -14,6 +14,8 @@ export interface ErrorPreviewElementIndexes {
   tracesById: Map<string, any>
   portsById: Map<string, any>
   viasById: Map<string, any>
+  smtpadsById?: Map<string, any>
+  platedHolesById?: Map<string, any>
   componentsById: Map<string, any>
   boardsById: Map<string, any>
 }
@@ -24,6 +26,8 @@ export const buildErrorPreviewElementIndexes = (
   const tracesById = new Map<string, any>()
   const portsById = new Map<string, any>()
   const viasById = new Map<string, any>()
+  const smtpadsById = new Map<string, any>()
+  const platedHolesById = new Map<string, any>()
   const componentsById = new Map<string, any>()
   const boardsById = new Map<string, any>()
 
@@ -34,6 +38,13 @@ export const buildErrorPreviewElementIndexes = (
       portsById.set(element.pcb_port_id, element)
     } else if (element.type === "pcb_via" && element.pcb_via_id) {
       viasById.set(element.pcb_via_id, element)
+    } else if (element.type === "pcb_smtpad" && element.pcb_smtpad_id) {
+      smtpadsById.set(element.pcb_smtpad_id, element)
+    } else if (
+      element.type === "pcb_plated_hole" &&
+      element.pcb_plated_hole_id
+    ) {
+      platedHolesById.set(element.pcb_plated_hole_id, element)
     } else if (element.type === "pcb_component" && element.pcb_component_id) {
       componentsById.set(element.pcb_component_id, element)
     } else if (element.type === "pcb_board" && element.pcb_board_id) {
@@ -45,6 +56,8 @@ export const buildErrorPreviewElementIndexes = (
     tracesById,
     portsById,
     viasById,
+    smtpadsById,
+    platedHolesById,
     componentsById,
     boardsById,
   }
@@ -99,6 +112,10 @@ const createBoundsFromComponent = (component: any): Bounds | null => {
 }
 
 const createBoardBounds = (board: any): Bounds | null => {
+  if (Array.isArray(board?.outline) && board.outline.length > 0) {
+    return getBoundsFromPoints(board.outline)
+  }
+
   if (
     !board?.center ||
     typeof board.width !== "number" ||
@@ -112,6 +129,53 @@ const createBoardBounds = (board: any): Bounds | null => {
     maxX: board.center.x + board.width / 2,
     minY: board.center.y - board.height / 2,
     maxY: board.center.y + board.height / 2,
+  }
+}
+
+const getElementCenter = (element: any): Point | null => {
+  if (!element) return null
+  if (typeof element.x === "number" && typeof element.y === "number") {
+    return { x: element.x, y: element.y }
+  }
+  if (element.center) return element.center
+  if (Array.isArray(element.points) && element.points.length > 0) {
+    const bounds = getBoundsFromPoints(element.points)
+    if (bounds) {
+      return {
+        x: (bounds.minX + bounds.maxX) / 2,
+        y: (bounds.minY + bounds.maxY) / 2,
+      }
+    }
+  }
+  return null
+}
+
+const createBoundsFromPadOrHole = (element: any): Bounds | null => {
+  if (!element) return null
+  if (Array.isArray(element.points) && element.points.length > 0) {
+    return createBoundsFromPoints(element.points, 0.25)
+  }
+  const center = getElementCenter(element)
+  if (!center) return null
+  const width =
+    element.width ??
+    element.outer_width ??
+    element.rect_pad_width ??
+    element.outer_diameter ??
+    (typeof element.radius === "number" ? element.radius * 2 : 0.6)
+  const height =
+    element.height ??
+    element.outer_height ??
+    element.rect_pad_height ??
+    element.outer_diameter ??
+    (typeof element.radius === "number" ? element.radius * 2 : 0.6)
+  const halfWidth = Math.max(width / 2, 0.3)
+  const halfHeight = Math.max(height / 2, 0.3)
+  return {
+    minX: center.x - halfWidth,
+    maxX: center.x + halfWidth,
+    minY: center.y - halfHeight,
+    maxY: center.y + halfHeight,
   }
 }
 
@@ -136,6 +200,8 @@ const getErrorFocusCenter = ({
   tracesById,
   portsById,
   viasById,
+  smtpadsById = new Map(),
+  platedHolesById = new Map(),
   componentsById,
 }: {
   error: any
@@ -157,6 +223,38 @@ const getErrorFocusCenter = ({
     }
   }
 
+  const smtpadIds = [
+    ...(error.pcb_smtpad_id ? [error.pcb_smtpad_id] : []),
+    ...(error.pcb_smtpad_ids ?? []),
+  ]
+  if (smtpadIds.length > 0) {
+    const padCenters = smtpadIds
+      .map((id: string) => getElementCenter(smtpadsById.get(id)))
+      .filter((pt): pt is Point => pt !== null)
+    if (padCenters.length > 0) {
+      return {
+        x: padCenters.reduce((sum, pt) => sum + pt.x, 0) / padCenters.length,
+        y: padCenters.reduce((sum, pt) => sum + pt.y, 0) / padCenters.length,
+      }
+    }
+  }
+
+  const platedHoleIds = [
+    ...(error.pcb_plated_hole_id ? [error.pcb_plated_hole_id] : []),
+    ...(error.pcb_plated_hole_ids ?? []),
+  ]
+  if (platedHoleIds.length > 0) {
+    const holeCenters = platedHoleIds
+      .map((id: string) => getElementCenter(platedHolesById.get(id)))
+      .filter((pt): pt is Point => pt !== null)
+    if (holeCenters.length > 0) {
+      return {
+        x: holeCenters.reduce((sum, pt) => sum + pt.x, 0) / holeCenters.length,
+        y: holeCenters.reduce((sum, pt) => sum + pt.y, 0) / holeCenters.length,
+      }
+    }
+  }
+
   if (error.pcb_port_ids?.length) {
     const ports = error.pcb_port_ids
       .map((pcbPortId: string) => portsById.get(pcbPortId))
@@ -174,8 +272,12 @@ const getErrorFocusCenter = ({
     }
   }
 
-  if (error.pcb_trace_id) {
-    const trace = tracesById.get(error.pcb_trace_id)
+  const traceIds = [
+    ...(error.pcb_trace_id ? [error.pcb_trace_id] : []),
+    ...(error.pcb_trace_ids ?? []),
+  ]
+  for (const traceId of traceIds) {
+    const trace = tracesById.get(traceId)
     if (trace?.route?.length) {
       const middleIndex = Math.floor(trace.route.length / 2)
       return {
@@ -187,6 +289,26 @@ const getErrorFocusCenter = ({
 
   if (error.pcb_component_id) {
     return componentsById.get(error.pcb_component_id)?.center ?? null
+  }
+
+  if (error.pcb_component_ids?.length) {
+    const components = error.pcb_component_ids
+      .map((id: string) => componentsById.get(id))
+      .filter((comp: any) => Boolean(comp?.center))
+    if (components.length > 0) {
+      return {
+        x:
+          components.reduce(
+            (sum: number, comp: any) => sum + comp.center.x,
+            0,
+          ) / components.length,
+        y:
+          components.reduce(
+            (sum: number, comp: any) => sum + comp.center.y,
+            0,
+          ) / components.length,
+      }
+    }
   }
 
   return null
@@ -342,6 +464,37 @@ export const getErrorPreviewBounds = ({
     }
   }
 
+  if (error.pcb_trace_ids && !focusCenter) {
+    for (const pcbTraceId of error.pcb_trace_ids) {
+      const trace = indexes.tracesById.get(pcbTraceId)
+      if (trace?.route) {
+        bounds = mergeBounds(bounds, createBoundsFromRoute(trace.route))
+      }
+    }
+  }
+
+  const smtpadIds = [
+    ...(error.pcb_smtpad_id ? [error.pcb_smtpad_id] : []),
+    ...(error.pcb_smtpad_ids ?? []),
+  ]
+  for (const pcbSmtpadId of smtpadIds) {
+    const pad = indexes.smtpadsById?.get(pcbSmtpadId)
+    if (pad) {
+      bounds = mergeBounds(bounds, createBoundsFromPadOrHole(pad))
+    }
+  }
+
+  const platedHoleIds = [
+    ...(error.pcb_plated_hole_id ? [error.pcb_plated_hole_id] : []),
+    ...(error.pcb_plated_hole_ids ?? []),
+  ]
+  for (const pcbPlatedHoleId of platedHoleIds) {
+    const hole = indexes.platedHolesById?.get(pcbPlatedHoleId)
+    if (hole) {
+      bounds = mergeBounds(bounds, createBoundsFromPadOrHole(hole))
+    }
+  }
+
   if (error.pcb_via_ids) {
     for (const pcbViaId of error.pcb_via_ids) {
       const via = indexes.viasById.get(pcbViaId)
@@ -408,6 +561,26 @@ export const getRelatedIdsForError = (error: any): string[] => {
 
   if (error.pcb_trace_id) {
     relatedIds.add(error.pcb_trace_id)
+  }
+
+  for (const pcbTraceId of error.pcb_trace_ids ?? []) {
+    relatedIds.add(pcbTraceId)
+  }
+
+  if (error.pcb_smtpad_id) {
+    relatedIds.add(error.pcb_smtpad_id)
+  }
+
+  for (const pcbSmtpadId of error.pcb_smtpad_ids ?? []) {
+    relatedIds.add(pcbSmtpadId)
+  }
+
+  if (error.pcb_plated_hole_id) {
+    relatedIds.add(error.pcb_plated_hole_id)
+  }
+
+  for (const pcbPlatedHoleId of error.pcb_plated_hole_ids ?? []) {
+    relatedIds.add(pcbPlatedHoleId)
   }
 
   for (const pcbPortId of error.pcb_port_ids ?? []) {
