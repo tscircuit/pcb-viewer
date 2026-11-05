@@ -113,7 +113,6 @@ export const EditPlacementOverlay = ({
               onCreateEditEvent({
                 edit_event_id,
                 edit_event_type: "edit_pcb_group_location",
-                pcb_edit_event_type: "edit_group_location",
                 pcb_group_id: selectableGroup.pcb_group_id,
                 original_center: selectableGroup.center,
                 new_center: selectableGroup.center,

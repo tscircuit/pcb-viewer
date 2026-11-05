@@ -5,12 +5,12 @@ import type {
 } from "@tscircuit/props"
 import type {
   AnyCircuitElement,
+  AnySourceComponent,
   CircuitJson,
   PcbComponent,
   PcbGroup,
   PcbTraceHint,
   SourceBoard,
-  SourceComponent,
   SourceGroup,
 } from "circuit-json"
 import { applyToPoint, translate } from "transformation-matrix"
@@ -34,7 +34,7 @@ export function getGroupAndMemberIds({
     (el): el is SourceGroup => el.type === "source_group",
   )
   const sourceComponents = circuitJson.filter(
-    (el): el is SourceComponent => el.type === "source_component",
+    (el): el is AnySourceComponent => el.type === "source_component",
   )
   const pcbComponents = circuitJson.filter(
     (el): el is PcbComponent => el.type === "pcb_component",
@@ -138,7 +138,7 @@ export function getSelectablePcbGroupForComponent({
     (el): el is SourceBoard => el.type === "source_board",
   )
   const sourceComponents = circuitJson.filter(
-    (el): el is SourceComponent => el.type === "source_component",
+    (el): el is AnySourceComponent => el.type === "source_component",
   )
 
   const directGroupId =
