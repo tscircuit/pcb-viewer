@@ -91,3 +91,117 @@ test("rotates an oval drill", async () => {
     }),
   ).toEqual([drill])
 })
+
+test("preserves ccw_rotation on oval plated hole pad and drill primitives", () => {
+  const element = {
+    type: "pcb_plated_hole" as const,
+    pcb_plated_hole_id: "oval_ph_1",
+    shape: "oval" as const,
+    x: 4,
+    y: 5,
+    outer_width: 3,
+    outer_height: 1.5,
+    hole_width: 2,
+    hole_height: 1,
+    ccw_rotation: 90,
+    layers: ["top" as const, "bottom" as const],
+  }
+  const primitives = convertElementToPrimitives(element, [element])
+  const ovals = primitives.filter((p) => p.pcb_drawing_type === "oval")
+  expect(ovals).toHaveLength(2)
+  expect(ovals[0]).toMatchObject({
+    layer: "top",
+    rX: 1.5,
+    rY: 0.75,
+    ccw_rotation: 90,
+  })
+  expect(ovals[1]).toMatchObject({
+    layer: "drill",
+    rX: 1,
+    rY: 0.5,
+    ccw_rotation: 90,
+  })
+  expect(getPrimitiveBoundingBox(ovals[0]!)).toEqual({
+    minX: expect.closeTo(4 - 0.75, 6),
+    maxX: expect.closeTo(4 + 0.75, 6),
+    minY: expect.closeTo(5 - 1.5, 6),
+    maxY: expect.closeTo(5 + 1.5, 6),
+  })
+})
+
+test("applies hole offsets and rect_ccw_rotation on rect-pad plated holes", () => {
+  const circularWithRect = {
+    type: "pcb_plated_hole" as const,
+    pcb_plated_hole_id: "circ_rect_1",
+    shape: "circular_hole_with_rect_pad" as const,
+    hole_shape: "circle" as const,
+    pad_shape: "rect" as const,
+    x: 10,
+    y: 20,
+    hole_diameter: 1,
+    rect_pad_width: 4,
+    rect_pad_height: 2,
+    rect_ccw_rotation: 90,
+    hole_offset_x: 0.5,
+    hole_offset_y: -0.25,
+    layers: ["top" as const, "bottom" as const],
+  }
+  const circPrims = convertElementToPrimitives(circularWithRect, [
+    circularWithRect,
+  ])
+  const circRects = circPrims.filter((p) => p.pcb_drawing_type === "rect")
+  expect(circRects.map((r) => r.ccw_rotation)).toEqual([90, 90])
+
+  const pillWithRect = {
+    type: "pcb_plated_hole" as const,
+    pcb_plated_hole_id: "pill_rect_1",
+    shape: "pill_hole_with_rect_pad" as const,
+    hole_shape: "pill" as const,
+    pad_shape: "rect" as const,
+    x: 10,
+    y: 20,
+    hole_width: 1.2,
+    hole_height: 0.8,
+    rect_pad_width: 3,
+    rect_pad_height: 2,
+    hole_offset_x: 0.4,
+    hole_offset_y: -0.3,
+    layers: ["top" as const, "bottom" as const],
+  }
+  const pillDrill = convertElementToPrimitives(pillWithRect, [
+    pillWithRect,
+  ]).find((p) => p.pcb_drawing_type === "pill")!
+  expect(pillDrill).toMatchObject({
+    x: expect.closeTo(10.4, 6),
+    y: expect.closeTo(19.7, 6),
+    layer: "drill",
+  })
+
+  const rotatedPillWithRect = {
+    type: "pcb_plated_hole" as const,
+    pcb_plated_hole_id: "rot_pill_rect_1",
+    shape: "rotated_pill_hole_with_rect_pad" as const,
+    hole_shape: "rotated_pill" as const,
+    pad_shape: "rect" as const,
+    x: 10,
+    y: 20,
+    hole_width: 1.2,
+    hole_height: 0.8,
+    hole_ccw_rotation: 45,
+    rect_pad_width: 3,
+    rect_pad_height: 2,
+    rect_ccw_rotation: 45,
+    hole_offset_x: -0.6,
+    hole_offset_y: 0.5,
+    layers: ["top" as const, "bottom" as const],
+  }
+  const rotPillDrill = convertElementToPrimitives(rotatedPillWithRect, [
+    rotatedPillWithRect,
+  ]).find((p) => p.pcb_drawing_type === "pill")!
+  expect(rotPillDrill).toMatchObject({
+    x: expect.closeTo(9.4, 6),
+    y: expect.closeTo(20.5, 6),
+    ccw_rotation: 45,
+    layer: "drill",
+  })
+})
