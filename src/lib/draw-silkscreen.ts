@@ -21,6 +21,25 @@ export function isSilkscreenElement(element: AnyCircuitElement) {
   return element.type.includes("pcb_silkscreen")
 }
 
+export function getSilkscreenElementsForLayer({
+  elements,
+  layers,
+}: {
+  elements: AnyCircuitElement[]
+  layers: PcbRenderLayer[]
+}) {
+  // Some silkscreen types (such as pill and oval) are not classified by the
+  // drawer's generic render-layer filter. Enforce the silkscreen side before drawing.
+  return elements.filter(
+    (element) =>
+      isSilkscreenElement(element) &&
+      "layer" in element &&
+      (layers.length === 0 ||
+        (element.layer === "top" && layers.includes("top_silkscreen")) ||
+        (element.layer === "bottom" && layers.includes("bottom_silkscreen"))),
+  )
+}
+
 export function drawSilkscreenElementsForLayer({
   canvas,
   elements,
@@ -40,7 +59,7 @@ export function drawSilkscreenElementsForLayer({
 
   drawer.realToCanvasMat = realToCanvasMat
 
-  const silkscreenElements = elements.filter(isSilkscreenElement)
+  const silkscreenElements = getSilkscreenElementsForLayer({ elements, layers })
 
   drawer.drawElements(silkscreenElements, { layers })
 }
