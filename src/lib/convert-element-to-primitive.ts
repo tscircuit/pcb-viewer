@@ -595,6 +595,102 @@ export const convertElementToPrimitives = (
         return []
       }
     }
+
+    case "pcb_trace_hint": {
+      const { route, pcb_port_id } = element
+      if (!Array.isArray(route) || route.length === 0) return []
+
+      const pcbPort = lookup("pcb_port", pcb_port_id)
+      const resolvedParentPcbComponent =
+        _parent_pcb_component ??
+        lookup("pcb_component", pcbPort?.pcb_component_id)
+      const resolvedParentSourceComponent =
+        _parent_source_component ??
+        lookup(
+          "source_component",
+          resolvedParentPcbComponent?.source_component_id,
+        )
+
+      let currentLayer: string =
+        pcbPort?.layers?.[0] ?? resolvedParentPcbComponent?.layer ?? "top"
+
+      const primitives: Primitive[] = []
+
+      for (let i = 0; i < route.length; i++) {
+        const point = route[i]
+        const x = distance.parse(point.x)
+        const y = distance.parse(point.y)
+        const traceWidth =
+          point.trace_width !== undefined
+            ? distance.parse(point.trace_width)
+            : 0.15
+
+        if (!point.via && point.to_layer) {
+          currentLayer = point.to_layer
+        }
+
+        if (i === 0) {
+          if (pcbPort && pcbPort.x !== undefined && pcbPort.y !== undefined) {
+            primitives.push({
+              _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+              _element: element,
+              _parent_pcb_component: resolvedParentPcbComponent,
+              _parent_source_component: resolvedParentSourceComponent,
+              _source_port,
+              pcb_drawing_type: "line",
+              x1: distance.parse(pcbPort.x),
+              y1: distance.parse(pcbPort.y),
+              x2: x,
+              y2: y,
+              width: traceWidth,
+              squareCap: false,
+              is_dashed: true,
+              layer: currentLayer,
+            })
+          }
+        } else {
+          const prevPoint = route[i - 1]
+          primitives.push({
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            _parent_pcb_component: resolvedParentPcbComponent,
+            _parent_source_component: resolvedParentSourceComponent,
+            _source_port,
+            pcb_drawing_type: "line",
+            x1: distance.parse(prevPoint.x),
+            y1: distance.parse(prevPoint.y),
+            x2: x,
+            y2: y,
+            width: traceWidth,
+            squareCap: false,
+            layer: currentLayer,
+          })
+        }
+
+        if (point.via) {
+          primitives.push({
+            _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            _parent_pcb_component: resolvedParentPcbComponent,
+            _parent_source_component: resolvedParentSourceComponent,
+            _source_port,
+            pcb_drawing_type: "circle",
+            x,
+            y,
+            r: traceWidth,
+            is_filled: false,
+            has_stroke: true,
+            stroke_width: Math.min(traceWidth / 2, 0.1),
+            layer: currentLayer,
+          })
+          if (point.to_layer) {
+            currentLayer = point.to_layer
+          }
+        }
+      }
+
+      return primitives
+    }
   }
 
   return []
