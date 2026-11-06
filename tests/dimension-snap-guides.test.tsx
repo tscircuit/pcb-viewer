@@ -1,6 +1,36 @@
 import { expect, test } from "bun:test"
 import { renderToStaticMarkup } from "react-dom/server"
+import { identity } from "transformation-matrix"
 import { DimensionSnapGuides } from "../src/components/DimensionSnapGuides"
+import { getScreenSnappingPoints } from "../src/lib/get-screen-snapping-points"
+
+test("getScreenSnappingPoints respects isEnabled flag for configurable snapping", () => {
+  const snappingPoints = [
+    { anchor: "center", point: { x: 5, y: 10 }, element: null },
+  ]
+  expect(
+    getScreenSnappingPoints({
+      snappingPoints,
+      realToScreenTransform: identity(),
+      isEnabled: false,
+    }),
+  ).toEqual([])
+  expect(
+    getScreenSnappingPoints({
+      snappingPoints,
+      realToScreenTransform: identity(),
+      isEnabled: true,
+    }),
+  ).toEqual([
+    {
+      id: "0-center",
+      anchor: "center",
+      point: { x: 5, y: 10 },
+      element: null,
+      screenPoint: { x: 5, y: 10 },
+    },
+  ])
+})
 
 test("renders a large guide set as two paths with only selected markers highlighted", () => {
   const points = Array.from({ length: 70_043 }, (_, index) => ({
