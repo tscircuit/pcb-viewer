@@ -4,6 +4,7 @@ import { applyToPoint } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
 import { zIndexMap } from "../../lib/util/z-index-map"
 import { COLORS, VISUAL_CONFIG } from "./common/constants"
+import { formatOffsetLabel } from "./common/format-offset-label"
 
 export interface AnchorOffsetTarget {
   id: string
@@ -101,12 +102,8 @@ export const AnchorOffsetOverlay = ({
           const shouldShowYLabel =
             yLineLength > VISUAL_CONFIG.MIN_LINE_LENGTH_FOR_LABEL
 
-          const xLabelText = `${
-            target.display_offset_x ?? offsetX.toFixed(2)
-          }mm`
-          const yLabelText = `${
-            target.display_offset_y ?? offsetY.toFixed(2)
-          }mm`
+          const xLabelText = formatOffsetLabel(target.display_offset_x, offsetX)
+          const yLabelText = formatOffsetLabel(target.display_offset_y, offsetY)
 
           return (
             <g key={target.id}>
