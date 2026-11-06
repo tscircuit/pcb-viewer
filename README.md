@@ -88,6 +88,20 @@ The PCBViewer component accepts these props:
 - DRC (Design Rule Check) visualization
 - Measurement tools
 
+### Component side visibility and placement
+
+The View menu's **Show Top Components** and **Show Bottom Components** settings
+persist across reloads. Hidden SMT components and SMT components on an unselected
+layer cannot be picked for placement. Switching layers or hiding a component
+finishes its active placement edit. Through-hole components are identified by
+their owned `pcb_plated_hole` elements and remain visible and pickable from either
+side, even when their `pcb_component.layer` is `"top"` or `"bottom"`.
+
+Run `bun run test:component-visibility-picking` after installing Chromium with
+`bunx playwright install chromium`. It builds the package and checks actual viewer
+interaction, side visibility persistence, through-hole copper rendering, and
+cancellation of an active edit after a layer change.
+
 ### WebGPU rendering
 
 `PCBViewer` defaults to `renderer="webgpu"`. It uses

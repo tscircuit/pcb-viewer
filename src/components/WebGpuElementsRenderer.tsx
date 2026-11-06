@@ -127,9 +127,9 @@ export function WebGpuElementsRenderer(props: Props) {
     } satisfies WebGpuRequest)
   }, [elements])
   useEffect(() => {
-    let disposed = false,
-      failed = false,
-      worker: Worker | undefined
+    let disposed = false
+    let failed = false
+    let worker: Worker | undefined
     const canvas = document.createElement("canvas")
     canvas.className = "pcb-webgpu-canvas"
     canvas.style.cssText =
@@ -268,12 +268,16 @@ export function WebGpuElementsRenderer(props: Props) {
             stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
           />
           {xRayUnavailable && (
-            <div
-              role="status"
-              style={{ padding: 16, color: "white", position: "relative" }}
+            <output
+              style={{
+                display: "block",
+                padding: 16,
+                color: "white",
+                position: "relative",
+              }}
             >
               X-Ray is unavailable in this WebGPU renderer.
-            </div>
+            </output>
           )}
         </>
       )}
