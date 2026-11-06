@@ -173,6 +173,7 @@ export const ToolbarOverlay = ({
     selectLayer,
     viewSettings,
     setIsShowingRatsNest,
+    setIsShowingOnlyUnconnectedRatsNest,
     setIsShowingMultipleTracesLength,
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
@@ -195,6 +196,8 @@ export const ToolbarOverlay = ({
     selectLayer: s.selectLayer,
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
+      is_showing_only_unconnected_rats_nest:
+        s.is_showing_only_unconnected_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
@@ -210,6 +213,7 @@ export const ToolbarOverlay = ({
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setIsShowingRatsNest: s.setIsShowingRatsNest,
+    setIsShowingOnlyUnconnectedRatsNest: s.setIsShowingOnlyUnconnectedRatsNest,
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
@@ -257,6 +261,7 @@ export const ToolbarOverlay = ({
   }, [onContextMenuOpenChange])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
+  const [isRatsNestMenuOpen, setRatsNestMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
   const [boundsToolArmed, setBoundsToolArmed] = useState(false)
@@ -371,6 +376,7 @@ export const ToolbarOverlay = ({
   const handleMouseLeave = useCallback(() => {
     setIsMouseOverContainer(false)
     setLayerMenuOpen(false)
+    setRatsNestMenuOpen(false)
     setViewMenuOpen(false)
     setErrorsOpen(false)
   }, [setIsMouseOverContainer])
@@ -378,6 +384,10 @@ export const ToolbarOverlay = ({
   const handleLayerMenuToggle = useCallback(() => {
     setLayerMenuOpen(!isLayerMenuOpen)
   }, [isLayerMenuOpen])
+
+  const handleRatsNestMenuToggle = useCallback(() => {
+    setRatsNestMenuOpen(!isRatsNestMenuOpen)
+  }, [isRatsNestMenuOpen])
 
   const handleErrorsToggle = useCallback(() => {
     const newErrorsOpen = !isErrorsOpen
@@ -393,10 +403,6 @@ export const ToolbarOverlay = ({
   const closeErrorsMenu = useCallback(() => {
     setErrorsOpen(false)
   }, [])
-
-  const handleRatsNestToggle = useCallback(() => {
-    setIsShowingRatsNest(!viewSettings.is_showing_rats_nest)
-  }, [viewSettings.is_showing_rats_nest, setIsShowingRatsNest])
 
   const handleMeasureToolClick = useCallback(() => {
     setMeasureToolArmed(true)
@@ -621,12 +627,56 @@ export const ToolbarOverlay = ({
         <ToolbarButton
           isSmallScreen={isSmallScreen}
           style={{}}
-          onClick={handleRatsNestToggle}
+          onClick={handleRatsNestMenuToggle}
+          onMouseLeave={() => {
+            if (isRatsNestMenuOpen) {
+              setRatsNestMenuOpen(false)
+            }
+          }}
         >
           <div>
             {viewSettings.is_showing_rats_nest ? "✖ " : ""}
             Rats Nest
+            {viewSettings.is_showing_rats_nest
+              ? viewSettings.is_showing_only_unconnected_rats_nest
+                ? ": Unconnected"
+                : ": All"
+              : ""}
           </div>
+          {isRatsNestMenuOpen && (
+            <div style={{ marginTop: 4, minWidth: 120 }}>
+              <RadioMenuItem
+                label="Off"
+                checked={!viewSettings.is_showing_rats_nest}
+                onClick={() => {
+                  setIsShowingRatsNest(false)
+                  setIsShowingOnlyUnconnectedRatsNest(false)
+                }}
+              />
+              <RadioMenuItem
+                label="All"
+                checked={
+                  viewSettings.is_showing_rats_nest &&
+                  !viewSettings.is_showing_only_unconnected_rats_nest
+                }
+                onClick={() => {
+                  setIsShowingRatsNest(true)
+                  setIsShowingOnlyUnconnectedRatsNest(false)
+                }}
+              />
+              <RadioMenuItem
+                label="Unconnected"
+                checked={
+                  viewSettings.is_showing_rats_nest &&
+                  viewSettings.is_showing_only_unconnected_rats_nest
+                }
+                onClick={() => {
+                  setIsShowingRatsNest(true)
+                  setIsShowingOnlyUnconnectedRatsNest(true)
+                }}
+              />
+            </div>
+          )}
         </ToolbarButton>
 
         <ToolbarButton
