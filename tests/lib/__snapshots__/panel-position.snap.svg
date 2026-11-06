@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="-30 -15 60 30">
+  <title>Centered 50x20mm panel enclosing two 20x15mm boards</title>
+  <rect x="-30" y="-15" width="60" height="30" fill="rgb(0, 16, 35)"/>
+  <g transform="scale(1 -1)">
+    <rect x="-25" y="-10" width="50" height="20" fill="none" stroke="rgba(255, 255, 255, 0.7)" stroke-width="0.25"/>
+    <rect x="-21" y="-7.5" width="20" height="15" fill="none" stroke="rgba(255, 255, 255, 0.5)" stroke-width="0.2"/>
+    <rect x="1" y="-7.5" width="20" height="15" fill="none" stroke="rgba(255, 255, 255, 0.5)" stroke-width="0.2"/>
+    <rect x="-11.8" y="-0.3" width="0.6" height="0.6" fill="rgb(200, 52, 52)"/>
+    <rect x="-10.8" y="-0.3" width="0.6" height="0.6" fill="rgb(200, 52, 52)"/>
+    <rect x="10.2" y="-0.3" width="0.6" height="0.6" fill="rgb(200, 52, 52)"/>
+    <rect x="11.2" y="-0.3" width="0.6" height="0.6" fill="rgb(200, 52, 52)"/>
+  </g>
+</svg>

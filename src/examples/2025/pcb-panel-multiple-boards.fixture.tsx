@@ -5,7 +5,7 @@ export const PcbPanelMultipleBoardsExample: React.FC = () => {
   const circuit = new Circuit()
 
   circuit.add(
-    <panel width="100mm" height="50mm">
+    <panel width="100mm" height="50mm" layoutMode="grid">
       <board width="10mm" height="10mm" routingDisabled />
       <board width="10mm" height="10mm" routingDisabled />
       <board width="10mm" height="10mm" routingDisabled />
@@ -13,6 +13,7 @@ export const PcbPanelMultipleBoardsExample: React.FC = () => {
     </panel>,
   )
 
+  circuit.renderUntilSettled()
   const soup = circuit.getCircuitJson()
 
   return (
