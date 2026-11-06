@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
+import { useHotKey } from "../hooks/useHotKey"
 
 interface Props {
   transform?: Matrix
@@ -13,6 +14,7 @@ interface Props {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  onUndoEditEvent?: () => void
 }
 
 const isInsideOf = (
@@ -39,6 +41,7 @@ export const EditPlacementOverlay = ({
   cancelPanDrag,
   onCreateEditEvent,
   onModifyEditEvent,
+  onUndoEditEvent,
 }: Props) => {
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -57,6 +60,14 @@ export const EditPlacementOverlay = ({
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
 
   const disabled = disabledProp || !in_move_footprint_mode
+
+  const handleUndo = () => {
+    if (disabledProp || activePcbComponentId) return
+    onUndoEditEvent?.()
+  }
+
+  useHotKey("ctrl+z", handleUndo, containerRef)
+  useHotKey("meta+z", handleUndo, containerRef)
 
   return (
     <div
