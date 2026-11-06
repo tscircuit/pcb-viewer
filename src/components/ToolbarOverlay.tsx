@@ -39,6 +39,7 @@ interface Props {
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onSearchComponent?: (pcbComponentId: string) => void
+  allowEditing?: boolean
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -156,6 +157,7 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
 export const ToolbarOverlay = ({
   children,
   elements,
+  allowEditing = true,
   onSearchComponent,
   onContextMenuOpenChange,
   getNetAtPoint,
@@ -171,6 +173,8 @@ export const ToolbarOverlay = ({
     setIsMouseOverContainer,
     selectedLayer,
     selectLayer,
+    inMoveFootprintMode,
+    setEditMode,
     viewSettings,
     setIsShowingRatsNest,
     setIsShowingMultipleTracesLength,
@@ -193,6 +197,8 @@ export const ToolbarOverlay = ({
     setIsMouseOverContainer: s.setIsMouseOverContainer,
     selectedLayer: s.selected_layer,
     selectLayer: s.selectLayer,
+    inMoveFootprintMode: s.in_move_footprint_mode,
+    setEditMode: s.setEditMode,
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
@@ -672,6 +678,17 @@ export const ToolbarOverlay = ({
             </div>
             {isViewMenuOpen && (
               <div style={{ marginTop: 4, minWidth: 120 }}>
+                {allowEditing && (
+                  <CheckboxMenuItem
+                    label="Move Components"
+                    checked={inMoveFootprintMode}
+                    onClick={() => {
+                      setEditMode(
+                        inMoveFootprintMode ? "off" : "move_footprint",
+                      )
+                    }}
+                  />
+                )}
                 <CheckboxMenuItem
                   label="Show All Trace Lengths"
                   checked={viewSettings.is_showing_multiple_traces_length}
