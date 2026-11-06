@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="-3.5 -2 8 5">
+  <title>Unconnected rats nest shows only remaining airwires</title>
+  <rect x="-3.5" y="-2" width="8" height="5" fill="rgb(0, 16, 35)"/>
+  <g transform="scale(1 -1)">
+    <rect x="-2.4" y="-0.4" width="0.8" height="0.8" fill="rgb(200, 52, 52)"/>
+    <rect x="-0.4" y="-0.4" width="0.8" height="0.8" fill="rgb(200, 52, 52)"/>
+    <rect x="2.6" y="0.7999999999999999" width="0.8" height="0.8" fill="rgb(200, 52, 52)"/>
+    <line x1="-2" y1="0" x2="0" y2="0" stroke="rgb(200, 52, 52)" stroke-width="0.25" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="3" y2="1.2" stroke="white" stroke-width="0.1" stroke-dasharray="0.25 0.2" opacity="0.85"/>
+  </g>
+</svg>
