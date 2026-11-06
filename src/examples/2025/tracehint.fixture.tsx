@@ -243,6 +243,51 @@ export const TraceHintExample = () => {
                 },
               ],
             },
+            {
+              type: "pcb_trace_hint",
+              pcb_trace_hint_id: "pcb_trace_hint_0",
+              pcb_component_id: "pcb_component_simple_resistor_0",
+              pcb_port_id: "pcb_port_0",
+              route: [
+                {
+                  x: -7,
+                  y: 1.5,
+                  trace_width: 0.2,
+                },
+                {
+                  x: -7,
+                  y: 3.5,
+                  via: true,
+                  to_layer: "bottom",
+                  trace_width: 0.2,
+                },
+                {
+                  x: -3,
+                  y: 3.5,
+                  trace_width: 0.2,
+                },
+              ],
+            },
+            {
+              type: "pcb_trace_hint",
+              pcb_trace_hint_id: "pcb_trace_hint_1",
+              pcb_component_id: "pcb_component_simple_resistor_0",
+              pcb_port_id: "pcb_port_1",
+              route: [
+                {
+                  x: -3,
+                  y: -1.5,
+                  trace_width: 0.2,
+                },
+                {
+                  x: -1,
+                  y: -1.5,
+                  via: true,
+                  to_layer: "bottom",
+                  trace_width: 0.2,
+                },
+              ],
+            },
           ] as AnyCircuitElement[]
         }
       />
