@@ -446,6 +446,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         >
           <ToolbarOverlay
             elements={elements}
+            allowEditing={props.allowEditing}
             onSearchComponent={props.onSearchComponent}
             getNetAtPoint={getNetAtPoint}
             xRayNetIds={xRayNetIds}

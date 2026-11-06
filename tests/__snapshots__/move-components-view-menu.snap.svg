@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="-6 -4 12 8">
+  <title>Move Components mode footprint relocation</title>
+  <rect x="-6" y="-4" width="12" height="8" fill="rgb(0, 16, 35)"/>
+  <g transform="scale(1 -1)">
+    <rect x="-3.6" y="-0.45" width="0.8" height="0.9" fill="rgb(200, 52, 52)" opacity="0.35" stroke="#ffffff" stroke-width="0.08" stroke-dasharray="0.2 0.15"/>
+    <rect x="-2.2" y="-0.45" width="0.8" height="0.9" fill="rgb(200, 52, 52)" opacity="0.35" stroke="#ffffff" stroke-width="0.08" stroke-dasharray="0.2 0.15"/>
+    <rect x="1.4" y="0.75" width="0.8" height="0.9" fill="rgb(200, 52, 52)" opacity="1"/>
+    <rect x="2.8000000000000003" y="0.75" width="0.8" height="0.9" fill="rgb(200, 52, 52)" opacity="1"/>
+    <line x1="-2.5" y1="0" x2="2.5" y2="1.2" stroke="#00e5ff" stroke-width="0.1" stroke-dasharray="0.25 0.15"/>
+  </g>
+</svg>
