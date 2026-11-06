@@ -3,6 +3,20 @@ import type { ManualEditEvent } from "@tscircuit/props"
 import type { CircuitJson, PcbTraceHint } from "circuit-json"
 import { translate } from "transformation-matrix"
 
+export function undoLastEditEvent(
+  editEvents: ManualEditEvent[],
+): ManualEditEvent[] {
+  if (editEvents.length === 0) return editEvents
+
+  for (let i = editEvents.length - 1; i >= 0; i--) {
+    if (!editEvents[i]?.in_progress) {
+      return [...editEvents.slice(0, i), ...editEvents.slice(i + 1)]
+    }
+  }
+
+  return editEvents.slice(0, -1)
+}
+
 export function applyEditEvents({
   circuitJson,
   editEvents,
