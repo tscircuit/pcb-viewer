@@ -3,9 +3,53 @@ import {
   getPlatedHolePolygon,
   getSmtPadPolygon,
 } from "@tscircuit/circuit-json-util"
-import type { AnyCircuitElement } from "circuit-json"
+import {
+  type AnyCircuitElement,
+  type PcbPlatedHole,
+  distance,
+} from "circuit-json"
 import { applyToPoint, rotateDEG } from "transformation-matrix"
 import { createTransformForBounds } from "./util/error-preview"
+
+const isFiniteBox = (box: {
+  xmin: number
+  xmax: number
+  ymin: number
+  ymax: number
+}) => [box.xmin, box.xmax, box.ymin, box.ymax].every(Number.isFinite)
+
+const normalizePlatedHoleForPolygon = (hole: PcbPlatedHole): PcbPlatedHole => {
+  if (hole.shape === "circle" || "outer_width" in hole) {
+    return hole
+  }
+
+  const holeOffsetX = distance.parse(
+    "hole_offset_x" in hole ? (hole.hole_offset_x ?? 0) : 0,
+  )
+  const holeOffsetY = distance.parse(
+    "hole_offset_y" in hole ? (hole.hole_offset_y ?? 0) : 0,
+  )
+  const rectPadOffsetX = distance.parse(
+    "rect_pad_offset_x" in hole
+      ? ((hole as { rect_pad_offset_x?: number | string }).rect_pad_offset_x ??
+          0)
+      : 0,
+  )
+  const rectPadOffsetY = distance.parse(
+    "rect_pad_offset_y" in hole
+      ? ((hole as { rect_pad_offset_y?: number | string }).rect_pad_offset_y ??
+          0)
+      : 0,
+  )
+
+  return {
+    ...hole,
+    x: hole.x + rectPadOffsetX,
+    y: hole.y + rectPadOffsetY,
+    hole_offset_x: holeOffsetX - rectPadOffsetX,
+    hole_offset_y: holeOffsetY - rectPadOffsetY,
+  }
+}
 
 export const getPcbComponentFocus = (
   elements: AnyCircuitElement[],
@@ -29,16 +73,24 @@ export const getPcbComponentFocus = (
       element.pcb_component_id !== pcbComponentId
     )
       return []
-    if (element.type === "pcb_smtpad") return [getSmtPadPolygon(element)]
-    if (element.type === "pcb_plated_hole")
-      return [getPlatedHolePolygon(element, rotation)]
+    try {
+      if (element.type === "pcb_smtpad") return [getSmtPadPolygon(element)]
+      if (element.type === "pcb_plated_hole")
+        return [
+          getPlatedHolePolygon(
+            normalizePlatedHoleForPolygon(element),
+            rotation,
+          ),
+        ]
+    } catch {
+      return []
+    }
     return []
   })
-  const boxes = polygons
+  const validPolygons = polygons.filter((polygon) => isFiniteBox(polygon.box))
+  const boxes = validPolygons
     .map((polygon) => polygon.rotate((-rotation * Math.PI) / 180).box)
-    .filter((box) =>
-      [box.xmin, box.xmax, box.ymin, box.ymax].every(Number.isFinite),
-    )
+    .filter(isFiniteBox)
   const fallbackBounds = getPcbElementBounds({ ...component, rotation: 0 })
   if (!fallbackBounds) return
   const localBounds = boxes.length
@@ -61,10 +113,10 @@ export const getPcbComponentFocus = (
   }
   const bounds = boxes.length
     ? {
-        minX: Math.min(...polygons.map((polygon) => polygon.box.xmin)),
-        maxX: Math.max(...polygons.map((polygon) => polygon.box.xmax)),
-        minY: Math.min(...polygons.map((polygon) => polygon.box.ymin)),
-        maxY: Math.max(...polygons.map((polygon) => polygon.box.ymax)),
+        minX: Math.min(...validPolygons.map((polygon) => polygon.box.xmin)),
+        maxX: Math.max(...validPolygons.map((polygon) => polygon.box.xmax)),
+        minY: Math.min(...validPolygons.map((polygon) => polygon.box.ymin)),
+        maxY: Math.max(...validPolygons.map((polygon) => polygon.box.ymax)),
       }
     : fallbackBounds
   return {

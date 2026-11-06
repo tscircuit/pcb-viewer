@@ -37,3 +37,51 @@ test("PCB focus waits for layout and ignores stale component IDs", () => {
   expect(getPcbComponentFocus(elements, "component", 800, 0)).toBeUndefined()
   expect(getPcbComponentFocus(elements, "missing", 800, 600)).toBeUndefined()
 })
+
+test("PCB focus handles rect-pad plated holes without hole_offset_x/y and with rect_pad_offset_x/y", () => {
+  const elements: AnyCircuitElement[] = [
+    {
+      ...component,
+      center: { x: 10, y: 20 },
+      rotation: 0,
+    },
+    {
+      type: "pcb_smtpad",
+      pcb_smtpad_id: "pad_1",
+      pcb_component_id: "component",
+      shape: "rect",
+      x: 8,
+      y: 20,
+      width: 1,
+      height: 2,
+      layer: "top",
+    },
+    {
+      type: "pcb_plated_hole",
+      pcb_plated_hole_id: "ph_1",
+      pcb_component_id: "component",
+      shape: "pill_hole_with_rect_pad",
+      hole_shape: "pill",
+      pad_shape: "rect",
+      x: 12,
+      y: 20,
+      hole_width: 1,
+      hole_height: 2,
+      rect_pad_width: 2,
+      rect_pad_height: 4,
+      rect_pad_offset_x: 1,
+      rect_pad_offset_y: 0,
+      layers: ["top", "bottom"],
+    } as unknown as AnyCircuitElement,
+  ]
+
+  const result = getPcbComponentFocus(elements, "component", 800, 600)!
+  expect(result).toBeDefined()
+  expect(result.bounds.minX).toBeCloseTo(7.5)
+  expect(result.bounds.maxX).toBeCloseTo(14)
+  expect(result.bounds.minY).toBeCloseTo(18)
+  expect(result.bounds.maxY).toBeCloseTo(22)
+  expect(Number.isFinite(result.transform.a)).toBe(true)
+  expect(Number.isFinite(result.transform.e)).toBe(true)
+  expect(Number.isFinite(result.transform.f)).toBe(true)
+})
