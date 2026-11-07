@@ -126,7 +126,12 @@ export const ComponentSearch = ({
         className={buttonClass}
         aria-label="Search components"
         title="Search components"
-        style={getToolbarButtonStyle(isSmallScreen)}
+        style={{
+          ...getToolbarButtonStyle(isSmallScreen),
+          // Native icon-only buttons can shrink to the SVG despite inherited line-height.
+          // Include one text line, 4px padding per side, and 1px borders like the other controls.
+          minHeight: "calc(1lh + 10px)",
+        }}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen(!open)}
