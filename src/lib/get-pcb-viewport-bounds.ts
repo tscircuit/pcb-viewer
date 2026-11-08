@@ -3,6 +3,7 @@ import {
   getBoardBounds,
 } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement } from "circuit-json"
+import { normalizePcbPanelElement } from "./draw-pcb-panel"
 
 export function getPcbViewportBounds(elements: AnyCircuitElement[]) {
   const pcbElements = elements.filter((element) =>
@@ -16,6 +17,9 @@ export function getPcbViewportBounds(elements: AnyCircuitElement[]) {
       (element) => element.type === "pcb_board" || element.type === "pcb_panel",
     )
     .map((element) => {
+      if (element.type === "pcb_panel") {
+        return normalizePcbPanelElement(element, pcbElements)
+      }
       if (element.type !== "pcb_board" || !element.outline?.length)
         return element
       const { center, width, height } = getBoardBounds(element)
