@@ -1,6 +1,6 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
 import { useGlobalStore } from "../global-store"
-import { useEffect, useRef, useState } from "react"
+import { useMemo, useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
@@ -55,6 +55,33 @@ export const EditPlacementOverlay = ({
   const in_edit_mode = useGlobalStore((s) => s.in_edit_mode)
   const in_move_footprint_mode = useGlobalStore((s) => s.in_move_footprint_mode)
   const setIsMovingComponent = useGlobalStore((s) => s.setIsMovingComponent)
+  const selected_layer = useGlobalStore((s) => s.selected_layer)
+  const is_showing_top_components = useGlobalStore(
+    (s) => (s as any).is_showing_top_components ?? true,
+  )
+  const is_showing_bottom_components = useGlobalStore(
+    (s) => (s as any).is_showing_bottom_components ?? true,
+  )
+
+  const throughHoleComponentIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const el of soup) {
+      if (el.type === "pcb_plated_hole" && el.pcb_component_id) {
+        ids.add(el.pcb_component_id)
+      }
+    }
+    return ids
+  }, [soup])
+
+  const isPickableComponent = (comp: PcbComponent): boolean => {
+    if (throughHoleComponentIds.has(comp.pcb_component_id)) {
+      return true
+    }
+    if (comp.layer === "top" && !is_showing_top_components) return false
+    if (comp.layer === "bottom" && !is_showing_bottom_components) return false
+    if (comp.layer && comp.layer !== selected_layer) return false
+    return true
+  }
 
   const disabled = disabledProp || !in_move_footprint_mode
 
@@ -77,6 +104,7 @@ export const EditPlacementOverlay = ({
         for (const e of soup) {
           if (
             e.type === "pcb_component" &&
+            isPickableComponent(e) &&
             isInsideOf(e, rwMousePoint, 10 / transform.a)
           ) {
             cancelPanDrag()
@@ -155,7 +183,10 @@ export const EditPlacementOverlay = ({
       {children}
       {!disabled &&
         soup
-          .filter((e): e is PcbComponent => e.type === "pcb_component")
+          .filter(
+            (e): e is PcbComponent =>
+              e.type === "pcb_component" && isPickableComponent(e),
+          )
           .map((e) => {
             if (!e?.center) return null
             const projectedCenter = applyToPoint(transform, e.center)
