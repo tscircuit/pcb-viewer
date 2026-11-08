@@ -95,6 +95,16 @@ export const ErrorOverlay = ({
   )
   const activeErrorId = focusedErrorId ?? hoveredErrorId
   const overlayElements = elements ?? EMPTY_ELEMENTS
+  const errorIndexByElement = useMemo(() => {
+    const map = new Map<AnyCircuitElement, number>()
+    let errorIndex = 0
+    for (const element of overlayElements) {
+      if (element.type.includes("error")) {
+        map.set(element, errorIndex++)
+      }
+    }
+    return map
+  }, [overlayElements])
   const traceErrors = useMemo(
     () =>
       overlayElements.filter(
@@ -123,6 +133,21 @@ export const ErrorOverlay = ({
       ),
     [overlayElements],
   )
+  const otherErrors = useMemo(
+    () =>
+      overlayElements.filter(
+        (
+          element,
+        ): element is AnyCircuitElement & {
+          message?: string
+          error_type?: string
+        } =>
+          element.type.includes("error") &&
+          element.type !== "pcb_trace_error" &&
+          element.type !== "pcb_via_clearance_error",
+      ),
+    [overlayElements],
+  )
   const elementIndexes = useMemo(
     () => buildErrorPreviewElementIndexes(overlayElements),
     [overlayElements],
@@ -134,12 +159,13 @@ export const ErrorOverlay = ({
   const componentErrorTargets = useMemo(
     () =>
       componentErrors.map((error, errorIndex) => {
+        const resolvedErrorIndex = errorIndexByElement.get(error) ?? errorIndex
         const componentName =
           ("component_name" in error && typeof error.component_name === "string"
             ? error.component_name
             : undefined) ?? error.message?.match(/name "([^"]+)"/)?.[1]
         if (!componentName) {
-          return { components: [], error, errorIndex }
+          return { components: [], error, errorIndex: resolvedErrorIndex }
         }
 
         const components = overlayElements.filter(
@@ -155,9 +181,9 @@ export const ErrorOverlay = ({
                   sourceComponent.name === componentName,
               )),
         )
-        return { components, error, errorIndex }
+        return { components, error, errorIndex: resolvedErrorIndex }
       }),
-    [componentErrors, overlayElements],
+    [componentErrors, errorIndexByElement, overlayElements],
   )
 
   if (!elements) {
@@ -169,10 +195,14 @@ export const ErrorOverlay = ({
   }
 
   const getScreenErrorCenter = (error: AnyCircuitElement) => {
-    const focusCenter = getErrorFocusPoint({
-      error,
-      indexes: elementIndexes,
-    })
+    const focusCenter =
+      getErrorFocusPoint({
+        error,
+        indexes: elementIndexes,
+      }) ??
+      (error.type === "source_failed_to_create_component_error"
+        ? { x: 0, y: 0 }
+        : null)
 
     if (
       !focusCenter ||
@@ -192,7 +222,10 @@ export const ErrorOverlay = ({
   }
 
   let focusScreenCenter: { x: number; y: number } | null = null
-  if (focusedErrorElement) {
+  if (
+    focusedErrorElement &&
+    focusedErrorElement.type !== "source_failed_to_create_component_error"
+  ) {
     focusScreenCenter = getScreenErrorCenter(
       focusedErrorElement as AnyCircuitElement,
     )
@@ -202,7 +235,7 @@ export const ErrorOverlay = ({
     <div style={{ position: "relative" }} ref={containerRef}>
       {children}
       {traceErrors.map((el: PcbTraceError, index) => {
-        const errorId = getErrorId(el, index)
+        const errorId = getErrorId(el, errorIndexByElement.get(el) ?? index)
         const isHighlighted = activeErrorId === errorId
 
         if (!isHighlighted && !isShowingDRCErrors) return null
@@ -282,7 +315,7 @@ export const ErrorOverlay = ({
         )
       })}
       {viaClearanceErrors.map((el, index) => {
-        const errorId = getErrorId(el, index)
+        const errorId = getErrorId(el, errorIndexByElement.get(el) ?? index)
         const isHighlighted = activeErrorId === errorId
 
         if (!isHighlighted && !isShowingDRCErrors) return null
@@ -507,6 +540,96 @@ export const ErrorOverlay = ({
             </Fragment>
           )
         })
+      })}
+      {otherErrors.map((el, index) => {
+        const errorId = getErrorId(el, errorIndexByElement.get(el) ?? index)
+        const isHighlighted = activeErrorId === errorId
+        const isComponentCreationError =
+          el.type === "source_failed_to_create_component_error"
+
+        if (!isHighlighted && !isShowingDRCErrors && !isComponentCreationError)
+          return null
+
+        const errorCenter = getScreenErrorCenter(el)
+        if (!errorCenter) return null
+
+        const popupPosition = getPopupPosition(
+          { x: errorCenter.x, y: errorCenter.y },
+          containerRef,
+        )
+        const isMessageVisibleByDefault =
+          isHighlighted || isComponentCreationError
+
+        return (
+          <Fragment key={errorId}>
+            <ErrorMarkerSVG
+              errorCenter={errorCenter}
+              isHighlighted={isHighlighted}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: errorCenter.x - 15,
+                top: errorCenter.y - 15,
+                width: 30,
+                height: 30,
+                zIndex: zIndexMap.errorOverlay + 5,
+                cursor: "pointer",
+                borderRadius: "50%",
+              }}
+              onMouseEnter={(e) => {
+                const popup = e.currentTarget.nextElementSibling as HTMLElement
+                if (popup) {
+                  const msg = popup.querySelector(
+                    ".error-message",
+                  ) as HTMLElement
+                  if (msg) msg.style.opacity = "1"
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isMessageVisibleByDefault) {
+                  const popup = e.currentTarget
+                    .nextElementSibling as HTMLElement
+                  if (popup) {
+                    const msg = popup.querySelector(
+                      ".error-message",
+                    ) as HTMLElement
+                    if (msg) msg.style.opacity = "0"
+                  }
+                }
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                zIndex: isHighlighted
+                  ? zIndexMap.errorOverlay + 10
+                  : zIndexMap.errorOverlay + 1,
+                left: popupPosition.left,
+                top: popupPosition.top,
+                color: isHighlighted ? "#ff4444" : "red",
+                textAlign: "center",
+                fontFamily: "sans-serif",
+                fontSize: 12,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                pointerEvents: "none",
+                transform: popupPosition.transform,
+              }}
+            >
+              <div
+                className={`error-message ${errorMessageStyles}`}
+                style={{
+                  opacity: isMessageVisibleByDefault ? 1 : 0,
+                  border: `1px solid ${isHighlighted ? "#ff4444" : "red"}`,
+                }}
+              >
+                {el.message}
+              </div>
+            </div>
+          </Fragment>
+        )
       })}
       {focusScreenCenter && <FocusMarkerSVG center={focusScreenCenter} />}
     </div>

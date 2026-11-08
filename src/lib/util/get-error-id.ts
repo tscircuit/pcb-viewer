@@ -32,10 +32,13 @@ export const findErrorElementById = (
 ) => {
   if (!errorId) return null
 
+  const errorElements = elements.filter((element) =>
+    element.type?.includes("error"),
+  )
+
   return (
-    elements.find((element, index) => {
-      if (!element.type?.includes("error")) return false
-      return getErrorId(element, index) === errorId
-    }) ?? null
+    errorElements.find(
+      (element, index) => getErrorId(element, index) === errorId,
+    ) ?? null
   )
 }
