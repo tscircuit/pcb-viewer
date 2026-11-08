@@ -27,6 +27,13 @@ function getColor(primitive: Primitive): string {
     c = c.alpha(0.7)
   }
 
+  if (primitive._element?.type === "pcb_trace_hint") {
+    if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
+      return c.alpha(1).rgb().toString()
+    }
+    return c.alpha(0.5).rgb().toString()
+  }
+
   if (primitive.is_mouse_over || primitive.is_in_highlighted_net) {
     return c.lighten(0.5).rgb().toString()
   }
@@ -42,7 +49,7 @@ export const drawLine = (drawer: Drawer, line: Line) => {
     layer: line.layer,
   })
   drawer.moveTo(line.x1, line.y1)
-  drawer.lineTo(line.x2, line.y2)
+  drawer.lineTo(line.x2, line.y2, line.is_dashed)
 }
 
 /**
@@ -308,8 +315,17 @@ export const drawCircle = (drawer: Drawer, circle: Circle) => {
   drawer.equip({
     color: getColor(circle),
     layer: circle.layer,
+    size: circle.stroke_width,
   })
-  drawer.circle(circle.x, circle.y, circle.r, circle.mesh_fill)
+  drawer.circle(
+    circle.x,
+    circle.y,
+    circle.r,
+    circle.mesh_fill,
+    circle.is_filled,
+    circle.has_stroke,
+    circle.stroke_width,
+  )
 }
 
 export const drawOval = (drawer: Drawer, oval: Oval) => {

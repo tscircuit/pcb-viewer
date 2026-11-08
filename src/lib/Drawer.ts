@@ -375,6 +375,8 @@ export class Drawer {
     r: number,
     mesh_fill?: boolean,
     is_filled = true,
+    has_stroke?: boolean,
+    stroke_width?: number,
   ) {
     const r$ = scaleOnly(this.transform, r)
     const [x$, y$] = applyToPoint(this.transform, [x, y])
@@ -398,9 +400,27 @@ export class Drawer {
       ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
       ctx.stroke()
     } else {
-      ctx.beginPath()
-      ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
-      ctx.fill()
+      if (is_filled !== false) {
+        ctx.beginPath()
+        ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
+        ctx.fill()
+      }
+
+      const shouldDrawStroke =
+        has_stroke === undefined ? is_filled === false : has_stroke
+
+      if (shouldDrawStroke) {
+        const originalLineWidth = ctx.lineWidth
+        if (stroke_width !== undefined) {
+          ctx.lineWidth = scaleOnly(this.transform, stroke_width)
+        }
+        ctx.beginPath()
+        ctx.arc(x$, y$, r$, 0, 2 * Math.PI)
+        ctx.stroke()
+        if (stroke_width !== undefined) {
+          ctx.lineWidth = originalLineWidth
+        }
+      }
     }
   }
 
@@ -640,7 +660,7 @@ export class Drawer {
   moveTo(x: number, y: number) {
     this.lastPoint = { x, y }
   }
-  lineTo(x: number, y: number) {
+  lineTo(x: number, y: number, is_dashed?: boolean) {
     const [x$, y$] = applyToPoint(this.transform, [x, y])
     const { size, shape, mode } = this.aperture
     const size$ = scaleOnly(this.transform, size)
@@ -649,6 +669,11 @@ export class Drawer {
 
     this.applyAperture()
     const ctx = this.getLayerCtx()
+
+    if (is_dashed) {
+      const dash = Math.max(size$ * 1.5, 2)
+      ctx.setLineDash([dash, dash])
+    }
 
     if (shape === "square")
       ctx.fillRect(
@@ -663,6 +688,10 @@ export class Drawer {
 
     ctx.stroke()
     ctx.closePath()
+
+    if (is_dashed) {
+      ctx.setLineDash([])
+    }
 
     if (shape === "square")
       ctx.fillRect(x$ - size$ / 2, y$ - size$ / 2, size$, size$)

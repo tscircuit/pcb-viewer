@@ -58,6 +58,7 @@ export interface Line extends PCBDrawingObject {
   width: number
   zoomIndependent?: boolean
   color?: string
+  is_dashed?: boolean
 }
 
 export interface Text extends PCBDrawingObject {
@@ -104,6 +105,8 @@ export interface Circle extends PCBDrawingObject {
   r: number
   mesh_fill?: boolean
   is_filled?: boolean
+  has_stroke?: boolean
+  stroke_width?: number
 }
 
 export interface Oval extends PCBDrawingObject {
