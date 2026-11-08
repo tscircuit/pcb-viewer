@@ -104,24 +104,62 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
+    isShowingTopComponents,
+    isShowingBottomComponents,
     copperPourOpacity,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
+    isShowingTopComponents: state.is_showing_top_components,
+    isShowingBottomComponents: state.is_showing_bottom_components,
     copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
   }))
   const activeErrorId = focusedErrorId ?? hoveredErrorId
 
-  const elementsToRender = useMemo(
-    () =>
-      isShowingCopperPours
-        ? elements
-        : elements.filter((elm) => elm.type !== "pcb_copper_pour"),
-    [elements, isShowingCopperPours],
-  )
+  const elementsToRender = useMemo(() => {
+    const throughHoleComponentIds = new Set<string>()
+    const componentLayerById = new Map<string, string>()
+    for (const el of elements) {
+      if (el.type === "pcb_plated_hole" && el.pcb_component_id) {
+        throughHoleComponentIds.add(el.pcb_component_id)
+      } else if (el.type === "pcb_component" && el.pcb_component_id && el.layer) {
+        componentLayerById.set(el.pcb_component_id, el.layer)
+      }
+    }
+
+    return elements.filter((elm) => {
+      if (!isShowingCopperPours && elm.type === "pcb_copper_pour") {
+        return false
+      }
+      if (!isShowingTopComponents || !isShowingBottomComponents) {
+        const compId = (elm as any).pcb_component_id as string | undefined
+        if (compId && throughHoleComponentIds.has(compId)) {
+          return true
+        }
+        const isComponentElement =
+          elm.type === "pcb_component" ||
+          elm.type === "pcb_smtpad" ||
+          elm.type.startsWith("pcb_silkscreen_") ||
+          elm.type.startsWith("pcb_fabrication_note_") ||
+          elm.type.startsWith("pcb_courtyard_")
+        if (isComponentElement) {
+          const side =
+            (compId && componentLayerById.get(compId)) || (elm as any).layer
+          if (side === "top" && !isShowingTopComponents) return false
+          if (side === "bottom" && !isShowingBottomComponents) return false
+        }
+      }
+      return true
+    })
+  }, [
+    elements,
+    isShowingCopperPours,
+    isShowingTopComponents,
+    isShowingBottomComponents,
+  ])
 
   const primitivesWithoutInteractionMetadata = useMemo(() => {
     const metadataIndex = createPrimitiveMetadataIndex(elements)
