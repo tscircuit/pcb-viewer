@@ -1,78 +1,178 @@
-import { useRenderedCircuit } from "@tscircuit/core"
-import { findBoundsAndCenter } from "@tscircuit/soup-util"
-import type { AnyCircuitElement } from "circuit-json"
-import { ContextProviders } from "components/ContextProviders"
-import type { StateProps } from "global-store"
+import { getPcbViewportBounds } from "lib/get-pcb-viewport-bounds"
+import type { ManualEditEvent } from "@tscircuit/props"
+import type { AnyCircuitElement, SourceTrace } from "circuit-json"
+import type { GraphicsObject } from "graphics-debug"
 import { applyEditEvents } from "lib/apply-edit-events"
-import type { EditEvent } from "lib/edit-events"
+import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
+import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { ToastContainer } from "lib/toast"
-import { useEffect, useMemo, useState } from "react"
+import { zIndexMap } from "lib/util/z-index-map"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
-import { compose, scale, translate } from "transformation-matrix"
+import { type Matrix, compose, scale, translate } from "transformation-matrix"
 import useMouseMatrixTransform from "use-mouse-matrix-transform"
 import { CanvasElementsRenderer } from "./components/CanvasElementsRenderer"
+import { ContextProviders } from "./components/ContextProviders"
+import type { BoundsSelection } from "./components/DimensionOverlay"
+import {
+  type RenderingEngine,
+  RenderingEngineContext,
+} from "./components/RenderingEngineContext"
+import type { StateProps } from "./global-store"
+import { useAnimationFrameTransformState } from "./hooks/useAnimationFrameTransformState"
+import {
+  STORAGE_KEYS,
+  getStoredString,
+  setStoredString,
+} from "./hooks/useLocalStorage"
+import { usePcbComponentSearchFocus } from "./hooks/usePcbComponentSearchFocus"
+import type { PcbViewerController } from "./hooks/usePcbViewerController"
+import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
+import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
+const getPreferredRenderer = (): RenderingEngine => {
+  const stored = getStoredString(STORAGE_KEYS.RENDERING_ENGINE, "webgpu")
+  return stored === "canvas" || stored === "webgpu" ? stored : "webgpu"
+}
+
 type Props = {
-  children?: any
   circuitJson?: AnyCircuitElement[]
-  soup?: any // @deprecated Use circuitJson instead
   height?: number
+  /** Initial engine override; otherwise restores the saved user preference.
+   * Users can switch via the context menu. Prop changes reset it.
+   * WebGPU runs in a worker and reports failures without changing engines. */
+  renderer?: "webgpu" | "canvas"
   allowEditing?: boolean
-  editEvents?: EditEvent[]
+  editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
-  onEditEventsChanged?: (editEvents: EditEvent[]) => void
+  onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
+  /** Called once after the active renderer first paints the current Circuit JSON. */
+  onRenderComplete?: () => void
+  /** Omit when the host has no enabled schematic tab. */
+  onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
+  onBoundsSelected?: (bounds: BoundsSelection) => void
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
+  debugGraphics?: GraphicsObject | null
+  disablePcbGroups?: boolean
+  /** Connect the controller returned by usePcbViewerController. */
+  controller?: PcbViewerController
 }
 
 export const PCBViewer = ({
-  children,
-  soup,
   circuitJson,
+  debugGraphics,
   height = 600,
+  renderer,
   initialState,
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
+  onRenderComplete,
+  onBoundsSelected,
+  onViewSchematicComponent,
   focusOnHover = false,
   clickToInteractEnabled = false,
+  disablePcbGroups = false,
+  controller,
 }: Props) => {
-  circuitJson ??= soup
-  const {
-    circuitJson: circuitJsonFromChildren,
-    error: errorFromChildren,
-    isLoading,
-  } = useRenderedCircuit(children)
-  circuitJson ??= circuitJsonFromChildren ?? []
-
-  const [isInteractionEnabled, setIsInteractionEnabled] = useState(!clickToInteractEnabled)
+  const [activeRenderer, setActiveRenderer] = useState<RenderingEngine>(
+    () => renderer ?? getPreferredRenderer(),
+  )
+  const [focusedPcbComponent, setFocusedPcbComponent] =
+    useState<PcbViewerController["focusRequest"]>(null)
+  useEffect(
+    () => setActiveRenderer(renderer ?? getPreferredRenderer()),
+    [renderer],
+  )
+  const setPreferredRenderer = useCallback((engine: RenderingEngine) => {
+    setActiveRenderer(engine)
+    setStoredString(STORAGE_KEYS.RENDERING_ENGINE, engine)
+  }, [])
+  const renderingEngine = useMemo(
+    () => ({ renderer: activeRenderer, setRenderer: setPreferredRenderer }),
+    [activeRenderer, setPreferredRenderer],
+  )
+  const [isInteractionEnabled, setIsInteractionEnabled] = useState(
+    !clickToInteractEnabled,
+  )
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false)
+  const contextMenuOpenRef = useRef(false)
   const [ref, refDimensions] = useMeasure()
-  const [transform, setTransformInternal] = useState(defaultTransform)
+  const { transform, setTransform: setTransformOnAnimationFrame } =
+    useAnimationFrameTransformState(defaultTransform)
+  const shouldAllowCanvasInteraction = useCallback(
+    (event: MouseEvent | TouchEvent | WheelEvent) => {
+      if (contextMenuOpenRef.current) return false
+      if (
+        event instanceof MouseEvent &&
+        (event.button === 2 || (event.buttons & 2) !== 0)
+      )
+        return false
+      const target = event.target
+      if (!(target instanceof Element)) return true
+
+      return !target.closest("[data-toolbar-overlay]")
+    },
+    [],
+  )
+
   const {
     ref: transformRef,
-    setTransform,
+    setTransform: setMouseTransform,
     cancelDrag: cancelPanDrag,
   } = useMouseMatrixTransform({
-    transform,
-    onSetTransform: setTransformInternal,
-    enabled: isInteractionEnabled,
+    initialTransform: defaultTransform,
+    onSetTransform: setTransformOnAnimationFrame,
+    enabled: isInteractionEnabled && !isContextMenuOpen,
+    shouldDrag: shouldAllowCanvasInteraction,
   })
 
-  let [editEvents, setEditEvents] = useState<EditEvent[]>([])
+  const { focusComponent, cancelSearchAnimation } = usePcbComponentSearchFocus({
+    transform,
+    setTransform: setMouseTransform,
+    focusedPcbComponent,
+    setFocusedPcbComponent,
+    circuitJson,
+  })
+
+  const setTransform = useCallback(
+    (next: Matrix) => {
+      cancelSearchAnimation()
+      setMouseTransform(next)
+    },
+    [cancelSearchAnimation, setMouseTransform],
+  )
+
+  const onContextMenuOpenChange = useCallback(
+    (open: boolean) => {
+      contextMenuOpenRef.current = open
+      if (open) cancelPanDrag()
+      setIsContextMenuOpen(open)
+    },
+    [cancelPanDrag],
+  )
+
+  let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
 
-  const resetTransform = (shouldAnimate: boolean = false) => {
+  const initialRenderCompleted = useRef(false)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const circuitJsonKey = useMemo(
+    () => calculateCircuitJsonKey(circuitJson),
+    [circuitJson],
+  )
+  const boardSizeKey = useMemo(
+    () => calculateBoardSizeKey(circuitJson),
+    [circuitJson],
+  )
+
+  const resetTransform = () => {
     const elmBounds =
       refDimensions?.width > 0 ? refDimensions : { width: 500, height: 500 }
-    const { center, width, height } = elements.some((e) =>
-      e.type.startsWith("pcb_"),
-    )
-      ? findBoundsAndCenter(
-          elements.filter((e) => e.type.startsWith("pcb_")) as any,
-        )
-      : { center: { x: 0, y: 0 }, width: 0.001, height: 0.001 }
+    const { center, width, height } = getPcbViewportBounds(elements)
     const scaleFactor =
       Math.min(
         (elmBounds.width ?? 0) / width,
@@ -86,135 +186,214 @@ export const PCBViewer = ({
       translate(-center.x, -center.y),
     )
 
-    if (!shouldAnimate) {
-      setTransform(targetTransform)
-      return
-    }
-
-    const startTransform = { ...transform }
-    const startTime = Date.now()
-    const duration = 1000
-
-    const animateTransform = () => {
-      const elapsed = Date.now() - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      
-      const easeProgress = 1 - Math.pow(1 - progress, 3)
-
-      const newTransform = {
-        a: startTransform.a + (targetTransform.a - startTransform.a) * easeProgress,
-        b: startTransform.b + (targetTransform.b - startTransform.b) * easeProgress,
-        c: startTransform.c + (targetTransform.c - startTransform.c) * easeProgress,
-        d: startTransform.d + (targetTransform.d - startTransform.d) * easeProgress,
-        e: startTransform.e + (targetTransform.e - startTransform.e) * easeProgress,
-        f: startTransform.f + (targetTransform.f - startTransform.f) * easeProgress,
-      }
-
-      setTransform(newTransform)
-
-      if (progress < 1) {
-        requestAnimationFrame(animateTransform)
-      }
-    }
-
-    requestAnimationFrame(animateTransform)
+    setTransform(targetTransform)
+    return
   }
 
   useEffect(() => {
-    if (
-      refDimensions &&
-      refDimensions.width !== 0 &&
-      (children || soup) &&
-      (!clickToInteractEnabled || isInteractionEnabled)
-    ) {
-      resetTransform(false) // No animation for initial/component updates
-    }
-  }, [children, refDimensions, clickToInteractEnabled, isInteractionEnabled])
+    if (!refDimensions?.width) return
+    if (!circuitJson) return
+    if (circuitJson.length === 0) return
 
-  const pcbElmsPreEdit: AnyCircuitElement[] = useMemo(
-    () =>
-      circuitJson.filter(
+    if (!initialRenderCompleted.current) {
+      resetTransform()
+      initialRenderCompleted.current = true
+    }
+  }, [circuitJson, refDimensions])
+
+  useEffect(() => {
+    if (initialRenderCompleted.current === true) {
+      resetTransform()
+    }
+  }, [boardSizeKey])
+
+  const pcbElmsPreEdit = useMemo(() => {
+    return (
+      circuitJson?.filter(
         (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
-      ),
-    [circuitJson],
-  )
+      ) ?? []
+    )
+  }, [circuitJson, circuitJsonKey])
 
   const elements = useMemo(() => {
-    return applyEditEvents(pcbElmsPreEdit, editEvents)
+    return applyEditEvents({
+      circuitJson: pcbElmsPreEdit as any,
+      editEvents,
+    })
   }, [pcbElmsPreEdit, editEvents])
 
-  const onCreateEditEvent = (event: EditEvent) => {
+  useEffect(() => {
+    const request = controller?.focusRequest
+    if (!request || !refDimensions.width || !height || !elements.length) return
+    const focus = getPcbComponentFocus(
+      elements,
+      request.pcbComponentId,
+      refDimensions.width,
+      height,
+    )
+    if (focus) {
+      cancelPanDrag()
+      setTransform(focus.transform)
+      setFocusedPcbComponent(request)
+    }
+    controller.onFocusRequestHandled(request)
+  }, [
+    controller,
+    elements,
+    refDimensions.width,
+    height,
+    cancelPanDrag,
+    setTransform,
+  ])
+
+  const focusSearchComponent = useCallback(
+    (pcbComponentId: string) => {
+      const width = refDimensions.width
+      const focus = getPcbComponentFocus(
+        elements,
+        pcbComponentId,
+        width,
+        height,
+      )
+      if (!focus) return
+      cancelPanDrag()
+      focusComponent(focus, width, height)
+    },
+    [elements, refDimensions.width, height, cancelPanDrag, focusComponent],
+  )
+
+  const onCreateEditEvent = (event: ManualEditEvent) => {
     setEditEvents([...editEvents, event])
     onEditEventsChanged?.([...editEvents, event])
   }
-  const onModifyEditEvent = (modifiedEvent: Partial<EditEvent>) => {
-    const newEditEvents: EditEvent[] = editEvents.map((e) =>
+  const onModifyEditEvent = (modifiedEvent: Partial<ManualEditEvent>) => {
+    const newEditEvents: ManualEditEvent[] = editEvents.map((e) =>
       e.edit_event_id === modifiedEvent.edit_event_id
-        ? ({ ...e, ...modifiedEvent } as EditEvent)
+        ? ({ ...e, ...modifiedEvent } as ManualEditEvent)
         : e,
     )
     setEditEvents(newEditEvents)
     onEditEventsChanged?.(newEditEvents)
   }
 
+  const mergedInitialState = useMemo(
+    () => ({
+      ...initialState,
+      ...(disablePcbGroups && { is_showing_pcb_groups: false }),
+    }),
+    [initialState, disablePcbGroups],
+  )
+
   return (
-    <div ref={transformRef as any} style={{ position: "relative" }}>
-      <div ref={ref as any}>
-        <ContextProviders initialState={initialState}>
-          <CanvasElementsRenderer
-            key={refDimensions.width}
-            transform={transform}
-            height={height}
-            width={refDimensions.width}
-            allowEditing={allowEditing}
-            focusOnHover={focusOnHover}
-            cancelPanDrag={cancelPanDrag}
-            onCreateEditEvent={onCreateEditEvent}
-            onModifyEditEvent={onModifyEditEvent}
-            grid={{
-              spacing: 1,
-              view_window: {
-                left: 0,
-                right: refDimensions.width || 500,
-                top: height,
-                bottom: 0,
-              },
-            }}
-            elements={elements}
-          />
-          <ToastContainer />
-        </ContextProviders>
-      </div>
-      {clickToInteractEnabled && !isInteractionEnabled && (
-        <div
-          onClick={() => {
-            setIsInteractionEnabled(true)
-            resetTransform(true) // Animate when clicking to interact
-          }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            cursor: "pointer",
-            zIndex: 10,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+    <RenderingEngineContext.Provider value={renderingEngine}>
+      <div
+        ref={transformRef as any}
+        style={{ position: "relative" }}
+        onPointerDownCapture={(event) => {
+          if (!(event.target as Element).closest("[data-toolbar-overlay]"))
+            cancelSearchAnimation()
+        }}
+        onWheelCapture={(event) => {
+          if (!(event.target as Element).closest("[data-toolbar-overlay]"))
+            cancelSearchAnimation()
+        }}
+        onContextMenu={(event) => event.preventDefault()}
+      >
+        <div ref={ref as any}>
+          <ContextProviders
+            initialState={mergedInitialState}
+            disablePcbGroups={disablePcbGroups}
+          >
+            <CanvasElementsRenderer
+              renderer={activeRenderer}
+              transform={transform}
+              setTransform={setTransform}
+              height={height}
+              width={refDimensions.width}
+              allowEditing={allowEditing}
+              focusOnHover={focusOnHover}
+              onBoundsSelected={onBoundsSelected}
+              onViewSchematicComponent={onViewSchematicComponent}
+              focusedPcbComponent={focusedPcbComponent}
+              onSearchComponent={focusSearchComponent}
+              cancelPanDrag={cancelPanDrag}
+              onContextMenuOpenChange={onContextMenuOpenChange}
+              onCreateEditEvent={onCreateEditEvent}
+              onModifyEditEvent={onModifyEditEvent}
+              onRenderComplete={onRenderComplete}
+              grid={{
+                spacing: 1,
+                view_window: {
+                  left: 0,
+                  right: refDimensions.width || 500,
+                  top: height,
+                  bottom: 0,
+                },
+              }}
+              elements={elements as SourceTrace[]}
+              debugGraphics={debugGraphics}
+            />
+            <ToastContainer />
+          </ContextProviders>
+        </div>
+        {clickToInteractEnabled && !isInteractionEnabled && (
           <div
+            onClick={() => {
+              setIsInteractionEnabled(true)
+              resetTransform()
+            }}
+            onTouchStart={(e) => {
+              const touch = e.touches[0]
+              touchStartRef.current = {
+                x: touch.clientX,
+                y: touch.clientY,
+              }
+            }}
+            onTouchEnd={(e) => {
+              const touch = e.changedTouches[0]
+              const start = touchStartRef.current
+              if (!start) return
+
+              const deltaX = Math.abs(touch.clientX - start.x)
+              const deltaY = Math.abs(touch.clientY - start.y)
+
+              if (deltaX < 10 && deltaY < 10) {
+                e.preventDefault()
+                setIsInteractionEnabled(true)
+                resetTransform()
+              }
+
+              touchStartRef.current = null
+            }}
             style={{
-              backgroundColor: "rgba(0, 0, 0, 0.8)",
-              color: "white",
-              padding: "12px 24px",
-              borderRadius: "8px",
-              fontSize: "16px",
-              pointerEvents: "none",
+              position: "absolute",
+              inset: 0,
+              cursor: "pointer",
+              zIndex: zIndexMap.clickToInteractOverlay,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              touchAction: "pan-x pan-y pinch-zoom",
             }}
           >
-            Click to Interact
+            <div
+              style={{
+                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                color: "white",
+                padding: "12px 24px",
+                borderRadius: "8px",
+                fontSize: "16px",
+                pointerEvents: "none",
+              }}
+            >
+              {typeof window !== "undefined" &&
+              ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+                ? "Touch to Interact"
+                : "Click to Interact"}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </RenderingEngineContext.Provider>
   )
 }
