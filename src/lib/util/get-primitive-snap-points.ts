@@ -1,5 +1,48 @@
 import type { NinePointAnchor } from "circuit-json"
-import type { Primitive } from "../types"
+import type { PointWithBulge, Primitive } from "../types"
+
+const getBrepArcMidpoint = (
+  p1: PointWithBulge,
+  p2: PointWithBulge,
+): { x: number; y: number } | null => {
+  const bulge = p1.bulge
+  if (!bulge || !Number.isFinite(bulge)) return null
+
+  const dx = p2.x - p1.x
+  const dy = p2.y - p1.y
+  const chord = Math.hypot(dx, dy)
+  if (!(chord > 1e-9)) return null
+
+  const angle = 4 * Math.atan(bulge)
+  const sinHalfAngle = Math.sin(angle / 2)
+  if (Math.abs(sinHalfAngle) < 1e-9) return null
+
+  const radius = Math.abs(chord / (2 * sinHalfAngle))
+  const mx = (p1.x + p2.x) / 2
+  const my = (p1.y + p2.y) / 2
+  const perpVx = -dy / chord
+  const perpVy = dx / chord
+  const distToCenter = Math.sqrt(
+    Math.max(0, radius * radius - (chord / 2) ** 2),
+  )
+  const centerSign = Math.sign(bulge) * (Math.abs(bulge) > 1 ? -1 : 1)
+  const cx = mx + distToCenter * perpVx * centerSign
+  const cy = my + distToCenter * perpVy * centerSign
+
+  const startAngle = Math.atan2(p1.y - cy, p1.x - cx)
+  let endAngle = Math.atan2(p2.y - cy, p2.x - cx)
+  if (bulge > 0 && endAngle < startAngle) {
+    endAngle += 2 * Math.PI
+  } else if (bulge < 0 && endAngle > startAngle) {
+    endAngle -= 2 * Math.PI
+  }
+
+  const midAngle = (startAngle + endAngle) / 2
+  return {
+    x: cx + radius * Math.cos(midAngle),
+    y: cy + radius * Math.sin(midAngle),
+  }
+}
 
 export interface PrimitiveSnapPoint {
   anchor: NinePointAnchor | string
@@ -143,10 +186,26 @@ export const getPrimitiveSnapPoints = (
       }))
     }
     case "polygon_with_arcs": {
-      return primitive.brep_shape.outer_ring.vertices.map((vertex, index) => ({
-        anchor: `polygon_with_arcs_vertex_${index}`,
-        point: { x: vertex.x, y: vertex.y },
-      }))
+      const vertices = primitive.brep_shape.outer_ring.vertices
+      const snapPoints: PrimitiveSnapPoint[] = []
+
+      for (let index = 0; index < vertices.length; index++) {
+        const vertex = vertices[index]!
+        const nextVertex = vertices[(index + 1) % vertices.length]!
+        snapPoints.push({
+          anchor: `polygon_with_arcs_vertex_${index}`,
+          point: { x: vertex.x, y: vertex.y },
+        })
+        const arcMidpoint = getBrepArcMidpoint(vertex, nextVertex)
+        if (arcMidpoint) {
+          snapPoints.push({
+            anchor: `polygon_with_arcs_arc_mid_${index}`,
+            point: arcMidpoint,
+          })
+        }
+      }
+
+      return snapPoints
     }
     default:
       return []
