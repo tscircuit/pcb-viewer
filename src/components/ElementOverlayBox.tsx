@@ -145,6 +145,20 @@ export const HighlightedPrimitiveBoxWithText = ({
     "ccw_rotation" in primitive
   ) {
     rotation = (primitiveElement as PcbPlatedHoleOval).ccw_rotation ?? 0
+  } else if (
+    primitiveElement.type === "pcb_plated_hole" &&
+    (primitiveElement?.shape === "circular_hole_with_rect_pad" ||
+      primitiveElement?.shape === "pill_hole_with_rect_pad" ||
+      primitiveElement?.shape === "rotated_pill_hole_with_rect_pad")
+  ) {
+    rotation =
+      ("rect_ccw_rotation" in primitiveElement
+        ? primitiveElement.rect_ccw_rotation
+        : undefined) ??
+      ("ccw_rotation" in primitive
+        ? (primitive as { ccw_rotation?: number }).ccw_rotation
+        : undefined) ??
+      0
   }
   // In HighlightedPrimitiveBoxWithText component
   if (primitiveElement.type === "pcb_trace") {

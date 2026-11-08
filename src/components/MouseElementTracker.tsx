@@ -6,7 +6,6 @@ import {
   getPrimitivesNearPoint,
 } from "lib/primitive-spatial-index"
 import type { Primitive } from "lib/types"
-import { getPrimitiveBoundingBox } from "lib/util/get-primitive-bounding-box"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
@@ -174,17 +173,25 @@ export const getPrimitivesUnderPoint = ({
       w = (primitive as any).r * 2
       h = (primitive as any).r * 2
     } else if ("rX" in primitive && "rY" in primitive) {
-      const bounds = getPrimitiveBoundingBox(primitive)!
-      w = bounds.maxX - bounds.minX
-      h = bounds.maxY - bounds.minY
+      w = primitive.rX * 2
+      h = primitive.rY * 2
     } else {
       continue
     }
 
-    if (
-      Math.abs((primitive as any).x - rwPoint.x) < w / 2 &&
-      Math.abs((primitive as any).y - rwPoint.y) < h / 2
-    ) {
+    const rotationDeg =
+      "ccw_rotation" in primitive && typeof primitive.ccw_rotation === "number"
+        ? primitive.ccw_rotation
+        : 0
+    const rawDx = rwPoint.x - (primitive as any).x
+    const rawDy = rwPoint.y - (primitive as any).y
+    const radians = (-rotationDeg * Math.PI) / 180
+    const cos = Math.cos(radians)
+    const sin = Math.sin(radians)
+    const dx = rotationDeg === 0 ? rawDx : rawDx * cos - rawDy * sin
+    const dy = rotationDeg === 0 ? rawDy : rawDx * sin + rawDy * cos
+
+    if (Math.abs(dx) < w / 2 && Math.abs(dy) < h / 2) {
       newMousedPrimitives.push(primitive)
     }
   }

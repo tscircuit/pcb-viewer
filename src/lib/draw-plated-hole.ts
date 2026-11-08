@@ -76,7 +76,13 @@ export function drawPlatedHolePads({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, { layers, drawSoldermask })
+    drawer.drawElements(nonHighlightedElements, {
+      layers,
+      drawSoldermask,
+      drawSoldermaskTop: layers.includes("top_copper"),
+      drawSoldermaskBottom: layers.includes("bottom_copper"),
+      clipContextElements: elements,
+    })
   }
 
   // Draw highlighted elements with lighter colors
@@ -87,6 +93,9 @@ export function drawPlatedHolePads({
     highlightDrawer.drawElements(highlightedElements, {
       layers,
       drawSoldermask,
+      drawSoldermaskTop: layers.includes("top_copper"),
+      drawSoldermaskBottom: layers.includes("bottom_copper"),
+      clipContextElements: elements,
     })
   }
 }
