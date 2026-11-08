@@ -2,7 +2,7 @@ import { getPcbViewportBounds } from "lib/get-pcb-viewport-bounds"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import type { GraphicsObject } from "graphics-debug"
-import { applyEditEvents } from "lib/apply-edit-events"
+import { applyEditEvents, undoLastEditEvent } from "lib/apply-edit-events"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { ToastContainer } from "lib/toast"
@@ -275,6 +275,12 @@ export const PCBViewer = ({
     setEditEvents(newEditEvents)
     onEditEventsChanged?.(newEditEvents)
   }
+  const onUndoEditEvent = () => {
+    if (editEvents.length === 0) return
+    const nextEditEvents = undoLastEditEvent(editEvents)
+    setEditEvents(nextEditEvents)
+    onEditEventsChanged?.(nextEditEvents)
+  }
 
   const mergedInitialState = useMemo(
     () => ({
@@ -320,6 +326,7 @@ export const PCBViewer = ({
               onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}
               onModifyEditEvent={onModifyEditEvent}
+              onUndoEditEvent={onUndoEditEvent}
               onRenderComplete={onRenderComplete}
               grid={{
                 spacing: 1,

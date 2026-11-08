@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="300" viewBox="-3 -3 10 6">
+  <title>Component returned to original center after undoing drag-and-drop</title>
+  <rect x="-3" y="-3" width="10" height="6" fill="rgb(0, 16, 35)"/>
+  <g transform="scale(1 -1)">
+    <rect x="3" y="0.7999999999999999" width="0.6" height="0.8" fill="rgb(200, 52, 52)" opacity="0.3"/>
+    <rect x="4.4" y="0.7999999999999999" width="0.6" height="0.8" fill="rgb(200, 52, 52)" opacity="0.3"/>
+    <rect x="-1" y="-0.4" width="0.6" height="0.8" fill="rgb(200, 52, 52)" opacity="1"/>
+    <rect x="0.39999999999999997" y="-0.4" width="0.6" height="0.8" fill="rgb(200, 52, 52)" opacity="1"/>
+    <line x1="4" y1="1.2" x2="0" y2="0" stroke="#fff" stroke-width="0.08" stroke-dasharray="0.2 0.15"/>
+  </g>
+</svg>

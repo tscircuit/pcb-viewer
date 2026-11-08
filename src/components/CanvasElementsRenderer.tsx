@@ -75,6 +75,7 @@ export interface CanvasElementsRendererProps {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  onUndoEditEvent?: () => void
 }
 
 function getHitTestCandidates({
@@ -436,6 +437,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         cancelPanDrag={props.cancelPanDrag}
         onCreateEditEvent={props.onCreateEditEvent}
         onModifyEditEvent={props.onModifyEditEvent}
+        onUndoEditEvent={props.onUndoEditEvent}
       >
         <DimensionOverlay
           transform={transform!}
