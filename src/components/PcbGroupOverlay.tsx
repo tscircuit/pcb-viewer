@@ -146,7 +146,11 @@ export const PcbGroupOverlay = ({
       for (const comp of pcbComponents) {
         if (!hoveredComponentIds.includes(comp.pcb_component_id)) continue
         const targetGroupId =
-          comp.positioned_relative_to_pcb_group_id ?? comp.pcb_group_id
+          comp.positioned_relative_to_pcb_group_id ??
+          comp.pcb_group_id ??
+          pcbGroups.find((g) =>
+            g.pcb_component_ids?.includes(comp.pcb_component_id),
+          )?.pcb_group_id
         if (targetGroupId) hoveredGroupIds.add(targetGroupId)
       }
     }
@@ -300,18 +304,19 @@ export const PcbGroupOverlay = ({
       ctx.textBaseline = "middle"
       ctx.fillText(labelText, labelX + labelPadding, labelY - labelHeight / 2)
 
+      const resolvedAnchorPosition = group.anchor_position ?? group.center
       const shouldShowAnchorMarker =
-        is_showing_group_anchor_offsets &&
-        hoveredGroupIds.has(group.pcb_group_id) &&
-        Boolean(group.anchor_position)
+        (is_showing_group_anchor_offsets ||
+          hoveredGroupIds.has(group.pcb_group_id)) &&
+        Boolean(resolvedAnchorPosition)
 
-      if (shouldShowAnchorMarker && group.anchor_position) {
-        const anchorPositionValue = Array.isArray(group.anchor_position)
+      if (shouldShowAnchorMarker && resolvedAnchorPosition) {
+        const anchorPositionValue = Array.isArray(resolvedAnchorPosition)
           ? {
-              x: group.anchor_position[0] ?? 0,
-              y: group.anchor_position[1] ?? 0,
+              x: resolvedAnchorPosition[0] ?? 0,
+              y: resolvedAnchorPosition[1] ?? 0,
             }
-          : { x: group.anchor_position.x, y: group.anchor_position.y }
+          : { x: resolvedAnchorPosition.x, y: resolvedAnchorPosition.y }
         const anchorScreenPos = applyToPoint(transform, anchorPositionValue)
 
         // Draw a simple "+" symbol
