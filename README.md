@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer.svg)](https://badge.fury.io/js/@tscircuit%2Fpcb-viewer)
 
-[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com) &middot; [Open in CodeSandbox](https://codesandbox.io/p/github/tscircuit/pcb-viewer)
+[Examples](https://pcb-viewer.vercel.app/) &middot; [TSCircuit](https://tscircuit.com)
 
 Render Printed Circuit Boards w/ React
 
@@ -23,16 +23,23 @@ There are two main ways to use the PCBViewer:
 This approach allows you to declaratively define your circuit using React components:
 
 ```tsx
+import { Circuit } from "@tscircuit/core"
 import React from "react"
 import { PCBViewer } from "@tscircuit/pcb-viewer"
 
 export default () => {
+  const circuit = new Circuit()
+  circuit.add(
+    <board width="10mm" height="10mm">
+      <resistor name="R1" footprint="0805" resistance="10k" />
+      <capacitor name="C1" footprint="0603" capacitance="100nF" />
+    </board>,
+  )
+  const circuitJson = circuit.getCircuitJson()
+
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer>
-        <resistor footprint="0805" resistance="10k" />
-        <capacitor footprint="0603" capacitance="100nF" />
-      </PCBViewer>
+      <PCBViewer circuitJson={circuitJson} />
     </div>
   )
 }
@@ -69,22 +76,29 @@ export default () => {
 
 The PCBViewer component accepts these props:
 
-- `children`: Circuit components to render
-- `circuitJson`: Circuit JSON elements array (alternative to children)
-- `height`: Height of viewer in pixels (default: 600)
-- `allowEditing`: Enable/disable editing capabilities (default: true)
+- `circuitJson`: Circuit JSON elements array (`AnyCircuitElement[]`)
+- `height`: Height of viewer in pixels (default: `600`)
+- `renderer`: Initial rendering engine override (`"webgpu" | "canvas"`, default: `"webgpu"`)
+- `allowEditing`: Enable/disable editing capabilities (default: `true`)
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
+- `onRenderComplete`: Called once after the active renderer first paints the current Circuit JSON
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
 - `initialState`: Initial state for the viewer
+- `focusOnHover`: Enable focus on hover for mouse/keyboard navigation (default: `false`)
+- `clickToInteractEnabled`: Render an interactive overlay preventing unintended zoom/pan on page scroll (default: `false`)
+- `debugGraphics`: Autorouter debug overlay graphics (`GraphicsObject | null`)
+- `disablePcbGroups`: Toggle group container visibility and highlights (default: `false`)
+- `controller`: Connect the controller returned by `usePcbViewerController`
 
 ### Features
 
 - Interactive PCB viewing with pan and zoom
 - Multiple layer support (top, bottom, inner layers)
 - Component placement editing
-- Trace routing
+- Net connectivity & X-Ray highlights
+- PCB group hierarchies & autoroute debug graphics
 - DRC (Design Rule Check) visualization
 - Measurement tools
 
