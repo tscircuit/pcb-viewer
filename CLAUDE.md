@@ -5,8 +5,8 @@
 - Format code: `npm run format` (Biome formatter)
 - Check formatting: `npm run format:check`
 - Type check: `npx tsc --noEmit`
-- Run Storybook: `npm run storybook` or `npm start`
-- Build Storybook: `npm run build-storybook`
+- Run React Cosmos dev server: `bun run start`
+- Export React Cosmos fixtures: `bun run build:cosmos`
 - Build and publish to yalc: `npm run yalc`
 
 ## Code Style Guidelines
@@ -23,6 +23,6 @@
 - **State Management**: Combination of React hooks and Zustand
 
 ## Project Architecture
-This package renders circuit boards using PixiJS for WebGL rendering.
+This package renders circuit boards using WebGPU (`circuit-json-webgpu`) and HTML5 Canvas.
 Main entry point is the PCBViewer component which takes circuit data as input.
 Circuit JSON format is defined by the circuit-json package.
