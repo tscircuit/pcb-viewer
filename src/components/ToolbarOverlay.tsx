@@ -185,6 +185,8 @@ export const ToolbarOverlay = ({
     setIsShowingSilkscreen,
     setIsShowingFabricationNotes,
     setIsShowingPcbNotes,
+    setIsShowingTopComponents,
+    setIsShowingBottomComponents,
     setPcbGroupViewMode,
     setHoveredErrorId,
     setFocusedErrorId,
@@ -207,6 +209,8 @@ export const ToolbarOverlay = ({
       is_showing_silkscreen: s.is_showing_silkscreen,
       is_showing_fabrication_notes: s.is_showing_fabrication_notes,
       is_showing_pcb_notes: s.is_showing_pcb_notes,
+      is_showing_top_components: s.is_showing_top_components,
+      is_showing_bottom_components: s.is_showing_bottom_components,
       pcb_group_view_mode: s.pcb_group_view_mode,
     },
     setIsShowingRatsNest: s.setIsShowingRatsNest,
@@ -222,6 +226,8 @@ export const ToolbarOverlay = ({
     setIsShowingSilkscreen: s.setIsShowingSilkscreen,
     setIsShowingFabricationNotes: s.setIsShowingFabricationNotes,
     setIsShowingPcbNotes: s.setIsShowingPcbNotes,
+    setIsShowingTopComponents: s.setIsShowingTopComponents,
+    setIsShowingBottomComponents: s.setIsShowingBottomComponents,
     setPcbGroupViewMode: s.setPcbGroupViewMode,
     setHoveredErrorId: s.setHoveredErrorId,
     setFocusedErrorId: s.setFocusedErrorId,
@@ -734,6 +740,24 @@ export const ToolbarOverlay = ({
                   checked={viewSettings.is_showing_silkscreen}
                   onClick={() => {
                     setIsShowingSilkscreen(!viewSettings.is_showing_silkscreen)
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Top Components"
+                  checked={viewSettings.is_showing_top_components}
+                  onClick={() => {
+                    setIsShowingTopComponents(
+                      !viewSettings.is_showing_top_components,
+                    )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Bottom Components"
+                  checked={viewSettings.is_showing_bottom_components}
+                  onClick={() => {
+                    setIsShowingBottomComponents(
+                      !viewSettings.is_showing_bottom_components,
+                    )
                   }}
                 />
                 <CheckboxMenuItem
