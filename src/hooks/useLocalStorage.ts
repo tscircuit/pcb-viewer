@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   IS_SHOWING_FABRICATION_NOTES: "pcb_viewer_is_showing_fabrication_notes",
   IS_SHOWING_PCB_NOTES: "pcb_viewer_is_showing_pcb_notes",
   IS_SHOWING_SILKSCREEN: "pcb_viewer_is_showing_silkscreen",
+  IS_SNAPPING_ENABLED: "pcb_viewer_is_snapping_enabled",
 } as const
 
 export const getStoredBoolean = (
