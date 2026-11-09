@@ -121,7 +121,7 @@ export const DisabledAutoFocus = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
+      <PCBViewer circuitJson={soup as any} focusOnHover={false} />
     </div>
   )
 }
@@ -131,4 +131,5 @@ export default {
   TriangleBoard,
   OctagonBoard,
   AtariBoard,
+  DisabledAutoFocus,
 }
