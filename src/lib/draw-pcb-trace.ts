@@ -44,6 +44,13 @@ export const filterTraceByLayers = (
       )
     }
 
+    if (segment.route_type === "through_pad") {
+      return (
+        targetLayers.has(segment.start_layer) ||
+        targetLayers.has(segment.end_layer)
+      )
+    }
+
     return false
   })
 
@@ -52,8 +59,11 @@ export const filterTraceByLayers = (
   ).length
 
   const hasVia = filteredRoute.some((segment) => segment.route_type === "via")
+  const hasThroughPad = filteredRoute.some(
+    (segment) => segment.route_type === "through_pad",
+  )
 
-  if (wireCount < 2 && !hasVia) return null
+  if (wireCount < 2 && !hasVia && !hasThroughPad) return null
 
   return {
     ...trace,
