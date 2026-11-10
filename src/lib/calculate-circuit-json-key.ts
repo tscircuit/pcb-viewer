@@ -40,12 +40,28 @@ export const calculateCircuitJsonKey = (
       formatToFixed4(bounds.maxY),
     ].join(",")
     let signature = `${id}:${boundsStr}`
+    if ("layer" in element && typeof element.layer === "string") {
+      signature += `:${element.layer}`
+    } else if ("layers" in element && Array.isArray(element.layers)) {
+      signature += `:${element.layers.join("+")}`
+    }
+    if ("is_covered_with_solder_mask" in element) {
+      signature += `:${element.is_covered_with_solder_mask}`
+    } else if ("covered_with_solder_mask" in element) {
+      signature += `:${element.covered_with_solder_mask}`
+    }
     if (element.type === "pcb_trace") {
-      const routeLength = ((element as PcbTrace).route ?? []).length
-      signature += `:${routeLength}`
-      for (const point of element.route ?? []) {
-        if (point.route_type !== "via") continue
-        signature += `:${point.tented_on_top}:${point.tented_on_bottom}`
+      const route = (element as PcbTrace).route ?? []
+      signature += `:${route.length}`
+      for (const point of route) {
+        if (!point) continue
+        if (point.route_type === "via") {
+          signature += `:${formatToFixed4(point.x)},${formatToFixed4(point.y)},${point.from_layer},${point.to_layer},${point.tented_on_top},${point.tented_on_bottom}`
+        } else if (point.route_type === "through_pad") {
+          signature += `:${formatToFixed4(point.start.x)},${formatToFixed4(point.start.y)},${formatToFixed4(point.end.x)},${formatToFixed4(point.end.y)},${formatToFixed4(point.width)},${point.start_layer},${point.end_layer}`
+        } else {
+          signature += `:${formatToFixed4(point.x)},${formatToFixed4(point.y)},${formatToFixed4(point.width ?? 0)},${point.layer}`
+        }
       }
     }
     if (element.type === "pcb_board") {
