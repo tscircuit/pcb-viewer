@@ -478,4 +478,99 @@ describe("calculateCircuitJsonKey", () => {
       expect(hash1).not.toBe(hash2)
     })
   })
+
+  describe("pcb_trace route, layer, and solder mask updates", () => {
+    it("should change key when intermediate pcb_trace route waypoints change within the same bounding box", () => {
+      const traceA: AnyCircuitElement[] = [
+        {
+          type: "pcb_trace",
+          pcb_trace_id: "pcb_trace_1",
+          route: [
+            { route_type: "wire", x: 0, y: 0, width: 0.2, layer: "top" },
+            { route_type: "wire", x: 10, y: 0, width: 0.2, layer: "top" },
+            { route_type: "wire", x: 10, y: 10, width: 0.2, layer: "top" },
+          ],
+        },
+      ]
+      const traceB: AnyCircuitElement[] = [
+        {
+          type: "pcb_trace",
+          pcb_trace_id: "pcb_trace_1",
+          route: [
+            { route_type: "wire", x: 0, y: 0, width: 0.2, layer: "top" },
+            { route_type: "wire", x: 0, y: 10, width: 0.2, layer: "top" },
+            { route_type: "wire", x: 10, y: 10, width: 0.2, layer: "top" },
+          ],
+        },
+      ]
+
+      expect(calculateCircuitJsonKey(traceA)).not.toBe(
+        calculateCircuitJsonKey(traceB),
+      )
+    })
+
+    it("should change key when element layer changes at the same position", () => {
+      const padTop: AnyCircuitElement[] = [
+        {
+          type: "pcb_smtpad",
+          pcb_smtpad_id: "pad_1",
+          x: 2,
+          y: 3,
+          width: 1,
+          height: 1,
+          shape: "rect",
+          layer: "top",
+        },
+      ]
+      const padBottom: AnyCircuitElement[] = [
+        {
+          type: "pcb_smtpad",
+          pcb_smtpad_id: "pad_1",
+          x: 2,
+          y: 3,
+          width: 1,
+          height: 1,
+          shape: "rect",
+          layer: "bottom",
+        },
+      ]
+
+      expect(calculateCircuitJsonKey(padTop)).not.toBe(
+        calculateCircuitJsonKey(padBottom),
+      )
+    })
+
+    it("should change key when is_covered_with_solder_mask changes on a pad", () => {
+      const padUncovered: AnyCircuitElement[] = [
+        {
+          type: "pcb_smtpad",
+          pcb_smtpad_id: "pad_1",
+          x: 2,
+          y: 3,
+          width: 1,
+          height: 1,
+          shape: "rect",
+          layer: "top",
+          is_covered_with_solder_mask: false,
+        },
+      ]
+      const padCovered: AnyCircuitElement[] = [
+        {
+          type: "pcb_smtpad",
+          pcb_smtpad_id: "pad_1",
+          x: 2,
+          y: 3,
+          width: 1,
+          height: 1,
+          shape: "rect",
+          layer: "top",
+          is_covered_with_solder_mask: true,
+        },
+      ]
+
+      expect(calculateCircuitJsonKey(padUncovered)).not.toBe(
+        calculateCircuitJsonKey(padCovered),
+      )
+    })
+  })
 })
