@@ -407,6 +407,7 @@ export const DimensionOverlay = ({
     <div
       ref={containerRef}
       data-pcb-viewer
+      data-focus-on-hover={focusOnHover ? "true" : "false"}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: <explanation>
       tabIndex={0}
       style={{ position: "relative", outline: "none" }}
