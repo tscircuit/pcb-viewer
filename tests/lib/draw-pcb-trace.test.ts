@@ -178,4 +178,48 @@ describe("drawPcbTrace layer filtering", () => {
       }),
     ).toEqual(new Set(["trace1"]))
   })
+
+  it("retains through_pad route segments on matching layers when filtering by layer", () => {
+    const traceWithThroughPad: PcbTrace = {
+      type: "pcb_trace",
+      pcb_trace_id: "trace_through_pad",
+      route: [
+        {
+          route_type: "through_pad",
+          pcb_plated_hole_id: "ph_0",
+          start: { x: 0, y: 0 },
+          end: { x: 1, y: 0 },
+          width: 0.25,
+          start_layer: "top",
+          end_layer: "bottom",
+        },
+        {
+          route_type: "wire",
+          x: 1,
+          y: 0,
+          width: 0.25,
+          layer: "bottom",
+        },
+      ],
+    }
+
+    const filteredTop = filterTraceByLayers(
+      traceWithThroughPad,
+      new Set(["top"]),
+    )
+    expect(filteredTop?.route).toHaveLength(1)
+    expect(filteredTop?.route[0]?.route_type).toBe("through_pad")
+
+    const filteredBottom = filterTraceByLayers(
+      traceWithThroughPad,
+      new Set(["bottom"]),
+    )
+    expect(filteredBottom?.route).toHaveLength(2)
+
+    const filteredInner = filterTraceByLayers(
+      traceWithThroughPad,
+      new Set(["inner1"]),
+    )
+    expect(filteredInner).toBeNull()
+  })
 })
