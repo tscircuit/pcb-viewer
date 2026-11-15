@@ -78,6 +78,8 @@ The PCBViewer component accepts these props:
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
 - `initialState`: Initial state for the viewer
+- `focusOnHover`: Focus the viewer when mouse enters, enabling keyboard shortcuts without clicking first (default: false)
+- `clickToInteractEnabled`: Require a click before pan/zoom interactions are enabled (default: false)
 
 ### Features
 
