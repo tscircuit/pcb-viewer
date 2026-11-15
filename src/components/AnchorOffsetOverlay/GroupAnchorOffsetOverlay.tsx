@@ -73,6 +73,30 @@ export const GroupAnchorOffsetOverlay = ({
     }
   }
 
+  groups.forEach((g, i) => {
+    if (
+      (g.position_mode as string) === "relative_to_pcb_group" ||
+      (!g.anchor_position && g.center)
+    ) {
+      groups[i] = {
+        ...g,
+        position_mode:
+          (g.position_mode as string) === "relative_to_pcb_group"
+            ? "relative_to_group_anchor"
+            : g.position_mode,
+        anchor_position: g.anchor_position ?? g.center,
+      }
+    }
+  })
+  components.forEach((c, i) => {
+    if ((c.position_mode as string) === "relative_to_pcb_group") {
+      components[i] = {
+        ...c,
+        position_mode: "relative_to_group_anchor",
+      }
+    }
+  })
+
   // Track hovered groups by checking if any components in the group are hovered
   // This includes traversing up the group hierarchy for nested groups
   const hoveredGroupIds = new Set<string>()
