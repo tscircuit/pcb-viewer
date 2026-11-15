@@ -47,10 +47,7 @@ export default function Nema17CanvasShorts() {
           </select>
         </label>
       </div>
-      <ContextProviders
-        disablePcbGroups
-        initialState={{ selected_layer: "top", hidden_layer_opacity: 0.15 }}
-      >
+      <ContextProviders disablePcbGroups>
         <CanvasElementsRenderer
           elements={elements}
           renderer={renderer}
