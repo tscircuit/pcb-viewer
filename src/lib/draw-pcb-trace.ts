@@ -28,37 +28,25 @@ export const filterTraceByLayers = (
   trace: PcbTrace,
   targetLayers: Set<string>,
 ): PcbTrace | null => {
-  const filteredRoute = trace.route.filter((segment) => {
-    if (
-      segment.route_type === "wire" &&
-      "layer" in segment &&
-      targetLayers.has(segment.layer)
-    ) {
-      return true
-    }
-
-    if (segment.route_type === "via") {
+  // Select whole traces, never route points. Removing another layer's wires or
+  // through_pad transitions makes separate runs adjacent and invents copper.
+  // circuit-to-canvas already splits the original route and filters by layer.
+  const touchesLayer = trace.route.some((point) => {
+    if (point.route_type === "wire") return targetLayers.has(point.layer)
+    if (point.route_type === "via") {
       return (
-        targetLayers.has(segment.from_layer) ||
-        targetLayers.has(segment.to_layer)
+        targetLayers.has(point.from_layer) || targetLayers.has(point.to_layer)
       )
     }
-
+    if (point.route_type === "through_pad") {
+      return (
+        targetLayers.has(point.start_layer) || targetLayers.has(point.end_layer)
+      )
+    }
     return false
   })
 
-  const wireCount = filteredRoute.filter(
-    (segment) => segment.route_type === "wire",
-  ).length
-
-  const hasVia = filteredRoute.some((segment) => segment.route_type === "via")
-
-  if (wireCount < 2 && !hasVia) return null
-
-  return {
-    ...trace,
-    route: filteredRoute,
-  }
+  return touchesLayer ? trace : null
 }
 
 export const showTraceSegmentsInsideHiddenCopperPours = (

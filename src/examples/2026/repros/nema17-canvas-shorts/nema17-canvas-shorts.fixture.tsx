@@ -31,8 +31,8 @@ export default function Nema17CanvasShorts() {
         </a>
         <p>
           Compare the horizontal copper line immediately above the USB-C pads.
-          Canvas incorrectly bridges the pins; WebGPU leaves the traces
-          separate. The route crosses inner layers through plated pads.
+          Both renderers should leave the traces separate. The regression drew a
+          false bridge when the route crossed inner layers through plated pads.
         </p>
         <label>
           Renderer:{" "}
