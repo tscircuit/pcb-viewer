@@ -49,3 +49,35 @@ test("tracks the positions, dimensions and outlines of every board", () => {
     ),
   ).not.toBe(originalKey)
 })
+
+test("handles outline-only pcb_board elements that omit center", () => {
+  const outlineOnlyBoard = [
+    {
+      type: "pcb_board" as const,
+      pcb_board_id: "outline_board",
+      material: "fr4" as const,
+      thickness: 1.6,
+      num_layers: 2,
+      outline: [
+        { x: 0, y: 0 },
+        { x: 20, y: 0 },
+        { x: 20, y: 15 },
+        { x: 0, y: 15 },
+      ],
+    },
+  ]
+  const resizedOutlineOnlyBoard = [
+    {
+      ...outlineOnlyBoard[0]!,
+      outline: [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 15 },
+        { x: 0, y: 15 },
+      ],
+    },
+  ]
+  expect(calculateBoardSizeKey(outlineOnlyBoard as any)).not.toBe(
+    calculateBoardSizeKey(resizedOutlineOnlyBoard as any),
+  )
+})
