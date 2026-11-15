@@ -1,12 +1,12 @@
 # PCB-Viewer Development Guidelines
 
 ## Build & Development Commands
-- Build: `npm run build` (uses tsup with browser platform)
-- Format code: `npm run format` (Biome formatter)
-- Check formatting: `npm run format:check`
+- Build: `bun run build` or `npm run build` (uses tsup with browser platform)
+- Format code: `bun run format` or `npm run format` (Biome formatter)
+- Check formatting: `bun run format:check` or `npm run format:check`
 - Type check: `npx tsc --noEmit`
-- Run Storybook: `npm run storybook` or `npm start`
-- Build Storybook: `npm run build-storybook`
+- Run React Cosmos dev server: `bun run start` or `bun run cosmos`
+- Export React Cosmos static site: `bun run cosmos-export`
 - Build and publish to yalc: `npm run yalc`
 
 ## Code Style Guidelines
@@ -23,6 +23,5 @@
 - **State Management**: Combination of React hooks and Zustand
 
 ## Project Architecture
-This package renders circuit boards using PixiJS for WebGL rendering.
-Main entry point is the PCBViewer component which takes circuit data as input.
-Circuit JSON format is defined by the circuit-json package.
+This package renders printed circuit boards from Circuit JSON (`circuit-json`) using either the WebGPU worker renderer (`@tscircuit/circuit-json-webgpu`) or the 2D Canvas renderer (`circuit-to-canvas`).
+The main entry point is the `PCBViewer` component (`src/PCBViewer.tsx`), which accepts a `circuitJson` array and interactive viewer props.
