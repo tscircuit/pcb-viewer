@@ -46,14 +46,8 @@ describe("drawPcbTrace layer filtering", () => {
     const filtered = filterTraceByLayers(trace, new Set(["top"]))
 
     expect(filtered).toBeDefined()
-    expect(filtered?.route.map((segment) => segment.route_type)).toEqual([
-      "wire",
-      "wire",
-      "via",
-      "via",
-      "wire",
-      "wire",
-    ])
+    expect(filtered).toBe(trace)
+    expect(filtered?.route).toBe(trace.route)
   })
 
   it("keeps route vias on layers without two wire points", () => {
@@ -74,10 +68,9 @@ describe("drawPcbTrace layer filtering", () => {
       ],
     } as PcbTrace
 
-    expect(filterTraceByLayers(trace, new Set(["top"]))?.route).toEqual([
-      trace.route[0],
-      trace.route[1],
-    ])
+    expect(filterTraceByLayers(trace, new Set(["top"]))?.route).toBe(
+      trace.route,
+    )
     expect(filterTraceByLayers(trace, new Set(["bottom"]))).toBeNull()
   })
 
