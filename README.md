@@ -72,6 +72,7 @@ The PCBViewer component accepts these props:
 - `children`: Circuit components to render
 - `circuitJson`: Circuit JSON elements array (alternative to children)
 - `height`: Height of viewer in pixels (default: 600)
+- `focusOnHover`: Focus the viewer when the pointer enters (default: false). Use `focusOnHover={false}` instead of the removed `disableAutoFocus` prop; clicking the viewer still focuses it.
 - `allowEditing`: Enable/disable editing capabilities (default: true)
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
