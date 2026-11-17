@@ -41,6 +41,9 @@ export const getTextForHighlightedPrimitive = (
       }
       return ""
     }
+    case "pcb_via": {
+      return `Hole diameter ${element.hole_diameter} mm\nOuter diameter ${element.outer_diameter} mm`
+    }
     case "pcb_smtpad":
     case "pcb_plated_hole": {
       const selectors: string[] = []
@@ -246,6 +249,10 @@ export const HighlightedPrimitiveBoxWithText = ({
             transform: `rotate(${rotation}deg)`,
             minWidth: "45px",
             textAlign: "center",
+            ...(primitiveElement.type === "pcb_via" && {
+              textAlign: "left",
+              whiteSpace: "pre",
+            }),
           }}
         >
           {label}
@@ -278,9 +285,10 @@ export const ElementOverlayBox = ({
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
 
   let primitives = highlightedPrimitives
-  // If both smtpad and trace are present, only return smtpads
   if (hasSmtPadAndTrace) {
-    primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
+    primitives = primitives.filter(
+      (p) => p._element.type === "pcb_smtpad" || p._element.type === "pcb_via",
+    )
   }
   // When having multiple traces filter traces to get only the shortest one
   primitives = filterTracesIfMultiple({
