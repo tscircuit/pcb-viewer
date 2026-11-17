@@ -41,6 +41,11 @@ export const getTextForHighlightedPrimitive = (
       }
       return ""
     }
+    case "pcb_via": {
+      const holeDiameterMm = Math.trunc(element.hole_diameter * 10) / 10
+      const outerDiameterMm = Math.trunc(element.outer_diameter * 10) / 10
+      return `Hole ${holeDiameterMm.toFixed(1)} / Outer ${outerDiameterMm.toFixed(1)} mm`
+    }
     case "pcb_smtpad":
     case "pcb_plated_hole": {
       const selectors: string[] = []
@@ -101,6 +106,7 @@ export const HighlightedPrimitiveBoxWithText = ({
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
+  const isVia = primitiveElement.type === "pcb_via"
 
   useEffect(() => {
     setTimeout(() => {
@@ -223,6 +229,7 @@ export const HighlightedPrimitiveBoxWithText = ({
           marginLeft: finalState ? `${-sip * si}px` : 0,
           marginTop: finalState ? `${-sip * si}px` : 0,
           border: `1px solid ${color}`,
+          ...(isVia && { border: "none" }),
           opacity: finalState ? 1 : si === 0 ? 1 : 0,
           transition:
             "width 0.2s, height 0.2s, margin-left 0.2s, margin-top 0.2s, opacity 0.2s",
@@ -246,6 +253,12 @@ export const HighlightedPrimitiveBoxWithText = ({
             transform: `rotate(${rotation}deg)`,
             minWidth: "45px",
             textAlign: "center",
+            ...(isVia && {
+              padding: "2px 4px",
+              borderRadius: "3px",
+              fontSize: "10px",
+              whiteSpace: "nowrap",
+            }),
           }}
         >
           {label}
@@ -278,9 +291,10 @@ export const ElementOverlayBox = ({
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
 
   let primitives = highlightedPrimitives
-  // If both smtpad and trace are present, only return smtpads
   if (hasSmtPadAndTrace) {
-    primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
+    primitives = primitives.filter(
+      (p) => p._element.type === "pcb_smtpad" || p._element.type === "pcb_via",
+    )
   }
   // When having multiple traces filter traces to get only the shortest one
   primitives = filterTracesIfMultiple({

@@ -167,7 +167,8 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     return primitivesWithoutInteractionMetadata.filter(
       (primitive) =>
         (primitive._element?.type === "pcb_smtpad" ||
-          primitive._element?.type === "pcb_plated_hole") &&
+          primitive._element?.type === "pcb_plated_hole" ||
+          primitive._element?.type === "pcb_via") &&
         selectedElements.has(primitive._element),
     )
   }, [primitivesWithoutInteractionMetadata, xRayElements])
