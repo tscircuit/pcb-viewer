@@ -42,7 +42,9 @@ export const getTextForHighlightedPrimitive = (
       return ""
     }
     case "pcb_via": {
-      return `Hole diameter ${element.hole_diameter} mm\nOuter diameter ${element.outer_diameter} mm`
+      const holeDiameterMm = Math.trunc(element.hole_diameter * 10) / 10
+      const outerDiameterMm = Math.trunc(element.outer_diameter * 10) / 10
+      return `Hole ${holeDiameterMm.toFixed(1)} / Outer ${outerDiameterMm.toFixed(1)} mm`
     }
     case "pcb_smtpad":
     case "pcb_plated_hole": {
@@ -104,6 +106,7 @@ export const HighlightedPrimitiveBoxWithText = ({
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
+  const isVia = primitiveElement.type === "pcb_via"
 
   useEffect(() => {
     setTimeout(() => {
@@ -226,6 +229,7 @@ export const HighlightedPrimitiveBoxWithText = ({
           marginLeft: finalState ? `${-sip * si}px` : 0,
           marginTop: finalState ? `${-sip * si}px` : 0,
           border: `1px solid ${color}`,
+          ...(isVia && { border: "none" }),
           opacity: finalState ? 1 : si === 0 ? 1 : 0,
           transition:
             "width 0.2s, height 0.2s, margin-left 0.2s, margin-top 0.2s, opacity 0.2s",
@@ -249,9 +253,11 @@ export const HighlightedPrimitiveBoxWithText = ({
             transform: `rotate(${rotation}deg)`,
             minWidth: "45px",
             textAlign: "center",
-            ...(primitiveElement.type === "pcb_via" && {
-              textAlign: "left",
-              whiteSpace: "pre",
+            ...(isVia && {
+              padding: "2px 4px",
+              borderRadius: "3px",
+              fontSize: "10px",
+              whiteSpace: "nowrap",
             }),
           }}
         >
