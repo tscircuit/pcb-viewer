@@ -4,6 +4,7 @@ export const zIndexMap = {
   errorOverlay: 40,
   pcbGroupOverlay: 35,
   ratsNestOverlay: 30,
+  localSkewOverlay: 31,
   toolbarOverlay: 70,
   warnings: 30,
   // Canvas layers are assigned z-indexes below this value. A 10-layer board

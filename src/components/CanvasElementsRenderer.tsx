@@ -50,6 +50,7 @@ import {
   getPrimitivesUnderPoint,
 } from "./MouseElementTracker"
 import { PcbGroupOverlay } from "./PcbGroupOverlay"
+import { LocalSkewOverlay } from "./LocalSkewOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
@@ -460,47 +461,49 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                 soup={elements}
                 connectivityMap={connectivityMap}
               >
-                <PcbGroupOverlay
-                  transform={transform}
-                  elements={elements}
-                  hoveredComponentIds={hoveredComponentIds}
-                >
-                  <DebugGraphicsOverlay
+                <LocalSkewOverlay transform={transform} elements={elements}>
+                  <PcbGroupOverlay
                     transform={transform}
-                    debugGraphics={props.debugGraphics}
+                    elements={elements}
+                    hoveredComponentIds={hoveredComponentIds}
                   >
-                    <WarningGraphicsOverlay
+                    <DebugGraphicsOverlay
                       transform={transform}
-                      elements={elements}
+                      debugGraphics={props.debugGraphics}
                     >
-                      {props.renderer === "canvas" ? (
-                        <CanvasPrimitiveRenderer
-                          transform={transform}
-                          primitives={primitives}
-                          elements={elementsToRender}
-                          circuitJson={elements}
-                          xRayElements={xRayElements}
-                          width={props.width}
-                          height={props.height}
-                          grid={props.grid}
-                          onRenderComplete={props.onRenderComplete}
-                        />
-                      ) : (
-                        <WebGpuElementsRenderer
-                          highlightedCopperPourIds={highlightedCopperPourIds}
-                          transform={transform}
-                          primitives={primitives}
-                          elements={elements}
-                          xRayElements={xRayElements}
-                          width={props.width}
-                          height={props.height}
-                          grid={props.grid}
-                          onRenderComplete={props.onRenderComplete}
-                        />
-                      )}
-                    </WarningGraphicsOverlay>
-                  </DebugGraphicsOverlay>
-                </PcbGroupOverlay>
+                      <WarningGraphicsOverlay
+                        transform={transform}
+                        elements={elements}
+                      >
+                        {props.renderer === "canvas" ? (
+                          <CanvasPrimitiveRenderer
+                            transform={transform}
+                            primitives={primitives}
+                            elements={elementsToRender}
+                            circuitJson={elements}
+                            xRayElements={xRayElements}
+                            width={props.width}
+                            height={props.height}
+                            grid={props.grid}
+                            onRenderComplete={props.onRenderComplete}
+                          />
+                        ) : (
+                          <WebGpuElementsRenderer
+                            highlightedCopperPourIds={highlightedCopperPourIds}
+                            transform={transform}
+                            primitives={primitives}
+                            elements={elements}
+                            xRayElements={xRayElements}
+                            width={props.width}
+                            height={props.height}
+                            grid={props.grid}
+                            onRenderComplete={props.onRenderComplete}
+                          />
+                        )}
+                      </WarningGraphicsOverlay>
+                    </DebugGraphicsOverlay>
+                  </PcbGroupOverlay>
+                </LocalSkewOverlay>
               </RatsNestOverlay>
             </ErrorOverlay>
           </ToolbarOverlay>
