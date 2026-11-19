@@ -7,19 +7,25 @@ import type {
   SourceTrace,
 } from "circuit-json"
 import { type CoupledRun, findCoupledRuns } from "./find-coupled-runs"
-import { type TraceStep, walkTrace } from "./walk-trace"
+import {
+  type PortComponents,
+  isNegativeRouteReversed,
+} from "./is-negative-route-reversed"
+import { type TraceStep, reverseWalk, walkTrace } from "./walk-trace"
 
-/** Overlay pieces are at most this long, in mm, so skew ramps look smooth (same as KiCad). */
+/** Skew ramps are cut into pieces at most this long, in mm, so they look smooth. */
 const SAMPLE_LENGTH = 0.05
 
-/** Skew is rounded to this, in mm, so equal traces don't flicker between colours. */
-const SKEW_RESOLUTION = 1e-5
+/** Skew is rounded to 1/this mm (10 nm), so equal traces don't flicker between colours. */
+const SKEW_ROUNDING = 1e5
 
-/** Cross-product tolerance, in mm², for treating two pieces as one straight line. */
-const STRAIGHT_TOLERANCE = 1e-9
-
-/** Without a declared gap, assume one trace width of copper between the pair. */
-const UNSET_GAP_WIDTHS = 1
+/**
+ * How a piece's skew is known:
+ * - `coupled`: measured, because the traces run side by side here.
+ * - `interpolated`: estimated between two coupled stretches.
+ * - `unknown`: before the traces first run together or after they last do.
+ */
+export type SkewCoupling = "coupled" | "interpolated" | "unknown"
 
 /** A piece of one trace of a pair, with the local skew at its middle. */
 export type LocalSkewSegment = {
@@ -28,11 +34,11 @@ export type LocalSkewSegment = {
   layer: LayerRef
   width: number
   /**
-   * How much farther this trace has travelled than its partner at this
-   * point, in mm. `null` before the traces first run together and after
-   * they last do.
+   * How much farther this trace has run than its partner at this point, in
+   * mm. Positive means this trace is longer so far. `null` when unknown.
    */
   skew: number | null
+  coupling: SkewCoupling
 }
 
 /** The overlay pieces for one trace of a pair. */
@@ -47,64 +53,104 @@ export type LocalSkewPair = {
   name?: string
   positive: LocalSkewTrace
   negative: LocalSkewTrace
-  /** Largest local skew anywhere on the pair, in mm. */
-  max_skew: number
+  /** Largest measured local skew on the pair, in mm. `null` if the traces never run together. */
+  max_skew: number | null
   /** The pair's `maxLengthSkew`, in mm, when one is set. */
   max_length_skew?: number
 }
 
-/** A distance along a trace where the local skew is known. */
-type KnownSkew = { distance: number; skew: number }
+/** A stretch of one trace with skew changing linearly from `startSkew` to `endSkew`. */
+type SkewSpan = {
+  from: number
+  to: number
+  startSkew: number | null
+  endSkew: number | null
+  coupling: SkewCoupling
+}
+
+/** Routed copper grouped by the source trace it belongs to. */
+type TracesBySource = Map<SourceTrace["source_trace_id"], PcbTrace[]>
 
 /**
  * Computes local skew along every routed differential pair: at each point,
- * how far one trace is ahead of the other, not only at the ends.
+ * how much farther one trace has run than the other, not only at the ends.
+ *
+ * Distances are planar copper length, like `pcb_trace.trace_length`, and
+ * are measured from the positive trace's first route point. The negative
+ * trace is walked from the end that matches it.
  */
 export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
+  const tracesBySource: TracesBySource = new Map()
+  const portComponents: PortComponents = new Map()
+  for (const element of circuitJson) {
+    if (element.type === "pcb_port") {
+      if (element.pcb_component_id !== undefined) {
+        portComponents.set(element.pcb_port_id, element.pcb_component_id)
+      }
+      continue
+    }
+    if (element.type !== "pcb_trace") continue
+    if (element.source_trace_id === undefined) continue
+    const traces = tracesBySource.get(element.source_trace_id) ?? []
+    traces.push(element)
+    tracesBySource.set(element.source_trace_id, traces)
+  }
+
   const pairs: LocalSkewPair[] = []
   for (const element of circuitJson) {
     if (element.type !== "source_bus") continue
-    if (!element.differential_pair) continue
-    const pair = computePairSkew({ circuitJson, bus: element })
+    const pair = computePairSkew({
+      bus: element,
+      tracesBySource,
+      portComponents,
+    })
     if (pair) pairs.push(pair)
   }
   return pairs
 }
 
-/** Local skew for one differential pair, or null if it isn't routed as two single traces. */
+/**
+ * Local skew for one differential pair. Null when the bus isn't a pair of
+ * two different traces each routed as one pcb_trace, because the order of
+ * split pieces along the signal isn't recorded.
+ */
 function computePairSkew({
-  circuitJson,
   bus,
+  tracesBySource,
+  portComponents,
 }: {
-  circuitJson: CircuitJson
   bus: SourceBus
+  tracesBySource: TracesBySource
+  portComponents: PortComponents
 }): LocalSkewPair | null {
   const differentialPair = bus.differential_pair
   if (!differentialPair) return null
+  const positiveId = differentialPair.positive_source_trace_id
+  const negativeId = differentialPair.negative_source_trace_id
+  if (positiveId === negativeId) return null
 
-  const positiveTrace = singlePcbTrace({
-    circuitJson,
-    sourceTraceId: differentialPair.positive_source_trace_id,
-  })
-  const negativeTrace = singlePcbTrace({
-    circuitJson,
-    sourceTraceId: differentialPair.negative_source_trace_id,
-  })
-  if (!positiveTrace || !negativeTrace) return null
+  const positiveTraces = tracesBySource.get(positiveId) ?? []
+  const negativeTraces = tracesBySource.get(negativeId) ?? []
+  if (positiveTraces.length !== 1 || negativeTraces.length !== 1) return null
+  const positiveTrace = positiveTraces[0]
+  const negativeTrace = negativeTraces[0]
 
-  const positiveSteps = walkTrace({ trace: positiveTrace, reverse: false })
-  let negativeSteps = walkTrace({ trace: negativeTrace, reverse: false })
+  const positiveSteps = walkTrace(positiveTrace)
+  let negativeSteps = walkTrace(negativeTrace)
   if (positiveSteps.length === 0 || negativeSteps.length === 0) return null
-  if (isWalkedBackwards({ positiveSteps, negativeSteps })) {
-    negativeSteps = walkTrace({ trace: negativeTrace, reverse: true })
-  }
+  const reversed = isNegativeRouteReversed({
+    positiveTrace,
+    negativeTrace,
+    positiveSteps,
+    negativeSteps,
+    portComponents,
+  })
+  if (reversed) negativeSteps = reverseWalk(negativeSteps)
 
-  const traceGap =
-    differentialPair.trace_gap ?? positiveSteps[0].width * UNSET_GAP_WIDTHS
   const runs = findCoupledRuns({
     positive: positiveSteps,
     negative: negativeSteps,
-    traceGap,
+    traceGap: differentialPair.trace_gap,
   })
 
   const pair: LocalSkewPair = {
@@ -114,17 +160,17 @@ function computePairSkew({
       pcb_trace_id: positiveTrace.pcb_trace_id,
       segments: sampleSkew({
         steps: positiveSteps,
-        known: knownSkews({ runs, side: "positive" }),
+        spans: skewSpans({ runs, side: "positive", steps: positiveSteps }),
       }),
     },
     negative: {
       pcb_trace_id: negativeTrace.pcb_trace_id,
       segments: sampleSkew({
         steps: negativeSteps,
-        known: knownSkews({ runs, side: "negative" }),
+        spans: skewSpans({ runs, side: "negative", steps: negativeSteps }),
       }),
     },
-    max_skew: Math.max(0, ...runs.map((run) => Math.abs(run.skew))),
+    max_skew: maxSkew(runs),
   }
   if (bus.max_length_skew !== undefined) {
     pair.max_length_skew = bus.max_length_skew
@@ -132,185 +178,166 @@ function computePairSkew({
   return pair
 }
 
+/** Largest measured skew, in mm, or null without coupled runs. */
+function maxSkew(runs: CoupledRun[]): number | null {
+  if (runs.length === 0) return null
+  let largest = 0
+  for (const run of runs) {
+    largest = Math.max(largest, Math.abs(run.startSkew), Math.abs(run.endSkew))
+  }
+  return roundSkew(largest)
+}
+
 /**
- * The routed copper for a source trace. Pairs split over several pcb_traces
- * are skipped, because their order along the signal is not recorded.
+ * Covers one whole trace with spans: unknown before the first coupled run
+ * and after the last, coupled runs as measured, and interpolated between
+ * consecutive runs. The negative side reports the negated skew.
  */
-function singlePcbTrace({
-  circuitJson,
-  sourceTraceId,
-}: {
-  circuitJson: CircuitJson
-  sourceTraceId: SourceTrace["source_trace_id"]
-}): PcbTrace | null {
-  const traces = circuitJson.filter(
-    (element): element is PcbTrace =>
-      element.type === "pcb_trace" && element.source_trace_id === sourceTraceId,
-  )
-  if (traces.length !== 1) return null
-  return traces[0]
-}
-
-/** True when the negative walk starts at the positive walk's far end. */
-function isWalkedBackwards({
-  positiveSteps,
-  negativeSteps,
-}: {
-  positiveSteps: TraceStep[]
-  negativeSteps: TraceStep[]
-}): boolean {
-  const positiveStart = positiveSteps[0].start
-  const positiveEnd = positiveSteps[positiveSteps.length - 1].end
-  const negativeStart = negativeSteps[0].start
-  const negativeEnd = negativeSteps[negativeSteps.length - 1].end
-  const sameDirection =
-    distanceBetween(positiveStart, negativeStart) +
-    distanceBetween(positiveEnd, negativeEnd)
-  const oppositeDirection =
-    distanceBetween(positiveStart, negativeEnd) +
-    distanceBetween(positiveEnd, negativeStart)
-  return oppositeDirection < sameDirection
-}
-
-/** Straight-line distance between two points. */
-function distanceBetween(a: Point, b: Point): number {
-  return Math.hypot(a.x - b.x, a.y - b.y)
-}
-
-/** Where each coupled run starts and ends on one trace, sorted along that trace. */
-function knownSkews({
+function skewSpans({
   runs,
   side,
+  steps,
 }: {
   runs: CoupledRun[]
   side: "positive" | "negative"
-}): KnownSkew[] {
-  const known: KnownSkew[] = []
-  for (const run of runs) {
+  steps: TraceStep[]
+}): SkewSpan[] {
+  const last = steps[steps.length - 1]
+  const totalLength = last.startDistance + last.length
+  const coupled: SkewSpan[] = runs.map((run) => {
     if (side === "positive") {
-      known.push({ distance: run.positiveStart, skew: run.skew })
-      known.push({ distance: run.positiveEnd, skew: run.skew })
-      continue
+      return {
+        from: run.positiveStart,
+        to: run.positiveEnd,
+        startSkew: run.startSkew,
+        endSkew: run.endSkew,
+        coupling: "coupled",
+      }
     }
-    known.push({ distance: run.negativeStart, skew: -run.skew })
-    known.push({ distance: run.negativeEnd, skew: -run.skew })
+    return {
+      from: run.negativeStart,
+      to: run.negativeEnd,
+      startSkew: -run.startSkew,
+      endSkew: -run.endSkew,
+      coupling: "coupled",
+    }
+  })
+  coupled.sort((a, b) => a.from - b.from)
+
+  if (coupled.length === 0) {
+    return [unknownSpan({ from: 0, to: totalLength })]
   }
-  return known.sort((a, b) => a.distance - b.distance)
+  const spans: SkewSpan[] = []
+  if (coupled[0].from > 0) {
+    spans.push(unknownSpan({ from: 0, to: coupled[0].from }))
+  }
+  coupled.forEach((span, index) => {
+    const previous = coupled[index - 1]
+    if (previous && span.from > previous.to) {
+      spans.push({
+        from: previous.to,
+        to: span.from,
+        startSkew: previous.endSkew,
+        endSkew: span.startSkew,
+        coupling: "interpolated",
+      })
+    }
+    spans.push(span)
+  })
+  const lastCoupled = coupled[coupled.length - 1]
+  if (lastCoupled.to < totalLength) {
+    spans.push(unknownSpan({ from: lastCoupled.to, to: totalLength }))
+  }
+  return spans
 }
 
-/** Cuts each step into short pieces and gives each the skew at its middle. */
+/** A span with no skew information. */
+function unknownSpan({ from, to }: { from: number; to: number }): SkewSpan {
+  return { from, to, startSkew: null, endSkew: null, coupling: "unknown" }
+}
+
+/**
+ * Cuts the steps at span boundaries. Constant pieces stay whole; pieces
+ * where skew changes are cut every {@link SAMPLE_LENGTH} mm, each with the
+ * skew at its middle.
+ */
 function sampleSkew({
   steps,
-  known,
+  spans,
 }: {
   steps: TraceStep[]
-  known: KnownSkew[]
+  spans: SkewSpan[]
 }): LocalSkewSegment[] {
   const segments: LocalSkewSegment[] = []
+  let spanIndex = 0
   for (const step of steps) {
-    const pieceCount = Math.max(1, Math.ceil(step.length / SAMPLE_LENGTH))
-    for (let i = 0; i < pieceCount; i++) {
-      const startFraction = i / pieceCount
-      const endFraction = (i + 1) / pieceCount
-      const midDistance =
-        step.startDistance + ((startFraction + endFraction) / 2) * step.length
-      const segment: LocalSkewSegment = {
-        start: pointAlong({ step, fraction: startFraction }),
-        end: pointAlong({ step, fraction: endFraction }),
-        layer: step.layer,
-        width: step.width,
-        skew: skewAt({ known, distance: midDistance }),
+    const stepEnd = step.startDistance + step.length
+    while (
+      spanIndex + 1 < spans.length &&
+      spans[spanIndex].to <= step.startDistance
+    ) {
+      spanIndex++
+    }
+    for (
+      let index = spanIndex;
+      index < spans.length && spans[index].from < stepEnd;
+      index++
+    ) {
+      const span = spans[index]
+      const from = Math.max(step.startDistance, span.from)
+      const to = Math.min(stepEnd, span.to)
+      if (to <= from) continue
+
+      let pieceCount = Math.ceil((to - from) / SAMPLE_LENGTH)
+      if (span.startSkew === span.endSkew) pieceCount = 1
+      for (let piece = 0; piece < pieceCount; piece++) {
+        const pieceFrom = from + ((to - from) * piece) / pieceCount
+        const pieceTo = from + ((to - from) * (piece + 1)) / pieceCount
+        segments.push({
+          start: pointAt({ step, distance: pieceFrom }),
+          end: pointAt({ step, distance: pieceTo }),
+          layer: step.layer,
+          width: step.width,
+          skew: skewAt({ span, distance: (pieceFrom + pieceTo) / 2 }),
+          coupling: span.coupling,
+        })
       }
-      appendOrExtend({ segments, segment })
     }
   }
   return segments
 }
 
-/**
- * The local skew at a distance along a trace, interpolated between known
- * points. `null` outside the first and last known points.
- */
+/** The skew at a distance inside a span, rounded. */
 function skewAt({
-  known,
+  span,
   distance,
 }: {
-  known: KnownSkew[]
+  span: SkewSpan
   distance: number
 }): number | null {
-  if (known.length === 0) return null
-  const first = known[0]
-  const last = known[known.length - 1]
-  if (distance < first.distance || distance > last.distance) return null
-
-  for (let i = 0; i + 1 < known.length; i++) {
-    const before = known[i]
-    const after = known[i + 1]
-    if (distance > after.distance) continue
-    const span = after.distance - before.distance
-    if (span === 0) return roundSkew(after.skew)
-    const t = (distance - before.distance) / span
-    return roundSkew(before.skew + t * (after.skew - before.skew))
-  }
-  return roundSkew(last.skew)
+  if (span.startSkew === null || span.endSkew === null) return null
+  const t = (distance - span.from) / (span.to - span.from)
+  return roundSkew(span.startSkew + t * (span.endSkew - span.startSkew))
 }
 
-/** Rounds skew to {@link SKEW_RESOLUTION}. */
+/** Rounds skew to 1/{@link SKEW_ROUNDING} mm, reporting -0 as 0. */
 function roundSkew(skew: number): number {
-  const rounded = Math.round(skew / SKEW_RESOLUTION) * SKEW_RESOLUTION
-  // Negating a zero skew for the negative trace gives -0; report it as 0.
+  const rounded = Math.round(skew * SKEW_ROUNDING) / SKEW_ROUNDING
   if (rounded === 0) return 0
   return rounded
 }
 
-/** The point at a fraction of the way along a step. */
-function pointAlong({
+/** The point on a step at a distance along the whole walk. */
+function pointAt({
   step,
-  fraction,
+  distance,
 }: {
   step: TraceStep
-  fraction: number
+  distance: number
 }): Point {
+  const fraction = (distance - step.startDistance) / step.length
   return {
     x: step.start.x + (step.end.x - step.start.x) * fraction,
     y: step.start.y + (step.end.y - step.start.y) * fraction,
   }
-}
-
-/** Adds a segment, or lengthens the previous one when it continues it with the same skew. */
-function appendOrExtend({
-  segments,
-  segment,
-}: {
-  segments: LocalSkewSegment[]
-  segment: LocalSkewSegment
-}): void {
-  const previous = segments[segments.length - 1]
-  const continuesPrevious =
-    previous !== undefined &&
-    previous.skew === segment.skew &&
-    previous.layer === segment.layer &&
-    previous.width === segment.width &&
-    previous.end.x === segment.start.x &&
-    previous.end.y === segment.start.y &&
-    isSameDirection({ previous, segment })
-  if (!continuesPrevious) {
-    segments.push(segment)
-    return
-  }
-  previous.end = segment.end
-}
-
-/** True when two segments point the same way, so joining them keeps the corner. */
-function isSameDirection({
-  previous,
-  segment,
-}: {
-  previous: LocalSkewSegment
-  segment: LocalSkewSegment
-}): boolean {
-  const cross =
-    (previous.end.x - previous.start.x) * (segment.end.y - segment.start.y) -
-    (previous.end.y - previous.start.y) * (segment.end.x - segment.start.x)
-  return Math.abs(cross) < STRAIGHT_TOLERANCE
 }
