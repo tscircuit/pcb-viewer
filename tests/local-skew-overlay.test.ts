@@ -1,39 +1,19 @@
 import { expect, test } from "bun:test"
 import "bun-match-svg"
-import { fileURLToPath } from "node:url"
-import { type Browser, chromium } from "playwright"
-import { createServer } from "vite"
-import { renderDifferentialPairBoard } from "./fixtures/local-skew/differential-pair-board"
+import {
+  openOverlayPage,
+  screenPointOf,
+} from "./local-skew-overlay/open-overlay-page"
 
-/** Overlay colour where USB_DP is ahead by at least the pair's 0.1 mm limit. */
-const FULLY_AHEAD_COLOR = "rgb(255, 77, 77)"
-
-test("Show Local Skew colours the out-of-phase stretch of a differential pair", async () => {
-  const server = await createServer({
-    root: fileURLToPath(new URL("../", import.meta.url)),
-    server: { host: "127.0.0.1", port: 0 },
-    logLevel: "error",
-  })
-  await server.listen()
-  let browser: Browser | undefined
+test("Show Local Skew colours the out-of-phase stretch without remounting the board", async () => {
+  const { page, errors, close } = await openOverlayPage({})
   try {
-    browser = await chromium.launch({
-      headless: true,
-      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
-        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
-        : {}),
+    await page.evaluate(() => {
+      ;(
+        document.querySelector(".pcb-layer-top") as HTMLElement
+      ).dataset.marker = "before-toggle"
     })
-    const page = await browser.newPage({
-      viewport: { width: 600, height: 400 },
-    })
-    const errors: string[] = []
-    page.on("pageerror", (error) => errors.push(error.message))
-    await page.addInitScript((circuitJson) => {
-      window.localSkewCircuitJson = circuitJson
-    }, renderDifferentialPairBoard())
-    await page.goto(`${server.resolvedUrls!.local[0]}tests/local-skew-overlay/`)
-    await page.waitForSelector(".pcb-layer-top")
-    const overlay = page.getByTestId("local-skew-overlay")
+    const overlay = page.locator(".pcb-local-skew-overlay")
     expect(await overlay.count()).toBe(0)
 
     await page.locator("[data-view-menu] > div > div").first().click({
@@ -41,44 +21,90 @@ test("Show Local Skew colours the out-of-phase stretch of a differential pair", 
     })
     await page.getByText("Show Local Skew", { exact: true }).click()
     await overlay.waitFor()
+    await page.locator("[data-view-menu] > div > div").first().click({
+      delay: 350,
+    })
+    await page.mouse.move(590, 390)
     expect(
       await page.evaluate(() =>
         localStorage.getItem("pcb_viewer_is_showing_local_skew"),
       ),
     ).toBe("true")
+    // The board canvases were not replaced when the overlay appeared.
+    expect(
+      await page.evaluate(
+        () =>
+          (document.querySelector(".pcb-layer-top") as HTMLElement).dataset
+            .marker,
+      ),
+    ).toBe("before-toggle")
 
-    const strokes = await overlay
-      .locator("line")
-      .evaluateAll((lines) => lines.map((line) => line.getAttribute("stroke")))
-    expect(strokes).toContain(FULLY_AHEAD_COLOR)
+    // Read the real rendered pixels, so a hidden or covered overlay fails.
+    const positive = await screenPointOf({ page, x: 0, y: 0.3 })
+    const negative = await screenPointOf({ page, x: 0, y: -0.3 })
+    const screenshot = (await page.screenshot()).toString("base64")
+    const pixels = await page.evaluate(
+      async ({ png, points }) => {
+        const image = new Image()
+        image.src = `data:image/png;base64,${png}`
+        await image.decode()
+        const canvas = document.createElement("canvas")
+        canvas.width = image.width
+        canvas.height = image.height
+        const ctx = canvas.getContext("2d")!
+        ctx.drawImage(image, 0, 0)
+        return points.map((point) =>
+          Array.from(
+            ctx.getImageData(Math.round(point.x), Math.round(point.y), 1, 1)
+              .data,
+          ).slice(0, 3),
+        )
+      },
+      { png: screenshot, points: [positive, negative] },
+    )
+    // Thin lines blend at their edges, so check which colour dominates.
+    const [[red1, green1, blue1], [red2, green2, blue2]] = pixels
+    expect(red1).toBeGreaterThan(2 * Math.max(green1, blue1))
+    expect(blue2).toBeGreaterThan(1.5 * Math.max(red2, green2))
 
-    await page.mouse.move(590, 390)
-    // Board artwork plus the overlay lines, excluding menus and OS UI fonts.
-    const svg = await page.evaluate(() => {
+    // Snapshot the board canvases plus the live overlay, leaving out the
+    // toolbar and labels drawn with OS fonts that differ between machines.
+    const board = await page.evaluate(async () => {
       const composite = document.createElement("canvas")
-      const board = document.querySelector(
-        ".pcb-layer-board",
-      ) as HTMLCanvasElement
-      composite.width = board.width
-      composite.height = board.height
+      composite.width = 600
+      composite.height = 400
       const ctx = composite.getContext("2d")!
       ctx.fillStyle = "#111"
-      ctx.fillRect(0, 0, composite.width, composite.height)
+      ctx.fillRect(0, 0, 600, 400)
       for (const name of ["board", "top"]) {
-        const canvas = document.querySelector(
-          `.pcb-layer-${name}`,
-        ) as HTMLCanvasElement
-        ctx.drawImage(canvas, 0, 0)
+        ctx.drawImage(
+          document.querySelector(`.pcb-layer-${name}`) as HTMLCanvasElement,
+          0,
+          0,
+        )
       }
-      const lines = document.querySelector(
-        "[data-testid=local-skew-overlay]",
-      )!.innerHTML
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><title>Local skew overlay on a differential pair that matches end to end</title><image width="600" height="400" href="${composite.toDataURL()}"/>${lines}</svg>`
+      const overlay = document.querySelector(
+        ".pcb-local-skew-overlay",
+      ) as SVGSVGElement
+      const markup = new XMLSerializer().serializeToString(overlay)
+      const image = new Image()
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+        markup.replace("<svg ", '<svg width="600" height="400" '),
+      )}`
+      await image.decode()
+      ctx.drawImage(image, 0, 0)
+      return composite.toDataURL()
     })
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><title>Local skew overlay on a differential pair that matches end to end</title><image width="600" height="400" href="${board}"/></svg>`
     await expect(svg).toMatchSvgSnapshot(import.meta.path, "local-skew-overlay")
+
+    await page.locator("[data-view-menu] > div > div").first().click({
+      delay: 350,
+    })
+    await page.getByText("Show Local Skew", { exact: true }).click()
+    await overlay.waitFor({ state: "detached" })
     expect(errors).toEqual([])
   } finally {
-    await browser?.close()
-    await server.close()
+    await close()
   }
 }, 60000)

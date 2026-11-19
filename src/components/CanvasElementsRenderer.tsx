@@ -45,12 +45,12 @@ import { type BoundsSelection, DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { FocusedPcbComponentOverlay } from "./FocusedPcbComponentOverlay"
+import { LocalSkewOverlay } from "./LocalSkewOverlay"
 import {
   MouseElementTracker,
   getPrimitivesUnderPoint,
 } from "./MouseElementTracker"
 import { PcbGroupOverlay } from "./PcbGroupOverlay"
-import { LocalSkewOverlay } from "./LocalSkewOverlay"
 import { RatsNestOverlay } from "./RatsNestOverlay"
 import { ToolbarOverlay } from "./ToolbarOverlay"
 import { WarningGraphicsOverlay } from "./WarningGraphicsOverlay"
@@ -461,49 +461,52 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                 soup={elements}
                 connectivityMap={connectivityMap}
               >
-                <LocalSkewOverlay transform={transform} elements={elements}>
-                  <PcbGroupOverlay
+                <PcbGroupOverlay
+                  transform={transform}
+                  elements={elements}
+                  hoveredComponentIds={hoveredComponentIds}
+                >
+                  <DebugGraphicsOverlay
                     transform={transform}
-                    elements={elements}
-                    hoveredComponentIds={hoveredComponentIds}
+                    debugGraphics={props.debugGraphics}
                   >
-                    <DebugGraphicsOverlay
+                    <WarningGraphicsOverlay
                       transform={transform}
-                      debugGraphics={props.debugGraphics}
+                      elements={elements}
                     >
-                      <WarningGraphicsOverlay
+                      {props.renderer === "canvas" ? (
+                        <CanvasPrimitiveRenderer
+                          transform={transform}
+                          primitives={primitives}
+                          elements={elementsToRender}
+                          circuitJson={elements}
+                          xRayElements={xRayElements}
+                          width={props.width}
+                          height={props.height}
+                          grid={props.grid}
+                          onRenderComplete={props.onRenderComplete}
+                        />
+                      ) : (
+                        <WebGpuElementsRenderer
+                          highlightedCopperPourIds={highlightedCopperPourIds}
+                          transform={transform}
+                          primitives={primitives}
+                          elements={elements}
+                          xRayElements={xRayElements}
+                          width={props.width}
+                          height={props.height}
+                          grid={props.grid}
+                          onRenderComplete={props.onRenderComplete}
+                        />
+                      )}
+                      <LocalSkewOverlay
                         transform={transform}
                         elements={elements}
-                      >
-                        {props.renderer === "canvas" ? (
-                          <CanvasPrimitiveRenderer
-                            transform={transform}
-                            primitives={primitives}
-                            elements={elementsToRender}
-                            circuitJson={elements}
-                            xRayElements={xRayElements}
-                            width={props.width}
-                            height={props.height}
-                            grid={props.grid}
-                            onRenderComplete={props.onRenderComplete}
-                          />
-                        ) : (
-                          <WebGpuElementsRenderer
-                            highlightedCopperPourIds={highlightedCopperPourIds}
-                            transform={transform}
-                            primitives={primitives}
-                            elements={elements}
-                            xRayElements={xRayElements}
-                            width={props.width}
-                            height={props.height}
-                            grid={props.grid}
-                            onRenderComplete={props.onRenderComplete}
-                          />
-                        )}
-                      </WarningGraphicsOverlay>
-                    </DebugGraphicsOverlay>
-                  </PcbGroupOverlay>
-                </LocalSkewOverlay>
+                        isXRayActive={xRayElements !== undefined}
+                      />
+                    </WarningGraphicsOverlay>
+                  </DebugGraphicsOverlay>
+                </PcbGroupOverlay>
               </RatsNestOverlay>
             </ErrorOverlay>
           </ToolbarOverlay>
