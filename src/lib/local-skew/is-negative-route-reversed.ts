@@ -35,15 +35,18 @@ export function isNegativeRouteReversed({
 }): boolean {
   const positive = routeEndComponents({ trace: positiveTrace, portComponents })
   const negative = routeEndComponents({ trace: negativeTrace, portComponents })
-  if (positive.start !== undefined && positive.start === negative.start) {
-    return false
-  }
-  if (positive.start !== undefined && positive.start === negative.end) {
-    return true
-  }
-  if (positive.end !== undefined && positive.end === negative.end) return false
-  if (positive.end !== undefined && positive.end === negative.start) {
-    return true
+  // A component decides only when it is shared with one end, not both
+  // (as on a loopback where all four pads are on one part).
+  for (const shared of [positive.start, positive.end]) {
+    if (shared === undefined) continue
+    const sameEnd =
+      (shared === positive.start && shared === negative.start) ||
+      (shared === positive.end && shared === negative.end)
+    const otherEnd =
+      (shared === positive.start && shared === negative.end) ||
+      (shared === positive.end && shared === negative.start)
+    if (sameEnd && !otherEnd) return false
+    if (otherEnd && !sameEnd) return true
   }
 
   const positiveStart = positiveSteps[0].start

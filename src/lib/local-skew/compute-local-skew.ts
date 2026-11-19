@@ -6,15 +6,19 @@ import type {
   SourceBus,
   SourceTrace,
 } from "circuit-json"
-import { type CoupledRun, findCoupledRuns } from "./find-coupled-runs"
+import { findCoupledRuns } from "./find-coupled-runs"
 import {
   type PortComponents,
   isNegativeRouteReversed,
 } from "./is-negative-route-reversed"
+import type { CoupledRun } from "./select-coupled-runs"
 import { type TraceStep, reverseWalk, walkTrace } from "./walk-trace"
 
 /** Skew ramps are cut into pieces at most this long, in mm, so they look smooth. */
 const SAMPLE_LENGTH = 0.05
+
+/** Ramps are not cut finer than this change in skew, in mm (1 µm, the readout precision). */
+const SKEW_STEP = 0.001
 
 /** Skew is rounded to 1/this mm (10 nm), so equal traces don't flicker between colours. */
 const SKEW_ROUNDING = 1e5
@@ -258,8 +262,9 @@ function unknownSpan({ from, to }: { from: number; to: number }): SkewSpan {
 
 /**
  * Cuts the steps at span boundaries. Constant pieces stay whole; pieces
- * where skew changes are cut every {@link SAMPLE_LENGTH} mm, each with the
- * skew at its middle.
+ * where skew changes are cut every {@link SAMPLE_LENGTH} mm, or every
+ * {@link SKEW_STEP} mm of skew if that is coarser, each with the skew at its
+ * middle.
  */
 function sampleSkew({
   steps,
@@ -288,8 +293,7 @@ function sampleSkew({
       const to = Math.min(stepEnd, span.to)
       if (to <= from) continue
 
-      let pieceCount = Math.ceil((to - from) / SAMPLE_LENGTH)
-      if (span.startSkew === span.endSkew) pieceCount = 1
+      const pieceCount = rampPieceCount({ span, from, to })
       for (let piece = 0; piece < pieceCount; piece++) {
         const pieceFrom = from + ((to - from) * piece) / pieceCount
         const pieceTo = from + ((to - from) * (piece + 1)) / pieceCount
@@ -305,6 +309,24 @@ function sampleSkew({
     }
   }
   return segments
+}
+
+/** How many pieces to cut a ramp between `from` and `to` into; 1 when skew barely changes. */
+function rampPieceCount({
+  span,
+  from,
+  to,
+}: {
+  span: SkewSpan
+  from: number
+  to: number
+}): number {
+  const startSkew = skewAt({ span, distance: from })
+  const endSkew = skewAt({ span, distance: to })
+  if (startSkew === null || endSkew === null) return 1
+  const byLength = Math.ceil((to - from) / SAMPLE_LENGTH)
+  const bySkew = Math.ceil(Math.abs(endSkew - startSkew) / SKEW_STEP)
+  return Math.max(1, Math.min(byLength, bySkew))
 }
 
 /** The skew at a distance inside a span, rounded. */

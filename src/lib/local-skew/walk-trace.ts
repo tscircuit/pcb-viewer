@@ -26,6 +26,9 @@ type RouteCorner = {
  * same rule the viewer draws with. Copper arriving at a via is on the
  * via's `from_layer`, so the run between two vias is on the layer they
  * connect. Via barrels add no length, matching `pcb_trace.trace_length`.
+ *
+ * Consecutive pieces that continue in a straight line on the same copper
+ * are joined, so how finely a route is split into points doesn't matter.
  */
 export function walkTrace(trace: PcbTrace): TraceStep[] {
   const corners = routeCorners(trace)
@@ -39,17 +42,45 @@ export function walkTrace(trace: PcbTrace): TraceStep[] {
       to.point.y - from.point.y,
     )
     if (length === 0) continue
-    steps.push({
+    const step: TraceStep = {
       start: from.point,
       end: to.point,
       layer: to.layer,
       width: to.width,
       startDistance: distance,
       length,
-    })
+    }
     distance += length
+    const previous = steps[steps.length - 1]
+    if (previous && continuesStraight({ previous, next: step })) {
+      previous.end = step.end
+      previous.length += step.length
+      continue
+    }
+    steps.push(step)
   }
   return steps
+}
+
+/** Cosine above which two steps count as one straight line (about 0.003°). */
+const STRAIGHT_COSINE = 1 - 1e-9
+
+/** True when `next` carries on from `previous` in a straight line on the same layer and width. */
+function continuesStraight({
+  previous,
+  next,
+}: {
+  previous: TraceStep
+  next: TraceStep
+}): boolean {
+  if (previous.layer !== next.layer || previous.width !== next.width) {
+    return false
+  }
+  const cosine =
+    ((previous.end.x - previous.start.x) * (next.end.x - next.start.x) +
+      (previous.end.y - previous.start.y) * (next.end.y - next.start.y)) /
+    (previous.length * next.length)
+  return cosine >= STRAIGHT_COSINE
 }
 
 /** The same copper walked from the other end. Each step keeps its layer and width. */
