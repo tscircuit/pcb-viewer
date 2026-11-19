@@ -149,3 +149,7 @@ schematic component even when reference designators repeat across subcircuits.
 RunFrame and CircuitJsonViewer can forward this callback from their shared PCB
 preview when the schematic tab is enabled. Tab switching and schematic zooming
 are implemented by the host; PCBViewer does not require schematic elements.
+
+## Hover Focus Behavior
+
+Pass `focusOnHover={false}` (default) or `focusOnHover={true}` to `<PCBViewer />` to control automatic hover focus behavior (`disableAutoFocus` has been removed in favor of `focusOnHover={false}`).
