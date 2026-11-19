@@ -1,4 +1,10 @@
 import type { Point } from "@tscircuit/math-utils"
+import {
+  type CandidateRun,
+  type CoupledRun,
+  MIN_OVERLAP,
+  selectCoupledRuns,
+} from "./select-coupled-runs"
 import { buildStepGrid, stepsNear } from "./step-grid"
 import type { TraceStep } from "./walk-trace"
 
@@ -8,26 +14,8 @@ const PARALLEL_COSINE = 0.9999
 /** Allow 20% more than the nominal centreline spacing before the traces stop counting as coupled. */
 const SPACING_ALLOWANCE = 1.2
 
-/** Overlaps shorter than this, in mm, are rounding noise at shared corners. */
-const MIN_OVERLAP = 1e-6
-
-/** Without a declared gap, look for a partner up to this many trace widths away. */
+/** Without a declared gap, traces count as coupled up to this many trace widths apart, centre to centre. */
 const UNSET_GAP_REACH_WIDTHS = 10
-
-/**
- * A stretch where the two traces of a pair run side by side. Distances are
- * measured along each walk from its first point, in mm.
- */
-export type CoupledRun = {
-  positiveStart: number
-  positiveEnd: number
-  negativeStart: number
-  negativeEnd: number
-  /** How much farther the positive trace has run than the negative one at the run's start, in mm. */
-  startSkew: number
-  /** The same at the run's end. It differs from `startSkew` when the traces are not exactly parallel. */
-  endSkew: number
-}
 
 /** A positive and a negative step that run parallel, with the negative step placed in the positive step's frame. */
 type ParallelPair = {
@@ -41,13 +29,10 @@ type ParallelPair = {
   negativeEndOffset: number
 }
 
-/** A coupled run and how far apart its traces are, for choosing between competing runs. */
-type CandidateRun = CoupledRun & { offset: number }
-
 /**
  * Finds where the two traces run parallel on the same layer within the
  * pair's spacing. Each stretch of copper is matched to at most one stretch
- * of its partner, preferring the nearest, and matches keep route order.
+ * of its partner, and the matches keep route order on both traces.
  */
 export function findCoupledRuns({
   positive,
@@ -56,22 +41,16 @@ export function findCoupledRuns({
 }: {
   positive: TraceStep[]
   negative: TraceStep[]
-  /** Edge-to-edge copper gap, in mm. Without it, the nearest parallel spacing is used. */
+  /** Edge-to-edge copper gap, in mm. Without it, any spacing up to {@link UNSET_GAP_REACH_WIDTHS} widths counts. */
   traceGap: number | undefined
 }): CoupledRun[] {
-  const widest = widestStep([...positive, ...negative])
+  const widest = widestStep({ steps: positive.concat(negative) })
   let reach = widest * UNSET_GAP_REACH_WIDTHS
   if (traceGap !== undefined) reach = (traceGap + widest) * SPACING_ALLOWANCE
 
-  const pairs = findParallelPairs({ positive, negative, reach })
-  let nearestSpacing = Number.POSITIVE_INFINITY
-  for (const pair of pairs) {
-    nearestSpacing = Math.min(nearestSpacing, midOffset(pair))
-  }
-
   const candidates: CandidateRun[] = []
-  for (const pair of pairs) {
-    let maxOffset = nearestSpacing * SPACING_ALLOWANCE
+  for (const pair of findParallelPairs({ positive, negative, reach })) {
+    let maxOffset = reach
     if (traceGap !== undefined) {
       maxOffset =
         (traceGap + (pair.positiveStep.width + pair.negativeStep.width) / 2) *
@@ -80,10 +59,10 @@ export function findCoupledRuns({
     const candidate = clipToSpacing({ pair, maxOffset })
     if (candidate) candidates.push(candidate)
   }
-  return selectOneToOne(candidates)
+  return selectCoupledRuns(candidates)
 }
 
-/** Every same-layer, same-direction step pair whose spans overlap within `reach`. */
+/** Every same-layer, same-direction step pair near enough for the grid to find. */
 function findParallelPairs({
   positive,
   negative,
@@ -105,24 +84,33 @@ function findParallelPairs({
         direction.x * negativeDirection.x + direction.y * negativeDirection.y
       if (cosine < PARALLEL_COSINE) continue
 
-      const startAlong = along({
-        step: positiveStep,
+      const negativeStartAlong = along({
+        direction,
+        origin: positiveStep.start,
         point: negativeStep.start,
       })
-      const endAlong = along({ step: positiveStep, point: negativeStep.end })
-      if (endAlong <= 0 || startAlong >= positiveStep.length) continue
-
+      const negativeEndAlong = along({
+        direction,
+        origin: positiveStep.start,
+        point: negativeStep.end,
+      })
+      // Cheap reject before building a pair: the steps don't overlap at all.
+      if (negativeEndAlong <= 0 || negativeStartAlong >= positiveStep.length) {
+        continue
+      }
       pairs.push({
         positiveStep,
         negativeStep,
-        negativeStartAlong: startAlong,
-        negativeEndAlong: endAlong,
+        negativeStartAlong,
+        negativeEndAlong,
         negativeStartOffset: across({
-          step: positiveStep,
+          direction,
+          origin: positiveStep.start,
           point: negativeStep.start,
         }),
         negativeEndOffset: across({
-          step: positiveStep,
+          direction,
+          origin: positiveStep.start,
           point: negativeStep.end,
         }),
       })
@@ -144,7 +132,6 @@ function clipToSpacing({
 }): CandidateRun | null {
   const {
     positiveStep,
-    negativeStep,
     negativeStartAlong,
     negativeEndAlong,
     negativeStartOffset,
@@ -189,129 +176,6 @@ function clipToSpacing({
 }
 
 /**
- * Takes candidates nearest first, trimming each to the parts of both traces
- * no nearer candidate has used, then keeps the runs that stay in route
- * order on both traces.
- */
-function selectOneToOne(candidates: CandidateRun[]): CoupledRun[] {
-  const nearestFirst = [...candidates].sort(
-    (a, b) => a.offset - b.offset || a.positiveStart - b.positiveStart,
-  )
-  const accepted: CandidateRun[] = []
-  for (const candidate of nearestFirst) {
-    accepted.push(...unusedParts({ candidate, accepted }))
-  }
-
-  accepted.sort((a, b) => a.positiveStart - b.positiveStart)
-  const ordered: CoupledRun[] = []
-  for (const { offset: _offset, ...run } of accepted) {
-    const previous = ordered[ordered.length - 1]
-    if (previous && run.negativeStart < previous.negativeEnd - MIN_OVERLAP) {
-      continue
-    }
-    ordered.push(run)
-  }
-  return ordered
-}
-
-/**
- * The pieces of `candidate` whose positive and negative stretches are not
- * already used by an accepted run.
- */
-function unusedParts({
-  candidate,
-  accepted,
-}: {
-  candidate: CandidateRun
-  accepted: CandidateRun[]
-}): CandidateRun[] {
-  // Work in positive-trace distance; the negative side maps onto it linearly.
-  const negativePerPositive =
-    (candidate.negativeEnd - candidate.negativeStart) /
-    (candidate.positiveEnd - candidate.positiveStart)
-  const used: Interval[] = []
-  for (const run of accepted) {
-    const touchesPositive =
-      run.positiveEnd > candidate.positiveStart &&
-      run.positiveStart < candidate.positiveEnd
-    const touchesNegative =
-      run.negativeEnd > candidate.negativeStart &&
-      run.negativeStart < candidate.negativeEnd
-    if (!touchesPositive && !touchesNegative) continue
-    used.push({ start: run.positiveStart, end: run.positiveEnd })
-    const mappedStart =
-      candidate.positiveStart +
-      (run.negativeStart - candidate.negativeStart) / negativePerPositive
-    const mappedEnd =
-      candidate.positiveStart +
-      (run.negativeEnd - candidate.negativeStart) / negativePerPositive
-    used.push({ start: mappedStart, end: mappedEnd })
-  }
-
-  const free = subtractIntervals({
-    from: { start: candidate.positiveStart, end: candidate.positiveEnd },
-    remove: used,
-  })
-  return free.map((piece) =>
-    sliceRun({ candidate, from: piece.start, to: piece.end }),
-  )
-}
-
-/** A stretch of distance along a trace, in mm. */
-type Interval = { start: number; end: number }
-
-/** What is left of `from` after removing every interval in `remove`, keeping pieces longer than {@link MIN_OVERLAP}. */
-function subtractIntervals({
-  from,
-  remove,
-}: {
-  from: Interval
-  remove: Interval[]
-}): Interval[] {
-  let pieces: Interval[] = [from]
-  for (const cut of remove) {
-    const next: Interval[] = []
-    for (const piece of pieces) {
-      if (cut.end <= piece.start || cut.start >= piece.end) {
-        next.push(piece)
-        continue
-      }
-      next.push({ start: piece.start, end: Math.max(piece.start, cut.start) })
-      next.push({ start: Math.min(piece.end, cut.end), end: piece.end })
-    }
-    pieces = next.filter((piece) => piece.end - piece.start > MIN_OVERLAP)
-  }
-  return pieces
-}
-
-/** The part of a candidate between two positive-trace distances, with skews interpolated. */
-function sliceRun({
-  candidate,
-  from,
-  to,
-}: {
-  candidate: CandidateRun
-  from: number
-  to: number
-}): CandidateRun {
-  const span = candidate.positiveEnd - candidate.positiveStart
-  const startFraction = (from - candidate.positiveStart) / span
-  const endFraction = (to - candidate.positiveStart) / span
-  const negativeSpan = candidate.negativeEnd - candidate.negativeStart
-  const negativeStart = candidate.negativeStart + negativeSpan * startFraction
-  const negativeEnd = candidate.negativeStart + negativeSpan * endFraction
-  return {
-    positiveStart: from,
-    positiveEnd: to,
-    negativeStart,
-    negativeEnd,
-    startSkew: from - negativeStart,
-    endSkew: to - negativeEnd,
-    offset: candidate.offset,
-  }
-}
-
-/**
  * Distance along the negative walk to the point of the negative step that
  * sits beside `position` on the positive step.
  */
@@ -329,34 +193,41 @@ function negativeDistanceAt({
   return pair.negativeStep.startDistance + pair.negativeStep.length * fraction
 }
 
-/** Distance between the traces at the middle of their shared span, in mm. */
-function midOffset(pair: ParallelPair): number {
-  return Math.abs((pair.negativeStartOffset + pair.negativeEndOffset) / 2)
-}
-
 /** The widest copper among the steps, in mm. */
-function widestStep(steps: TraceStep[]): number {
+function widestStep({ steps }: { steps: TraceStep[] }): number {
   let widest = 0
   for (const step of steps) widest = Math.max(widest, step.width)
   return widest
 }
 
-/** How far `point` lies along `step`'s direction from its start, in mm. */
-function along({ step, point }: { step: TraceStep; point: Point }): number {
-  const direction = unitDirection(step)
-  return (
-    direction.x * (point.x - step.start.x) +
-    direction.y * (point.y - step.start.y)
-  )
+/** How far `point` lies along the line through `origin` along `direction`, in mm. */
+function along({
+  direction,
+  origin,
+  point,
+}: {
+  /** Unit vector of the line. */
+  direction: Point
+  /** A point on the line. */
+  origin: Point
+  point: Point
+}): number {
+  return direction.x * (point.x - origin.x) + direction.y * (point.y - origin.y)
 }
 
-/** Signed distance of `point` from `step`'s centreline, in mm. */
-function across({ step, point }: { step: TraceStep; point: Point }): number {
-  const direction = unitDirection(step)
-  return (
-    direction.x * (point.y - step.start.y) -
-    direction.y * (point.x - step.start.x)
-  )
+/** Signed distance of `point` from the line through `origin` along `direction`, in mm. */
+function across({
+  direction,
+  origin,
+  point,
+}: {
+  /** Unit vector of the line. */
+  direction: Point
+  /** A point on the line. */
+  origin: Point
+  point: Point
+}): number {
+  return direction.x * (point.y - origin.y) - direction.y * (point.x - origin.x)
 }
 
 /** The unit vector pointing along a step. */

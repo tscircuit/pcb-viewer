@@ -18,11 +18,14 @@ test("a slightly slanted partner keeps the skew it builds along the run", () => 
     }),
   )
 
+  // The run's skew grows from 0 to the slant's extra length; the maximum
+  // comes from its end, not its middle.
+  expect(pair.max_skew).toBeCloseTo(SLANT_EXTRA_LENGTH, 5)
+  // A change this small (0.25 µm) stays one piece instead of 400.
   const slanted = pair.negative.segments.filter(
-    (segment) =>
-      segment.start.y !== segment.end.y && segment.coupling === "coupled",
+    (segment) => segment.start.y !== segment.end.y,
   )
-  const lastSkew = slanted[slanted.length - 1].skew ?? 0
-  expect(slanted.length).toBeGreaterThan(1)
-  expect(lastSkew).toBeCloseTo(SLANT_EXTRA_LENGTH, 4)
+  expect(
+    slanted.filter((segment) => segment.coupling === "coupled"),
+  ).toHaveLength(1)
 })

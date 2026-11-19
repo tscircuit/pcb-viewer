@@ -18,10 +18,11 @@ export function routeLengthToX({
     (element): element is SourceTrace =>
       element.type === "source_trace" && element.name === traceName,
   )
+  if (!sourceTrace) throw new Error(`No source trace named ${traceName}`)
   const pcbTrace = circuitJson.find(
     (element): element is PcbTrace =>
       element.type === "pcb_trace" &&
-      element.source_trace_id === sourceTrace?.source_trace_id,
+      element.source_trace_id === sourceTrace.source_trace_id,
   )
   if (!pcbTrace) throw new Error(`No routed trace named ${traceName}`)
 
