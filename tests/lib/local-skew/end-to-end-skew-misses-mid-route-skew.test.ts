@@ -1,25 +1,24 @@
 import { expect, test } from "bun:test"
-import type { PcbTrace } from "circuit-json"
-import { renderDifferentialPairBoard } from "../../fixtures/local-skew/differential-pair-board"
+import { checkPcbBusLengthSkew } from "@tscircuit/checks"
+import {
+  DETOUR_EXTRA_LENGTH,
+  renderDifferentialPairBoard,
+} from "../../fixtures/local-skew/differential-pair-board"
+import { routeLengthToX } from "../../fixtures/local-skew/route-length-to-x"
 
-/** Length the positive trace's detour adds before the negative trace catches up, in mm. */
-const DETOUR_EXTRA_LENGTH = 2 * Math.sqrt(0.5 ** 2 + 1 ** 2) - 1
+/** A cross-section between the two detours, in mm. */
+const MID_ROUTE_X = 0
 
 test("end-to-end skew passes a pair that is out of phase mid-route", () => {
-  const circuitJson = renderDifferentialPairBoard()
+  const circuitJson = renderDifferentialPairBoard({ compensated: true })
 
-  const traceLengths = circuitJson
-    .filter((element): element is PcbTrace => element.type === "pcb_trace")
-    .map((trace) => trace.trace_length ?? 0)
-  const skewErrors = circuitJson.filter(
-    (element) => element.type === "pcb_bus_length_skew_error",
-  )
+  const midRouteSkew =
+    routeLengthToX({ circuitJson, traceName: "USB_DP", x: MID_ROUTE_X }) -
+    routeLengthToX({ circuitJson, traceName: "USB_DN", x: MID_ROUTE_X })
 
-  // The total lengths match, so the only skew check finds nothing to report,
-  // even though the positive trace is ahead by DETOUR_EXTRA_LENGTH between
-  // the two detours. Nothing in the viewer shows that stretch today.
-  expect(traceLengths).toHaveLength(2)
-  expect(traceLengths[0]).toBeCloseTo(traceLengths[1], 9)
-  expect(skewErrors).toHaveLength(0)
-  expect(DETOUR_EXTRA_LENGTH).toBeGreaterThan(1.2)
+  // USB_DP is longer than USB_DN by the whole detour between the detours,
+  // far beyond the pair's 0.1 mm limit...
+  expect(midRouteSkew).toBeCloseTo(DETOUR_EXTRA_LENGTH, 6)
+  // ...yet the only skew check, which compares total lengths, reports nothing.
+  expect(checkPcbBusLengthSkew(circuitJson)).toEqual([])
 })
