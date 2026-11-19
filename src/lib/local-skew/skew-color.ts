@@ -57,3 +57,22 @@ function blend({
 function toCss([red, green, blue]: Rgb): string {
   return `rgb(${red}, ${green}, ${blue})`
 }
+
+/** Without a `maxLengthSkew`, colours saturate at the pair's largest skew but never below this, in mm. */
+const MIN_FULL_SCALE = 0.05
+
+/**
+ * The skew, in mm, drawn with the full longer or shorter colour: the
+ * pair's `maxLengthSkew` when set, so full colour means the limit is reached,
+ * otherwise its largest skew, floored so tiny skews don't look alarming.
+ */
+export function fullScaleFor({
+  maxLengthSkew,
+  maxSkew,
+}: {
+  maxLengthSkew: number | undefined
+  maxSkew: number | null
+}): number {
+  if (maxLengthSkew !== undefined) return maxLengthSkew
+  return Math.max(MIN_FULL_SCALE, maxSkew ?? 0)
+}

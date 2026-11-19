@@ -1,4 +1,6 @@
 import { fileURLToPath } from "node:url"
+import type { Point } from "@tscircuit/math-utils"
+import type { CircuitJson } from "circuit-json"
 import {
   type Browser,
   type LaunchOptions,
@@ -6,6 +8,7 @@ import {
   chromium,
 } from "playwright"
 import { type ViteDevServer, createServer } from "vite"
+import type { State } from "../../src/global-store"
 import { renderDifferentialPairBoard } from "../fixtures/local-skew/differential-pair-board"
 
 /** A browser page showing the compensated differential pair, and how to shut it down. */
@@ -17,12 +20,23 @@ export type OverlayPage = {
 }
 
 /** Viewer store fields to start from, e.g. `{ selected_layer: "bottom" }`. */
-export type OverlayInitialState = Record<string, unknown>
+export type OverlayInitialState = Partial<State>
 
-/** Opens the compensated differential pair board in Chromium with the given viewer state. */
-export async function openOverlayPage(
-  initialState: OverlayInitialState,
-): Promise<OverlayPage> {
+/** Delay for clicks that open the View menu, which opens on a held press. */
+export const MENU_CLICK_DELAY_MS = 350
+
+/** A point off the board, for moving the pointer out of the way. */
+export const OFF_BOARD_POINT: Point = { x: 590, y: 390 }
+
+/** Opens a board in Chromium with the given viewer state; by default the compensated differential pair. */
+export async function openOverlayPage({
+  initialState,
+  circuitJson = renderDifferentialPairBoard({ compensated: true }),
+}: {
+  initialState: OverlayInitialState
+  /** Rendered from a TSX fixture through core. */
+  circuitJson?: CircuitJson
+}): Promise<OverlayPage> {
   const server: ViteDevServer = await createServer({
     root: fileURLToPath(new URL("../../", import.meta.url)),
     server: { host: "127.0.0.1", port: 0 },
@@ -43,7 +57,7 @@ export async function openOverlayPage(
       window.localSkewInitialState = state
     },
     {
-      circuitJson: renderDifferentialPairBoard({ compensated: true }),
+      circuitJson,
       state: initialState,
     },
   )
@@ -68,7 +82,7 @@ export async function screenPointOf({
   page: Page
   x: number
   y: number
-}): Promise<{ x: number; y: number }> {
+}): Promise<Point> {
   return page.evaluate(
     ({ x, y }) => {
       const group = document.querySelector(

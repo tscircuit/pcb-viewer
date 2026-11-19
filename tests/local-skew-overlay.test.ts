@@ -1,13 +1,22 @@
 import { expect, test } from "bun:test"
 import "bun-match-svg"
 import {
+  MENU_CLICK_DELAY_MS,
+  OFF_BOARD_POINT,
   openOverlayPage,
   screenPointOf,
 } from "./local-skew-overlay/open-overlay-page"
 
+/**
+ * Plain top copper is rgb(200, 52, 52) and its edges blend darker; the
+ * overlay's "longer" red is rgb(255, 77, 77), so even blended it is brighter.
+ */
+const MIN_OVERLAY_RED = 215
+
 test("Show Local Skew colours the out-of-phase stretch without remounting the board", async () => {
-  const { page, errors, close } = await openOverlayPage({})
+  const { page, errors, close } = await openOverlayPage({ initialState: {} })
   try {
+    const viewMenu = page.locator("[data-view-menu] > div > div").first()
     await page.evaluate(() => {
       ;(
         document.querySelector(".pcb-layer-top") as HTMLElement
@@ -16,15 +25,11 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
     const overlay = page.locator(".pcb-local-skew-overlay")
     expect(await overlay.count()).toBe(0)
 
-    await page.locator("[data-view-menu] > div > div").first().click({
-      delay: 350,
-    })
+    await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
     await page.getByText("Show Local Skew", { exact: true }).click()
     await overlay.waitFor()
-    await page.locator("[data-view-menu] > div > div").first().click({
-      delay: 350,
-    })
-    await page.mouse.move(590, 390)
+    await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
+    await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
     expect(
       await page.evaluate(() =>
         localStorage.getItem("pcb_viewer_is_showing_local_skew"),
@@ -38,6 +43,10 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
             .marker,
       ),
     ).toBe("before-toggle")
+    // The detours are estimated between measured stretches, so drawn faded.
+    const interpolated = page.locator('[data-coupling="interpolated"]')
+    expect(await interpolated.first().getAttribute("opacity")).toBe("0.45")
+    expect(await interpolated.locator("line").count()).toBeGreaterThan(0)
 
     // Read the real rendered pixels, so a hidden or covered overlay fails.
     const positive = await screenPointOf({ page, x: 0, y: 0.3 })
@@ -64,6 +73,7 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
     )
     // Thin lines blend at their edges, so check which colour dominates.
     const [[red1, green1, blue1], [red2, green2, blue2]] = pixels
+    expect(red1).toBeGreaterThan(MIN_OVERLAY_RED)
     expect(red1).toBeGreaterThan(2 * Math.max(green1, blue1))
     expect(blue2).toBeGreaterThan(1.5 * Math.max(red2, green2))
 
@@ -98,9 +108,7 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><title>Local skew overlay on a differential pair that matches end to end</title><image width="600" height="400" href="${board}"/></svg>`
     await expect(svg).toMatchSvgSnapshot(import.meta.path, "local-skew-overlay")
 
-    await page.locator("[data-view-menu] > div > div").first().click({
-      delay: 350,
-    })
+    await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
     await page.getByText("Show Local Skew", { exact: true }).click()
     await overlay.waitFor({ state: "detached" })
     expect(errors).toEqual([])
