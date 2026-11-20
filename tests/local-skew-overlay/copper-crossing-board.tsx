@@ -21,7 +21,7 @@ export function CopperCrossingBoard(): ReactElement {
     },
   ]
   return (
-    <board width="40mm" height="20mm">
+    <board width="40mm" height="20mm" layers={4} routeRemaining={false}>
       <testpoint
         name="TP_SRC"
         footprintVariant="pad"
@@ -95,13 +95,34 @@ export function CopperCrossingBoard(): ReactElement {
         height={2}
         cornerRadius={1}
       />
+      <via
+        fromLayer="top"
+        toLayer="bottom"
+        outerDiameter={1}
+        holeDiameter={0.2}
+        pcbX={4.5}
+        pcbY={-0.08}
+      />
+      <net name="GND" />
+      <copperpour
+        layer="top"
+        connectsTo="net.GND"
+        clearance={0.05}
+        outline={[
+          { x: 5.18, y: 0.02 },
+          { x: 5.88, y: 0.02 },
+          { x: 5.88, y: 1 },
+          { x: 5.18, y: 1 },
+        ]}
+      />
     </board>
   )
 }
 
 /** Renders {@link CopperCrossingBoard} through core. */
-export function renderCopperCrossingBoard(): CircuitJson {
+export async function renderCopperCrossingBoard(): Promise<CircuitJson> {
   const circuit = new Circuit()
   circuit.add(<CopperCrossingBoard />)
+  await circuit.renderUntilSettled()
   return circuit.getCircuitJson()
 }

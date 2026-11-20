@@ -14,7 +14,7 @@ test("hover follows the painted widths and rounded pad corners on higher Canvas 
       selected_layer: "top",
       hidden_layer_opacity: 0.5,
     },
-    circuitJson: renderCopperCrossingBoard(),
+    circuitJson: await renderCopperCrossingBoard(),
   })
   try {
     await page.locator(".pcb-local-skew-overlay").waitFor()
@@ -54,7 +54,7 @@ test("hover follows the painted widths and rounded pad corners on higher Canvas 
 
     // Selecting the bottom layer puts the bottom overlay in front of top copper.
     await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
-    await page.keyboard.press("2")
+    await page.keyboard.press("4")
     await page
       .locator('.pcb-local-skew-overlay svg[data-layer="bottom"][opacity="1"]')
       .waitFor()

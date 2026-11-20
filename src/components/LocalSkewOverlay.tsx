@@ -21,7 +21,6 @@ import {
   getCopperLayerRefsFromElements,
   isCopperLayer,
 } from "../lib/copper-layers"
-import { getCopperPoursUnderPoint } from "../lib/draw-copper-pour"
 import type { LocalSkewPair } from "../lib/local-skew/compute-local-skew"
 import { describeSkew } from "../lib/local-skew/describe-skew"
 import { skewColor } from "../lib/local-skew/skew-color"
@@ -30,7 +29,6 @@ import {
   getPrimitivesNearPoint,
 } from "../lib/primitive-spatial-index"
 import { zIndexMap } from "../lib/util/z-index-map"
-import { isXRayCopper } from "../lib/x-ray-net"
 import { getPrimitivesUnderPoint } from "./MouseElementTracker"
 
 /** Draw the overlay 10% wider than the copper so it covers the trace. */
@@ -100,8 +98,6 @@ export const LocalSkewOverlay = ({
 }): ReactElement | null => {
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
-  const isShowingCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
-  const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
   const [pointer, setPointer] = useState<Pointer | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const innerLayers = useMemo(
@@ -169,15 +165,12 @@ export const LocalSkewOverlay = ({
             pairs[candidate.pairIndex][candidate.side].segments[
               candidate.segmentIndex
             ].layer,
-          elements,
           primitiveSpatialIndex: canvasCopperIndex,
           selectedLayer,
           transform: matrix,
           pixelsPerMm,
           zIndexes,
           opacityOf,
-          isShowingCopperPours,
-          copperPourOpacity,
         }))
     ) {
       hovered = candidate
@@ -359,69 +352,50 @@ function segmentUnderPointer({
 }
 
 /**
- * Whether an opaque copper primitive or pour on a higher-z layer covers
+ * Whether an opaque copper primitive on a higher-z layer covers
  * `point`, obscuring an overlay drawn on `layer`.
  */
 function isCoveredByHigherCopper({
   point,
   layer,
-  elements,
   primitiveSpatialIndex,
   selectedLayer,
   transform,
   pixelsPerMm,
   zIndexes,
   opacityOf,
-  isShowingCopperPours,
-  copperPourOpacity,
 }: {
   point: Point
   layer: LayerRef
-  elements: AnyCircuitElement[]
   primitiveSpatialIndex: PrimitiveSpatialIndex
   selectedLayer: LayerRef
   transform: Matrix
   pixelsPerMm: number
   zIndexes: Map<string, number>
   opacityOf: (layer: LayerRef) => number
-  isShowingCopperPours: boolean
-  copperPourOpacity: number
 }): boolean {
   const overlayZIndex = zIndexes.get(layer) ?? 0
-  const hits = getPrimitivesUnderPoint({
-    includeHiddenTraces: true,
-    usePaintedGeometry: true,
-    primitives: getPrimitivesNearPoint({
-      point,
-      realToScreenScale: pixelsPerMm,
-      spatialIndex: primitiveSpatialIndex,
-    }),
-    rwPoint: point,
-    selectedLayer,
-    transform,
-  })
-  const hasCoveringPrimitive = hits.some(
-    (primitive) =>
-      isXRayCopper(primitive._element) &&
-      isCopperLayer(primitive.layer) &&
-      opacityOf(primitive.layer) >= 1 &&
-      (zIndexes.get(primitive.layer) ?? 0) > overlayZIndex,
+  const coversOverlay = (copperLayer: LayerRef) =>
+    opacityOf(copperLayer) >= 1 &&
+    (zIndexes.get(copperLayer) ?? 0) > overlayZIndex
+
+  // On copper layers the index contains only traces, pads and vias.
+  // Canvas paints copper pours at half alpha even at the full opacity setting.
+  const candidates = getPrimitivesNearPoint({
+    point,
+    realToScreenScale: pixelsPerMm,
+    spatialIndex: primitiveSpatialIndex,
+  }).filter(({ layer }) => isCopperLayer(layer) && coversOverlay(layer))
+  return (
+    getPrimitivesUnderPoint({
+      includeHiddenTraces: true,
+      usePaintedGeometry: true,
+      primitives: candidates,
+      rwPoint: point,
+      selectedLayer,
+      transform,
+    }).length > 0
   )
-  if (hasCoveringPrimitive) return true
-  if (!isShowingCopperPours || copperPourOpacity < 1) return false
-  const coveringPourLayers = new Set<LayerRef>()
-  for (const element of elements) {
-    if (element.type !== "pcb_copper_pour") continue
-    if (opacityOf(element.layer) < 1) continue
-    if ((zIndexes.get(element.layer) ?? 0) <= overlayZIndex) continue
-    coveringPourLayers.add(element.layer)
-  }
-  for (const pourLayer of coveringPourLayers) {
-    if (getCopperPoursUnderPoint(elements, point, pourLayer).length > 0) {
-      return true
-    }
-  }
-  return false
 }
 
 /**
