@@ -14,7 +14,7 @@ test("a detour where the pair widens to pad pitch shows as skew, measured at the
   // The pair fans in from 0.6 mm pad pitch to 0.3 mm over x in [-9.85, 4.0], within
   // (0.15 + 0.15) * 1.2 = 0.36 mm of the declared gap. Like KiCad, the stretches at pad
   // pitch before the first and after the last run are matched against the pads' centre
-  // distance instead: (0.6 + 0.15) * 1.2 = 0.9 mm, so they couple too.
+  // distance instead: 0.6 * 1.2 = 0.72 mm, so they couple too.
   // DP's vertical loop (x in [6, 8], 2.8 mm from DN at its top) doesn't couple, so skew
   // ramps across it from 0 to the loop's 4.445 mm and stays there to the load.
   const circuitJson = renderPairBoard({

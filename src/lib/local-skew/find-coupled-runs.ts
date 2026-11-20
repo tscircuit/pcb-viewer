@@ -31,10 +31,11 @@ type ParallelPair = {
 
 /**
  * Finds where the two traces run parallel on the same layer within the
- * pair's spacing, then checks the steps strictly before the first run and
- * after the last run at the source/load pad centre distance so wider pad
- * fan-outs still couple. Each stretch of copper is matched to at most one
- * stretch of its partner, and the matches keep route order on both traces.
+ * pair's spacing, then checks the copper before the first run and after the
+ * last run (clipping any step that straddles those boundaries) at the
+ * source/load pad centre distance so wider pad fan-outs still couple. Each
+ * stretch of copper is matched to at most one stretch of its partner, and the
+ * matches keep route order on both traces.
  */
 export function findCoupledRuns({
   positive,
@@ -51,38 +52,44 @@ export function findCoupledRuns({
 
   const first = mainRuns[0]
   const last = mainRuns[mainRuns.length - 1]
-  const positiveBefore = positive.filter(
-    (step) =>
-      step.startDistance + step.length <= first.positiveStart + MIN_OVERLAP,
-  )
-  const negativeBefore = negative.filter(
-    (step) =>
-      step.startDistance + step.length <= first.negativeStart + MIN_OVERLAP,
-  )
+  const positiveBefore = sliceSteps({
+    steps: positive,
+    from: 0,
+    to: first.positiveStart,
+  })
+  const negativeBefore = sliceSteps({
+    steps: negative,
+    from: 0,
+    to: first.negativeStart,
+  })
   const beforeRuns =
     positiveBefore.length > 0 && negativeBefore.length > 0
       ? findRunsAtGap({
           positive: positiveBefore,
           negative: negativeBefore,
-          traceGap: Math.hypot(
+          centreSpacing: Math.hypot(
             positive[0].start.x - negative[0].start.x,
             positive[0].start.y - negative[0].start.y,
           ),
         })
       : []
 
-  const positiveAfter = positive.filter(
-    (step) => step.startDistance >= last.positiveEnd - MIN_OVERLAP,
-  )
-  const negativeAfter = negative.filter(
-    (step) => step.startDistance >= last.negativeEnd - MIN_OVERLAP,
-  )
+  const positiveAfter = sliceSteps({
+    steps: positive,
+    from: last.positiveEnd,
+    to: Number.POSITIVE_INFINITY,
+  })
+  const negativeAfter = sliceSteps({
+    steps: negative,
+    from: last.negativeEnd,
+    to: Number.POSITIVE_INFINITY,
+  })
   const afterRuns =
     positiveAfter.length > 0 && negativeAfter.length > 0
       ? findRunsAtGap({
           positive: positiveAfter,
           negative: negativeAfter,
-          traceGap: Math.hypot(
+          centreSpacing: Math.hypot(
             positive[positive.length - 1].end.x -
               negative[negative.length - 1].end.x,
             positive[positive.length - 1].end.y -
@@ -94,24 +101,72 @@ export function findCoupledRuns({
   return [...beforeRuns, ...mainRuns, ...afterRuns]
 }
 
-/** One pass of parallel-run coupling at a single gap limit. */
+/** The portions of `steps` whose walk distance lies inside `[from, to]`. */
+function sliceSteps({
+  steps,
+  from,
+  to,
+}: {
+  steps: TraceStep[]
+  from: number
+  to: number
+}): TraceStep[] {
+  const sliced: TraceStep[] = []
+  for (const step of steps) {
+    const stepEnd = step.startDistance + step.length
+    const clampedFrom = Math.max(step.startDistance, from)
+    const clampedTo = Math.min(stepEnd, to)
+    if (clampedTo - clampedFrom <= MIN_OVERLAP) continue
+    if (clampedFrom === step.startDistance && clampedTo === stepEnd) {
+      sliced.push(step)
+      continue
+    }
+    const startFraction = (clampedFrom - step.startDistance) / step.length
+    const endFraction = (clampedTo - step.startDistance) / step.length
+    sliced.push({
+      ...step,
+      start: {
+        x: step.start.x + (step.end.x - step.start.x) * startFraction,
+        y: step.start.y + (step.end.y - step.start.y) * startFraction,
+      },
+      end: {
+        x: step.start.x + (step.end.x - step.start.x) * endFraction,
+        y: step.start.y + (step.end.y - step.start.y) * endFraction,
+      },
+      startDistance: clampedFrom,
+      length: clampedTo - clampedFrom,
+      startViaLength:
+        clampedFrom === step.startDistance ? step.startViaLength : 0,
+      endViaLength: clampedTo === stepEnd ? step.endViaLength : 0,
+    })
+  }
+  return sliced
+}
+
+/** One pass of parallel-run coupling at either an edge-to-edge `traceGap` or a centre-to-centre `centreSpacing`. */
 function findRunsAtGap({
   positive,
   negative,
   traceGap,
+  centreSpacing,
 }: {
   positive: TraceStep[]
   negative: TraceStep[]
-  traceGap: number | undefined
+  traceGap?: number
+  centreSpacing?: number
 }): CoupledRun[] {
   const widest = widestStep({ steps: positive.concat(negative) })
   let reach = widest * UNSET_GAP_REACH_WIDTHS
-  if (traceGap !== undefined) reach = (traceGap + widest) * SPACING_ALLOWANCE
+  if (centreSpacing !== undefined) {
+    reach = centreSpacing * SPACING_ALLOWANCE
+  } else if (traceGap !== undefined) {
+    reach = (traceGap + widest) * SPACING_ALLOWANCE
+  }
 
   const candidates: CandidateRun[] = []
   for (const pair of findParallelPairs({ positive, negative, reach })) {
     let maxOffset = reach
-    if (traceGap !== undefined) {
+    if (centreSpacing === undefined && traceGap !== undefined) {
       maxOffset =
         (traceGap + (pair.positiveStep.width + pair.negativeStep.width) / 2) *
         SPACING_ALLOWANCE
