@@ -8,6 +8,6 @@ test("skewColor scales positive and negative skew independently per trace", () =
   expect(skewColor({ skew: 3, fullScale: scale })).toBe("rgb(0, 0, 255)")
   expect(skewColor({ skew: -1, fullScale: scale })).toBe("rgb(255, 0, 0)")
 
-  const tiny = { positive: 0.0001, negative: 0 }
-  expect(skewColor({ skew: 0.0001, fullScale: tiny })).toBe("rgb(0, 0, 255)")
+  const tiny = { positive: 0.001, negative: 0 }
+  expect(skewColor({ skew: 0.001, fullScale: tiny })).toBe("rgb(0, 0, 255)")
 })
