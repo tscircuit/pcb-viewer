@@ -3,9 +3,11 @@ import type {
   CircuitJson,
   LayerRef,
   PcbBoard,
+  PcbPort,
   PcbStackup,
   PcbTrace,
   SourceBus,
+  SourcePort,
   SourceTrace,
 } from "circuit-json"
 import { findCoupledRuns } from "./find-coupled-runs"
@@ -87,11 +89,15 @@ type TracesBySource = Map<SourceTrace["source_trace_id"], PcbTrace[]>
  * how much farther one trace has run than the other, not only at the ends.
  *
  * Distances are copper length (planar length plus each via's Z-distance
- * between layers), measured from the positive trace's first route point.
- * The negative trace is walked from the end that matches it.
+ * between layers). When each trace has exactly one end port marked
+ * `is_output`, both traces are walked from that end; otherwise distances are
+ * measured from the positive trace's first route point and the negative
+ * trace is walked from the end that matches it.
  */
 export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const tracesBySource: TracesBySource = new Map()
+  const pcbPortsById = new Map<PcbPort["pcb_port_id"], PcbPort>()
+  const sourcePortsById = new Map<SourcePort["source_port_id"], SourcePort>()
   const boards: PcbBoard[] = []
   const stackups: PcbStackup[] = []
   for (const element of circuitJson) {
@@ -101,6 +107,14 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
     }
     if (element.type === "pcb_stackup") {
       stackups.push(element)
+      continue
+    }
+    if (element.type === "pcb_port") {
+      pcbPortsById.set(element.pcb_port_id, element)
+      continue
+    }
+    if (element.type === "source_port") {
+      sourcePortsById.set(element.source_port_id, element)
       continue
     }
     if (element.type !== "pcb_trace") continue
@@ -116,6 +130,8 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
     const pair = computePairSkew({
       bus: element,
       tracesBySource,
+      pcbPortsById,
+      sourcePortsById,
       boards,
       stackups,
     })
@@ -133,11 +149,15 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
 function computePairSkew({
   bus,
   tracesBySource,
+  pcbPortsById,
+  sourcePortsById,
   boards,
   stackups,
 }: {
   bus: SourceBus
   tracesBySource: TracesBySource
+  pcbPortsById: Map<PcbPort["pcb_port_id"], PcbPort>
+  sourcePortsById: Map<SourcePort["source_port_id"], SourcePort>
   boards: PcbBoard[]
   stackups: PcbStackup[]
 }): LocalSkewPair | null {
@@ -173,7 +193,7 @@ function computePairSkew({
     stackups[0]
   const boardThickness = board?.thickness
 
-  const positive = walkTrace({
+  let positive = walkTrace({
     trace: positiveTrace,
     stackup,
     boardThickness,
@@ -185,7 +205,20 @@ function computePairSkew({
     boardThickness,
   })
   if (!isMeasurable(negative)) return null
-  if (
+  const positiveOutput = outputEnd({
+    trace: positiveTrace,
+    pcbPortsById,
+    sourcePortsById,
+  })
+  const negativeOutput = outputEnd({
+    trace: negativeTrace,
+    pcbPortsById,
+    sourcePortsById,
+  })
+  if (positiveOutput && negativeOutput) {
+    if (positiveOutput === "end") positive = reverseWalk(positive)
+    if (negativeOutput === "end") negative = reverseWalk(negative)
+  } else if (
     isNegativeRouteReversed({
       positiveSteps: positive.steps,
       negativeSteps: negative.steps,
@@ -234,6 +267,42 @@ function computePairSkew({
     pair.max_length_skew = bus.max_length_skew
   }
   return pair
+}
+
+/**
+ * Which end of `trace` is connected to an output port (`source_port.is_output`),
+ * or null unless exactly one end port is an output.
+ */
+function outputEnd({
+  trace,
+  pcbPortsById,
+  sourcePortsById,
+}: {
+  trace: PcbTrace
+  pcbPortsById: Map<PcbPort["pcb_port_id"], PcbPort>
+  sourcePortsById: Map<SourcePort["source_port_id"], SourcePort>
+}): "start" | "end" | null {
+  let startPortId: string | undefined
+  let endPortId: string | undefined
+  for (const point of trace.route) {
+    if (point.route_type !== "wire") continue
+    if (startPortId === undefined && point.start_pcb_port_id !== undefined) {
+      startPortId = point.start_pcb_port_id
+    }
+    if (point.end_pcb_port_id !== undefined) {
+      endPortId = point.end_pcb_port_id
+    }
+  }
+  const isOutput = (pcbPortId: string | undefined): boolean => {
+    if (pcbPortId === undefined) return false
+    const pcbPort = pcbPortsById.get(pcbPortId)
+    if (!pcbPort) return false
+    return sourcePortsById.get(pcbPort.source_port_id)?.is_output === true
+  }
+  const startIsOutput = isOutput(startPortId)
+  const endIsOutput = isOutput(endPortId)
+  if (startIsOutput === endIsOutput) return null
+  return startIsOutput ? "start" : "end"
 }
 
 /** True when a walk has copper, a finite length, and every coordinate and width within {@link MAX_COORDINATE}. */
