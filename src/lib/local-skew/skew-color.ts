@@ -1,3 +1,4 @@
+import type { PcbDifferentialPairLocalSkew } from "circuit-json"
 import color from "color"
 
 const DEFAULT_COLORS = {
@@ -19,12 +20,17 @@ export function skewColor({
   positiveScale,
   negativeScale,
   colors,
+  pair,
   useLogScale,
 }: {
   skew?: number
   positiveScale: number
   negativeScale: number
   colors?: LocalSkewColors
+  pair?: Pick<
+    PcbDifferentialPairLocalSkew,
+    "positive_skew_color" | "negative_skew_color"
+  >
   useLogScale?: boolean
 }): string {
   if (skew === undefined) return colors?.unknown ?? DEFAULT_COLORS.unknown
@@ -34,6 +40,8 @@ export function skewColor({
   if (magnitude < ZERO_SKEW_THRESHOLD) return zero
 
   const sign = skew > 0 ? "positive" : "negative"
+  const pairColor =
+    sign === "positive" ? pair?.positive_skew_color : pair?.negative_skew_color
   const limit = Math.max(
     MIN_COLOR_SCALE,
     skew > 0 ? positiveScale : negativeScale,
@@ -48,7 +56,7 @@ export function skewColor({
     ? Math.log1p(9 * fraction) / Math.log(10)
     : fraction
   return color(zero)
-    .mix(color(colors?.[sign] ?? DEFAULT_COLORS[sign]), weight)
+    .mix(color(colors?.[sign] ?? pairColor ?? DEFAULT_COLORS[sign]), weight)
     .rgb()
     .round()
     .string()
