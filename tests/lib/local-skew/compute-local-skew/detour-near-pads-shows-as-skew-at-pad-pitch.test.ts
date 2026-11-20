@@ -9,7 +9,7 @@ import { segmentAtX } from "../../../fixtures/local-skew/segment-at-x"
 /** Extra copper DP adds in its detour near the load pads: 2 * 2.2225 mm. */
 const DETOUR_EXTRA_LENGTH = 4.445
 
-// Geometry derived from KiCad QA tests `DRCLengths` (`time_calculations` CLASS7 in test_drc_lengths.cpp) and `DRCFalsePositiveRegressions` (`issue7975` in test_drc_regressions.cpp).
+// Geometry check inspired by KiCad QA tests `DRCLengths` (`time_calculations` CLASS7 in test_drc_lengths.cpp) and `DRCFalsePositiveRegressions` (`issue7975` in test_drc_regressions.cpp); dimensions and expected values are our own.
 test("a detour where the pair widens to pad pitch shows as skew, measured at the pad pitch", async () => {
   // The pair fans in from 0.6 mm pad pitch to 0.3 mm over x in [-9.85, 4.0], within
   // (0.15 + 0.15) * 1.2 = 0.36 mm of the declared gap. Like KiCad, the stretches at pad

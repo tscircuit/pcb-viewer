@@ -37,7 +37,7 @@ function segmentAtY({
  */
 const BEND_SKEW = 2 * 0.6
 
-// Derived from KiCad QA test `DRCSkew` / `DRCFalsePositiveRegressions` (`diff_pair_uncoupled_tuning_drc` in test_drc_skew.cpp and test_drc_regressions.cpp).
+// Geometry check inspired by KiCad QA tests `DRCSkew` / `DRCFalsePositiveRegressions` (`diff_pair_uncoupled_tuning_drc` in test_drc_skew.cpp and test_drc_regressions.cpp); dimensions and expected values are our own.
 test("coupled serpentine meander alternates local skew across legs and cancels to zero on exit", async () => {
   // 3-lobe serpentine at d = 0.6 mm centreline pitch (maxOffset = (0.45 + 0.15) * 1.2 = 0.72 mm).
   // Both legs have total length 32.0 mm:

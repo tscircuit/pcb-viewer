@@ -34,7 +34,7 @@ function diagonalAtX({
 const CORNER_SHIFT = 0.6 * Math.tan(Math.PI / 8)
 const MITRED_BEND_SKEW = 2 * CORNER_SHIFT
 
-// Derived from KiCad QA test `DRCFalsePositiveRegressions` (`issue8407` in test_drc_regressions.cpp).
+// Geometry check inspired by KiCad QA test `DRCFalsePositiveRegressions` (`issue8407` in test_drc_regressions.cpp); dimensions and expected values are our own.
 test("45° mitred bends create opposite-sign skew of 2 * d * tan(pi/8) on coupled diagonals", async () => {
   // Coupled 45° Z-jog keeping d = 0.60 mm perpendicular spacing on every run
   // (maxOffset = (0.45 + 0.15) * 1.2 = 0.72 mm):
