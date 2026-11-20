@@ -86,23 +86,25 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
       const ctx = composite.getContext("2d")!
       ctx.fillStyle = "#111"
       ctx.fillRect(0, 0, 600, 400)
+      // Each layer's canvas, then that layer's overlay above it.
       for (const name of ["board", "top"]) {
         ctx.drawImage(
           document.querySelector(`.pcb-layer-${name}`) as HTMLCanvasElement,
           0,
           0,
         )
+        const overlay = document.querySelector(
+          `.pcb-local-skew-overlay svg[data-layer="${name}"]`,
+        )
+        if (!overlay) continue
+        const markup = new XMLSerializer().serializeToString(overlay)
+        const image = new Image()
+        image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+          markup.replace("<svg ", '<svg width="600" height="400" '),
+        )}`
+        await image.decode()
+        ctx.drawImage(image, 0, 0)
       }
-      const overlay = document.querySelector(
-        ".pcb-local-skew-overlay",
-      ) as SVGSVGElement
-      const markup = new XMLSerializer().serializeToString(overlay)
-      const image = new Image()
-      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-        markup.replace("<svg ", '<svg width="600" height="400" '),
-      )}`
-      await image.decode()
-      ctx.drawImage(image, 0, 0)
       return composite.toDataURL()
     })
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><title>Local skew overlay on a differential pair that matches end to end</title><image width="600" height="400" href="${board}"/></svg>`
