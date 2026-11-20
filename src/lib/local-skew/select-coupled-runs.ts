@@ -25,77 +25,35 @@ export type CandidateRun = CoupledRun & {
 /** A stretch of distance along one trace, in mm. */
 type Interval = { start: number; end: number }
 
-/** Which candidates claim a contested stretch first. */
-type Priority = "nearest" | "longest"
-
 /**
- * Chooses which candidate runs to keep: the selection that couples the
- * most length, trying nearest-first and longest-first priority (nearest
- * wins ties). Longest-first stops a short, nearer pass, such as a trace
- * doubling back, from breaking up a long pass that keeps route order.
+ * Chooses which candidate runs to keep: the set that couples the most
+ * length while using each stretch of either trace at most once and keeping
+ * route order on both, the nearer partner on a tie. Whole candidates
+ * compete with the pieces left after trimming nearest-first, so a nearer
+ * pass that breaks route order (say a trace doubling back) can't knock
+ * out the passes that keep it.
  */
 export function selectCoupledRuns(candidates: CandidateRun[]): CoupledRun[] {
-  const nearest = selectWithPriority({ candidates, priority: "nearest" })
-  const longest = selectWithPriority({ candidates, priority: "longest" })
-  if (coupledLength(longest) > coupledLength(nearest) + MIN_OVERLAP) {
-    return longest
-  }
-  return nearest
-}
-
-/**
- * In priority order, trims each candidate to the stretches of both traces
- * that no earlier candidate has used, then keeps the longest set of pieces
- * that keeps route order on both traces.
- */
-function selectWithPriority({
-  candidates,
-  priority,
-}: {
-  candidates: CandidateRun[]
-  priority: Priority
-}): CoupledRun[] {
-  const pieces = trimInOrder({ candidates, priority })
-  return longestOrderedChain(pieces).map(({ offset: _offset, ...run }) => run)
+  const options = candidates.concat(trimNearestFirst(candidates))
+  return bestOrderedChain(options).map(({ offset: _offset, ...run }) => run)
 }
 
 /** Total length of the positive trace covered by runs, in mm. */
-function coupledLength(runs: CoupledRun[]): number {
+export function coupledLength(runs: CoupledRun[]): number {
   let length = 0
   for (const run of runs) length += run.positiveEnd - run.positiveStart
   return length
 }
 
-/** Trims candidates in priority order so no stretch of either trace is used twice. */
-function trimInOrder({
-  candidates,
-  priority,
-}: {
-  candidates: CandidateRun[]
-  priority: Priority
-}): CandidateRun[] {
-  const order = candidates
-    .map((_, index) => index)
-    .sort((a, b) => {
-      const first = candidates[a]
-      const second = candidates[b]
-      if (priority === "longest") {
-        const byLength =
-          second.positiveEnd -
-          second.positiveStart -
-          (first.positiveEnd - first.positiveStart)
-        if (byLength !== 0) return byLength
-      }
-      return (
-        first.offset - second.offset ||
-        first.positiveStart - second.positiveStart
-      )
-    })
+/** Trims candidates, nearest first, so no stretch of either trace is used twice. */
+function trimNearestFirst(candidates: CandidateRun[]): CandidateRun[] {
+  const order = [...candidates].sort(
+    (a, b) => a.offset - b.offset || a.positiveStart - b.positiveStart,
+  )
   const usedPositive: Interval[] = []
   const usedNegative: Interval[] = []
   const pieces: CandidateRun[] = []
-  for (const index of order) {
-    const run = candidates[index]
+  for (const run of order) {
     for (const free of freeParts({ run, usedPositive, usedNegative })) {
       pieces.push(free)
       insertInterval({
@@ -159,65 +117,101 @@ function freeParts({
 }
 
 /**
- * The longest total positive length of pieces that keep route order on
- * both traces, found with a Fenwick tree over negative-trace order.
+ * The runs, in route order, that never share a stretch of either trace and
+ * cover the most positive length, the smallest length-weighted offset on a
+ * tie. Runs are swept by positive start; a Fenwick tree over negative end
+ * order holds the best chains already ended on the positive trace.
  */
-function longestOrderedChain(pieces: CandidateRun[]): CandidateRun[] {
-  const byPositive = [...pieces].sort(
-    (a, b) => a.positiveStart - b.positiveStart,
-  )
-  // Pieces never share a stretch of either trace, so ordering by start is enough.
-  const negativeRank = new Map<CandidateRun, number>()
-  ;[...pieces]
-    .sort((a, b) => a.negativeStart - b.negativeStart)
-    .forEach((piece, rank) => negativeRank.set(piece, rank + 1))
+function bestOrderedChain(runs: CandidateRun[]): CandidateRun[] {
+  const total: number[] = new Array(runs.length)
+  const weightedOffset: number[] = new Array(runs.length)
+  const previous: number[] = new Array(runs.length)
+  /** True when the chain ending at `a` beats the one ending at `b` (-1 for none). */
+  const beats = (a: number, b: number) => {
+    if (a < 0) return false
+    if (b < 0) return true
+    const byLength =
+      Math.round(total[a] / MIN_OVERLAP) - Math.round(total[b] / MIN_OVERLAP)
+    if (byLength !== 0) return byLength > 0
+    return weightedOffset[a] < weightedOffset[b]
+  }
 
-  const bestTotal: number[] = []
-  const previous: number[] = []
-  const tree = new Array<number>(pieces.length + 1).fill(-1)
-  byPositive.forEach((piece, index) => {
-    const rank = negativeRank.get(piece) ?? 0
-    const before = bestBefore({ tree, totals: bestTotal, rank })
-    const length = piece.positiveEnd - piece.positiveStart
-    let total = length
-    if (before >= 0) total += bestTotal[before]
-    bestTotal.push(total)
-    previous.push(before)
-    for (let at = rank; at < tree.length; at += at & -at) {
-      if (tree[at] < 0 || bestTotal[tree[at]] < bestTotal[index]) {
-        tree[at] = index
+  const order = (key: (run: CandidateRun) => number) =>
+    runs.map((_, index) => index).sort((a, b) => key(runs[a]) - key(runs[b]))
+  const byNegativeEnd = order((run) => run.negativeEnd)
+  const negativeEnds = byNegativeEnd.map((index) => runs[index].negativeEnd)
+  const rank: number[] = new Array(runs.length)
+  byNegativeEnd.forEach((index, position) => {
+    rank[index] = position + 1
+  })
+  const byPositiveEnd = order((run) => run.positiveEnd)
+  const tree = new Array<number>(runs.length + 1).fill(-1)
+
+  let ended = 0
+  for (const index of order((run) => run.positiveStart)) {
+    const run = runs[index]
+    // Chains that end before this run on the positive trace become available.
+    while (
+      ended < byPositiveEnd.length &&
+      runs[byPositiveEnd[ended]].positiveEnd <= run.positiveStart + MIN_OVERLAP
+    ) {
+      const done = byPositiveEnd[ended++]
+      for (let at = rank[done]; at < tree.length; at += at & -at) {
+        if (beats(done, tree[at])) tree[at] = done
       }
     }
-  })
+    // The best of them that also ends before this run on the negative trace.
+    let before = -1
+    for (
+      let at = countAtMost({
+        sorted: negativeEnds,
+        value: run.negativeStart + MIN_OVERLAP,
+      });
+      at > 0;
+      at -= at & -at
+    ) {
+      if (beats(tree[at], before)) before = tree[at]
+    }
+    const length = run.positiveEnd - run.positiveStart
+    total[index] = length
+    weightedOffset[index] = run.offset * length
+    if (before >= 0) {
+      total[index] += total[before]
+      weightedOffset[index] += weightedOffset[before]
+    }
+    previous[index] = before
+  }
 
   let best = -1
-  bestTotal.forEach((total, index) => {
-    if (best < 0 || total > bestTotal[best]) best = index
+  runs.forEach((_, index) => {
+    if (beats(index, best)) best = index
   })
   const chain: CandidateRun[] = []
   for (let index = best; index >= 0; index = previous[index]) {
-    chain.push(byPositive[index])
+    chain.push(runs[index])
   }
   return chain.reverse()
 }
 
-/** Index of the best chain ending at a negative rank below `rank`, or -1. */
-function bestBefore({
-  tree,
-  totals,
-  rank,
+/** How many values in an ascending list are at most `value` (binary search). */
+function countAtMost({
+  sorted,
+  value,
 }: {
-  tree: number[]
-  totals: number[]
-  rank: number
+  sorted: number[]
+  value: number
 }): number {
-  let best = -1
-  for (let at = rank - 1; at > 0; at -= at & -at) {
-    const candidate = tree[at]
-    if (candidate < 0) continue
-    if (best < 0 || totals[candidate] > totals[best]) best = candidate
+  let low = 0
+  let high = sorted.length
+  while (low < high) {
+    const middle = (low + high) >> 1
+    if (sorted[middle] <= value) {
+      low = middle + 1
+      continue
+    }
+    high = middle
   }
-  return best
+  return low
 }
 
 /** Intervals in a sorted, non-overlapping list that overlap `interval`. */
