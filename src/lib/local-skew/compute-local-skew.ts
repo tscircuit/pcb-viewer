@@ -2,8 +2,12 @@ import type { Point } from "@tscircuit/math-utils"
 import type {
   CircuitJson,
   LayerRef,
+  PcbBoard,
+  PcbPort,
+  PcbStackup,
   PcbTrace,
   SourceBus,
+  SourcePort,
   SourceTrace,
 } from "circuit-json"
 import { findCoupledRuns } from "./find-coupled-runs"
@@ -84,14 +88,35 @@ type TracesBySource = Map<SourceTrace["source_trace_id"], PcbTrace[]>
  * Computes local skew along every routed differential pair: at each point,
  * how much farther one trace has run than the other, not only at the ends.
  *
- * Distances are copper length as in `pcb_trace.trace_length` (planar
- * length plus a fixed length per via), measured from the positive trace's
- * first route point. The negative trace is walked from the end that
- * matches it.
+ * Distances are copper length (planar length plus each via's Z-distance
+ * between layers). When each trace has exactly one end port marked
+ * `is_output`, both traces are walked from that end; otherwise distances are
+ * measured from the positive trace's first route point and the negative
+ * trace is walked from the end that matches it.
  */
 export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const tracesBySource: TracesBySource = new Map()
+  const pcbPortsById = new Map<PcbPort["pcb_port_id"], PcbPort>()
+  const sourcePortsById = new Map<SourcePort["source_port_id"], SourcePort>()
+  const boards: PcbBoard[] = []
+  const stackups: PcbStackup[] = []
   for (const element of circuitJson) {
+    if (element.type === "pcb_board") {
+      boards.push(element)
+      continue
+    }
+    if (element.type === "pcb_stackup") {
+      stackups.push(element)
+      continue
+    }
+    if (element.type === "pcb_port") {
+      pcbPortsById.set(element.pcb_port_id, element)
+      continue
+    }
+    if (element.type === "source_port") {
+      sourcePortsById.set(element.source_port_id, element)
+      continue
+    }
     if (element.type !== "pcb_trace") continue
     if (element.source_trace_id === undefined) continue
     const traces = tracesBySource.get(element.source_trace_id) ?? []
@@ -102,7 +127,14 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const pairs: LocalSkewPair[] = []
   for (const element of circuitJson) {
     if (element.type !== "source_bus") continue
-    const pair = computePairSkew({ bus: element, tracesBySource })
+    const pair = computePairSkew({
+      bus: element,
+      tracesBySource,
+      pcbPortsById,
+      sourcePortsById,
+      boards,
+      stackups,
+    })
     if (pair) pairs.push(pair)
   }
   return pairs
@@ -117,9 +149,17 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
 function computePairSkew({
   bus,
   tracesBySource,
+  pcbPortsById,
+  sourcePortsById,
+  boards,
+  stackups,
 }: {
   bus: SourceBus
   tracesBySource: TracesBySource
+  pcbPortsById: Map<PcbPort["pcb_port_id"], PcbPort>
+  sourcePortsById: Map<SourcePort["source_port_id"], SourcePort>
+  boards: PcbBoard[]
+  stackups: PcbStackup[]
 }): LocalSkewPair | null {
   const differentialPair = bus.differential_pair
   if (!differentialPair) return null
@@ -133,11 +173,52 @@ function computePairSkew({
   const positiveTrace = positiveTraces[0]
   const negativeTrace = negativeTraces[0]
 
-  const positive = walkTrace(positiveTrace)
+  const subcircuitId =
+    positiveTrace.subcircuit_id ??
+    negativeTrace.subcircuit_id ??
+    bus.subcircuit_id
+  const board =
+    (subcircuitId
+      ? boards.find((candidate) => candidate.subcircuit_id === subcircuitId)
+      : undefined) ?? boards[0]
+  const stackup =
+    (board
+      ? stackups.find(
+          (candidate) => candidate.pcb_board_id === board.pcb_board_id,
+        )
+      : undefined) ??
+    (subcircuitId
+      ? stackups.find((candidate) => candidate.subcircuit_id === subcircuitId)
+      : undefined) ??
+    stackups[0]
+  const boardThickness = board?.thickness
+
+  let positive = walkTrace({
+    trace: positiveTrace,
+    stackup,
+    boardThickness,
+  })
   if (!isMeasurable(positive)) return null
-  let negative = walkTrace(negativeTrace)
+  let negative = walkTrace({
+    trace: negativeTrace,
+    stackup,
+    boardThickness,
+  })
   if (!isMeasurable(negative)) return null
-  if (
+  const positiveOutput = outputEnd({
+    trace: positiveTrace,
+    pcbPortsById,
+    sourcePortsById,
+  })
+  const negativeOutput = outputEnd({
+    trace: negativeTrace,
+    pcbPortsById,
+    sourcePortsById,
+  })
+  if (positiveOutput && negativeOutput) {
+    if (positiveOutput === "end") positive = reverseWalk(positive)
+    if (negativeOutput === "end") negative = reverseWalk(negative)
+  } else if (
     isNegativeRouteReversed({
       positiveSteps: positive.steps,
       negativeSteps: negative.steps,
@@ -151,29 +232,77 @@ function computePairSkew({
     traceGap: differentialPair.trace_gap,
   })
 
+  const positiveSpans = skewSpans({
+    runs,
+    side: "positive",
+    steps: positive.steps,
+    partnerSteps: negative.steps,
+    length: positive.length,
+  })
+  const negativeSpans = skewSpans({
+    runs,
+    side: "negative",
+    steps: negative.steps,
+    partnerSteps: positive.steps,
+    length: negative.length,
+  })
+
   const pair: LocalSkewPair = {
     source_bus_id: bus.source_bus_id,
     name: bus.name,
     positive: {
       pcb_trace_id: positiveTrace.pcb_trace_id,
-      segments: sampleSkew({
-        steps: positive.steps,
-        spans: skewSpans({ runs, side: "positive", length: positive.length }),
-      }),
+      segments: sampleSkew({ steps: positive.steps, spans: positiveSpans }),
     },
     negative: {
       pcb_trace_id: negativeTrace.pcb_trace_id,
-      segments: sampleSkew({
-        steps: negative.steps,
-        spans: skewSpans({ runs, side: "negative", length: negative.length }),
-      }),
+      segments: sampleSkew({ steps: negative.steps, spans: negativeSpans }),
     },
-    max_skew: maxSkew(runs),
+    max_skew: maxSkew({
+      runs,
+      spans: positiveSpans.concat(negativeSpans),
+    }),
   }
   if (bus.max_length_skew !== undefined) {
     pair.max_length_skew = bus.max_length_skew
   }
   return pair
+}
+
+/**
+ * Which end of `trace` is connected to an output port (`source_port.is_output`),
+ * or null unless exactly one end port is an output.
+ */
+function outputEnd({
+  trace,
+  pcbPortsById,
+  sourcePortsById,
+}: {
+  trace: PcbTrace
+  pcbPortsById: Map<PcbPort["pcb_port_id"], PcbPort>
+  sourcePortsById: Map<SourcePort["source_port_id"], SourcePort>
+}): "start" | "end" | null {
+  let startPortId: string | undefined
+  let endPortId: string | undefined
+  for (const point of trace.route) {
+    if (point.route_type !== "wire") continue
+    if (startPortId === undefined && point.start_pcb_port_id !== undefined) {
+      startPortId = point.start_pcb_port_id
+    }
+    if (point.end_pcb_port_id !== undefined) {
+      endPortId = point.end_pcb_port_id
+    }
+  }
+  const isOutput = (pcbPortId: string | undefined): boolean => {
+    if (pcbPortId === undefined) return false
+    const pcbPort = pcbPortsById.get(pcbPortId)
+    if (!pcbPort) return false
+    return sourcePortsById.get(pcbPort.source_port_id)?.is_output === true
+  }
+  const startIsOutput = isOutput(startPortId)
+  const endIsOutput = isOutput(endPortId)
+  if (startIsOutput === endIsOutput) return null
+  return startIsOutput ? "start" : "end"
 }
 
 /** True when a walk has copper, a finite length, and every coordinate and width within {@link MAX_COORDINATE}. */
@@ -186,15 +315,22 @@ function isMeasurable(walk: TraceWalk): boolean {
   )
 }
 
-/** Largest measured skew, in mm, or null without coupled runs. */
-function maxSkew(runs: CoupledRun[]): number | null {
+/** Largest known skew across the pair's spans, in mm, or null without coupled runs. */
+function maxSkew({
+  runs,
+  spans,
+}: {
+  runs: CoupledRun[]
+  spans: SkewSpan[]
+}): number | null {
   if (runs.length === 0) return null
   let largest = 0
-  for (const run of runs) {
+  for (const span of spans) {
+    if (span.startSkew === null || span.endSkew === null) continue
     largest = Math.max(
       largest,
-      Math.abs(run.positiveStart - run.negativeStart),
-      Math.abs(run.positiveEnd - run.negativeEnd),
+      Math.abs(span.startSkew),
+      Math.abs(span.endSkew),
     )
   }
   return roundSkew(largest)
@@ -203,37 +339,61 @@ function maxSkew(runs: CoupledRun[]): number | null {
 /**
  * Covers one whole trace with spans: unknown before the first coupled run
  * and after the last, coupled runs as measured, and interpolated between
- * consecutive runs. The negative side reports the negated skew.
+ * consecutive runs. When a coupled run begins or ends right at a via, the
+ * via length steps at the via instead of ramping across the uncoupled
+ * stretch. The negative side reports the negated skew.
  */
 function skewSpans({
   runs,
   side,
+  steps,
+  partnerSteps,
   length: totalLength,
 }: {
   runs: CoupledRun[]
   side: "positive" | "negative"
+  steps: TraceStep[]
+  partnerSteps: TraceStep[]
   /** The trace's walk length, in mm. */
   length: number
 }): SkewSpan[] {
-  const coupled: SkewSpan[] = runs.map((run) => {
-    if (side === "positive") {
+  const coupled = runs
+    .map((run) => {
+      const from = side === "positive" ? run.positiveStart : run.negativeStart
+      const to = side === "positive" ? run.positiveEnd : run.negativeEnd
+      const otherFrom =
+        side === "positive" ? run.negativeStart : run.positiveStart
+      const otherTo = side === "positive" ? run.negativeEnd : run.positiveEnd
       return {
-        from: run.positiveStart,
-        to: run.positiveEnd,
-        startSkew: run.positiveStart - run.negativeStart,
-        endSkew: run.positiveEnd - run.negativeEnd,
-        coupling: "coupled",
+        from,
+        to,
+        otherFrom,
+        otherTo,
+        startSkew: from - otherFrom,
+        endSkew: to - otherTo,
+        startVia: viaAt({
+          steps,
+          distance: from,
+          edge: "start",
+        }),
+        endVia: viaAt({
+          steps,
+          distance: to,
+          edge: "end",
+        }),
+        otherStartVia: viaAt({
+          steps: partnerSteps,
+          distance: otherFrom,
+          edge: "start",
+        }),
+        otherEndVia: viaAt({
+          steps: partnerSteps,
+          distance: otherTo,
+          edge: "end",
+        }),
       }
-    }
-    return {
-      from: run.negativeStart,
-      to: run.negativeEnd,
-      startSkew: run.negativeStart - run.positiveStart,
-      endSkew: run.negativeEnd - run.positiveEnd,
-      coupling: "coupled",
-    }
-  })
-  coupled.sort((a, b) => a.from - b.from)
+    })
+    .sort((a, b) => a.from - b.from)
 
   if (coupled.length === 0) {
     return [unknownSpan({ from: 0, to: totalLength })]
@@ -243,24 +403,76 @@ function skewSpans({
   if (coupled[0].from > MIN_OVERLAP) {
     spans.push(unknownSpan({ from: 0, to: coupled[0].from }))
   }
-  coupled.forEach((span, index) => {
+  coupled.forEach((run, index) => {
     const previous = coupled[index - 1]
-    if (previous && span.from - previous.to > MIN_OVERLAP) {
-      spans.push({
-        from: previous.to,
-        to: span.from,
-        startSkew: previous.endSkew,
-        endSkew: span.startSkew,
-        coupling: "interpolated",
-      })
+    if (previous) {
+      const gapFrom = previous.to + previous.endVia
+      const gapTo = run.from - run.startVia
+      if (gapTo - gapFrom > MIN_OVERLAP) {
+        // If the partner had only a single via between the two runs, that via
+        // was already accounted for at `previous.otherEndVia`.
+        const partnerHasCopperGap =
+          run.otherFrom - (previous.otherTo + previous.otherEndVia) >
+          MIN_OVERLAP
+        const otherStartVia = partnerHasCopperGap ? run.otherStartVia : 0
+        spans.push({
+          from: gapFrom,
+          to: gapTo,
+          startSkew: previous.endSkew + previous.endVia - previous.otherEndVia,
+          endSkew: run.startSkew - run.startVia + otherStartVia,
+          coupling: "interpolated",
+        })
+      }
     }
-    spans.push(span)
+    spans.push({
+      from: run.from,
+      to: run.to,
+      startSkew: run.startSkew,
+      endSkew: run.endSkew,
+      coupling: "coupled",
+    })
   })
   const lastCoupled = coupled[coupled.length - 1]
   if (totalLength - lastCoupled.to > MIN_OVERLAP) {
     spans.push(unknownSpan({ from: lastCoupled.to, to: totalLength }))
   }
   return spans
+}
+
+/** Length of any via directly before the start or after the end of a step at `distance`, in mm. */
+function viaAt({
+  steps,
+  distance,
+  edge,
+}: {
+  steps: TraceStep[]
+  distance: number
+  edge: "start" | "end"
+}): number {
+  const position = (step: TraceStep) =>
+    edge === "start" ? step.startDistance : step.startDistance + step.length
+  const viaLength = (step: TraceStep) =>
+    edge === "start" ? step.startViaLength : step.endViaLength
+
+  let low = 0
+  let high = steps.length
+  while (low < high) {
+    const middle = (low + high) >> 1
+    if (position(steps[middle]) < distance - MIN_OVERLAP) {
+      low = middle + 1
+      continue
+    }
+    high = middle
+  }
+  for (
+    let index = low;
+    index < steps.length && position(steps[index]) <= distance + MIN_OVERLAP;
+    index++
+  ) {
+    const length = viaLength(steps[index])
+    if (length > 0) return length
+  }
+  return 0
 }
 
 /** A span with no skew information. */
