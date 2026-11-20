@@ -116,7 +116,11 @@ function addStep({
     endViaLength: 0,
   }
   const previous = steps[steps.length - 1]
-  if (previous && continuesStraight({ previous, next: step })) {
+  if (
+    previous &&
+    startViaLength === 0 &&
+    continuesStraight({ previous, next: step })
+  ) {
     previous.end = step.end
     previous.length += step.length
     return
