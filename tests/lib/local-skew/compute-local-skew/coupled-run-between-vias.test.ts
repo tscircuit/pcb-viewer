@@ -1,4 +1,6 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
+import { localSkewSvg } from "../../../fixtures/local-skew/local-skew-svg"
 import { computeLocalSkew } from "../../../../src/lib/local-skew/compute-local-skew"
 import {
   type PairPathPoint,
@@ -12,14 +14,13 @@ const BOTTOM_LAYER_HOP: PairPathPoint[] = [
   { x: 18, y: 0, via: true, fromLayer: "bottom", toLayer: "top" },
 ]
 
-test("the run between two vias is coupled on the bottom layer", () => {
-  const [pair] = computeLocalSkew(
-    renderPairBoard({
-      positivePath: BOTTOM_LAYER_HOP,
-      negativePath: BOTTOM_LAYER_HOP,
-      pcbTraceGap: "0.45mm",
-    }),
-  )
+test("the run between two vias is coupled on the bottom layer", async () => {
+  const circuitJson = renderPairBoard({
+    positivePath: BOTTOM_LAYER_HOP,
+    negativePath: BOTTOM_LAYER_HOP,
+    pcbTraceGap: "0.45mm",
+  })
+  const [pair] = computeLocalSkew(circuitJson)
 
   for (const segments of [pair.positive.segments, pair.negative.segments]) {
     const between = segmentAtX({ segments, x: 0 })
@@ -28,4 +29,6 @@ test("the run between two vias is coupled on the bottom layer", () => {
     expect(between.skew).toBe(0)
   }
   expect(pair.max_skew).toBe(0)
+
+  await expect(localSkewSvg(circuitJson)).toMatchSvgSnapshot(import.meta.path)
 })

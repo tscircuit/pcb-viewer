@@ -1,22 +1,23 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
+import { localSkewSvg } from "../../../fixtures/local-skew/local-skew-svg"
 import { computeLocalSkew } from "../../../../src/lib/local-skew/compute-local-skew"
 import { renderPairBoard } from "../../../fixtures/local-skew/pair-board"
 import { segmentAtX } from "../../../fixtures/local-skew/segment-at-x"
 
-test("a stretch where the traces split apart is marked interpolated, not measured", () => {
+test("a stretch where the traces split apart is marked interpolated, not measured", async () => {
   // DN drops 6 mm away between x = -6 and x = 6.
-  const [pair] = computeLocalSkew(
-    renderPairBoard({
-      positivePath: [],
-      negativePath: [
-        { x: 6, y: 0 },
-        { x: 6, y: -6 },
-        { x: 18, y: -6 },
-        { x: 18, y: 0 },
-      ],
-      pcbTraceGap: "0.45mm",
-    }),
-  )
+  const circuitJson = renderPairBoard({
+    positivePath: [],
+    negativePath: [
+      { x: 6, y: 0 },
+      { x: 6, y: -6 },
+      { x: 18, y: -6 },
+      { x: 18, y: 0 },
+    ],
+    pcbTraceGap: "0.45mm",
+  })
+  const [pair] = computeLocalSkew(circuitJson)
 
   const beside = segmentAtX({ segments: pair.positive.segments, x: -9 })
   const apart = segmentAtX({ segments: pair.positive.segments, x: 0 })
@@ -39,4 +40,6 @@ test("a stretch where the traces split apart is marked interpolated, not measure
   })
   // Only the measured stretches count toward the maximum: 12 mm of detour.
   expect(pair.max_skew).toBeCloseTo(12, 5)
+
+  await expect(localSkewSvg(circuitJson)).toMatchSvgSnapshot(import.meta.path)
 })

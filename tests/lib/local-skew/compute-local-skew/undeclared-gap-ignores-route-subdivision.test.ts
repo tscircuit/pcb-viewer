@@ -1,4 +1,6 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
+import { localSkewSvg } from "../../../fixtures/local-skew/local-skew-svg"
 import { computeLocalSkew } from "../../../../src/lib/local-skew/compute-local-skew"
 import {
   type PairPathPoint,
@@ -26,7 +28,7 @@ function renderFarPair({ step }: { step: number }) {
   })
 }
 
-test("without pcbTraceGap, splitting a route into more points doesn't change coupling", () => {
+test("without pcbTraceGap, splitting a route into more points doesn't change coupling", async () => {
   const coupling = (step: number) =>
     computeLocalSkew(renderFarPair({ step }))[0].positive.segments.map(
       (segment) => `${segment.start.x.toFixed(3)}:${segment.coupling}`,
@@ -35,9 +37,11 @@ test("without pcbTraceGap, splitting a route into more points doesn't change cou
   // 2 mm apart is beyond ten trace widths, so the far stretch never couples,
   // whether DN is one 22 mm step or 22 steps of 1 mm.
   expect(coupling(1)).toEqual(coupling(30))
-  const [pair] = computeLocalSkew(renderFarPair({ step: 1 }))
+  const circuitJson = renderFarPair({ step: 1 })
+  const [pair] = computeLocalSkew(circuitJson)
   const middle = pair.positive.segments.find(
     (segment) => segment.start.x <= 0 && segment.end.x >= 0,
   )
   expect(middle?.coupling).toBe("interpolated")
+  await expect(localSkewSvg(circuitJson)).toMatchSvgSnapshot(import.meta.path)
 })

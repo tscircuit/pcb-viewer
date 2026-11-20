@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="104" viewBox="-13 -1.3 26 2.6">
+  <title>PAIR: max local skew 0.0000 mm</title>
+  <rect x="-13" y="-1.3" width="26" height="2.6" fill="rgb(0, 16, 35)"/>
+  <g transform="scale(1 -1)">
+    <circle cx="-12" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="-12" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="12" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="12" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <line x1="-12" y1="0.3" x2="-11" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-11" y1="0.3" x2="-10" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-10" y1="0.3" x2="-9" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-9" y1="0.3" x2="-8" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-8" y1="0.3" x2="-7" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-7" y1="0.3" x2="-6" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-6" y1="0.3" x2="-5" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-5" y1="0.3" x2="-4" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-4" y1="0.3" x2="-3" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-3" y1="0.3" x2="-2" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-2" y1="0.3" x2="-1" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-1" y1="0.3" x2="0" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="0" y1="0.3" x2="1" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="1" y1="0.3" x2="2" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="2" y1="0.3" x2="3" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="3" y1="0.3" x2="4" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="4" y1="0.3" x2="5" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="5" y1="0.3" x2="6" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="6" y1="0.3" x2="7" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="7" y1="0.3" x2="8" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="8" y1="0.3" x2="9" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="9" y1="0.3" x2="10" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="10" y1="0.3" x2="11" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="11" y1="0.3" x2="12" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-12" y1="-0.3" x2="12" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-12" y1="0.3" x2="12" y2="0.3" stroke="rgb(46, 204, 113)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="-0.3" x2="12" y2="-0.3" stroke="rgb(46, 204, 113)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
+  </g>
+</svg>
