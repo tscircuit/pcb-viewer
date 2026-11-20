@@ -11,6 +11,8 @@ test("the viewer opens a length-matched USB pair with stored local skew", async 
     (element) => element.type === "pcb_differential_pair_local_skew",
   )
   expect(skew?.max_local_skew).toBeCloseTo(1.236, 3)
+  expect(skew?.positive_skew_color).toBe("rgb(0, 0, 255)")
+  expect(skew?.negative_skew_color).toBe("rgb(255, 0, 0)")
   expect(skew?.positive.pcb_trace_id).toBe(traces[0].pcb_trace_id)
   expect(skew?.negative.pcb_trace_id).toBe(traces[1].pcb_trace_id)
 
