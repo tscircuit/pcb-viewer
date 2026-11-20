@@ -1,3 +1,4 @@
+import { createServer as createTcpServer } from "node:net"
 import { fileURLToPath } from "node:url"
 import type { Point } from "@tscircuit/math-utils"
 import type { CircuitJson } from "circuit-json"
@@ -37,39 +38,58 @@ export async function openOverlayPage({
   /** Rendered from a TSX fixture through core. */
   circuitJson?: CircuitJson
 }): Promise<OverlayPage> {
-  const server: ViteDevServer = await createServer({
-    root: fileURLToPath(new URL("../../", import.meta.url)),
-    server: { host: "127.0.0.1", port: 0 },
-    logLevel: "error",
+  const host = "127.0.0.1"
+  const port = await new Promise<number>((resolve, reject) => {
+    const probe = createTcpServer().once("error", reject)
+    probe.listen(0, host, () => {
+      const { port } = probe.address() as { port: number }
+      probe.close((error) => (error ? reject(error) : resolve(port)))
+    })
   })
-  await server.listen()
-  const launchOptions: LaunchOptions = { headless: true }
-  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) {
-    launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+
+  let server: ViteDevServer | undefined
+  let browser: Browser | undefined
+  const close = async () => {
+    try {
+      await browser?.close()
+    } finally {
+      await server?.close()
+    }
   }
-  const browser: Browser = await chromium.launch(launchOptions)
-  const page = await browser.newPage({ viewport: { width: 600, height: 400 } })
-  const errors: string[] = []
-  page.on("pageerror", (error) => errors.push(error.message))
-  await page.addInitScript(
-    ({ circuitJson, state }) => {
-      window.localSkewCircuitJson = circuitJson
-      window.localSkewInitialState = state
-    },
-    {
-      circuitJson,
-      state: initialState,
-    },
-  )
-  await page.goto(`${server.resolvedUrls!.local[0]}tests/local-skew-overlay/`)
-  await page.waitForSelector(".pcb-layer-top", { state: "attached" })
-  return {
-    page,
-    errors,
-    close: async () => {
-      await browser.close()
-      await server.close()
-    },
+
+  try {
+    server = await createServer({
+      root: fileURLToPath(new URL("../../", import.meta.url)),
+      server: { host, port, strictPort: true },
+      logLevel: "error",
+    })
+    await server.listen()
+    const launchOptions: LaunchOptions = { headless: true }
+    if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) {
+      launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+    }
+    browser = await chromium.launch(launchOptions)
+    const page = await browser.newPage({
+      viewport: { width: 600, height: 400 },
+    })
+    const errors: string[] = []
+    page.on("pageerror", (error) => errors.push(error.message))
+    await page.addInitScript(
+      ({ circuitJson, state }) => {
+        window.localSkewCircuitJson = circuitJson
+        window.localSkewInitialState = state
+      },
+      {
+        circuitJson,
+        state: initialState,
+      },
+    )
+    await page.goto(`http://${host}:${port}/tests/local-skew-overlay/`)
+    await page.waitForSelector(".pcb-layer-top", { state: "attached" })
+    return { page, errors, close }
+  } catch (error) {
+    await close().catch(() => {})
+    throw error
   }
 }
 
