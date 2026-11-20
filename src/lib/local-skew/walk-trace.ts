@@ -36,10 +36,10 @@ const DEFAULT_VIA_LENGTH = 1.6
 /**
  * Splits a trace route into straight pieces in stored route order.
  *
- * Copper arriving at a wire point is on that wire's layer and width, the
- * same rule the viewer draws with. Copper arriving at a via is on the
- * via's `from_layer`, so the run between two vias is on the layer they
- * connect. A via between two different layers adds their Z-distance from
+ * Copper arriving at a wire point uses that wire's layer and width.
+ * Copper arriving at a via uses the via's `from_layer` and the last wire's
+ * width, so sparse routes still contribute planar length between vias.
+ * A via between two different layers adds their Z-distance from
  * `stackup`, else `boardThickness`, else {@link DEFAULT_VIA_LENGTH}.
  *
  * Consecutive pieces that continue in a straight line on the same copper
