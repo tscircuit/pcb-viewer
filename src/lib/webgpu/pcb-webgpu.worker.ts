@@ -12,6 +12,9 @@ let drawer: CircuitToWebGpuDrawer | undefined
 let canvas: OffscreenCanvas
 let latestView: Extract<WebGpuRequest, { type: "view" }> | undefined
 let pendingScene: Extract<WebGpuRequest, { type: "scene" }> | undefined
+let layerStrokes: Extract<WebGpuRequest, { type: "layer-strokes" }>["strokes"]
+let pendingPick: Extract<WebGpuRequest, { type: "pick-layer" }> | undefined
+let picking = false
 let sceneGeneration = 0
 let scheduled = false,
   failed = false
@@ -44,7 +47,7 @@ function renderFrame() {
     const renderedSceneGeneration = sceneGeneration
     if (canvas.width !== view.width) canvas.width = view.width
     if (canvas.height !== view.height) canvas.height = view.height
-    drawer.render({ ...view.options, transform: view.transform })
+    drawer.render({ ...view.options, transform: view.transform, layerStrokes })
     scope.postMessage({
       type: "rendered",
       xRayActive:
@@ -54,8 +57,29 @@ function renderFrame() {
       compileMs: drawer.stats.compileMs,
       sceneGeneration: renderedSceneGeneration,
     })
+    void pickLayer()
   } catch (error) {
     fail(error)
+  }
+}
+async function pickLayer() {
+  if (failed || scheduled || picking || !pendingPick || !drawer) return
+  const { id, point, candidates } = pendingPick
+  pendingPick = undefined
+  picking = true
+  try {
+    const picked = await drawer.pickLayerAt(point, candidates)
+    if (!failed)
+      scope.postMessage({
+        type: "picked-layer",
+        id,
+        layer: candidates.find((layer) => layer === picked),
+      })
+  } catch (error) {
+    fail(error)
+  } finally {
+    picking = false
+    void pickLayer()
   }
 }
 function schedule() {
@@ -87,6 +111,12 @@ scope.onmessage = async (event) => {
     } else if (workerRequest.type === "view") {
       latestView = workerRequest
       schedule()
+    } else if (workerRequest.type === "layer-strokes") {
+      layerStrokes = workerRequest.strokes
+      schedule()
+    } else if (workerRequest.type === "pick-layer") {
+      pendingPick = workerRequest
+      void pickLayer()
     } else {
       failed = true
       pendingScene = undefined

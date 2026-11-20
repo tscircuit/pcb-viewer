@@ -3,67 +3,71 @@ import { renderCopperCrossingBoard } from "./local-skew-overlay/copper-crossing-
 import {
   MENU_CLICK_DELAY_MS,
   openOverlayPage,
-  screenPointOf,
   screenshotPixelsAt,
 } from "./local-skew-overlay/open-overlay-page"
 
-test("local skew temporarily switches the default renderer to layered Canvas", async () => {
+test("WebGPU local skew follows copper order in pixels and hover without replacing the renderer", async () => {
   const { page, errors, close } = await openOverlayPage({
     initialState: { hidden_layer_opacity: 0.5 },
     circuitJson: await renderCopperCrossingBoard(),
     renderer: "webgpu",
   })
   try {
-    const webgpu = page.locator(
-      '[data-pcb-renderer="webgpu"][data-x-ray-net-active="false"]',
-    )
+    const gpu = page.locator(".pcb-webgpu-canvas")
+    const originalCanvas = await gpu.elementHandle()
     const viewMenu = page.locator("[data-view-menu] > div > div").first()
-    const toggle = page.getByText("Show Local Skew", { exact: true })
     const overlay = page.locator(".pcb-local-skew-overlay")
-    const canvas = page.locator(".pcb-layer-top")
-    await webgpu.waitFor()
-    expect(await canvas.count()).toBe(0)
+    const readout = page.locator(".pcb-local-skew-readout")
+    const toggleSkew = async () => {
+      await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
+      await page.getByText("Show Local Skew", { exact: true }).click()
+      await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
+    }
 
-    await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
-    await toggle.click()
-    await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
-    await webgpu.waitFor({ state: "detached" })
-    await canvas.waitFor()
-    const bottomOverlay = overlay.locator('svg[data-layer="bottom"]')
-    await bottomOverlay.waitFor()
-    const layers = await bottomOverlay.evaluate((svg) => {
-      const bottom = document.querySelector(".pcb-layer-bottom")!
-      const top = document.querySelector(".pcb-layer-top")!
-      return {
-        bottom: Number(getComputedStyle(bottom).zIndex),
-        skew: Number(getComputedStyle(svg).zIndex),
-        top: Number(getComputedStyle(top).zIndex),
-        followsBottom: Boolean(
-          bottom.compareDocumentPosition(svg) &
-            Node.DOCUMENT_POSITION_FOLLOWING,
-        ),
-      }
-    })
-    expect(layers.skew).toBe(layers.bottom)
-    expect(layers.followsBottom).toBe(true)
-    expect(layers.skew).toBeLessThan(layers.top)
-
-    const points = [
-      await screenPointOf({ page, x: -4, y: 0.3 }),
-      await screenPointOf({ page, x: 1, y: 0.3 }),
-    ]
-    const [coveredByTop, visibleBottom] = await screenshotPixelsAt({
+    // A centered 40 × 20 mm board fits to 75% of the 600 px viewport width.
+    const covered = { x: 300 - 4 * 11.25, y: 200 - 0.3 * 11.25 }
+    const visible = { x: 300 + 11.25, y: covered.y }
+    await toggleSkew()
+    await page.mouse.move(visible.x, visible.y)
+    await readout.waitFor()
+    expect(await readout.textContent()).toStartWith("PAIR: in step")
+    expect(await overlay.locator("svg").count()).toBe(0)
+    const [coveredPixel, visiblePixel] = await screenshotPixelsAt({
       page,
-      points,
+      points: [covered, visible],
     })
-    expect(coveredByTop[0]).toBeGreaterThan(2 * coveredByTop[1])
-    expect(Math.min(...visibleBottom)).toBeGreaterThan(90)
+    expect(coveredPixel).toEqual([200, 52, 52])
+    expect(Math.min(...visiblePixel)).toBeGreaterThan(100)
+    expect(Math.max(...visiblePixel)).toBeLessThan(155)
 
-    await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
-    await toggle.click()
+    await page.mouse.move(covered.x, covered.y)
+    await readout.waitFor({ state: "detached" })
+    await page.keyboard.press("4")
+    // Selecting bottom puts both the stroke and its tooltip above the crossing.
+    await readout.waitFor()
+    await page.evaluate(() =>
+      window.updateLocalSkewProps({
+        localSkewColors: { zero: "lime" },
+      }),
+    )
+    await readout.waitFor()
+    const [foregroundPixel] = await screenshotPixelsAt({
+      page,
+      points: [covered],
+    })
+    expect(foregroundPixel).toEqual([0, 255, 0])
+
+    await toggleSkew()
     await overlay.waitFor({ state: "detached" })
-    await webgpu.waitFor()
-    expect(await canvas.count()).toBe(0)
+    expect(
+      await gpu.evaluate(
+        (canvas, original) => canvas === original,
+        originalCanvas,
+      ),
+    ).toBe(true)
+    expect(
+      await page.locator(".pcb-layer-top, [data-webgpu-error]").count(),
+    ).toBe(0)
     expect(
       await page.evaluate(() =>
         localStorage.getItem("pcb_viewer_rendering_engine"),

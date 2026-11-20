@@ -1,17 +1,27 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { RenderOptions } from "@tscircuit/circuit-json-webgpu"
+import type { LayerStroke, RenderOptions } from "@tscircuit/circuit-json-webgpu"
+import { type SkewLayers, getWebGpuSkewStrokes } from "lib/local-skew/strokes"
 import type { GridConfig, Primitive } from "lib/types"
 import { createWebGpuWorker } from "lib/webgpu/create-worker"
 import type { WebGpuRequest, WebGpuResponse } from "lib/webgpu/protocol"
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
+import { LocalSkewOverlay, type PickSkewLayer } from "./LocalSkewOverlay"
 
 type Props = {
   elements: AnyCircuitElement[]
   primitives: Primitive[]
   highlightedCopperPourIds?: string[]
+  localSkewLayers?: SkewLayers
   xRayElements?: AnyCircuitElement[]
   transform?: Matrix
   width?: number
@@ -23,7 +33,7 @@ type Props = {
 /** Retains a GPU canvas in a worker; the UI thread sends scene/camera changes only. */
 export function WebGpuElementsRenderer(props: Props) {
   const { primitives, transform, width = 500, height = 500 } = props
-  // Local-skew annotations are painted by the overlay outside the GPU scene.
+  // Local skew travels as separate layer strokes to keep copper buffers retained.
   const elements = useMemo(
     () =>
       props.elements.filter(
@@ -31,6 +41,19 @@ export function WebGpuElementsRenderer(props: Props) {
       ),
     [props.elements],
   )
+  const ratio = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1
+  const layerStrokes = useMemo(
+    () =>
+      props.localSkewLayers
+        ? getWebGpuSkewStrokes(props.localSkewLayers, ratio)
+        : [],
+    [props.localSkewLayers, ratio],
+  )
+  const strokesRef = useRef<LayerStroke[]>(layerStrokes)
+  const pickRef = useRef<
+    { id: number; onPick: Parameters<PickSkewLayer>[2] } | undefined
+  >(undefined)
+  const pickId = useRef(0)
   const holder = useRef<HTMLDivElement>(null)
   const workerRef = useRef<Worker | undefined>(undefined)
   const onRenderCompleteRef = useRef(props.onRenderComplete)
@@ -103,8 +126,6 @@ export function WebGpuElementsRenderer(props: Props) {
   )
   const viewRef = useRef<WebGpuRequest | undefined>(undefined)
   if (transform) {
-    const ratio =
-      typeof window === "undefined" ? 1 : window.devicePixelRatio || 1
     viewRef.current = {
       type: "view",
       width: Math.max(1, Math.round(width * ratio)),
@@ -134,6 +155,14 @@ export function WebGpuElementsRenderer(props: Props) {
       sceneGeneration,
     } satisfies WebGpuRequest)
   }, [elements])
+  useLayoutEffect(() => {
+    strokesRef.current = layerStrokes
+    if (ready.current)
+      workerRef.current?.postMessage({
+        type: "layer-strokes",
+        strokes: layerStrokes,
+      } satisfies WebGpuRequest)
+  }, [layerStrokes])
   useEffect(() => {
     let disposed = false,
       failed = false,
@@ -152,6 +181,7 @@ export function WebGpuElementsRenderer(props: Props) {
       worker?.terminate()
       worker = undefined
       workerRef.current = undefined
+      pickRef.current = undefined
       if (holder.current) holder.current.dataset.xRayNetActive = "false"
       setFailure(message)
     }
@@ -193,6 +223,12 @@ export function WebGpuElementsRenderer(props: Props) {
               return
             completedSceneGenerationRef.current = workerResponse.sceneGeneration
             onRenderCompleteRef.current?.()
+          } else if (workerResponse.type === "picked-layer") {
+            if (pickRef.current?.id === workerResponse.id) {
+              const { onPick } = pickRef.current
+              pickRef.current = undefined
+              onPick(workerResponse.layer)
+            }
           } else if (workerResponse.type === "error") {
             fail(workerResponse.message)
           } else if (workerResponse.type === "ready") {
@@ -206,6 +242,11 @@ export function WebGpuElementsRenderer(props: Props) {
               elements: scene.elements,
               sceneGeneration: scene.sceneGeneration,
             } satisfies WebGpuRequest)
+            if (strokesRef.current.length)
+              worker!.postMessage({
+                type: "layer-strokes",
+                strokes: strokesRef.current,
+              } satisfies WebGpuRequest)
             if (viewRef.current) worker!.postMessage(viewRef.current)
           }
         }
@@ -230,14 +271,31 @@ export function WebGpuElementsRenderer(props: Props) {
       clearTimeout(timeout)
       ready.current = false
       workerRef.current = undefined
+      pickRef.current = undefined
       worker?.terminate()
       canvas.remove()
     }
   }, [])
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (ready.current && viewRef.current)
       workerRef.current?.postMessage(viewRef.current)
-  }, [transform, width, height, options])
+  }, [transform, width, height, options, ratio])
+
+  const pickLayer = useCallback<PickSkewLayer>(
+    (point, candidates, onPick) => {
+      if (!ready.current) return
+      const id = ++pickId.current
+      pickRef.current = { id, onPick }
+      workerRef.current?.postMessage({
+        type: "pick-layer",
+        id,
+        point: { x: point.x * ratio, y: point.y * ratio },
+        candidates,
+      } satisfies WebGpuRequest)
+      // Re-pick for layer and visibility changes under a stationary pointer.
+    },
+    [ratio, options],
+  )
 
   const xRayUnavailable = Boolean(
     props.xRayElements && supportsXRayNet === false,
@@ -275,6 +333,16 @@ export function WebGpuElementsRenderer(props: Props) {
             transform={transform!}
             stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
           />
+          {supportsXRayNet !== null &&
+            props.localSkewLayers &&
+            props.localSkewLayers.size > 0 && (
+              <LocalSkewOverlay
+                elements={props.elements}
+                layers={props.localSkewLayers}
+                transform={transform}
+                pickLayer={pickLayer}
+              />
+            )}
           {xRayUnavailable && (
             <div
               role="status"

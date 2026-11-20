@@ -27,7 +27,7 @@
         "@tscircuit/capacity-autorouter": "^0.0.1135",
         "@tscircuit/checks": "^0.0.282",
         "@tscircuit/circuit-json-util": "^0.0.120",
-        "@tscircuit/circuit-json-webgpu": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.21.tgz",
+        "@tscircuit/circuit-json-webgpu": "file:vendor/circuit-json-webgpu-8e2c297.tgz",
         "@tscircuit/core": "https://pkg.pr.new/tscircuit/core/@tscircuit/core@fd54dd9",
         "@tscircuit/eagle-xml-converter": "^1.0.0",
         "@tscircuit/footprinter": "^0.0.451",
@@ -434,7 +434,7 @@
 
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.120", "", { "dependencies": { "@flatten-js/core": "^1.6.14", "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "3" } }, "sha512-nmfjmWmQnPd4IW9vsyQzkzEs2jPQeN6toETkK7x5O9BxePmkzIz0+sWJkhO1D8iFJplREeFWKnFaEz5MD/4fPg=="],
 
-    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.21.tgz", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-b8j5Ay/emLTP9c5COcZnvyN1tNCgHPhKN+CiMlAl5oXlqRJfLo2KaHzZc3y7ien1DcTwyFDpQYIZ9+tgi1s1sw=="],
+    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@vendor/circuit-json-webgpu-8e2c297.tgz", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-Sx2/upJ23sOQ0wEaD0Qpn6KXHyx+vtgqWQ0PNcPAAEo3qFVkZKknSoa7Qj8YnmmShb3Q5vT6me1Ctq060sp/hA=="],
 
     "@tscircuit/cli": ["@tscircuit/cli@0.1.2480", "", { "dependencies": { "typescript": "~5.9.3" }, "peerDependencies": { "tscircuit": "*" }, "bin": { "tscircuit-cli": "cli/entrypoint.js" } }, "sha512-K4KeQIAYeClrOgtHaHNdZC4+4ilI2DoOv26jEAE7Ws37Bw64+VBpgSq9VXtmmlu3t+qe14m2CM4H1y7t2W1Hzw=="],
 

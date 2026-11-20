@@ -9,6 +9,7 @@ import {
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { getHighlightedCopperPourIds } from "lib/get-highlighted-copper-pour-ids"
 import type { LocalSkewColors } from "lib/local-skew/skew-color"
+import { groupSkewStrokes } from "lib/local-skew/strokes"
 import {
   type PrimitiveSpatialIndex,
   createPrimitiveSpatialIndex,
@@ -372,6 +373,24 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     xRayNetIds,
   ])
 
+  const localSkewLayers = useMemo(
+    () =>
+      isShowingLocalSkew && !xRayElements
+        ? groupSkewStrokes(
+            elements,
+            props.localSkewColors,
+            props.localSkewUseLogScale,
+          )
+        : undefined,
+    [
+      isShowingLocalSkew,
+      xRayElements,
+      elements,
+      props.localSkewColors,
+      props.localSkewUseLogScale,
+    ],
+  )
+
   const onMouseOverPrimitives = useCallback(
     (primitivesHoveredOver: Primitive[]) => {
       const primitiveIdsInMousedOverNet: string[] = []
@@ -479,7 +498,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       transform={transform}
                       elements={elements}
                     >
-                      {isShowingLocalSkew || props.renderer === "canvas" ? (
+                      {props.renderer === "canvas" ? (
                         <CanvasPrimitiveRenderer
                           transform={transform}
                           primitives={primitives}
@@ -494,6 +513,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       ) : (
                         <WebGpuElementsRenderer
                           highlightedCopperPourIds={highlightedCopperPourIds}
+                          localSkewLayers={localSkewLayers}
                           transform={transform}
                           primitives={primitives}
                           elements={elements}
@@ -504,17 +524,18 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           onRenderComplete={props.onRenderComplete}
                         />
                       )}
-                      {isShowingLocalSkew && !xRayElements && (
-                        <LocalSkewOverlay
-                          transform={transform}
-                          elements={elements}
-                          colors={props.localSkewColors}
-                          useLogScale={props.localSkewUseLogScale}
-                          showCopperPours={
-                            isShowingCopperPours && copperPourOpacity > 0
-                          }
-                        />
-                      )}
+                      {props.renderer === "canvas" &&
+                        localSkewLayers &&
+                        localSkewLayers.size > 0 && (
+                          <LocalSkewOverlay
+                            transform={transform}
+                            elements={elements}
+                            layers={localSkewLayers}
+                            showCopperPours={
+                              isShowingCopperPours && copperPourOpacity > 0
+                            }
+                          />
+                        )}
                     </WarningGraphicsOverlay>
                   </DebugGraphicsOverlay>
                 </PcbGroupOverlay>

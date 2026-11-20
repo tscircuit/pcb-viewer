@@ -1,5 +1,10 @@
-import type { AnyCircuitElement } from "circuit-json"
-import type { Matrix, RenderOptions } from "@tscircuit/circuit-json-webgpu"
+import type { AnyCircuitElement, LayerRef } from "circuit-json"
+import type {
+  LayerStroke,
+  Matrix,
+  Point,
+  RenderOptions,
+} from "@tscircuit/circuit-json-webgpu"
 export type WebGpuRequest =
   | { type: "init"; canvas: OffscreenCanvas }
   | {
@@ -14,6 +19,8 @@ export type WebGpuRequest =
       transform: Matrix
       options: RenderOptions & { xRayElementIds?: readonly string[] }
     }
+  | { type: "layer-strokes"; strokes: LayerStroke[] }
+  | { type: "pick-layer"; id: number; point: Point; candidates: LayerRef[] }
   | { type: "dispose" }
 export type WebGpuResponse =
   | { type: "ready"; supportsXRayNet: boolean }
@@ -25,4 +32,5 @@ export type WebGpuResponse =
       compileMs: number
       sceneGeneration: number
     }
+  | { type: "picked-layer"; id: number; layer?: LayerRef }
   | { type: "error"; message: string }

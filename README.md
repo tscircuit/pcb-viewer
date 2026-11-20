@@ -94,7 +94,7 @@ The PCBViewer component accepts these props:
 
 Choose **View → Show Local Skew** to colour the local skew recorded in the board's Circuit JSON. Hover a segment to see its measured or interpolated skew, the pair's peak, and its configured limit when available. Each trace reaches full colour at the larger of its per-sign peak and 0.001 mm. Magnitudes below 0.0005 mm use the zero-skew colour.
 
-Enabling the overlay temporarily uses Canvas so each skew layer paints directly above its own copper. Turning it off restores the configured renderer.
+Both renderers paint each skew layer directly above its own copper. Copper on foreground layers can cover skew on layers behind it.
 
 ### WebGPU rendering
 

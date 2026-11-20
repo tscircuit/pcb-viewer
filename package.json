@@ -37,7 +37,7 @@
     "@tscircuit/capacity-autorouter": "^0.0.1135",
     "@tscircuit/checks": "^0.0.282",
     "@tscircuit/circuit-json-util": "^0.0.120",
-    "@tscircuit/circuit-json-webgpu": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.21.tgz",
+    "@tscircuit/circuit-json-webgpu": "file:vendor/circuit-json-webgpu-8e2c297.tgz",
     "@tscircuit/core": "https://pkg.pr.new/tscircuit/core/@tscircuit/core@fd54dd9",
     "@tscircuit/eagle-xml-converter": "^1.0.0",
     "@tscircuit/footprinter": "^0.0.451",

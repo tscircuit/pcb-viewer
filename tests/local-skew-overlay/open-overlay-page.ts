@@ -60,29 +60,26 @@ export async function openOverlayPage({
   }
 
   try {
-    const useRealWebGpu =
-      renderer === "webgpu" && process.env.PCB_VIEWER_REAL_WEBGPU === "1"
     server = await createServer({
       root: fileURLToPath(new URL("../../", import.meta.url)),
       server: { host, port, strictPort: true },
       logLevel: "error",
-      resolve:
-        renderer === "webgpu" && !useRealWebGpu
-          ? {
-              alias: {
-                "@tscircuit/circuit-json-webgpu": fileURLToPath(
-                  new URL("./controlled-webgpu-drawer.ts", import.meta.url),
-                ),
-              },
-            }
-          : undefined,
     })
     await server.listen()
     const launchOptions: LaunchOptions = {
       headless: true,
-      args: useRealWebGpu
-        ? ["--enable-unsafe-webgpu", "--use-angle=swiftshader"]
-        : undefined,
+      args:
+        renderer === "webgpu"
+          ? [
+              "--enable-unsafe-webgpu",
+              "--enable-gpu",
+              "--use-angle=swiftshader",
+              "--use-vulkan=swiftshader",
+              "--enable-features=Vulkan",
+              "--enable-unsafe-swiftshader",
+              "--ignore-gpu-blocklist",
+            ]
+          : undefined,
     }
     if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) {
       launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
