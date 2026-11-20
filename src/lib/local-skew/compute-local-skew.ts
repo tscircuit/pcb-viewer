@@ -13,6 +13,7 @@ import type {
 import { findCoupledRuns } from "./find-coupled-runs"
 import { isNegativeRouteReversed } from "./is-negative-route-reversed"
 import { type CoupledRun, MIN_OVERLAP } from "./select-coupled-runs"
+import type { SkewScale } from "./skew-color"
 import {
   type TraceStep,
   type TraceWalk,
@@ -66,7 +67,7 @@ export type LocalSkewPair = {
   name?: string
   positive: LocalSkewTrace
   negative: LocalSkewTrace
-  /** Largest measured local skew on the pair, in mm. `null` if the traces never run together. */
+  /** Largest known local skew on the pair (measured runs, interpolated stretches, and via steps), in mm. `null` if the traces never run together. */
   max_skew: number | null
   /** The pair's `maxLengthSkew`, in mm, when one is set. */
   max_length_skew?: number
@@ -222,14 +223,14 @@ function computePairSkew({
     traceGap: differentialPair.trace_gap,
   })
 
-  const positiveSpans = skewSpans({
+  const positiveTrack = skewSpans({
     runs,
     side: "positive",
     steps: positive.steps,
     partnerSteps: negative.steps,
     length: positive.length,
   })
-  const negativeSpans = skewSpans({
+  const negativeTrack = skewSpans({
     runs,
     side: "negative",
     steps: negative.steps,
@@ -242,16 +243,27 @@ function computePairSkew({
     name: bus.name,
     positive: {
       pcb_trace_id: positiveTrace.pcb_trace_id,
-      segments: sampleSkew({ steps: positive.steps, spans: positiveSpans }),
+      segments: sampleSkew({
+        steps: positive.steps,
+        spans: positiveTrack.spans,
+      }),
     },
     negative: {
       pcb_trace_id: negativeTrace.pcb_trace_id,
-      segments: sampleSkew({ steps: negative.steps, spans: negativeSpans }),
+      segments: sampleSkew({
+        steps: negative.steps,
+        spans: negativeTrack.spans,
+      }),
     },
-    max_skew: maxSkew({
-      runs,
-      spans: positiveSpans.concat(negativeSpans),
-    }),
+    max_skew:
+      runs.length === 0
+        ? null
+        : Math.max(
+            positiveTrack.scale.positive,
+            positiveTrack.scale.negative,
+            negativeTrack.scale.positive,
+            negativeTrack.scale.negative,
+          ),
   }
   if (bus.max_length_skew !== undefined) {
     pair.max_length_skew = bus.max_length_skew
@@ -305,33 +317,14 @@ function isMeasurable(walk: TraceWalk): boolean {
   )
 }
 
-/** Largest known skew across the pair's spans, in mm, or null without coupled runs. */
-function maxSkew({
-  runs,
-  spans,
-}: {
-  runs: CoupledRun[]
-  spans: SkewSpan[]
-}): number | null {
-  if (runs.length === 0) return null
-  let largest = 0
-  for (const span of spans) {
-    if (span.startSkew === null || span.endSkew === null) continue
-    largest = Math.max(
-      largest,
-      Math.abs(span.startSkew),
-      Math.abs(span.endSkew),
-    )
-  }
-  return roundSkew(largest)
-}
-
 /**
  * Covers one whole trace with spans: unknown before the first coupled run
  * and after the last, coupled runs as measured, and interpolated between
  * consecutive runs. When a coupled run begins or ends right at a via, the
  * via length steps at the via instead of ramping across the uncoupled
- * stretch. The negative side reports the negated skew.
+ * stretch, and the via endpoint is recorded in the trace's per-sign scale
+ * even before the first run or after the last. The negative side reports the
+ * negated skew.
  */
 function skewSpans({
   runs,
@@ -346,7 +339,7 @@ function skewSpans({
   partnerSteps: TraceStep[]
   /** The trace's walk length, in mm. */
   length: number
-}): SkewSpan[] {
+}): { spans: SkewSpan[]; scale: SkewScale } {
   const coupled = runs
     .map((run) => {
       const from = side === "positive" ? run.positiveStart : run.negativeStart
@@ -386,34 +379,58 @@ function skewSpans({
     .sort((a, b) => a.from - b.from)
 
   if (coupled.length === 0) {
-    return [unknownSpan({ from: 0, to: totalLength })]
+    return {
+      spans: [unknownSpan({ from: 0, to: totalLength })],
+      scale: { positive: 0, negative: 0 },
+    }
   }
+  let positive = 0
+  let negative = 0
+  const record = (value: number): void => {
+    const rounded = roundSkew(value)
+    if (rounded > positive) positive = rounded
+    if (-rounded > negative) negative = -rounded
+  }
+
   const spans: SkewSpan[] = []
+  const first = coupled[0]
+  if (first.startVia > 0 || first.otherStartVia > 0) {
+    record(first.startSkew - first.startVia + first.otherStartVia)
+  }
   // Gaps under MIN_OVERLAP are rounding at shared corners, not stretches.
-  if (coupled[0].from > MIN_OVERLAP) {
-    spans.push(unknownSpan({ from: 0, to: coupled[0].from }))
+  if (first.from > MIN_OVERLAP) {
+    spans.push(unknownSpan({ from: 0, to: first.from }))
   }
   coupled.forEach((run, index) => {
     const previous = coupled[index - 1]
     if (previous) {
       const gapFrom = previous.to + previous.endVia
       const gapTo = run.from - run.startVia
+      const afterPrevious =
+        previous.endSkew + previous.endVia - previous.otherEndVia
+      const partnerHasCopperGap =
+        run.otherFrom - (previous.otherTo + previous.otherEndVia) > MIN_OVERLAP
       if (gapTo - gapFrom > MIN_OVERLAP) {
         // If the partner had only a single via between the two runs, that via
         // was already accounted for at `previous.otherEndVia`.
-        const partnerHasCopperGap =
-          run.otherFrom - (previous.otherTo + previous.otherEndVia) >
-          MIN_OVERLAP
         const otherStartVia = partnerHasCopperGap ? run.otherStartVia : 0
+        const beforeRun = run.startSkew - run.startVia + otherStartVia
+        record(afterPrevious)
+        record(beforeRun)
         spans.push({
           from: gapFrom,
           to: gapTo,
-          startSkew: previous.endSkew + previous.endVia - previous.otherEndVia,
-          endSkew: run.startSkew - run.startVia + otherStartVia,
+          startSkew: afterPrevious,
+          endSkew: beforeRun,
           coupling: "interpolated",
         })
+      } else if (partnerHasCopperGap) {
+        record(afterPrevious)
+        record(run.startSkew + run.otherStartVia)
       }
     }
+    record(run.startSkew)
+    record(run.endSkew)
     spans.push({
       from: run.from,
       to: run.to,
@@ -422,11 +439,14 @@ function skewSpans({
       coupling: "coupled",
     })
   })
-  const lastCoupled = coupled[coupled.length - 1]
-  if (totalLength - lastCoupled.to > MIN_OVERLAP) {
-    spans.push(unknownSpan({ from: lastCoupled.to, to: totalLength }))
+  const last = coupled[coupled.length - 1]
+  if (last.endVia > 0 || last.otherEndVia > 0) {
+    record(last.endSkew + last.endVia - last.otherEndVia)
   }
-  return spans
+  if (totalLength - last.to > MIN_OVERLAP) {
+    spans.push(unknownSpan({ from: last.to, to: totalLength }))
+  }
+  return { spans, scale: { positive, negative } }
 }
 
 /** Length of any via directly before the start or after the end of a step at `distance`, in mm. */
