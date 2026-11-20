@@ -35,6 +35,8 @@ export type PairBoardProps = {
   loadPadHalfPitch?: number
   /** Differential pair name. Defaults to "PAIR". */
   pairName?: string
+  /** Optional subcircuit group containing the pair. */
+  subcircuitName?: string
 }
 
 /**
@@ -55,6 +57,7 @@ export function PairBoard({
   sourcePadHalfPitch = 0.3,
   loadPadHalfPitch = 0.3,
   pairName = "PAIR",
+  subcircuitName,
 }: PairBoardProps): ReactElement {
   let negativeFrom = ".TN_SRC > .pin1"
   let negativeTo = ".TN_LOAD > .pin1"
@@ -64,14 +67,8 @@ export function PairBoard({
   }
   let negativeConnection = "DN"
   if (positiveOnBothSides) negativeConnection = "DP"
-  return (
-    <board
-      width="40mm"
-      height="20mm"
-      layers={layers}
-      thickness={thickness}
-      fabricatorPreset={fabricatorPreset}
-    >
+  const pair = (
+    <>
       <testpoint
         name="TP_SRC"
         footprintVariant="pad"
@@ -124,6 +121,23 @@ export function PairBoard({
         negativeConnection={negativeConnection}
         pcbTraceGap={pcbTraceGap}
       />
+    </>
+  )
+  return (
+    <board
+      width="40mm"
+      height="20mm"
+      layers={layers}
+      thickness={thickness}
+      fabricatorPreset={fabricatorPreset}
+    >
+      {subcircuitName ? (
+        <group subcircuit name={subcircuitName}>
+          {pair}
+        </group>
+      ) : (
+        pair
+      )}
     </board>
   )
 }

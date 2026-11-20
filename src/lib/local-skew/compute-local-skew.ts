@@ -102,13 +102,27 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const tracesBySource: TracesBySource = new Map()
   const pcbPortsById = new Map<PcbPort["pcb_port_id"], PcbPort>()
   const sourcePortsById = new Map<SourcePort["source_port_id"], SourcePort>()
+  const boards: PcbBoard[] = []
+  const parentBySubcircuit = new Map<string, string>()
   const boardsBySubcircuit = new Map<string, PcbBoard>()
   const stackupsByBoard = new Map<PcbBoard["pcb_board_id"], PcbStackup>()
   for (const element of circuitJson) {
     if (element.type === "pcb_board") {
+      boards.push(element)
       if (element.subcircuit_id !== undefined) {
         boardsBySubcircuit.set(element.subcircuit_id, element)
       }
+      continue
+    }
+    if (
+      element.type === "source_group" &&
+      element.subcircuit_id !== undefined &&
+      element.parent_subcircuit_id !== undefined
+    ) {
+      parentBySubcircuit.set(
+        element.subcircuit_id,
+        element.parent_subcircuit_id,
+      )
       continue
     }
     if (element.type === "pcb_stackup") {
@@ -130,6 +144,20 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
     tracesBySource.set(element.source_trace_id, traces)
   }
 
+  const findBoard = (
+    subcircuitId: string | undefined,
+  ): PcbBoard | undefined => {
+    if (boards.length === 1) return boards[0]
+    const visited = new Set<string>()
+    while (subcircuitId !== undefined && !visited.has(subcircuitId)) {
+      const board = boardsBySubcircuit.get(subcircuitId)
+      if (board) return board
+      visited.add(subcircuitId)
+      subcircuitId = parentBySubcircuit.get(subcircuitId)
+    }
+    return undefined
+  }
+
   const pairs: LocalSkewPair[] = []
   for (const element of circuitJson) {
     if (element.type !== "source_bus") continue
@@ -138,7 +166,7 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
       tracesBySource,
       pcbPortsById,
       sourcePortsById,
-      boardsBySubcircuit,
+      findBoard,
       stackupsByBoard,
     })
     if (pair) pairs.push(pair)
@@ -157,14 +185,14 @@ function computePairSkew({
   tracesBySource,
   pcbPortsById,
   sourcePortsById,
-  boardsBySubcircuit,
+  findBoard,
   stackupsByBoard,
 }: {
   bus: SourceBus
   tracesBySource: TracesBySource
   pcbPortsById: Map<PcbPort["pcb_port_id"], PcbPort>
   sourcePortsById: Map<SourcePort["source_port_id"], SourcePort>
-  boardsBySubcircuit: Map<string, PcbBoard>
+  findBoard: (subcircuitId: string | undefined) => PcbBoard | undefined
   stackupsByBoard: Map<PcbBoard["pcb_board_id"], PcbStackup>
 }): LocalSkewPair | null {
   const differentialPair = bus.differential_pair
@@ -183,7 +211,7 @@ function computePairSkew({
     positiveTrace.subcircuit_id ??
     negativeTrace.subcircuit_id ??
     bus.subcircuit_id
-  const board = subcircuitId ? boardsBySubcircuit.get(subcircuitId) : undefined
+  const board = findBoard(subcircuitId)
   const stackup = board ? stackupsByBoard.get(board.pcb_board_id) : undefined
   const boardThickness = board?.thickness
 
