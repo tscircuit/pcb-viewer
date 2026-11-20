@@ -1,4 +1,3 @@
-import { createServer as createTcpServer } from "node:net"
 import { fileURLToPath } from "node:url"
 import type { Point } from "@tscircuit/math-utils"
 import type { CircuitJson } from "circuit-json"
@@ -26,6 +25,17 @@ export type OverlayInitialState = Partial<State>
 /** Delay for clicks that open the View menu, which opens on a held press. */
 export const MENU_CLICK_DELAY_MS = 350
 
+/** Chromium flags for software WebGPU (SwiftShader), so tests run without a GPU. */
+const SOFTWARE_WEBGPU_ARGS = [
+  "--enable-unsafe-webgpu",
+  "--enable-gpu",
+  "--use-angle=swiftshader",
+  "--use-vulkan=swiftshader",
+  "--enable-features=Vulkan",
+  "--enable-unsafe-swiftshader",
+  "--ignore-gpu-blocklist",
+]
+
 /** A point off the board, for moving the pointer out of the way. */
 export const OFF_BOARD_POINT: Point = { x: 590, y: 390 }
 
@@ -40,47 +50,19 @@ export async function openOverlayPage({
   /** Rendered from a TSX fixture through core. */
   circuitJson?: CircuitJson
 }): Promise<OverlayPage> {
-  const host = "127.0.0.1"
-  const port = await new Promise<number>((resolve, reject) => {
-    const probe = createTcpServer().once("error", reject)
-    probe.listen(0, host, () => {
-      const { port } = probe.address() as { port: number }
-      probe.close((error) => (error ? reject(error) : resolve(port)))
-    })
-  })
-
   let server: ViteDevServer | undefined
   let browser: Browser | undefined
-  const close = async () => {
-    try {
-      await browser?.close()
-    } finally {
-      await server?.close()
-    }
-  }
-
   try {
+    // Port 0 lets the operating system pick a free port when Vite binds.
     server = await createServer({
       root: fileURLToPath(new URL("../../", import.meta.url)),
-      server: { host, port, strictPort: true },
+      server: { host: "127.0.0.1", port: 0, strictPort: true },
       logLevel: "error",
     })
     await server.listen()
-    const launchOptions: LaunchOptions = {
-      headless: true,
-      args:
-        renderer === "webgpu"
-          ? [
-              "--enable-unsafe-webgpu",
-              "--enable-gpu",
-              "--use-angle=swiftshader",
-              "--use-vulkan=swiftshader",
-              "--enable-features=Vulkan",
-              "--enable-unsafe-swiftshader",
-              "--ignore-gpu-blocklist",
-            ]
-          : undefined,
-    }
+    const [baseUrl] = server.resolvedUrls?.local ?? []
+    const launchOptions: LaunchOptions = { headless: true }
+    if (renderer === "webgpu") launchOptions.args = SOFTWARE_WEBGPU_ARGS
     if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) {
       launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
     }
@@ -95,15 +77,14 @@ export async function openOverlayPage({
         window.localSkewCircuitJson = circuitJson
         window.localSkewInitialState = state
         window.localSkewRenderer = renderer
-        if (renderer === "webgpu") {
-          window.Worker = class extends Worker {
-            constructor(url: string | URL, options?: WorkerOptions) {
-              super(url, options)
-              this.addEventListener("message", ({ data }) => {
-                if (data.type === "picked-layer")
-                  window.lastLocalSkewPick = data
-              })
-            }
+        if (renderer !== "webgpu") return
+        // Record the worker's layer picks for tests to wait on.
+        window.Worker = class extends Worker {
+          constructor(url: string | URL, options?: WorkerOptions) {
+            super(url, options)
+            this.addEventListener("message", ({ data }) => {
+              if (data.type === "picked-layer") window.lastLocalSkewPick = data
+            })
           }
         }
       },
@@ -113,17 +94,18 @@ export async function openOverlayPage({
         state: initialState,
       },
     )
-    await page.goto(`http://${host}:${port}/tests/local-skew-overlay/`)
+    await page.goto(`${baseUrl}tests/local-skew-overlay/`)
     await page.waitForFunction(() =>
       document.querySelector(
         '#root[data-rendered="true"], [data-webgpu-error]',
       ),
     )
-    const gpuError = (await page.locator("[data-pcb-renderer=webgpu]").count())
-      ? await page
-          .locator("[data-pcb-renderer=webgpu]")
-          .getAttribute("data-webgpu-error")
-      : null
+    const gpuError = await page.evaluate(
+      () =>
+        document
+          .querySelector("[data-webgpu-error]")
+          ?.getAttribute("data-webgpu-error") ?? null,
+    )
     if (gpuError) throw new Error(gpuError)
     if (renderer === "canvas") {
       await page.waitForFunction(
@@ -139,10 +121,31 @@ export async function openOverlayPage({
           requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
         }),
     )
-    return { page, errors, close }
+    const openBrowser = browser
+    const openServer = server
+    return {
+      page,
+      errors,
+      close: () => closeOverlay({ browser: openBrowser, server: openServer }),
+    }
   } catch (error) {
-    await close().catch(() => {})
+    await closeOverlay({ browser, server }).catch(() => {})
     throw error
+  }
+}
+
+/** Closes the browser, then the Vite server, whichever were started. */
+async function closeOverlay({
+  browser,
+  server,
+}: {
+  browser: Browser | undefined
+  server: ViteDevServer | undefined
+}): Promise<void> {
+  try {
+    await browser?.close()
+  } finally {
+    await server?.close()
   }
 }
 
@@ -198,4 +201,12 @@ export async function screenshotPixelsAt({
     },
     { png, points },
   )
+}
+
+/** Toggles View → Show Local Skew and closes the View menu again. */
+export async function toggleLocalSkew({ page }: { page: Page }): Promise<void> {
+  const viewMenu = page.locator("[data-view-menu] > div > div").first()
+  await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
+  await page.getByText("Show Local Skew", { exact: true }).click()
+  await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
 }

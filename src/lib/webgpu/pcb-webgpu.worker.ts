@@ -68,7 +68,7 @@ async function pickLayer() {
   pendingPick = undefined
   picking = true
   try {
-    const picked = await drawer.pickLayerAt(point, candidates)
+    const picked = await drawer.pickLayerAt({ point, candidates })
     if (!failed)
       scope.postMessage({
         type: "picked-layer",

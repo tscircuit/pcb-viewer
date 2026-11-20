@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { renderCopperCrossingBoard } from "./local-skew-overlay/copper-crossing-board"
 import {
-  MENU_CLICK_DELAY_MS,
   openOverlayPage,
   screenshotPixelsAt,
+  toggleLocalSkew,
 } from "./local-skew-overlay/open-overlay-page"
 
 test("WebGPU local skew follows copper order in pixels and hover without replacing the renderer", async () => {
@@ -15,22 +15,15 @@ test("WebGPU local skew follows copper order in pixels and hover without replaci
   try {
     const gpu = page.locator(".pcb-webgpu-canvas")
     const originalCanvas = await gpu.elementHandle()
-    const viewMenu = page.locator("[data-view-menu] > div > div").first()
     const overlay = page.locator(".pcb-local-skew-overlay")
     const readout = page.locator(".pcb-local-skew-readout")
-    const toggleSkew = async () => {
-      await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
-      await page.getByText("Show Local Skew", { exact: true }).click()
-      await viewMenu.click({ delay: MENU_CLICK_DELAY_MS })
-    }
-
     // A centered 40 × 20 mm board fits to 75% of the 600 px viewport width.
     const covered = { x: 300 - 4 * 11.25, y: 200 - 0.3 * 11.25 }
     const visible = { x: 300 + 11.25, y: covered.y }
-    await toggleSkew()
+    await toggleLocalSkew({ page })
     await page.mouse.move(visible.x, visible.y)
     await readout.waitFor()
-    expect(await readout.textContent()).toStartWith("PAIR: in step")
+    expect(await readout.textContent()).toStartWith("PAIR: local skew 0.000 mm")
     expect(await overlay.locator("svg").count()).toBe(0)
     const [coveredPixel, visiblePixel] = await screenshotPixelsAt({
       page,
@@ -68,7 +61,7 @@ test("WebGPU local skew follows copper order in pixels and hover without replaci
     })
     expect(foregroundPixel).toEqual([0, 255, 0])
 
-    await toggleSkew()
+    await toggleLocalSkew({ page })
     await overlay.waitFor({ state: "detached" })
     expect(
       await gpu.evaluate(

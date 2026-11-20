@@ -78,7 +78,7 @@ The PCBViewer component accepts these props:
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
 - `initialState`: Initial state for the viewer
-- `localSkewColors` accepts optional `zero`, `positive`, `negative`, and `unknown` overrides. Positive and negative skew use the pair's stored colours when no override is supplied. The KiCad defaults are white, blue, red, and grey.
+- `localSkewColors` accepts optional `zero`, `positive`, `negative`, and `unknown` CSS colours. Positive and negative skew use the pair's stored colours when no override is supplied. A colour that does not parse is skipped for the next one. The KiCad defaults are white, blue, red, and grey.
 - `localSkewUseLogScale` applies KiCad's logarithmic colour scale when true. It defaults to false, which uses a linear scale.
 
 ### Features
@@ -92,9 +92,9 @@ The PCBViewer component accepts these props:
 
 ### Differential-pair local skew
 
-Choose **View → Show Local Skew** to colour the local skew recorded in the board's Circuit JSON. Hover a segment to see its measured or interpolated skew, the pair's peak, and its configured limit when available. Each trace reaches full colour at the larger of its per-sign peak and 0.001 mm. Magnitudes below 0.0005 mm use the zero-skew colour.
+Choose **View → Show Local Skew** to colour the local skew recorded in the board's Circuit JSON. Hover a segment to see its local skew (or "unknown"), the pair's peak, and the pair's configured end-to-end length skew limit when available. Each trace reaches full colour at the larger of its per-sign peak and 0.001 mm. Magnitudes below 0.0005 mm use the zero-skew colour.
 
-Both renderers paint each skew layer directly above its own copper. Copper on foreground layers can cover skew on layers behind it.
+Both renderers paint each skew layer directly above its own copper, so copper on foreground layers can cover skew on layers behind it.
 
 ### WebGPU rendering
 
@@ -118,7 +118,7 @@ triangle tessellation and can show facets at extreme zoom.
 Right-click the board and choose **Rendering Engine → Canvas** or
 **WebGPU (experimental)** to switch without resetting pan, zoom, or layer visibility.
 The `renderer` prop sets the initial selection; changing that prop updates the selection.
-The rendering engine preference is saved when you choose an engine from the menu.
+Switching to Canvas always requires an explicit engine selection.
 
 Run `bun run test:webgpu` after `bunx playwright install chromium` to test the built
 viewer bundle, AM3352 wheel zoom, resize, StrictMode cleanup, context-menu switching,

@@ -1,4 +1,4 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import type { LayerStroke, RenderOptions } from "@tscircuit/circuit-json-webgpu"
 import { type SkewLayers, getWebGpuSkewStrokes } from "lib/local-skew/strokes"
 import type { GridConfig, Primitive } from "lib/types"
@@ -30,6 +30,12 @@ type Props = {
   onRenderComplete?: () => void
 }
 
+/** Canvas pixels per CSS pixel; 1 outside a browser. */
+function devicePixelRatio(): number {
+  if (typeof window === "undefined") return 1
+  return window.devicePixelRatio || 1
+}
+
 /** Retains the board and layer strokes in the GPU worker. */
 export function WebGpuElementsRenderer(props: Props) {
   const { primitives, transform, width = 500, height = 500 } = props
@@ -41,17 +47,17 @@ export function WebGpuElementsRenderer(props: Props) {
       ),
     [props.elements],
   )
-  const ratio = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1
-  const layerStrokes = useMemo(
-    () =>
-      props.localSkewLayers
-        ? getWebGpuSkewStrokes(props.localSkewLayers, ratio)
-        : [],
-    [props.localSkewLayers, ratio],
-  )
+  const ratio = devicePixelRatio()
+  const layerStrokes = useMemo(() => {
+    if (!props.localSkewLayers) return []
+    return getWebGpuSkewStrokes({
+      layers: props.localSkewLayers,
+      pixelRatio: ratio,
+    })
+  }, [props.localSkewLayers, ratio])
   const strokesRef = useRef<LayerStroke[]>(layerStrokes)
   const pickRef = useRef<
-    { id: number; onPick: Parameters<PickSkewLayer>[2] } | undefined
+    { id: number; onPick: (layer?: LayerRef) => void } | undefined
   >(undefined)
   const pickId = useRef(0)
   const holder = useRef<HTMLDivElement>(null)
@@ -283,14 +289,15 @@ export function WebGpuElementsRenderer(props: Props) {
 
   // Re-pick for layer and visibility changes under a stationary pointer.
   const pickLayer = useCallback<PickSkewLayer>(
-    (point, candidates, onPick) => {
+    ({ pointer, candidates, onPick }) => {
       if (!ready.current) return
-      const id = ++pickId.current
+      pickId.current++
+      const id = pickId.current
       pickRef.current = { id, onPick }
       workerRef.current?.postMessage({
         type: "pick-layer",
         id,
-        point: { x: point.x * ratio, y: point.y * ratio },
+        point: { x: pointer.x * ratio, y: pointer.y * ratio },
         candidates,
       } satisfies WebGpuRequest)
     },
@@ -333,16 +340,14 @@ export function WebGpuElementsRenderer(props: Props) {
             transform={transform!}
             stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
           />
-          {supportsXRayNet !== null &&
-            props.localSkewLayers &&
-            props.localSkewLayers.size > 0 && (
-              <LocalSkewOverlay
-                elements={props.elements}
-                layers={props.localSkewLayers}
-                transform={transform}
-                pickLayer={pickLayer}
-              />
-            )}
+          {supportsXRayNet !== null && props.localSkewLayers && (
+            <LocalSkewOverlay
+              elements={props.elements}
+              layers={props.localSkewLayers}
+              transform={transform}
+              pickLayer={pickLayer}
+            />
+          )}
           {xRayUnavailable && (
             <div
               role="status"

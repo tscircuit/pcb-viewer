@@ -20,7 +20,9 @@ test("hovering reads the visible layer's segment, not a hidden one beneath it", 
     await page.mouse.move(point.x, point.y)
     const readout = page.locator(".pcb-local-skew-readout")
     await readout.waitFor()
-    expect(await readout.textContent()).toStartWith("BOT_PAIR: in step")
+    expect(await readout.textContent()).toStartWith(
+      "BOT_PAIR: local skew 0.000 mm",
+    )
     expect(errors).toEqual([])
   } finally {
     await close()

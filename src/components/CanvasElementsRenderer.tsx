@@ -373,23 +373,24 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     xRayNetIds,
   ])
 
-  const localSkewLayers = useMemo(
-    () =>
-      isShowingLocalSkew && !xRayElements
-        ? groupSkewStrokes(
-            elements,
-            props.localSkewColors,
-            props.localSkewUseLogScale,
-          )
-        : undefined,
-    [
-      isShowingLocalSkew,
-      xRayElements,
+  // Skew strokes exist only while there is skew to paint: on, out of X-ray,
+  // with at least one stored segment.
+  const localSkewLayers = useMemo(() => {
+    if (!isShowingLocalSkew || xRayElements) return undefined
+    const layers = groupSkewStrokes({
       elements,
-      props.localSkewColors,
-      props.localSkewUseLogScale,
-    ],
-  )
+      colors: props.localSkewColors,
+      useLogScale: props.localSkewUseLogScale,
+    })
+    if (layers.size === 0) return undefined
+    return layers
+  }, [
+    isShowingLocalSkew,
+    xRayElements,
+    elements,
+    props.localSkewColors,
+    props.localSkewUseLogScale,
+  ])
 
   const onMouseOverPrimitives = useCallback(
     (primitivesHoveredOver: Primitive[]) => {
@@ -524,18 +525,16 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           onRenderComplete={props.onRenderComplete}
                         />
                       )}
-                      {props.renderer === "canvas" &&
-                        localSkewLayers &&
-                        localSkewLayers.size > 0 && (
-                          <LocalSkewOverlay
-                            transform={transform}
-                            elements={elements}
-                            layers={localSkewLayers}
-                            showCopperPours={
-                              isShowingCopperPours && copperPourOpacity > 0
-                            }
-                          />
-                        )}
+                      {props.renderer === "canvas" && localSkewLayers && (
+                        <LocalSkewOverlay
+                          transform={transform}
+                          elements={elements}
+                          layers={localSkewLayers}
+                          showCopperPours={
+                            isShowingCopperPours && copperPourOpacity > 0
+                          }
+                        />
+                      )}
                     </WarningGraphicsOverlay>
                   </DebugGraphicsOverlay>
                 </PcbGroupOverlay>

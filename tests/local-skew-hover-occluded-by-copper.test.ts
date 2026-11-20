@@ -30,8 +30,7 @@ test("hover follows the painted widths and rounded pad corners on higher Canvas 
     })
 
     const readout = page.locator(".pcb-local-skew-readout")
-    const expectedReadout =
-      "PAIR: in step with its partner (measured) · max 0.000 mm"
+    const expectedReadout = "PAIR: local skew 0.000 mm · max 0.000 mm"
     // The start width controls the painted trace. A rounded pad's empty
     // corner leaves the lower overlay visible even inside the pad's bounds.
     for (const [index, covered, point] of [

@@ -41,10 +41,12 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
             .marker,
       ),
     ).toBe("before-toggle")
-    // Like KiCad, interpolated stretches are opaque and full brightness,
-    // blending linearly from white to blue or red with no darkening.
+    // Like KiCad, known skew is opaque and full brightness, blending
+    // linearly from white to blue or red with no darkening.
     const estimates = await page
-      .locator('line[data-coupling="interpolated"]')
+      .locator(
+        '.pcb-local-skew-overlay line:not([stroke="rgb(128, 128, 128)"])',
+      )
       .evaluateAll((lines) =>
         lines.map((line) => ({
           stroke: line.getAttribute("stroke"),
