@@ -2,7 +2,7 @@ import type { AnyCircuitElement, CircuitJson, LayerRef } from "circuit-json"
 import { LAYER_NAME_TO_COLOR } from "../../../src/lib/Drawer"
 import colors from "../../../src/lib/colors"
 import { computeLocalSkew } from "../../../src/lib/local-skew/compute-local-skew"
-import { fullScaleFor, skewColor } from "../../../src/lib/local-skew/skew-color"
+import { skewColor, skewScaleFor } from "../../../src/lib/local-skew/skew-color"
 
 /** Board millimetres to snapshot pixels. */
 const PIXELS_PER_MM = 40
@@ -10,10 +10,10 @@ const PIXELS_PER_MM = 40
 /** Space around the routed copper, in mm. */
 const MARGIN = 1
 
-/** Width of the skew stripe drawn inside each trace, relative to the trace. */
-const SKEW_WIDTH_FACTOR = 0.6
+/** Width of the skew overlay relative to the trace, matching KiCad's 1.1× inflation. */
+const SKEW_WIDTH_FACTOR = 1.1
 
-/** Copper is dimmed so it can't be mistaken for the red "longer" skew. */
+/** Copper is dimmed so pads and un-overlaid traces aren't mistaken for the red negative-skew colour. */
 const COPPER_OPACITY = 0.35
 
 /** Bottom first, so top copper and its skew paint over it, as in the viewer. */
@@ -21,10 +21,9 @@ const LAYER_ORDER: LayerRef[] = ["bottom", "inner1", "inner2", "top"]
 
 /**
  * An SVG of a board's routed copper with its local skew drawn on top, in
- * the overlay's colours: green in step, red where a trace has run farther
- * than its partner, blue where it has run less far, darker where estimated
- * and grey where unknown. Dimmed copper shows at each trace's edges, and
- * bare where there is no skew to draw.
+ * KiCad's overlay colours: white in step, blue where a trace has run farther
+ * than its partner, red where it has run less far, and grey where unknown.
+ * Dimmed copper shows at pads and bare where there is no skew to draw.
  */
 export function localSkewSvg(circuitJson: CircuitJson): string {
   const pairs = computeLocalSkew(circuitJson)
@@ -63,27 +62,22 @@ export function localSkewSvg(circuitJson: CircuitJson): string {
       }
     }
     for (const pair of pairs) {
-      const fullScale = fullScaleFor({
-        maxLengthSkew: pair.max_length_skew,
-        maxSkew: pair.max_skew,
-      })
-      for (const segment of [
-        ...pair.positive.segments,
-        ...pair.negative.segments,
-      ]) {
-        if (segment.layer !== layer) continue
-        shapes.push(
-          line({
-            start: segment.start,
-            end: segment.end,
-            width: segment.width * SKEW_WIDTH_FACTOR,
-            color: skewColor({
-              skew: segment.skew,
-              fullScale,
-              isEstimate: segment.coupling === "interpolated",
+      for (const trace of [pair.positive, pair.negative]) {
+        const fullScale = skewScaleFor(trace.segments)
+        for (const segment of trace.segments) {
+          if (segment.layer !== layer) continue
+          shapes.push(
+            line({
+              start: segment.start,
+              end: segment.end,
+              width: segment.width * SKEW_WIDTH_FACTOR,
+              color: skewColor({
+                skew: segment.skew,
+                fullScale,
+              }),
             }),
-          }),
-        )
+          )
+        }
       }
     }
   }
