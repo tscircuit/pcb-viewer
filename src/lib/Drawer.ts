@@ -10,8 +10,12 @@ import {
   translate,
 } from "transformation-matrix"
 import colors from "./colors"
+import { isCopperLayer } from "./copper-layers"
 import { scaleOnly } from "./util/scale-only"
 import { zIndexMap } from "./util/z-index-map"
+
+/** Brightness factor applied to copper canvases behind the local skew overlay. */
+const DIMMED_COPPER_BRIGHTNESS = 0.35
 
 export interface Aperture {
   shape: "circle" | "square"
@@ -114,6 +118,7 @@ export class Drawer {
   foregroundLayer = "top"
   hiddenLayerOpacity = 0.2
   xRayNetActive = false
+  dimCopper = false
   lastPoint: { x: number; y: number }
 
   constructor(canvasLayerMap: Record<string, HTMLCanvasElement>) {
@@ -504,7 +509,7 @@ export class Drawer {
 
   getLayerOpacity(layer: string) {
     if (this.xRayNetActive)
-      return /^(top|bottom|inner\d+)$/.test(layer) ? this.hiddenLayerOpacity : 0
+      return isCopperLayer(layer) ? this.hiddenLayerOpacity : 0
     const side = this.foregroundLayer
     const isSelectedSideDetail =
       (side === "top" || side === "bottom") &&
@@ -541,6 +546,10 @@ export class Drawer {
       const opacity = this.getLayerOpacity(layer)
       canvas.style.opacity = String(opacity)
       canvas.style.display = opacity === 0 ? "none" : ""
+      canvas.style.filter =
+        this.dimCopper && isCopperLayer(layer)
+          ? `brightness(${DIMMED_COPPER_BRIGHTNESS})`
+          : ""
     }
   }
 

@@ -5,15 +5,11 @@ import {
   OFF_BOARD_POINT,
   openOverlayPage,
   screenPointOf,
+  screenshotPixelsAt,
 } from "./local-skew-overlay/open-overlay-page"
 
-/**
- * Plain top copper is rgb(200, 52, 52) and its edges blend darker; KiCad's
- * negative (shorter) overlay is rgb(255, 0, 0), so even blended it is
- * brighter than copper, while blue/white channels exceed copper's 52 by far.
- */
-const MIN_OVERLAY_RED = 215
-const MIN_NON_RED_OVERLAY_CHANNEL = 180
+/** Minimum dominant channel on an opaque overlay stroke after anti-aliasing. */
+const MIN_OVERLAY_CHANNEL = 180
 
 test("Show Local Skew colours the out-of-phase stretch without remounting the board", async () => {
   const { page, errors, close } = await openOverlayPage({ initialState: {} })
@@ -70,39 +66,20 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
     const inStep = await screenPointOf({ page, x: -11, y: 0.3 })
     const positive = await screenPointOf({ page, x: 0, y: 0.3 })
     const negative = await screenPointOf({ page, x: 0, y: -0.3 })
-    const screenshot = (await page.screenshot()).toString("base64")
-    const pixels = await page.evaluate(
-      async ({ png, points }) => {
-        const image = new Image()
-        image.src = `data:image/png;base64,${png}`
-        await image.decode()
-        const canvas = document.createElement("canvas")
-        canvas.width = image.width
-        canvas.height = image.height
-        const ctx = canvas.getContext("2d")!
-        ctx.drawImage(image, 0, 0)
-        return points.map((point) =>
-          Array.from(
-            ctx.getImageData(Math.round(point.x), Math.round(point.y), 1, 1)
-              .data,
-          ).slice(0, 3),
-        )
-      },
-      { png: screenshot, points: [inStep, positive, negative] },
-    )
-    // Thin lines blend at their edges, so check which colour dominates:
-    // white in step, blue where longer (+), red where shorter (-).
     const [
       [red0, green0, blue0],
       [red1, green1, blue1],
       [red2, green2, blue2],
-    ] = pixels
-    expect(Math.min(red0, green0, blue0)).toBeGreaterThan(
-      MIN_NON_RED_OVERLAY_CHANNEL,
-    )
-    expect(blue1).toBeGreaterThan(MIN_NON_RED_OVERLAY_CHANNEL)
+    ] = await screenshotPixelsAt({
+      page,
+      points: [inStep, positive, negative],
+    })
+    // Thin lines blend at their edges, so check which colour dominates:
+    // white in step, blue where longer (+), red where shorter (-).
+    expect(Math.min(red0, green0, blue0)).toBeGreaterThan(MIN_OVERLAY_CHANNEL)
+    expect(blue1).toBeGreaterThan(MIN_OVERLAY_CHANNEL)
     expect(blue1).toBeGreaterThan(2 * Math.max(red1, green1))
-    expect(red2).toBeGreaterThan(MIN_OVERLAY_RED)
+    expect(red2).toBeGreaterThan(MIN_OVERLAY_CHANNEL)
     expect(red2).toBeGreaterThan(2 * Math.max(green2, blue2))
 
     // Snapshot the board canvases plus the live overlay, leaving out the
@@ -114,13 +91,17 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
       const ctx = composite.getContext("2d")!
       ctx.fillStyle = "#111"
       ctx.fillRect(0, 0, 600, 400)
-      // Each layer's canvas, then that layer's overlay above it.
+      // Each layer's canvas (with its live opacity and filter), then that layer's overlay above it.
       for (const name of ["board", "top"]) {
-        ctx.drawImage(
-          document.querySelector(`.pcb-layer-${name}`) as HTMLCanvasElement,
-          0,
-          0,
-        )
+        const canvas = document.querySelector(
+          `.pcb-layer-${name}`,
+        ) as HTMLCanvasElement
+        const style = getComputedStyle(canvas)
+        ctx.save()
+        ctx.globalAlpha = Number(style.opacity)
+        ctx.filter = style.filter
+        ctx.drawImage(canvas, 0, 0)
+        ctx.restore()
         const overlay = document.querySelector(
           `.pcb-local-skew-overlay svg[data-layer="${name}"]`,
         )

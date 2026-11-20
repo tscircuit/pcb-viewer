@@ -22,10 +22,7 @@ import {
   isCopperLayer,
 } from "../lib/copper-layers"
 import { getCopperPoursUnderPoint } from "../lib/draw-copper-pour"
-import {
-  type LocalSkewPair,
-  computeLocalSkew,
-} from "../lib/local-skew/compute-local-skew"
+import type { LocalSkewPair } from "../lib/local-skew/compute-local-skew"
 import { describeSkew } from "../lib/local-skew/describe-skew"
 import { skewColor, skewScaleFor } from "../lib/local-skew/skew-color"
 import {
@@ -87,26 +84,22 @@ type LineGroup = {
 export const LocalSkewOverlay = ({
   transform,
   elements,
+  pairs,
   primitiveSpatialIndex,
   isXRayActive,
 }: {
   transform?: Matrix
   elements: AnyCircuitElement[]
+  pairs: LocalSkewPair[]
   primitiveSpatialIndex: PrimitiveSpatialIndex
   isXRayActive: boolean
 }): ReactElement | null => {
-  const isShowingLocalSkew = useGlobalStore((s) => s.is_showing_local_skew)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
   const isShowingCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
   const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
   const [pointer, setPointer] = useState<Pointer | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const pairs = useMemo(() => {
-    if (!isShowingLocalSkew) return []
-    return computeLocalSkew(elements)
-  }, [isShowingLocalSkew, elements])
   const innerLayers = useMemo(
     () =>
       getCopperLayerRefsFromElements(elements).filter((layer) =>

@@ -8,6 +8,7 @@ import {
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { getHighlightedCopperPourIds } from "lib/get-highlighted-copper-pour-ids"
+import { computeLocalSkew } from "lib/local-skew/compute-local-skew"
 import {
   type PrimitiveSpatialIndex,
   createPrimitiveSpatialIndex,
@@ -105,16 +106,22 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
+    isShowingLocalSkew,
     copperPourOpacity,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
+    isShowingLocalSkew: state.is_showing_local_skew,
     copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
   }))
   const activeErrorId = focusedErrorId ?? hoveredErrorId
+  const localSkewPairs = useMemo(
+    () => (isShowingLocalSkew ? computeLocalSkew(elements) : []),
+    [isShowingLocalSkew, elements],
+  )
 
   const elementsToRender = useMemo(
     () =>
@@ -481,6 +488,10 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           elements={elementsToRender}
                           circuitJson={elements}
                           xRayElements={xRayElements}
+                          dimCopper={
+                            localSkewPairs.length > 0 &&
+                            xRayElements === undefined
+                          }
                           width={props.width}
                           height={props.height}
                           grid={props.grid}
@@ -502,6 +513,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       <LocalSkewOverlay
                         transform={transform}
                         elements={elements}
+                        pairs={localSkewPairs}
                         primitiveSpatialIndex={primitiveSpatialIndex}
                         isXRayActive={xRayElements !== undefined}
                       />

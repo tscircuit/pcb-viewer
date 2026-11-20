@@ -119,7 +119,7 @@ export async function screenshotPixelsAt({
       ctx.drawImage(image, 0, 0)
       return points.map((point) =>
         Array.from(
-          ctx.getImageData(Math.round(point.x), Math.round(point.y), 1, 1).data,
+          ctx.getImageData(Math.floor(point.x), Math.floor(point.y), 1, 1).data,
         ).slice(0, 3),
       ) as [number, number, number][]
     },
