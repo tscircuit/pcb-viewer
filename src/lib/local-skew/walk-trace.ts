@@ -36,10 +36,10 @@ const DEFAULT_VIA_LENGTH = 1.6
 /**
  * Splits a trace route into straight pieces in stored route order.
  *
- * Copper arriving at a wire point is on that wire's layer and width, the
- * same rule the viewer draws with. Copper arriving at a via is on the
- * via's `from_layer`, so the run between two vias is on the layer they
- * connect. A via between two different layers adds their Z-distance from
+ * Copper arriving at a wire point uses that wire's layer and width.
+ * Copper arriving at a via uses the via's `from_layer` and the last wire's
+ * width, so sparse routes still contribute planar length between vias.
+ * A via between two different layers adds their Z-distance from
  * `stackup`, else `boardThickness`, else {@link DEFAULT_VIA_LENGTH}.
  *
  * Consecutive pieces that continue in a straight line on the same copper
@@ -116,7 +116,11 @@ function addStep({
     endViaLength: 0,
   }
   const previous = steps[steps.length - 1]
-  if (previous && continuesStraight({ previous, next: step })) {
+  if (
+    previous &&
+    startViaLength === 0 &&
+    continuesStraight({ previous, next: step })
+  ) {
     previous.end = step.end
     previous.length += step.length
     return
@@ -273,13 +277,7 @@ function stackupLayerDistance({
   for (let index = start; index <= end; index++) {
     const layer = stackup.layers[index]
     const { thickness } = layer
-    if (
-      thickness === undefined ||
-      !Number.isFinite(thickness) ||
-      thickness < 0
-    ) {
-      return undefined
-    }
+    if (thickness === undefined) return undefined
     if (
       layer.layer_type === "copper" &&
       (index === start || index === end) &&

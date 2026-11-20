@@ -102,13 +102,27 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const tracesBySource: TracesBySource = new Map()
   const pcbPortsById = new Map<PcbPort["pcb_port_id"], PcbPort>()
   const sourcePortsById = new Map<SourcePort["source_port_id"], SourcePort>()
+  const boards: PcbBoard[] = []
+  const parentBySubcircuit = new Map<string, string>()
   const boardsBySubcircuit = new Map<string, PcbBoard>()
   const stackupsByBoard = new Map<PcbBoard["pcb_board_id"], PcbStackup>()
   for (const element of circuitJson) {
     if (element.type === "pcb_board") {
+      boards.push(element)
       if (element.subcircuit_id !== undefined) {
         boardsBySubcircuit.set(element.subcircuit_id, element)
       }
+      continue
+    }
+    if (
+      element.type === "source_group" &&
+      element.subcircuit_id !== undefined &&
+      element.parent_subcircuit_id !== undefined
+    ) {
+      parentBySubcircuit.set(
+        element.subcircuit_id,
+        element.parent_subcircuit_id,
+      )
       continue
     }
     if (element.type === "pcb_stackup") {
@@ -130,18 +144,37 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
     tracesBySource.set(element.source_trace_id, traces)
   }
 
+  const findBoard = (
+    subcircuitId: string | undefined,
+  ): PcbBoard | undefined => {
+    if (boards.length === 1) return boards[0]
+    const visited = new Set<string>()
+    while (subcircuitId !== undefined && !visited.has(subcircuitId)) {
+      const board = boardsBySubcircuit.get(subcircuitId)
+      if (board) return board
+      visited.add(subcircuitId)
+      subcircuitId = parentBySubcircuit.get(subcircuitId)
+    }
+    return undefined
+  }
+
   const pairs: LocalSkewPair[] = []
   for (const element of circuitJson) {
     if (element.type !== "source_bus") continue
-    const pair = computePairSkew({
-      bus: element,
-      tracesBySource,
-      pcbPortsById,
-      sourcePortsById,
-      boardsBySubcircuit,
-      stackupsByBoard,
-    })
-    if (pair) pairs.push(pair)
+    try {
+      const pair = computePairSkew({
+        bus: element,
+        tracesBySource,
+        pcbPortsById,
+        sourcePortsById,
+        findBoard,
+        stackupsByBoard,
+      })
+      if (pair) pairs.push(pair)
+    } catch {
+      // A failed pair must not hide skew on the rest of the board.
+      continue
+    }
   }
   return pairs
 }
@@ -157,14 +190,14 @@ function computePairSkew({
   tracesBySource,
   pcbPortsById,
   sourcePortsById,
-  boardsBySubcircuit,
+  findBoard,
   stackupsByBoard,
 }: {
   bus: SourceBus
   tracesBySource: TracesBySource
   pcbPortsById: Map<PcbPort["pcb_port_id"], PcbPort>
   sourcePortsById: Map<SourcePort["source_port_id"], SourcePort>
-  boardsBySubcircuit: Map<string, PcbBoard>
+  findBoard: (subcircuitId: string | undefined) => PcbBoard | undefined
   stackupsByBoard: Map<PcbBoard["pcb_board_id"], PcbStackup>
 }): LocalSkewPair | null {
   const differentialPair = bus.differential_pair
@@ -183,7 +216,7 @@ function computePairSkew({
     positiveTrace.subcircuit_id ??
     negativeTrace.subcircuit_id ??
     bus.subcircuit_id
-  const board = subcircuitId ? boardsBySubcircuit.get(subcircuitId) : undefined
+  const board = findBoard(subcircuitId)
   const stackup = board ? stackupsByBoard.get(board.pcb_board_id) : undefined
   const boardThickness = board?.thickness
 
@@ -415,11 +448,12 @@ function skewSpans({
     if (previous) {
       const gapFrom = previous.to + previous.endVia
       const gapTo = run.from - run.startVia
-      const afterPrevious =
-        previous.endSkew + previous.endVia - previous.otherEndVia
-      const partnerHasCopperGap =
-        run.otherFrom - (previous.otherTo + previous.otherEndVia) > MIN_OVERLAP
       if (gapTo - gapFrom > MIN_OVERLAP) {
+        const afterPrevious =
+          previous.endSkew + previous.endVia - previous.otherEndVia
+        const partnerHasCopperGap =
+          run.otherFrom - (previous.otherTo + previous.otherEndVia) >
+          MIN_OVERLAP
         // If the partner had only a single via between the two runs, that via
         // was already accounted for at `previous.otherEndVia`.
         const otherStartVia = partnerHasCopperGap ? run.otherStartVia : 0
@@ -433,9 +467,6 @@ function skewSpans({
           endSkew: beforeRun,
           coupling: "interpolated",
         })
-      } else if (partnerHasCopperGap) {
-        record(afterPrevious)
-        record(run.startSkew + run.otherStartVia)
       }
     }
     record(run.startSkew)

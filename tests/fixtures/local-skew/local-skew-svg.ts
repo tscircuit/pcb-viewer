@@ -2,16 +2,16 @@ import type { AnyCircuitElement, CircuitJson, LayerRef } from "circuit-json"
 import { LAYER_NAME_TO_COLOR } from "../../../src/lib/Drawer"
 import colors from "../../../src/lib/colors"
 import { computeLocalSkew } from "../../../src/lib/local-skew/compute-local-skew"
-import { skewColor } from "../../../src/lib/local-skew/skew-color"
+import {
+  OVERLAY_WIDTH_FACTOR,
+  skewColor,
+} from "../../../src/lib/local-skew/skew-color"
 
 /** Board millimetres to snapshot pixels. */
 const PIXELS_PER_MM = 40
 
 /** Space around the routed copper, in mm. */
 const MARGIN = 1
-
-/** Width of the skew overlay relative to the trace, matching KiCad's 1.1× inflation. */
-const SKEW_WIDTH_FACTOR = 1.1
 
 /** Copper is dimmed so pads and un-overlaid traces aren't mistaken for the red negative-skew colour. */
 const COPPER_OPACITY = 0.35
@@ -69,7 +69,7 @@ export function localSkewSvg(circuitJson: CircuitJson): string {
             line({
               start: segment.start,
               end: segment.end,
-              width: segment.width * SKEW_WIDTH_FACTOR,
+              width: segment.width * OVERLAY_WIDTH_FACTOR,
               color: skewColor({
                 skew: segment.skew,
                 fullScale: trace.scale,

@@ -6,6 +6,7 @@ import { computeLocalSkew } from "../../../../src/lib/local-skew/compute-local-s
 import { localSkewSvg } from "../../../fixtures/local-skew/local-skew-svg"
 import {
   PairBoard,
+  renderPairBoard,
   type PairPathPoint,
 } from "../../../fixtures/local-skew/pair-board"
 
@@ -15,7 +16,10 @@ const VIA_HOP: PairPathPoint[] = [
 ]
 
 /** Renders a two-board panel: one 1.6 mm JLCPCB preset board and one plain 0.8 mm board. */
-function renderPanel(stackupFirst: boolean): CircuitJson {
+function renderPanel(
+  stackupFirst: boolean,
+  subcircuitName?: string,
+): CircuitJson {
   const stackupBoard = (
     <PairBoard
       pairName="STACKUP"
@@ -29,6 +33,7 @@ function renderPanel(stackupFirst: boolean): CircuitJson {
   const plainBoard = (
     <PairBoard
       pairName="PLAIN"
+      subcircuitName={subcircuitName}
       positivePath={[]}
       negativePath={VIA_HOP}
       pcbTraceGap="0.45mm"
@@ -51,13 +56,26 @@ test("each board in a panel uses only its own stackup or thickness, never a neig
   const stackupFirstJson = renderPanel(true)
   const plainFirstJson = renderPanel(false)
 
-  for (const circuitJson of [stackupFirstJson, plainFirstJson]) {
+  for (const circuitJson of [
+    stackupFirstJson,
+    plainFirstJson,
+    renderPanel(true, "G"),
+  ]) {
     const pairs = computeLocalSkew(circuitJson)
     const stackupPair = pairs.find((pair) => pair.name === "STACKUP")
     const plainPair = pairs.find((pair) => pair.name === "PLAIN")
     expect(stackupPair?.max_skew).toBeCloseTo(2.98, 5)
     expect(plainPair?.max_skew).toBeCloseTo(1.6, 5)
   }
+
+  const nestedPairJson = renderPairBoard({
+    subcircuitName: "G",
+    positivePath: [],
+    negativePath: VIA_HOP,
+    pcbTraceGap: "0.45mm",
+    thickness: "0.8mm",
+  })
+  expect(computeLocalSkew(nestedPairJson)[0]?.max_skew).toBeCloseTo(1.6, 5)
 
   await expect(localSkewSvg(stackupFirstJson)).toMatchSvgSnapshot(
     import.meta.path,
