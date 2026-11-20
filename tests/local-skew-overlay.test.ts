@@ -43,10 +43,22 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
             .marker,
       ),
     ).toBe("before-toggle")
-    // The detours are estimated between measured stretches, so drawn faded.
-    const interpolated = page.locator('[data-coupling="interpolated"]')
-    expect(await interpolated.first().getAttribute("opacity")).toBe("0.45")
-    expect(await interpolated.locator("line").count()).toBeGreaterThan(0)
+    // The detours are estimated between measured stretches, so drawn
+    // darker, and opaque so the copper beneath can't change their hue.
+    const estimates = await page
+      .locator('line[data-coupling="interpolated"]')
+      .evaluateAll((lines) =>
+        lines.map((line) => ({
+          stroke: line.getAttribute("stroke"),
+          opacity: getComputedStyle(line).opacity,
+        })),
+      )
+    expect(estimates.length).toBeGreaterThan(0)
+    for (const { stroke, opacity } of estimates) {
+      expect(opacity).toBe("1")
+      const channels = (stroke?.match(/\d+/g) ?? []).map(Number)
+      expect(Math.max(...channels)).toBeLessThanOrEqual(141)
+    }
 
     // Read the real rendered pixels, so a hidden or covered overlay fails.
     const positive = await screenPointOf({ page, x: 0, y: 0.3 })

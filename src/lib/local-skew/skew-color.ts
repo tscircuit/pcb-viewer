@@ -14,33 +14,46 @@ const SHORTER_COLOR: Rgb = [77, 141, 255]
 export const UNKNOWN_SKEW_COLOR = "rgb(136, 136, 136)"
 
 /**
+ * Brightness of estimated (interpolated) skew relative to measured. Dimmed
+ * rather than made translucent, so the copper beneath can't shift its hue.
+ */
+const ESTIMATE_BRIGHTNESS = 0.55
+
+/**
  * The overlay colour for a local skew: it blends from the in-step colour
  * to the longer or shorter colour, reaching it at `fullScale` mm. A zero
  * `fullScale` (a zero-skew limit) gives the full colour for any skew.
+ * Estimates are drawn darker.
  */
 export function skewColor({
   skew,
   fullScale,
+  isEstimate = false,
 }: {
   skew: number | null
   /** Skew, in mm, that gets the full longer or shorter colour. */
   fullScale: number
+  isEstimate?: boolean
 }): string {
   if (skew === null) return UNKNOWN_SKEW_COLOR
-  if (skew === 0) return toCss(IN_STEP_COLOR)
 
   let fraction = 1
   if (fullScale > 0) fraction = Math.min(1, Math.abs(skew) / fullScale)
+  if (skew === 0) fraction = 0
   let target = SHORTER_COLOR
   if (skew > 0) target = LONGER_COLOR
-  return toCss([
-    blend({ from: IN_STEP_COLOR[0], to: target[0], fraction }),
-    blend({ from: IN_STEP_COLOR[1], to: target[1], fraction }),
-    blend({ from: IN_STEP_COLOR[2], to: target[2], fraction }),
-  ])
+  let brightness = 1
+  if (isEstimate) brightness = ESTIMATE_BRIGHTNESS
+  return toCss(
+    IN_STEP_COLOR.map((channel, index) =>
+      Math.round(
+        brightness * blend({ from: channel, to: target[index], fraction }),
+      ),
+    ) as Rgb,
+  )
 }
 
-/** A channel value `fraction` of the way from `from` to `to`, rounded. */
+/** A channel value `fraction` of the way from `from` to `to`. */
 function blend({
   from,
   to,
@@ -50,7 +63,7 @@ function blend({
   to: number
   fraction: number
 }): number {
-  return Math.round(from + (to - from) * fraction)
+  return from + (to - from) * fraction
 }
 
 /** Formats a colour for CSS and SVG. */

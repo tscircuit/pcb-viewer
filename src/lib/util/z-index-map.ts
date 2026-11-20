@@ -4,7 +4,6 @@ export const zIndexMap = {
   errorOverlay: 40,
   pcbGroupOverlay: 35,
   ratsNestOverlay: 30,
-  localSkewOverlay: 31,
   localSkewReadout: 41,
   toolbarOverlay: 70,
   warnings: 30,

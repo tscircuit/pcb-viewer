@@ -1,4 +1,4 @@
-import type { Point } from "@tscircuit/math-utils"
+import { type Point, pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import {
   type CSSProperties,
@@ -20,9 +20,9 @@ import { getCopperLayerRefsFromElements } from "../lib/copper-layers"
 import { getCanvasLayerZIndexes } from "../lib/Drawer"
 import {
   type LocalSkewPair,
-  type LocalSkewSegment,
   computeLocalSkew,
 } from "../lib/local-skew/compute-local-skew"
+import { describeSkew } from "../lib/local-skew/describe-skew"
 import { fullScaleFor, skewColor } from "../lib/local-skew/skew-color"
 import { zIndexMap } from "../lib/util/z-index-map"
 
@@ -32,23 +32,18 @@ const OVERLAY_WIDTH_FACTOR = 1.1
 /** Keep overlay lines visible, in screen pixels, when zoomed far out. */
 const MIN_STROKE_PIXELS = 2
 
-/** Interpolated stretches are drawn at this opacity, so estimates read as fainter than measurements. */
-const INTERPOLATED_OPACITY = 0.45
-
 /** Extra reach, in screen pixels, beyond a line's drawn half-width that still hovers it. */
 const HOVER_SLACK_PIXELS = 2
 
 /** Gap between the pointer and the readout, in screen pixels. The trace tooltip sits below-right, so the readout goes above. */
 const READOUT_OFFSET_PIXELS = 12
 
-/** Below this distance from the viewer's top, in pixels, the readout goes below the pointer so it stays visible. */
-const READOUT_FLIP_PIXELS = 48
-
-/** Keep the readout this far inside the viewer's edges, in pixels. */
-const READOUT_MARGIN_PIXELS = 4
-
-/** Decimal places shown for skew in mm (1 µm). */
-const READOUT_DECIMALS = 3
+/**
+ * Closer than this to the viewer's top, in pixels, a readout above the
+ * pointer would run under the toolbar (about 45 px) or off the viewer, so
+ * it goes below the pointer instead.
+ */
+const READOUT_FLIP_PIXELS = 100
 
 /** An overlay segment, by pair, side and index. */
 type SegmentRef = {
@@ -57,17 +52,16 @@ type SegmentRef = {
   segmentIndex: number
 }
 
-/** The hovered segment and where to place the readout, in viewer pixels. */
-type HoveredSkew = SegmentRef & {
+/** The pointer position in the viewer, in pixels. */
+type Pointer = {
   x: number
   y: number
   viewerWidth: number
 }
 
-/** Overlay lines grouped for drawing: by layer, then by coupling, then by stroke width. */
+/** Overlay lines grouped for drawing: by layer, then by stroke width. */
 type LineGroup = {
   layer: LayerRef
-  interpolated: boolean
   width: number
   lines: ReactElement[]
 }
@@ -92,7 +86,7 @@ export const LocalSkewOverlay = ({
   const isShowingLocalSkew = useGlobalStore((s) => s.is_showing_local_skew)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
-  const [hovered, setHovered] = useState<HoveredSkew | null>(null)
+  const [pointer, setPointer] = useState<Pointer | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const pairs = useMemo(() => {
@@ -111,61 +105,51 @@ export const LocalSkewOverlay = ({
       getCanvasLayerZIndexes({ innerLayers, foregroundLayer: selectedLayer }),
     [innerLayers, selectedLayer],
   )
-
-  const matrix = transform ?? identity()
-  const pixelsPerMm = Math.hypot(matrix.a, matrix.b)
-
   // Built without the zoom, so zooming only changes group attributes.
   const groups = useMemo(() => groupLines({ pairs }), [pairs])
+  const isShown = pairs.length > 0 && !isXRayActive
 
-  // Hover is read from the viewer's own pointer events, so the overlay never
-  // captures the pointer. A readout would be stale once the board, view or
-  // visible layers change, so it clears then.
+  // The pointer is read from the viewer's own events, so the overlay never
+  // captures it. The segment under it is found at render, so the readout
+  // follows zooming, panning and layer changes without the mouse moving.
   useEffect(() => {
-    setHovered(null)
+    setPointer(null)
     const viewer = containerRef.current?.parentElement
-    if (!viewer || pairs.length === 0 || isXRayActive) return
-    const view = transform ?? identity()
+    if (!viewer || !isShown) return
     const onMove = (event: MouseEvent) => {
       const bounds = viewer.getBoundingClientRect()
-      const x = event.clientX - bounds.left
-      const y = event.clientY - bounds.top
-      const segment = segmentUnderPointer({
-        pairs,
-        point: applyToPoint(inverse(view), { x, y }),
-        pixelsPerMm: Math.hypot(view.a, view.b),
-        zIndexes,
-        opacityOf: (layer) =>
-          layerOpacity({ layer, selectedLayer, hiddenLayerOpacity }),
+      setPointer({
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+        viewerWidth: bounds.width,
       })
-      if (!segment) {
-        setHovered(null)
-        return
-      }
-      setHovered({ ...segment, x, y, viewerWidth: bounds.width })
     }
-    const onLeave = () => setHovered(null)
+    const onLeave = () => setPointer(null)
     viewer.addEventListener("mousemove", onMove)
     viewer.addEventListener("mouseleave", onLeave)
     return () => {
       viewer.removeEventListener("mousemove", onMove)
       viewer.removeEventListener("mouseleave", onLeave)
     }
-  }, [
-    pairs,
-    transform,
-    zIndexes,
-    selectedLayer,
-    hiddenLayerOpacity,
-    isXRayActive,
-  ])
+  }, [isShown])
 
-  if (pairs.length === 0 || isXRayActive) return null
+  if (!isShown) return null
 
+  const matrix = transform ?? identity()
+  const pixelsPerMm = Math.hypot(matrix.a, matrix.b)
+  const opacityOf = (layer: LayerRef) =>
+    layerOpacity({ layer, selectedLayer, hiddenLayerOpacity })
+  let hovered: SegmentRef | null = null
+  if (pointer) {
+    hovered = segmentUnderPointer({
+      pairs,
+      point: applyToPoint(inverse(matrix), pointer),
+      pixelsPerMm,
+      zIndexes,
+      opacityOf,
+    })
+  }
   const layers = [...new Set(groups.map((group) => group.layer))]
-  const hoveredPair = hovered ? pairs[hovered.pairIndex] : undefined
-  const hoveredSegment =
-    hovered && hoveredPair?.[hovered.side].segments[hovered.segmentIndex]
 
   return (
     <div
@@ -181,11 +165,7 @@ export const LocalSkewOverlay = ({
       }}
     >
       {layers.map((layer) => {
-        const opacity = layerOpacity({
-          layer,
-          selectedLayer,
-          hiddenLayerOpacity,
-        })
+        const opacity = opacityOf(layer)
         if (opacity === 0) return null
         return (
           <svg
@@ -198,43 +178,39 @@ export const LocalSkewOverlay = ({
               top: 0,
               width: "100%",
               height: "100%",
-              zIndex: zIndexes.get(layer) ?? zIndexMap.localSkewOverlay,
+              zIndex: zIndexes.get(layer) ?? 0,
             }}
           >
             <g transform={toSVG(matrix)} strokeLinecap="round">
               {groups
                 .filter((group) => group.layer === layer)
-                .map((group) => {
-                  let groupOpacity = 1
-                  let coupling = "measured"
-                  if (group.interpolated) {
-                    groupOpacity = INTERPOLATED_OPACITY
-                    coupling = "interpolated"
-                  }
-                  return (
-                    <g
-                      key={`${group.interpolated}-${group.width}`}
-                      data-coupling={coupling}
-                      opacity={groupOpacity}
-                      strokeWidth={strokeWidth({
-                        width: group.width,
-                        pixelsPerMm,
-                      })}
-                    >
-                      {group.lines}
-                    </g>
-                  )
-                })}
+                .map((group) => (
+                  <g
+                    key={group.width}
+                    strokeWidth={strokeWidth({
+                      width: group.width,
+                      pixelsPerMm,
+                    })}
+                  >
+                    {group.lines}
+                  </g>
+                ))}
             </g>
           </svg>
         )
       })}
-      {hovered && hoveredPair && hoveredSegment && (
+      {pointer && hovered && (
         <div
           className="pcb-local-skew-readout"
-          style={readoutPlacement(hovered)}
+          style={readoutPlacement(pointer)}
         >
-          {describeSkew({ pair: hoveredPair, segment: hoveredSegment })}
+          {describeSkew({
+            pair: pairs[hovered.pairIndex],
+            segment:
+              pairs[hovered.pairIndex][hovered.side].segments[
+                hovered.segmentIndex
+              ],
+          })}
         </div>
       )}
     </div>
@@ -252,41 +228,40 @@ function strokeWidth({
   return Math.max(width * OVERLAY_WIDTH_FACTOR, MIN_STROKE_PIXELS / pixelsPerMm)
 }
 
-/** Turns pairs into lines grouped by layer, interpolated or not, and copper width. */
+/** Turns pairs into lines grouped by layer and copper width. */
 function groupLines({ pairs }: { pairs: LocalSkewPair[] }): LineGroup[] {
   const groups = new Map<string, LineGroup>()
-  pairs.forEach((pair, pairIndex) => {
+  for (const pair of pairs) {
     const fullScale = fullScaleFor({
       maxLengthSkew: pair.max_length_skew,
       maxSkew: pair.max_skew,
     })
     for (const side of ["positive", "negative"] as const) {
       pair[side].segments.forEach((segment, segmentIndex) => {
-        const interpolated = segment.coupling === "interpolated"
-        const key = `${segment.layer}|${interpolated}|${segment.width}`
+        const key = `${segment.layer}|${segment.width}`
         let group = groups.get(key)
         if (!group) {
-          group = {
-            layer: segment.layer,
-            interpolated,
-            width: segment.width,
-            lines: [],
-          }
+          group = { layer: segment.layer, width: segment.width, lines: [] }
           groups.set(key, group)
         }
         group.lines.push(
           <line
             key={`${pair.source_bus_id}-${side}-${segmentIndex}`}
+            data-coupling={segment.coupling}
             x1={segment.start.x}
             y1={segment.start.y}
             x2={segment.end.x}
             y2={segment.end.y}
-            stroke={skewColor({ skew: segment.skew, fullScale })}
+            stroke={skewColor({
+              skew: segment.skew,
+              fullScale,
+              isEstimate: segment.coupling === "interpolated",
+            })}
           />,
         )
       })
     }
-  })
+  }
   return [...groups.values()]
 }
 
@@ -315,7 +290,11 @@ function segmentUnderPointer({
     for (const side of ["positive", "negative"] as const) {
       pair[side].segments.forEach((segment, segmentIndex) => {
         if (opacityOf(segment.layer) === 0) return
-        const distance = distanceToSegment({ segment, point })
+        const distance = pointToSegmentDistance(
+          point,
+          segment.start,
+          segment.end,
+        )
         const reach =
           strokeWidth({ width: segment.width, pixelsPerMm }) / 2 +
           HOVER_SLACK_PIXELS / pixelsPerMm
@@ -332,47 +311,16 @@ function segmentUnderPointer({
   return best
 }
 
-/** Distance from a point to a segment, in mm. */
-function distanceToSegment({
-  segment,
-  point,
-}: {
-  segment: LocalSkewSegment
-  point: Point
-}): number {
-  const dx = segment.end.x - segment.start.x
-  const dy = segment.end.y - segment.start.y
-  const lengthSquared = dx * dx + dy * dy
-  let t = 0
-  if (lengthSquared > 0) {
-    t =
-      ((point.x - segment.start.x) * dx + (point.y - segment.start.y) * dy) /
-      lengthSquared
-    t = Math.max(0, Math.min(1, t))
-  }
-  return Math.hypot(
-    point.x - (segment.start.x + t * dx),
-    point.y - (segment.start.y + t * dy),
-  )
-}
-
 /**
  * Places the readout above the pointer, clear of the trace tooltip below
- * it, or below the pointer near the viewer's top edge. It opens to the
- * left in the viewer's right half, so it stays inside.
+ * it, or below the pointer near the viewer's top. It opens to the left in
+ * the viewer's right half, so it stays inside.
  */
-function readoutPlacement(hovered: HoveredSkew): CSSProperties {
-  let top = hovered.y - READOUT_OFFSET_PIXELS
-  let transform = "translateY(-100%)"
-  if (hovered.y < READOUT_FLIP_PIXELS) {
-    top = hovered.y + READOUT_OFFSET_PIXELS
-    transform = "none"
-  }
+function readoutPlacement(pointer: Pointer): CSSProperties {
   const placement: CSSProperties = {
     position: "absolute",
-    top,
-    transform,
-    maxWidth: hovered.viewerWidth - 2 * READOUT_MARGIN_PIXELS,
+    top: pointer.y - READOUT_OFFSET_PIXELS,
+    transform: "translateY(-100%)",
     zIndex: zIndexMap.localSkewReadout,
     pointerEvents: "none",
     background: "#222",
@@ -382,17 +330,15 @@ function readoutPlacement(hovered: HoveredSkew): CSSProperties {
     padding: "4px 6px",
     font: "12px sans-serif",
   }
-  if (hovered.x > hovered.viewerWidth / 2) {
-    placement.right = Math.max(
-      READOUT_MARGIN_PIXELS,
-      hovered.viewerWidth - hovered.x + READOUT_OFFSET_PIXELS,
-    )
+  if (pointer.y < READOUT_FLIP_PIXELS) {
+    placement.top = pointer.y + READOUT_OFFSET_PIXELS
+    placement.transform = "none"
+  }
+  if (pointer.x > pointer.viewerWidth / 2) {
+    placement.right = pointer.viewerWidth - pointer.x + READOUT_OFFSET_PIXELS
     return placement
   }
-  placement.left = Math.max(
-    READOUT_MARGIN_PIXELS,
-    hovered.x + READOUT_OFFSET_PIXELS,
-  )
+  placement.left = pointer.x + READOUT_OFFSET_PIXELS
   return placement
 }
 
@@ -408,40 +354,4 @@ function layerOpacity({
 }): number {
   if (layer === selectedLayer) return 1
   return hiddenLayerOpacity
-}
-
-/** The readout, e.g. "USB: 1.236 mm longer than its partner (measured) · max 1.236 mm · limit 0.100 mm". */
-function describeSkew({
-  pair,
-  segment,
-}: {
-  pair: LocalSkewPair
-  segment: LocalSkewSegment
-}): string {
-  let local = "skew unknown (traces not running together)"
-  if (segment.skew !== null) {
-    let source = "measured"
-    if (segment.coupling === "interpolated") source = "interpolated"
-    local = `in step with its partner (${source})`
-    const size = formatMm(Math.abs(segment.skew))
-    if (size !== formatMm(0)) {
-      let comparison = "longer than"
-      if (segment.skew < 0) comparison = "shorter than"
-      local = `${size} ${comparison} its partner (${source})`
-    }
-  }
-
-  let description = `${pair.name ?? "Pair"}: ${local}`
-  if (pair.max_skew !== null) {
-    description += ` · max ${formatMm(pair.max_skew)}`
-  }
-  if (pair.max_length_skew !== undefined) {
-    description += ` · limit ${formatMm(pair.max_length_skew)}`
-  }
-  return description
-}
-
-/** Formats a non-negative length in mm at the readout precision. */
-function formatMm(mm: number): string {
-  return `${mm.toFixed(READOUT_DECIMALS)} mm`
 }
