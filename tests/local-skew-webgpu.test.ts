@@ -13,7 +13,8 @@ test("the default WebGPU renderer paints local skew over the composite copper", 
     renderer: "webgpu",
   })
   try {
-    // The opaque top trace at this point covers the bottom skew in Canvas.
+    // The test drawer paints opaque copper here. With the real GPU drawer,
+    // this point coincides with the crossing's opaque top trace.
     const point = await screenPointOf({ page, x: -4, y: 0.3 })
     const [pixel] = await screenshotPixelsAt({ page, points: [point] })
     expect(pixel[1]).toBeGreaterThan(100)
