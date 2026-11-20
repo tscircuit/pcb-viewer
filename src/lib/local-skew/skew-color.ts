@@ -43,18 +43,13 @@ export function skewColor({
   fullScale,
 }: {
   skew: number | null
-  /** Skew magnitude, in mm, that reaches full blue or red, or per-sign scales from `LocalSkewTrace.scale`. */
-  fullScale: number | SkewScale
+  /** Per-sign full-scale skew magnitudes, in mm, from `LocalSkewTrace.scale`. */
+  fullScale: SkewScale
 }): string {
   if (skew === null) return UNKNOWN_SKEW_COLOR
   if (Math.abs(skew) < ZERO_SKEW_THRESHOLD) return toCss(ZERO_SKEW_COLOR)
 
-  const limit =
-    typeof fullScale === "number"
-      ? fullScale
-      : skew > 0
-        ? fullScale.positive
-        : fullScale.negative
+  const limit = skew > 0 ? fullScale.positive : fullScale.negative
   const fraction = limit > 0 ? Math.min(1, Math.abs(skew) / limit) : 1
   const target = skew > 0 ? POSITIVE_SKEW_COLOR : NEGATIVE_SKEW_COLOR
   return toCss(
