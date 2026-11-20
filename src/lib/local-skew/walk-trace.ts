@@ -277,13 +277,7 @@ function stackupLayerDistance({
   for (let index = start; index <= end; index++) {
     const layer = stackup.layers[index]
     const { thickness } = layer
-    if (
-      thickness === undefined ||
-      !Number.isFinite(thickness) ||
-      thickness < 0
-    ) {
-      return undefined
-    }
+    if (thickness === undefined) return undefined
     if (
       layer.layer_type === "copper" &&
       (index === start || index === end) &&

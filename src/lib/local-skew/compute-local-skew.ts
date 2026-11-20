@@ -443,11 +443,12 @@ function skewSpans({
     if (previous) {
       const gapFrom = previous.to + previous.endVia
       const gapTo = run.from - run.startVia
-      const afterPrevious =
-        previous.endSkew + previous.endVia - previous.otherEndVia
-      const partnerHasCopperGap =
-        run.otherFrom - (previous.otherTo + previous.otherEndVia) > MIN_OVERLAP
       if (gapTo - gapFrom > MIN_OVERLAP) {
+        const afterPrevious =
+          previous.endSkew + previous.endVia - previous.otherEndVia
+        const partnerHasCopperGap =
+          run.otherFrom - (previous.otherTo + previous.otherEndVia) >
+          MIN_OVERLAP
         // If the partner had only a single via between the two runs, that via
         // was already accounted for at `previous.otherEndVia`.
         const otherStartVia = partnerHasCopperGap ? run.otherStartVia : 0
@@ -461,9 +462,6 @@ function skewSpans({
           endSkew: beforeRun,
           coupling: "interpolated",
         })
-      } else if (partnerHasCopperGap) {
-        record(afterPrevious)
-        record(run.startSkew + run.otherStartVia)
       }
     }
     record(run.startSkew)
