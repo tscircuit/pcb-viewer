@@ -31,8 +31,10 @@ type ParallelPair = {
 
 /**
  * Finds where the two traces run parallel on the same layer within the
- * pair's spacing. Each stretch of copper is matched to at most one stretch
- * of its partner, and the matches keep route order on both traces.
+ * pair's spacing, then checks the steps strictly before the first run and
+ * after the last run at the source/load pad centre distance so wider pad
+ * fan-outs still couple. Each stretch of copper is matched to at most one
+ * stretch of its partner, and the matches keep route order on both traces.
  */
 export function findCoupledRuns({
   positive,
@@ -42,6 +44,64 @@ export function findCoupledRuns({
   positive: TraceStep[]
   negative: TraceStep[]
   /** Edge-to-edge copper gap, in mm. Without it, any spacing up to {@link UNSET_GAP_REACH_WIDTHS} widths counts. */
+  traceGap: number | undefined
+}): CoupledRun[] {
+  const mainRuns = findRunsAtGap({ positive, negative, traceGap })
+  if (mainRuns.length === 0) return []
+
+  const first = mainRuns[0]
+  const last = mainRuns[mainRuns.length - 1]
+  const positiveBefore = positive.filter(
+    (step) =>
+      step.startDistance + step.length <= first.positiveStart + MIN_OVERLAP,
+  )
+  const negativeBefore = negative.filter(
+    (step) =>
+      step.startDistance + step.length <= first.negativeStart + MIN_OVERLAP,
+  )
+  const beforeRuns =
+    positiveBefore.length > 0 && negativeBefore.length > 0
+      ? findRunsAtGap({
+          positive: positiveBefore,
+          negative: negativeBefore,
+          traceGap: Math.hypot(
+            positive[0].start.x - negative[0].start.x,
+            positive[0].start.y - negative[0].start.y,
+          ),
+        })
+      : []
+
+  const positiveAfter = positive.filter(
+    (step) => step.startDistance >= last.positiveEnd - MIN_OVERLAP,
+  )
+  const negativeAfter = negative.filter(
+    (step) => step.startDistance >= last.negativeEnd - MIN_OVERLAP,
+  )
+  const afterRuns =
+    positiveAfter.length > 0 && negativeAfter.length > 0
+      ? findRunsAtGap({
+          positive: positiveAfter,
+          negative: negativeAfter,
+          traceGap: Math.hypot(
+            positive[positive.length - 1].end.x -
+              negative[negative.length - 1].end.x,
+            positive[positive.length - 1].end.y -
+              negative[negative.length - 1].end.y,
+          ),
+        })
+      : []
+
+  return [...beforeRuns, ...mainRuns, ...afterRuns]
+}
+
+/** One pass of parallel-run coupling at a single gap limit. */
+function findRunsAtGap({
+  positive,
+  negative,
+  traceGap,
+}: {
+  positive: TraceStep[]
+  negative: TraceStep[]
   traceGap: number | undefined
 }): CoupledRun[] {
   const widest = widestStep({ steps: positive.concat(negative) })

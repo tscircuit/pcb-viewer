@@ -29,12 +29,16 @@ export type PairBoardProps = {
   thickness?: string
   /** Optional fabricator preset, which emits a `pcb_stackup`. */
   fabricatorPreset?: "jlcpcb_standard"
+  /** Half the centre-to-centre distance between the source pads, in mm. Defaults to 0.3. */
+  sourcePadHalfPitch?: number
+  /** Half the centre-to-centre distance between the load pads, in mm. Defaults to 0.3. */
+  loadPadHalfPitch?: number
 }
 
 /**
  * A board with source pads at x = -12 and load pads at x = 12.
- * The positive trace's pads are at y = 0.3 and the negative's at y = -0.3,
- * so a straight pair is 0.6 mm apart centre to centre with 0.15 mm traces.
+ * By default the positive trace's pads are at y = 0.3 and the negative's at
+ * y = -0.3, so a straight pair is 0.6 mm apart centre to centre with 0.15 mm traces.
  */
 export function PairBoard({
   positivePath,
@@ -46,6 +50,8 @@ export function PairBoard({
   layers = 2,
   thickness,
   fabricatorPreset,
+  sourcePadHalfPitch = 0.3,
+  loadPadHalfPitch = 0.3,
 }: PairBoardProps): ReactElement {
   let negativeFrom = ".TN_SRC > .pin1"
   let negativeTo = ".TN_LOAD > .pin1"
@@ -69,7 +75,7 @@ export function PairBoard({
         padDiameter="0.3mm"
         doNotPlace
         pcbX={-12}
-        pcbY={0.3}
+        pcbY={sourcePadHalfPitch}
       />
       <testpoint
         name="TN_SRC"
@@ -77,7 +83,7 @@ export function PairBoard({
         padDiameter="0.3mm"
         doNotPlace
         pcbX={-12}
-        pcbY={-0.3}
+        pcbY={-sourcePadHalfPitch}
       />
       <testpoint
         name="TP_LOAD"
@@ -85,7 +91,7 @@ export function PairBoard({
         padDiameter="0.3mm"
         doNotPlace
         pcbX={12}
-        pcbY={0.3}
+        pcbY={loadPadHalfPitch}
       />
       <testpoint
         name="TN_LOAD"
@@ -93,7 +99,7 @@ export function PairBoard({
         padDiameter="0.3mm"
         doNotPlace
         pcbX={12}
-        pcbY={-0.3}
+        pcbY={-loadPadHalfPitch}
       />
       <trace
         name="DP"
