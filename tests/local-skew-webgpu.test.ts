@@ -40,17 +40,28 @@ test("WebGPU local skew follows copper order in pixels and hover without replaci
     expect(Math.min(...visiblePixel)).toBeGreaterThan(100)
     expect(Math.max(...visiblePixel)).toBeLessThan(155)
 
+    const lastPick = () => page.evaluate(() => window.lastLocalSkewPick!)
+    const visiblePick = await lastPick()
     await page.mouse.move(covered.x, covered.y)
+    await page.waitForFunction(
+      (id) => (window.lastLocalSkewPick?.id ?? 0) > id,
+      visiblePick.id,
+    )
+    expect((await lastPick()).layer).toBeUndefined()
     await readout.waitFor({ state: "detached" })
     await page.keyboard.press("4")
     // Selecting bottom puts both the stroke and its tooltip above the crossing.
     await readout.waitFor()
+    const foregroundPick = await lastPick()
     await page.evaluate(() =>
       window.updateLocalSkewProps({
         localSkewColors: { zero: "lime" },
       }),
     )
-    await readout.waitFor()
+    await page.waitForFunction(
+      (id) => (window.lastLocalSkewPick?.id ?? 0) > id,
+      foregroundPick.id,
+    )
     const [foregroundPixel] = await screenshotPixelsAt({
       page,
       points: [covered],

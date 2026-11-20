@@ -30,7 +30,7 @@ type Props = {
   onRenderComplete?: () => void
 }
 
-/** Retains a GPU canvas in a worker; the UI thread sends scene/camera changes only. */
+/** Retains the board and layer strokes in the GPU worker. */
 export function WebGpuElementsRenderer(props: Props) {
   const { primitives, transform, width = 500, height = 500 } = props
   // Local skew travels as separate layer strokes to keep copper buffers retained.
@@ -281,6 +281,7 @@ export function WebGpuElementsRenderer(props: Props) {
       workerRef.current?.postMessage(viewRef.current)
   }, [transform, width, height, options, ratio])
 
+  // Re-pick for layer and visibility changes under a stationary pointer.
   const pickLayer = useCallback<PickSkewLayer>(
     (point, candidates, onPick) => {
       if (!ready.current) return
@@ -292,7 +293,6 @@ export function WebGpuElementsRenderer(props: Props) {
         point: { x: point.x * ratio, y: point.y * ratio },
         candidates,
       } satisfies WebGpuRequest)
-      // Re-pick for layer and visibility changes under a stationary pointer.
     },
     [ratio, options],
   )

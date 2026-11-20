@@ -77,7 +77,6 @@ export function LocalSkewOverlay({
   )
 
   useEffect(() => {
-    setPointer(null)
     const viewer = containerRef.current?.parentElement
     if (!viewer) return
     const onMove = (event: MouseEvent) => {
@@ -165,6 +164,7 @@ export function LocalSkewOverlay({
     )
       hovered = undefined
   }
+  const svgLayers = pickLayer ? [] : [...layers]
   const bus =
     hovered &&
     elements.find(
@@ -178,61 +178,60 @@ export function LocalSkewOverlay({
       className="pcb-local-skew-overlay"
       style={OVERLAY_STYLE}
     >
-      {!pickLayer &&
-        [...layers].map(([layer, groups]) => {
-          const opacity = opacityOf(layer)
-          if (opacity === 0) return null
-          return (
-            <svg
-              key={layer}
-              data-layer={layer}
-              opacity={opacity}
-              style={{
-                ...OVERLAY_STYLE,
-                width: "100%",
-                height: "100%",
-                zIndex: zIndexes.get(layer),
-              }}
-            >
-              <g transform={toSVG(matrix)} strokeLinecap="round">
-                {[...groups].map(([width, group]) => {
-                  const { stroke, casing } = getSkewStrokeWidths(
-                    width,
-                    pixelsPerMm,
-                  )
-                  if (casing <= stroke) return null
-                  return (
-                    <path
-                      key={width}
-                      d={group.casing}
-                      fill="none"
-                      stroke="black"
-                      strokeWidth={casing}
-                    />
-                  )
-                })}
-                {[...groups].map(([width, { lines }]) => (
-                  <g
+      {svgLayers.map(([layer, groups]) => {
+        const opacity = opacityOf(layer)
+        if (opacity === 0) return null
+        return (
+          <svg
+            key={layer}
+            data-layer={layer}
+            opacity={opacity}
+            style={{
+              ...OVERLAY_STYLE,
+              width: "100%",
+              height: "100%",
+              zIndex: zIndexes.get(layer),
+            }}
+          >
+            <g transform={toSVG(matrix)} strokeLinecap="round">
+              {[...groups].map(([width, group]) => {
+                const { stroke, casing } = getSkewStrokeWidths(
+                  width,
+                  pixelsPerMm,
+                )
+                if (casing <= stroke) return null
+                return (
+                  <path
                     key={width}
-                    strokeWidth={getSkewStrokeWidths(width, pixelsPerMm).stroke}
-                  >
-                    {lines.map(({ key, segment, color }) => (
-                      <line
-                        key={key}
-                        data-coupling={segment.coupling}
-                        x1={segment.start.x}
-                        y1={segment.start.y}
-                        x2={segment.end.x}
-                        y2={segment.end.y}
-                        stroke={color}
-                      />
-                    ))}
-                  </g>
-                ))}
-              </g>
-            </svg>
-          )
-        })}
+                    d={group.casing}
+                    fill="none"
+                    stroke="black"
+                    strokeWidth={casing}
+                  />
+                )
+              })}
+              {[...groups].map(([width, { lines }]) => (
+                <g
+                  key={width}
+                  strokeWidth={getSkewStrokeWidths(width, pixelsPerMm).stroke}
+                >
+                  {lines.map(({ key, segment, color }) => (
+                    <line
+                      key={key}
+                      data-coupling={segment.coupling}
+                      x1={segment.start.x}
+                      y1={segment.start.y}
+                      x2={segment.end.x}
+                      y2={segment.end.y}
+                      stroke={color}
+                    />
+                  ))}
+                </g>
+              ))}
+            </g>
+          </svg>
+        )
+      })}
       {pointer && hovered && (
         <div
           className="pcb-local-skew-readout"

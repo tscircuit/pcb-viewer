@@ -95,6 +95,17 @@ export async function openOverlayPage({
         window.localSkewCircuitJson = circuitJson
         window.localSkewInitialState = state
         window.localSkewRenderer = renderer
+        if (renderer === "webgpu") {
+          window.Worker = class extends Worker {
+            constructor(url: string | URL, options?: WorkerOptions) {
+              super(url, options)
+              this.addEventListener("message", ({ data }) => {
+                if (data.type === "picked-layer")
+                  window.lastLocalSkewPick = data
+              })
+            }
+          }
+        }
       },
       {
         circuitJson,

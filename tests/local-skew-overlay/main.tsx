@@ -1,6 +1,7 @@
 import type { CircuitJson } from "circuit-json"
 import type { ComponentProps } from "react"
 import { createRoot } from "react-dom/client"
+import type { WebGpuResponse } from "../../src/lib/webgpu/protocol"
 import type { State, StateProps } from "../../src/global-store"
 import { PCBViewer } from "../../src/index"
 
@@ -16,6 +17,7 @@ declare global {
     /** Viewer store fields to start from, set by the test. */
     localSkewInitialState: Partial<State>
     localSkewRenderer: "canvas" | "webgpu"
+    lastLocalSkewPick?: Extract<WebGpuResponse, { type: "picked-layer" }>
     updateLocalSkewProps: (props: SkewProps) => void
   }
 }
