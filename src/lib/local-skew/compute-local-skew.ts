@@ -7,16 +7,8 @@ import type {
   SourceTrace,
 } from "circuit-json"
 import { findCoupledRuns } from "./find-coupled-runs"
-import {
-  type PortComponents,
-  componentsSayNegativeReversed,
-  endsSayNegativeReversed,
-} from "./negative-route-direction"
-import {
-  type CoupledRun,
-  MIN_OVERLAP,
-  coupledLength,
-} from "./select-coupled-runs"
+import { isNegativeRouteReversed } from "./is-negative-route-reversed"
+import { type CoupledRun, MIN_OVERLAP } from "./select-coupled-runs"
 import {
   type TraceStep,
   type TraceWalk,
@@ -99,14 +91,7 @@ type TracesBySource = Map<SourceTrace["source_trace_id"], PcbTrace[]>
  */
 export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const tracesBySource: TracesBySource = new Map()
-  const portComponents: PortComponents = new Map()
   for (const element of circuitJson) {
-    if (element.type === "pcb_port") {
-      if (element.pcb_component_id !== undefined) {
-        portComponents.set(element.pcb_port_id, element.pcb_component_id)
-      }
-      continue
-    }
     if (element.type !== "pcb_trace") continue
     if (element.source_trace_id === undefined) continue
     const traces = tracesBySource.get(element.source_trace_id) ?? []
@@ -117,11 +102,7 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const pairs: LocalSkewPair[] = []
   for (const element of circuitJson) {
     if (element.type !== "source_bus") continue
-    const pair = computePairSkew({
-      bus: element,
-      tracesBySource,
-      portComponents,
-    })
+    const pair = computePairSkew({ bus: element, tracesBySource })
     if (pair) pairs.push(pair)
   }
   return pairs
@@ -136,11 +117,9 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
 function computePairSkew({
   bus,
   tracesBySource,
-  portComponents,
 }: {
   bus: SourceBus
   tracesBySource: TracesBySource
-  portComponents: PortComponents
 }): LocalSkewPair | null {
   const differentialPair = bus.differential_pair
   if (!differentialPair) return null
@@ -156,16 +135,19 @@ function computePairSkew({
 
   const positive = walkTrace(positiveTrace)
   if (!isMeasurable(positive)) return null
-  const forward = walkTrace(negativeTrace)
-  if (!isMeasurable(forward)) return null
-  const { negative, runs } = orientNegative({
-    positive,
-    forward,
-    byComponents: componentsSayNegativeReversed({
-      positiveTrace,
-      negativeTrace,
-      portComponents,
-    }),
+  let negative = walkTrace(negativeTrace)
+  if (!isMeasurable(negative)) return null
+  if (
+    isNegativeRouteReversed({
+      positiveSteps: positive.steps,
+      negativeSteps: negative.steps,
+    })
+  ) {
+    negative = reverseWalk(negative)
+  }
+  const runs = findCoupledRuns({
+    positive: positive.steps,
+    negative: negative.steps,
     traceGap: differentialPair.trace_gap,
   })
 
@@ -204,54 +186,16 @@ function isMeasurable(walk: TraceWalk): boolean {
   )
 }
 
-/**
- * Walks the negative trace from the end that matches the positive one and
- * finds the coupled runs. A shared component decides the direction when the
- * route ends agree with it, and the route ends decide without one. When the
- * two disagree (say a connector spans both ends of the pair), the direction
- * that couples more copper wins, the component on a tie.
- */
-function orientNegative({
-  positive,
-  forward,
-  byComponents,
-  traceGap,
-}: {
-  positive: TraceWalk
-  /** The negative trace in stored route order. */
-  forward: TraceWalk
-  byComponents: boolean | undefined
-  traceGap: number | undefined
-}): { negative: TraceWalk; runs: CoupledRun[] } {
-  const couple = (reversed: boolean) => {
-    let negative = forward
-    if (reversed) negative = reverseWalk(forward)
-    const runs = findCoupledRuns({
-      positive: positive.steps,
-      negative: negative.steps,
-      traceGap,
-    })
-    return { negative, runs }
-  }
-  const byEnds = endsSayNegativeReversed({
-    positiveSteps: positive.steps,
-    negativeSteps: forward.steps,
-  })
-  const preferred = couple(byComponents ?? byEnds)
-  if (byComponents === undefined || byComponents === byEnds) return preferred
-  const other = couple(byEnds)
-  if (coupledLength(other.runs) > coupledLength(preferred.runs) + MIN_OVERLAP) {
-    return other
-  }
-  return preferred
-}
-
 /** Largest measured skew, in mm, or null without coupled runs. */
 function maxSkew(runs: CoupledRun[]): number | null {
   if (runs.length === 0) return null
   let largest = 0
   for (const run of runs) {
-    largest = Math.max(largest, Math.abs(run.startSkew), Math.abs(run.endSkew))
+    largest = Math.max(
+      largest,
+      Math.abs(run.positiveStart - run.negativeStart),
+      Math.abs(run.positiveEnd - run.negativeEnd),
+    )
   }
   return roundSkew(largest)
 }
@@ -276,16 +220,16 @@ function skewSpans({
       return {
         from: run.positiveStart,
         to: run.positiveEnd,
-        startSkew: run.startSkew,
-        endSkew: run.endSkew,
+        startSkew: run.positiveStart - run.negativeStart,
+        endSkew: run.positiveEnd - run.negativeEnd,
         coupling: "coupled",
       }
     }
     return {
       from: run.negativeStart,
       to: run.negativeEnd,
-      startSkew: -run.startSkew,
-      endSkew: -run.endSkew,
+      startSkew: run.negativeStart - run.positiveStart,
+      endSkew: run.negativeEnd - run.positiveEnd,
       coupling: "coupled",
     }
   })
@@ -295,12 +239,13 @@ function skewSpans({
     return [unknownSpan({ from: 0, to: totalLength })]
   }
   const spans: SkewSpan[] = []
-  if (coupled[0].from > 0) {
+  // Gaps under MIN_OVERLAP are rounding at shared corners, not stretches.
+  if (coupled[0].from > MIN_OVERLAP) {
     spans.push(unknownSpan({ from: 0, to: coupled[0].from }))
   }
   coupled.forEach((span, index) => {
     const previous = coupled[index - 1]
-    if (previous && span.from > previous.to) {
+    if (previous && span.from - previous.to > MIN_OVERLAP) {
       spans.push({
         from: previous.to,
         to: span.from,
@@ -312,7 +257,7 @@ function skewSpans({
     spans.push(span)
   })
   const lastCoupled = coupled[coupled.length - 1]
-  if (lastCoupled.to < totalLength) {
+  if (totalLength - lastCoupled.to > MIN_OVERLAP) {
     spans.push(unknownSpan({ from: lastCoupled.to, to: totalLength }))
   }
   return spans
@@ -354,7 +299,7 @@ function sampleSkew({
       const span = spans[index]
       const from = Math.max(step.startDistance, span.from)
       const to = Math.min(stepEnd, span.to)
-      if (to <= from) continue
+      if (to - from <= MIN_OVERLAP) continue
 
       const pieceCount = rampPieceCount({ span, from, to })
       for (let piece = 0; piece < pieceCount; piece++) {

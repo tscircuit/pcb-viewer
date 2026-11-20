@@ -121,7 +121,7 @@ function findParallelPairs({
 
 /**
  * The part of a parallel pair where the traces overlap and stay within
- * `maxOffset` of each other, with the skew at each end. Null if none.
+ * `maxOffset` of each other. Null if none.
  */
 function clipToSpacing({
   pair,
@@ -157,17 +157,11 @@ function clipToSpacing({
   }
   if (to - from <= MIN_OVERLAP) return null
 
-  const positiveStart = positiveStep.startDistance + from
-  const positiveEnd = positiveStep.startDistance + to
-  const negativeStart = negativeDistanceAt({ pair, position: from })
-  const negativeEnd = negativeDistanceAt({ pair, position: to })
   return {
-    positiveStart,
-    positiveEnd,
-    negativeStart,
-    negativeEnd,
-    startSkew: positiveStart - negativeStart,
-    endSkew: positiveEnd - negativeEnd,
+    positiveStart: positiveStep.startDistance + from,
+    positiveEnd: positiveStep.startDistance + to,
+    negativeStart: negativeDistanceAt({ pair, position: from }),
+    negativeEnd: negativeDistanceAt({ pair, position: to }),
     offset: Math.abs(
       negativeStartOffset +
         offsetSlope * ((from + to) / 2 - negativeStartAlong),

@@ -29,6 +29,14 @@ test("a stretch where the traces split apart is marked interpolated, not measure
   const negativeApart = segmentAtX({ segments: pair.negative.segments, x: 0 })
   expect(negativeApart.coupling).toBe("interpolated")
   expect(negativeApart.skew).toBeCloseTo(6, 1)
+  // The 12 mm ramp is cut every 0.05 mm, each piece a step further along.
+  const ramp = pair.positive.segments.filter(
+    (segment) => segment.coupling === "interpolated",
+  )
+  expect(ramp).toHaveLength(240)
+  ramp.slice(1).forEach((segment, index) => {
+    expect(segment.skew ?? 0).toBeLessThan(ramp[index].skew ?? 0)
+  })
   // Only the measured stretches count toward the maximum: 12 mm of detour.
   expect(pair.max_skew).toBeCloseTo(12, 5)
 })

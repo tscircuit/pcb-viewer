@@ -42,7 +42,7 @@ export function buildStepGrid({
   return { cellSize, cells, steps }
 }
 
-/** Steps placed in a cell `step` passes through, in their original order. */
+/** Steps placed in a cell `step` passes through. */
 export function stepsNear({
   grid,
   step,
@@ -54,7 +54,7 @@ export function stepsNear({
   for (const key of cellsAlong({ step, cellSize: grid.cellSize, margin: 0 })) {
     for (const index of grid.cells.get(key) ?? []) found.add(index)
   }
-  return [...found].sort((a, b) => a - b).map((index) => grid.steps[index])
+  return [...found].map((index) => grid.steps[index])
 }
 
 /**
