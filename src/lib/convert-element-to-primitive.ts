@@ -163,27 +163,33 @@ export const convertElementToPrimitives = (
       }
       let prevX: number | null = null
       let prevY: number | null = null
+      let prevLayer: string | null = null
 
       for (const route of element.route) {
-        if (route.route_type === "wire") {
-          if (prevX !== null && prevY !== null) {
-            primitives.push({
-              _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
-              _element: element,
-              pcb_drawing_type: "line",
-              x1: prevX,
-              y1: prevY,
-              x2: route.x,
-              y2: route.y,
-              width: route.width,
-              squareCap: false,
-              layer: route.layer,
-            })
-          }
-
-          prevX = route.x
-          prevY = route.y
+        if (route.route_type !== "wire") {
+          prevX = null
+          prevY = null
+          prevLayer = null
+          continue
         }
+        if (prevX !== null && prevY !== null && prevLayer === route.layer) {
+          primitives.push({
+            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            _element: element,
+            pcb_drawing_type: "line",
+            x1: prevX,
+            y1: prevY,
+            x2: route.x,
+            y2: route.y,
+            width: route.width,
+            squareCap: false,
+            layer: route.layer,
+          })
+        }
+
+        prevX = route.x
+        prevY = route.y
+        prevLayer = route.layer
       }
 
       return primitives

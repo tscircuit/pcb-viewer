@@ -502,6 +502,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       <LocalSkewOverlay
                         transform={transform}
                         elements={elements}
+                        primitiveSpatialIndex={primitiveSpatialIndex}
                         isXRayActive={xRayElements !== undefined}
                       />
                     </WarningGraphicsOverlay>

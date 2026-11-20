@@ -94,3 +94,35 @@ export async function screenPointOf({
     { x, y },
   )
 }
+
+/** RGB colour `[red, green, blue]` read from a page screenshot. */
+export type RgbPixel = [red: number, green: number, blue: number]
+
+/** Samples rendered screenshot pixels at the given page coordinates. */
+export async function screenshotPixelsAt({
+  page,
+  points,
+}: {
+  page: Page
+  points: Point[]
+}): Promise<RgbPixel[]> {
+  const png = (await page.screenshot()).toString("base64")
+  return page.evaluate(
+    async ({ png, points }) => {
+      const image = new Image()
+      image.src = `data:image/png;base64,${png}`
+      await image.decode()
+      const canvas = document.createElement("canvas")
+      canvas.width = image.width
+      canvas.height = image.height
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(image, 0, 0)
+      return points.map((point) =>
+        Array.from(
+          ctx.getImageData(Math.round(point.x), Math.round(point.y), 1, 1).data,
+        ).slice(0, 3),
+      ) as [number, number, number][]
+    },
+    { png, points },
+  )
+}

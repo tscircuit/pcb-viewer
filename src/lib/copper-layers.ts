@@ -1,5 +1,8 @@
 import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 
+export const isCopperLayer = (layer: string): layer is LayerRef =>
+  /^(top|bottom|inner\d+)$/.test(layer)
+
 export const getCopperLayerRefs = (numLayers = 2): LayerRef[] => {
   const layerCount = Math.max(2, Math.min(10, Math.floor(numLayers)))
   return [

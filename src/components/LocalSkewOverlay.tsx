@@ -16,15 +16,25 @@ import {
   toSVG,
 } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
-import { getCopperLayerRefsFromElements } from "../lib/copper-layers"
 import { getCanvasLayerZIndexes } from "../lib/Drawer"
+import {
+  getCopperLayerRefsFromElements,
+  isCopperLayer,
+} from "../lib/copper-layers"
+import { getCopperPoursUnderPoint } from "../lib/draw-copper-pour"
 import {
   type LocalSkewPair,
   computeLocalSkew,
 } from "../lib/local-skew/compute-local-skew"
 import { describeSkew } from "../lib/local-skew/describe-skew"
 import { skewColor, skewScaleFor } from "../lib/local-skew/skew-color"
+import {
+  type PrimitiveSpatialIndex,
+  getPrimitivesNearPoint,
+} from "../lib/primitive-spatial-index"
 import { zIndexMap } from "../lib/util/z-index-map"
+import { isXRayCopper } from "../lib/x-ray-net"
+import { getPrimitivesUnderPoint } from "./MouseElementTracker"
 
 /** Draw the overlay 10% wider than the copper so it covers the trace. */
 const OVERLAY_WIDTH_FACTOR = 1.1
@@ -77,15 +87,19 @@ type LineGroup = {
 export const LocalSkewOverlay = ({
   transform,
   elements,
+  primitiveSpatialIndex,
   isXRayActive,
 }: {
   transform?: Matrix
   elements: AnyCircuitElement[]
+  primitiveSpatialIndex: PrimitiveSpatialIndex
   isXRayActive: boolean
 }): ReactElement | null => {
   const isShowingLocalSkew = useGlobalStore((s) => s.is_showing_local_skew)
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
   const hiddenLayerOpacity = useGlobalStore((s) => s.hidden_layer_opacity)
+  const isShowingCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
+  const copperPourOpacity = useGlobalStore((s) => s.copper_pour_opacity)
   const [pointer, setPointer] = useState<Pointer | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -141,13 +155,35 @@ export const LocalSkewOverlay = ({
     layerOpacity({ layer, selectedLayer, hiddenLayerOpacity })
   let hovered: SegmentRef | null = null
   if (pointer) {
-    hovered = segmentUnderPointer({
+    const point = applyToPoint(inverse(matrix), pointer)
+    const candidate = segmentUnderPointer({
       pairs,
-      point: applyToPoint(inverse(matrix), pointer),
+      point,
       pixelsPerMm,
       zIndexes,
       opacityOf,
     })
+    if (
+      candidate &&
+      !isCoveredByHigherCopper({
+        point,
+        layer:
+          pairs[candidate.pairIndex][candidate.side].segments[
+            candidate.segmentIndex
+          ].layer,
+        elements,
+        primitiveSpatialIndex,
+        selectedLayer,
+        transform: matrix,
+        pixelsPerMm,
+        zIndexes,
+        opacityOf,
+        isShowingCopperPours,
+        copperPourOpacity,
+      })
+    ) {
+      hovered = candidate
+    }
   }
   const layers = [...new Set(groups.map((group) => group.layer))]
 
@@ -305,6 +341,72 @@ function segmentUnderPointer({
     }
   })
   return best
+}
+
+/**
+ * Whether an opaque copper primitive or pour on a higher-z layer covers
+ * `point`, obscuring an overlay drawn on `layer`.
+ */
+function isCoveredByHigherCopper({
+  point,
+  layer,
+  elements,
+  primitiveSpatialIndex,
+  selectedLayer,
+  transform,
+  pixelsPerMm,
+  zIndexes,
+  opacityOf,
+  isShowingCopperPours,
+  copperPourOpacity,
+}: {
+  point: Point
+  layer: LayerRef
+  elements: AnyCircuitElement[]
+  primitiveSpatialIndex: PrimitiveSpatialIndex
+  selectedLayer: LayerRef
+  transform: Matrix
+  pixelsPerMm: number
+  zIndexes: Map<string, number>
+  opacityOf: (layer: LayerRef) => number
+  isShowingCopperPours: boolean
+  copperPourOpacity: number
+}): boolean {
+  const overlayZIndex = zIndexes.get(layer) ?? 0
+  const hits = getPrimitivesUnderPoint({
+    includeHiddenTraces: true,
+    useActualTraceWidth: true,
+    primitives: getPrimitivesNearPoint({
+      point,
+      realToScreenScale: pixelsPerMm,
+      spatialIndex: primitiveSpatialIndex,
+    }),
+    rwPoint: point,
+    selectedLayer,
+    transform,
+  })
+  const hasCoveringPrimitive = hits.some(
+    (primitive) =>
+      isXRayCopper(primitive._element) &&
+      isCopperLayer(primitive.layer) &&
+      opacityOf(primitive.layer) >= 1 &&
+      (zIndexes.get(primitive.layer) ?? 0) > overlayZIndex,
+  )
+  if (hasCoveringPrimitive) return true
+  if (!isShowingCopperPours || copperPourOpacity < 1) return false
+  const coveringPourLayers = new Set<LayerRef>()
+  for (const element of elements) {
+    if (element.type !== "pcb_copper_pour") continue
+    if (opacityOf(element.layer) < 1) continue
+    if ((zIndexes.get(element.layer) ?? 0) <= overlayZIndex) continue
+    coveringPourLayers.add(element.layer)
+  }
+  for (const pourLayer of coveringPourLayers) {
+    if (getCopperPoursUnderPoint(elements, point, pourLayer).length > 0) {
+      return true
+    }
+  }
+  return false
 }
 
 /**

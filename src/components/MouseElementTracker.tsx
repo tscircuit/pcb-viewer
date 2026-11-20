@@ -75,12 +75,14 @@ const isPointInsidePolygon = (
 
 export const getPrimitivesUnderPoint = ({
   includeHiddenTraces = false,
+  useActualTraceWidth = false,
   primitives,
   rwPoint,
   selectedLayer,
   transform,
 }: {
   includeHiddenTraces?: boolean
+  useActualTraceWidth?: boolean
   primitives: Primitive[]
   rwPoint: { x: number; y: number }
   selectedLayer: LayerRef
@@ -107,6 +109,12 @@ export const getPrimitivesUnderPoint = ({
       )
 
       const lineWidth = primitive.width || 0.5
+      if (useActualTraceWidth) {
+        if (distance <= lineWidth / 2) {
+          newMousedPrimitives.push(primitive)
+        }
+        continue
+      }
       const detectionThreshold = Math.max(lineWidth * 25, 2) / transform!.a
 
       if (distance < detectionThreshold) {
@@ -178,6 +186,16 @@ export const getPrimitivesUnderPoint = ({
       w = bounds.maxX - bounds.minX
       h = bounds.maxY - bounds.minY
     } else {
+      continue
+    }
+
+    if (useActualTraceWidth && primitive.pcb_drawing_type === "circle") {
+      if (
+        Math.hypot(primitive.x - rwPoint.x, primitive.y - rwPoint.y) <=
+        primitive.r
+      ) {
+        newMousedPrimitives.push(primitive)
+      }
       continue
     }
 
