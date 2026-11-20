@@ -79,23 +79,23 @@ type LineGroup = {
 
 /**
  * Colours each routed differential pair by its local skew when
- * "Show Local Skew" is on. Each layer's overlay is stacked right above that
- * layer's copper canvas and faded like it, so foreground copper stays on
- * top. It hides during X-ray, and shows the skew of the visible overlay
- * line under the pointer. It never takes pointer events, so panning and the
+ * "Show Local Skew" is on. On Canvas, each overlay layer sits immediately
+ * above its own copper and can be covered by foreground copper. On WebGPU,
+ * the overlay sits above the composite canvas. It hides during X-ray and
+ * shows the skew of the visible overlay line under the pointer. It never takes pointer events, so panning and the
  * viewer's own hover work as usual.
  */
 export const LocalSkewOverlay = ({
   transform,
   elements,
   pairs,
-  primitiveSpatialIndex,
+  canvasCopperIndex,
   isXRayActive,
 }: {
   transform?: Matrix
   elements: AnyCircuitElement[]
   pairs: LocalSkewPair[]
-  primitiveSpatialIndex: PrimitiveSpatialIndex
+  canvasCopperIndex?: PrimitiveSpatialIndex
   isXRayActive: boolean
 }): ReactElement | null => {
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
@@ -162,22 +162,23 @@ export const LocalSkewOverlay = ({
     })
     if (
       candidate &&
-      !isCoveredByHigherCopper({
-        point,
-        layer:
-          pairs[candidate.pairIndex][candidate.side].segments[
-            candidate.segmentIndex
-          ].layer,
-        elements,
-        primitiveSpatialIndex,
-        selectedLayer,
-        transform: matrix,
-        pixelsPerMm,
-        zIndexes,
-        opacityOf,
-        isShowingCopperPours,
-        copperPourOpacity,
-      })
+      (!canvasCopperIndex ||
+        !isCoveredByHigherCopper({
+          point,
+          layer:
+            pairs[candidate.pairIndex][candidate.side].segments[
+              candidate.segmentIndex
+            ].layer,
+          elements,
+          primitiveSpatialIndex: canvasCopperIndex,
+          selectedLayer,
+          transform: matrix,
+          pixelsPerMm,
+          zIndexes,
+          opacityOf,
+          isShowingCopperPours,
+          copperPourOpacity,
+        }))
     ) {
       hovered = candidate
     }
@@ -389,7 +390,7 @@ function isCoveredByHigherCopper({
   const overlayZIndex = zIndexes.get(layer) ?? 0
   const hits = getPrimitivesUnderPoint({
     includeHiddenTraces: true,
-    useActualTraceWidth: true,
+    usePaintedGeometry: true,
     primitives: getPrimitivesNearPoint({
       point,
       realToScreenScale: pixelsPerMm,

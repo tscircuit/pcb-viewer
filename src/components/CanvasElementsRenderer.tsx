@@ -510,7 +510,11 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                         transform={transform}
                         elements={elements}
                         pairs={localSkewPairs}
-                        primitiveSpatialIndex={primitiveSpatialIndex}
+                        canvasCopperIndex={
+                          props.renderer === "canvas"
+                            ? primitiveSpatialIndex
+                            : undefined
+                        }
                         isXRayActive={xRayElements !== undefined}
                       />
                     </WarningGraphicsOverlay>

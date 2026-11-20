@@ -1,4 +1,4 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 import {
   applyToPoint,
   compose,
@@ -6,7 +6,11 @@ import {
   translate,
 } from "transformation-matrix"
 import type { Primitive } from "./types"
-import { type Point, getExpandedStroke } from "./util/expand-stroke"
+import {
+  type Point,
+  getExpandedStroke,
+  getExpandedTaper,
+} from "./util/expand-stroke"
 import { distance } from "circuit-json"
 import { convertSmtpadRect } from "./element-to-primitive-converters/convert-smtpad-rect"
 import { convertSmtpadCircle } from "./element-to-primitive-converters/convert-smtpad-circle"
@@ -103,95 +107,90 @@ export const convertElementToPrimitives = (
 
     case "pcb_trace": {
       const primitives: Primitive[] = []
-
-      if (element.route_thickness_mode === "interpolated") {
-        // Prepare the stroke input
-        const strokeInput: Point[] = element.route.flatMap((routePoint) => {
-          if (routePoint.route_type === "through_pad") {
-            return [
-              {
-                ...routePoint.start,
-                trace_width: routePoint.width,
-              },
-              {
-                ...routePoint.end,
-                trace_width: routePoint.width,
-              },
-            ]
-          }
-
-          return [
-            {
-              x: routePoint.x,
-              y: routePoint.y,
-              trace_width:
-                routePoint.route_type === "wire" ? routePoint.width : 0.5,
-            },
-          ]
-        })
-
-        // Use getExpandedStroke to generate the polygon points
-        const expandedStroke = getExpandedStroke(strokeInput, 0.5) // Use 0.5 as default width
-
-        const layer = (element.route[0] as any).layer
-
-        // Generate a single polygon primitive from the expanded stroke
+      type Wire = Extract<PcbTrace["route"][number], { route_type: "wire" }>
+      const interpolated = element.route_thickness_mode === "interpolated"
+      let run: Wire[] = []
+      let previous: Wire | undefined
+      const pushPolygon = (points: Point[], layer: string) => {
         primitives.push({
-          _pcb_drawing_object_id: `polygon_${globalPcbDrawingObjectCount++}`,
+          _pcb_drawing_object_id: getNewPcbDrawingObjectId("polygon"),
           _element: element,
           pcb_drawing_type: "polygon",
-          points: expandedStroke,
-          layer, // same layer for all points
+          points,
+          layer,
         })
-
-        // Add circles for vias
-        element.route.forEach((r) => {
-          if (r.route_type === "via") {
-            primitives.push({
-              _pcb_drawing_object_id: `circle_${globalPcbDrawingObjectCount++}`,
-              _element: element,
-              pcb_drawing_type: "circle",
-              x: r.x,
-              y: r.y,
-              r: (r as any).outer_diameter / 2,
-              layer: (r as any).from_layer,
-            })
-          }
-        })
-
-        return primitives
       }
-      let prevX: number | null = null
-      let prevY: number | null = null
-      let prevLayer: string | null = null
+      const finishRun = () => {
+        if (run.length >= 2) {
+          pushPolygon(getExpandedStroke(run), run[0].layer)
+        }
+        run = []
+        previous = undefined
+      }
 
-      for (const route of element.route) {
-        if (route.route_type !== "wire") {
-          prevX = null
-          prevY = null
-          prevLayer = null
+      for (const [index, point] of element.route.entries()) {
+        if (point.route_type !== "wire") {
+          finishRun()
           continue
         }
-        if (prevX !== null && prevY !== null && prevLayer === route.layer) {
+        if (previous && previous.layer !== point.layer) finishRun()
+        if (interpolated) {
+          run.push(point)
+        } else if (previous) {
           primitives.push({
-            _pcb_drawing_object_id: `line_${globalPcbDrawingObjectCount++}`,
+            _pcb_drawing_object_id: getNewPcbDrawingObjectId("line"),
             _element: element,
             pcb_drawing_type: "line",
-            x1: prevX,
-            y1: prevY,
-            x2: route.x,
-            y2: route.y,
-            width: route.width,
+            x1: previous.x,
+            y1: previous.y,
+            x2: point.x,
+            y2: point.y,
+            width: previous.width,
             squareCap: false,
-            layer: route.layer,
+            layer: point.layer,
           })
         }
+        previous = point
 
-        prevX = route.x
-        prevY = route.y
-        prevLayer = route.layer
+        // An explicit taper replaces the outgoing round stroke, including
+        // when its endpoint is a via or the start of a through-pad route.
+        const { start_width, end_width, width_interpolation_mode } = point
+        if (
+          !(
+            "start_width" in point ||
+            "end_width" in point ||
+            "width_interpolation_mode" in point
+          )
+        )
+          continue
+        finishRun()
+        if (
+          !start_width ||
+          start_width !== point.width ||
+          !end_width ||
+          !width_interpolation_mode
+        )
+          continue
+        const next = element.route[index + 1]
+        if (!next) continue
+        const endLayer =
+          next.route_type === "via"
+            ? next.from_layer
+            : next.route_type === "through_pad"
+              ? next.start_layer
+              : next.layer
+        if (point.layer !== endLayer) continue
+        const end = next.route_type === "through_pad" ? next.start : next
+        const points = getExpandedTaper(
+          point,
+          end,
+          start_width,
+          end_width,
+          width_interpolation_mode,
+        )
+        if (points.length) pushPolygon(points, point.layer)
       }
-
+      finishRun()
       return primitives
     }
     // The builder currently outputs these as smtpads and holes, so pcb_via isn't

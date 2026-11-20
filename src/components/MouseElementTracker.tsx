@@ -75,14 +75,14 @@ const isPointInsidePolygon = (
 
 export const getPrimitivesUnderPoint = ({
   includeHiddenTraces = false,
-  useActualTraceWidth = false,
+  usePaintedGeometry = false,
   primitives,
   rwPoint,
   selectedLayer,
   transform,
 }: {
   includeHiddenTraces?: boolean
-  useActualTraceWidth?: boolean
+  usePaintedGeometry?: boolean
   primitives: Primitive[]
   rwPoint: { x: number; y: number }
   selectedLayer: LayerRef
@@ -109,7 +109,7 @@ export const getPrimitivesUnderPoint = ({
       )
 
       const lineWidth = primitive.width || 0.5
-      if (useActualTraceWidth) {
+      if (usePaintedGeometry) {
         if (distance <= lineWidth / 2) {
           newMousedPrimitives.push(primitive)
         }
@@ -172,6 +172,39 @@ export const getPrimitivesUnderPoint = ({
     // Handle primitives with x, y coordinates
     if (!("x" in primitive && "y" in primitive)) continue
 
+    if (usePaintedGeometry && primitive.pcb_drawing_type === "circle") {
+      if (
+        Math.hypot(primitive.x - rwPoint.x, primitive.y - rwPoint.y) <=
+        primitive.r
+      ) {
+        newMousedPrimitives.push(primitive)
+      }
+      continue
+    }
+
+    if (usePaintedGeometry && primitive.pcb_drawing_type === "rect") {
+      const angle = ((primitive.ccw_rotation ?? 0) * Math.PI) / 180
+      const dx = rwPoint.x - primitive.x
+      const dy = rwPoint.y - primitive.y
+      const localX = Math.abs(dx * Math.cos(angle) + dy * Math.sin(angle))
+      const localY = Math.abs(dy * Math.cos(angle) - dx * Math.sin(angle))
+      const halfWidth = primitive.w / 2
+      const halfHeight = primitive.h / 2
+      const radius = Math.max(
+        0,
+        Math.min(primitive.roundness ?? 0, halfWidth, halfHeight),
+      )
+      if (
+        Math.hypot(
+          Math.max(0, localX - halfWidth + radius),
+          Math.max(0, localY - halfHeight + radius),
+        ) <= radius
+      ) {
+        newMousedPrimitives.push(primitive)
+      }
+      continue
+    }
+
     let w = 0
     let h = 0
 
@@ -186,16 +219,6 @@ export const getPrimitivesUnderPoint = ({
       w = bounds.maxX - bounds.minX
       h = bounds.maxY - bounds.minY
     } else {
-      continue
-    }
-
-    if (useActualTraceWidth && primitive.pcb_drawing_type === "circle") {
-      if (
-        Math.hypot(primitive.x - rwPoint.x, primitive.y - rwPoint.y) <=
-        primitive.r
-      ) {
-        newMousedPrimitives.push(primitive)
-      }
       continue
     }
 

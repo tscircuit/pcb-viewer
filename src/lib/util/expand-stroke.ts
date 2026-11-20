@@ -1,109 +1,81 @@
-export interface Point {
-  x: number
-  y: number
-  trace_width?: number
+export type Point = { x: number; y: number }
+
+function unit(x: number, y: number): Point {
+  const length = Math.hypot(x, y)
+  return length <= Number.EPSILON
+    ? { x: 0, y: 0 }
+    : { x: x / length, y: y / length }
 }
 
-export function getExpandedStroke(
-  strokeInput: (Point | [number, number] | number[])[],
-  defaultWidth: number,
+function direction(from: Point, to: Point): Point {
+  return unit(to.x - from.x, to.y - from.y)
+}
+
+function strokePolygon(
+  sections: { center: Point; direction: Point; width: number }[],
 ): Point[] {
-  if (strokeInput.length < 2) {
-    throw new Error("Stroke must have at least two points")
+  const left: Point[] = []
+  const right: Point[] = []
+  for (const { center, direction, width } of sections) {
+    const dx = (-direction.y * width) / 2
+    const dy = (direction.x * width) / 2
+    left.push({ x: center.x + dx, y: center.y + dy })
+    right.push({ x: center.x - dx, y: center.y - dy })
   }
+  return [...left, ...right.reverse()]
+}
 
-  const stroke: Point[] = strokeInput.map((point) => {
-    if (Array.isArray(point)) {
-      return { x: point[0], y: point[1] }
-    }
-    return point as Point
-  })
-
-  const leftSide: Point[] = []
-  const rightSide: Point[] = []
-
-  function getNormal(p1: Point, p2: Point): Point {
-    const dx = p2.x - p1.x
-    const dy = p2.y - p1.y
-    const length = Math.sqrt(dx * dx + dy * dy)
-    return { x: -dy / length, y: dx / length }
-  }
-
-  function addPoint(
-    point: Point,
-    normal: Point,
-    factor: number,
-    width: number,
-  ) {
-    const halfWidth = width / 2
-    const newPoint = {
-      x: point.x + normal.x * halfWidth * factor,
-      y: point.y + normal.y * halfWidth * factor,
-    }
-    if (factor > 0) {
-      leftSide.push(newPoint)
-    } else {
-      rightSide.unshift(newPoint)
-    }
-  }
-
-  // Handle the first point
-  const firstNormal = getNormal(stroke[0]!, stroke[1]!)
-  const firstWidth = stroke[0]!.trace_width ?? defaultWidth
-  addPoint(stroke[0]!, firstNormal, 1, firstWidth)
-  addPoint(stroke[0]!, firstNormal, -1, firstWidth)
-
-  // Handle middle points
-  for (let i = 1; i < stroke.length - 1; i++) {
-    const prev = stroke[i - 1]!
-    const current = stroke[i]!
-    const next = stroke[i + 1]!
-
-    const normalPrev = getNormal(prev, current)
-    const normalNext = getNormal(current, next)
-
-    // Calculate miter line
-    const miterX = normalPrev.x + normalNext.x
-    const miterY = normalPrev.y + normalNext.y
-    const miterLength = Math.sqrt(miterX * miterX + miterY * miterY)
-
-    const currentWidth = current.trace_width ?? defaultWidth
-
-    // Check if miter is too long (sharp corner)
-    const miterLimit = 2 // Adjust this value to control when to bevel
-    if (miterLength / 2 > miterLimit * (currentWidth / 2)) {
-      // Use bevel join
-      addPoint(current, normalPrev, 1, currentWidth)
-      addPoint(current, normalNext, 1, currentWidth)
-      addPoint(current, normalPrev, -1, currentWidth)
-      addPoint(current, normalNext, -1, currentWidth)
-    } else {
-      // Use miter join
-      const scale = 1 / miterLength
-      addPoint(
-        current,
-        { x: miterX * scale, y: miterY * scale },
-        1,
-        currentWidth,
-      )
-      addPoint(
-        current,
-        { x: miterX * scale, y: miterY * scale },
-        -1,
-        currentWidth,
-      )
-    }
-  }
-
-  // Handle the last point
-  const lastNormal = getNormal(
-    stroke[stroke.length - 2]!,
-    stroke[stroke.length - 1]!,
+/** Same per-vertex bisectors and butt ends as Canvas's interpolated trace. */
+export function getExpandedStroke(
+  points: (Point & { width: number })[],
+): Point[] {
+  return strokePolygon(
+    points.map((point, index) => {
+      const incoming = direction(points[index - 1] ?? point, point)
+      const outgoing = direction(point, points[index + 1] ?? point)
+      let tangent = unit(incoming.x + outgoing.x, incoming.y + outgoing.y)
+      if (tangent.x === 0 && tangent.y === 0) {
+        tangent = incoming.x || incoming.y ? incoming : { x: 1, y: 0 }
+      }
+      return { center: point, direction: tangent, width: point.width }
+    }),
   )
-  const lastWidth = stroke[stroke.length - 1]!.trace_width ?? defaultWidth
-  addPoint(stroke[stroke.length - 1]!, lastNormal, 1, lastWidth)
-  addPoint(stroke[stroke.length - 1]!, lastNormal, -1, lastWidth)
+}
 
-  // Combine left and right sides to form a closed polygon
-  return [...leftSide, ...rightSide]
+/** Match Canvas's piecewise-linear outline for explicitly tapered wire points. */
+export function getExpandedTaper(
+  start: Point,
+  end: Point,
+  startWidth: number,
+  endWidth: number,
+  mode: "linear" | "quadratic",
+): Point[] {
+  const tangent = direction(start, end)
+  if (tangent.x === 0 && tangent.y === 0) return []
+  const delta = Math.abs(endWidth - startWidth)
+  const steps =
+    mode === "linear"
+      ? 1
+      : Math.max(
+          1,
+          Math.ceil(Math.sqrt((delta / (1e-3 + delta * 1e-6)) * (3 / 8))),
+        )
+  return strokePolygon(
+    Array.from({ length: steps + 1 }, (_, index) => {
+      const t = index / steps
+      const u = startWidth <= endWidth ? t : 1 - t
+      const width =
+        mode === "linear"
+          ? startWidth + (endWidth - startWidth) * t
+          : Math.min(startWidth, endWidth) + delta * u * u
+      return {
+        center: {
+          x: start.x + (end.x - start.x) * t,
+          y: start.y + (end.y - start.y) * t,
+        },
+        direction: tangent,
+        width,
+      }
+    }),
+  )
 }

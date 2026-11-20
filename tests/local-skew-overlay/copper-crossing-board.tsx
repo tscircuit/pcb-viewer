@@ -2,12 +2,7 @@ import { Circuit } from "@tscircuit/core"
 import type { CircuitJson } from "circuit-json"
 import type { ReactElement } from "react"
 
-/**
- * A differential pair that hops to the bottom layer across x ∈ [-6, 6]
- * (in step, white) while an ordinary 0.5 mm top copper trace covers DP
- * across x ∈ [-2, 2] at y = 0.3, leaving DN at y = -0.3 and DP at x = -4
- * uncovered.
- */
+/** A matched bottom-layer pair under top traces and a round-cornered pad. */
 export function CopperCrossingBoard(): ReactElement {
   const viaHopPath = [
     {
@@ -79,28 +74,26 @@ export function CopperCrossingBoard(): ReactElement {
         negativeConnection="DN"
         pcbTraceGap="0.45mm"
       />
-      <testpoint
-        name="CROSS_L"
-        footprintVariant="pad"
-        padDiameter="0.5mm"
-        doNotPlace
-        pcbX={-2}
-        pcbY={0.3}
+      <pcbtrace
+        route={[
+          { route_type: "wire", x: -5, y: 0, width: 0.9, layer: "top" },
+          { route_type: "wire", x: -3, y: 0, width: 0.15, layer: "top" },
+        ]}
       />
-      <testpoint
-        name="CROSS_R"
-        footprintVariant="pad"
-        padDiameter="0.5mm"
-        doNotPlace
-        pcbX={2}
-        pcbY={0.3}
+      <pcbtrace
+        route={[
+          { route_type: "wire", x: -2, y: 0, width: 0.15, layer: "top" },
+          { route_type: "wire", x: 0, y: 0, width: 0.9, layer: "top" },
+        ]}
       />
-      <trace
-        name="CROSS"
-        from=".CROSS_L > .pin1"
-        to=".CROSS_R > .pin1"
-        thickness="0.5mm"
-        pcbPath={[]}
+      <smtpad
+        shape="rect"
+        layer="top"
+        pcbX={2.5}
+        pcbY={-0.4}
+        width={2}
+        height={2}
+        cornerRadius={1}
       />
     </board>
   )
