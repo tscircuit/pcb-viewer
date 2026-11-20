@@ -23,16 +23,13 @@ import {
 } from "../lib/copper-layers"
 import type { LocalSkewPair } from "../lib/local-skew/compute-local-skew"
 import { describeSkew } from "../lib/local-skew/describe-skew"
-import { skewColor } from "../lib/local-skew/skew-color"
+import { OVERLAY_WIDTH_FACTOR, skewColor } from "../lib/local-skew/skew-color"
 import {
   type PrimitiveSpatialIndex,
   getPrimitivesNearPoint,
 } from "../lib/primitive-spatial-index"
 import { zIndexMap } from "../lib/util/z-index-map"
 import { getPrimitivesUnderPoint } from "./MouseElementTracker"
-
-/** Draw the overlay 10% wider than the copper so it covers the trace. */
-const OVERLAY_WIDTH_FACTOR = 1.1
 
 /** Keep overlay lines visible, in screen pixels, when zoomed far out. */
 const MIN_STROKE_PIXELS = 2
