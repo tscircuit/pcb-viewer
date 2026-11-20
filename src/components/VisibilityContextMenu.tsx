@@ -44,6 +44,8 @@ export const VisibilityContextMenu = ({
   onXRayGroup,
   xRayDisplayName = "Net",
   onExitXRayNet,
+  onCheckForShorts,
+  isCheckingForShorts = false,
 }: {
   component?: PadComponent
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
@@ -54,6 +56,8 @@ export const VisibilityContextMenu = ({
   onXRayGroup?: (group: XRayGroup) => void
   xRayDisplayName?: string
   onExitXRayNet?: () => void
+  onCheckForShorts?: () => void
+  isCheckingForShorts?: boolean
 }) => {
   const engine = useRenderingEngine()
   const [rendererOpen, setRendererOpen] = useState(false)
@@ -408,6 +412,23 @@ export const VisibilityContextMenu = ({
             </div>
           )}
         </div>
+      )}
+      {onCheckForShorts && (
+        <button
+          type="button"
+          role="menuitem"
+          disabled={isCheckingForShorts}
+          className={itemStyle}
+          style={
+            isCheckingForShorts ? { color: "#aaa", cursor: "default" } : {}
+          }
+          onClick={() => {
+            onCheckForShorts()
+            onClose()
+          }}
+        >
+          {isCheckingForShorts ? "Checking for Shorts…" : "Check for Shorts"}
+        </button>
       )}
       {component && onViewSchematicComponent && (
         <button

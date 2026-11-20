@@ -20,6 +20,17 @@ export const useToast = () => {
       ...opts,
     })
 
+  toast.update = (
+    toastId: Parameters<typeof ogToast.update>[0],
+    opts?: Parameters<typeof ogToast.update>[1],
+  ) =>
+    ogToast.update(toastId, {
+      containerId: pcb_viewer_id,
+      ...opts,
+    })
+
+  toast.dismiss = ogToast.dismiss
+
   // TODO add container id to this
   toast.promise = ogToast.promise
 

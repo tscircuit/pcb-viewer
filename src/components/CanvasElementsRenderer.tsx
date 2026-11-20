@@ -6,6 +6,8 @@ import {
   convertElementToPrimitives,
   createPrimitiveMetadataIndex,
 } from "lib/convert-element-to-primitive"
+import { checkForShorts } from "lib/check-shorts/check-for-shorts"
+import { convertShortsToErrorElements } from "lib/check-shorts/convert-shorts-to-error-elements"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { getHighlightedCopperPourIds } from "lib/get-highlighted-copper-pour-ids"
 import {
@@ -13,6 +15,7 @@ import {
   createPrimitiveSpatialIndex,
   getPrimitivesNearPoint,
 } from "lib/primitive-spatial-index"
+import { useToast } from "lib/toast"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 import {
@@ -100,6 +103,61 @@ function getHitTestCandidates({
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
+  const toast = useToast()
+  const [shortErrorElements, setShortErrorElements] = useState<
+    AnyCircuitElement[]
+  >([])
+  const [isCheckingForShorts, setIsCheckingForShorts] = useState(false)
+  const elementsRef = useRef(elements)
+  elementsRef.current = elements
+  // Short check results describe one circuit, drop them when it changes.
+  useEffect(() => setShortErrorElements([]), [elements])
+  // Only the error UI sees the shorts, so finding some doesn't rebuild the
+  // scene.
+  const elementsWithShortErrors = useMemo(
+    () =>
+      shortErrorElements.length > 0
+        ? [...elements, ...shortErrorElements]
+        : elements,
+    [elements, shortErrorElements],
+  )
+
+  const runShortCheck = async () => {
+    const toastId = toast("Checking for shorts…", {
+      isLoading: true,
+      autoClose: false,
+    })
+    setIsCheckingForShorts(true)
+    try {
+      const shorts = await checkForShorts(elements)
+      // The circuit changed while checking, these shorts are for the old one.
+      if (elementsRef.current !== elements) {
+        toast.dismiss(toastId)
+        return
+      }
+      setShortErrorElements(convertShortsToErrorElements(shorts))
+      toast.update(toastId, {
+        render:
+          shorts.length === 0
+            ? "No shorts detected"
+            : `${shorts.length} short${shorts.length === 1 ? "" : "s"} detected`,
+        type: shorts.length === 0 ? "success" : "error",
+        isLoading: false,
+        autoClose: 5000,
+      })
+    } catch (error) {
+      toast.update(toastId, {
+        render: `Couldn't check for shorts: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      })
+    } finally {
+      setIsCheckingForShorts(false)
+    }
+  }
   const {
     hoveredErrorId,
     focusedErrorId,
@@ -275,7 +333,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const errorRelatedIds = useMemo(() => {
     if (!activeErrorId) return []
 
-    const errorElements = elements.filter((el): el is any =>
+    const errorElements = elementsWithShortErrors.filter((el): el is any =>
       el.type.includes("error"),
     )
 
@@ -286,7 +344,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     if (!activeError) return []
 
     return getRelatedIdsForError(activeError)
-  }, [activeErrorId, elements])
+  }, [activeErrorId, elementsWithShortErrors])
 
   useEffect(() => {
     if (transform) {
@@ -304,7 +362,10 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     if (!props.width || !props.height || !props.setTransform || !focusedErrorId)
       return
 
-    const focusedError = findErrorElementById(elements, focusedErrorId)
+    const focusedError = findErrorElementById(
+      elementsWithShortErrors,
+      focusedErrorId,
+    )
 
     if (!focusedError) return
 
@@ -340,7 +401,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     })
   }, [
     focusedErrorId,
-    elements,
+    elementsWithShortErrors,
     elementIndexes,
     props.height,
     props.setTransform,
@@ -445,16 +506,21 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           cancelPanDrag={props.cancelPanDrag}
         >
           <ToolbarOverlay
-            elements={elements}
+            elements={elementsWithShortErrors}
             onSearchComponent={props.onSearchComponent}
             getNetAtPoint={getNetAtPoint}
             xRayNetIds={xRayNetIds}
             onXRayNetsChange={setXRayNetIds}
             onContextMenuOpenChange={props.onContextMenuOpenChange}
+            onCheckForShorts={runShortCheck}
+            isCheckingForShorts={isCheckingForShorts}
             getComponentAtPoint={getComponentAtPoint}
             onViewSchematicComponent={props.onViewSchematicComponent}
           >
-            <ErrorOverlay transform={transform} elements={elements}>
+            <ErrorOverlay
+              transform={transform}
+              elements={elementsWithShortErrors}
+            >
               <RatsNestOverlay
                 transform={transform}
                 soup={elements}
