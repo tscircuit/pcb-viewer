@@ -10,6 +10,10 @@ export type TraceStep = {
   /** Distance along the walk from its first point to `start`, in mm. */
   startDistance: number
   length: number
+  /** Length of any via directly before `start`, in mm. */
+  startViaLength: number
+  /** Length of any via directly after `end`, in mm. */
+  endViaLength: number
 }
 
 /** A trace's steps in walk order, and its total length including vias, in mm. */
@@ -47,7 +51,7 @@ export function walkTrace(trace: PcbTrace): TraceWalk {
   const steps: TraceStep[] = []
   let distance = 0
   let from: RouteCorner | undefined
-  let viaSinceLastStep = false
+  let pendingViaLength = 0
   for (const to of routeCorners(trace)) {
     if (from) {
       const length = Math.hypot(
@@ -61,15 +65,17 @@ export function walkTrace(trace: PcbTrace): TraceWalk {
           to,
           startDistance: distance,
           length,
-          viaSinceLastStep,
+          startViaLength: pendingViaLength,
         })
-        viaSinceLastStep = false
+        pendingViaLength = 0
       }
       distance += length
     }
     if (to.isVia) {
       distance += VIA_LENGTH
-      viaSinceLastStep = true
+      pendingViaLength += VIA_LENGTH
+      const previous = steps[steps.length - 1]
+      if (previous) previous.endViaLength += VIA_LENGTH
     }
     from = to
   }
@@ -83,7 +89,7 @@ function addStep({
   to,
   startDistance,
   length,
-  viaSinceLastStep,
+  startViaLength,
 }: {
   steps: TraceStep[]
   from: RouteCorner
@@ -91,7 +97,7 @@ function addStep({
   startDistance: number
   length: number
   /** A via between the previous step and this one adds length, so they can't be joined. */
-  viaSinceLastStep: boolean
+  startViaLength: number
 }): void {
   const step: TraceStep = {
     start: from.point,
@@ -100,11 +106,13 @@ function addStep({
     width: to.width,
     startDistance,
     length,
+    startViaLength,
+    endViaLength: 0,
   }
   const previous = steps[steps.length - 1]
   if (
     previous &&
-    !viaSinceLastStep &&
+    startViaLength === 0 &&
     continuesStraight({ previous, next: step })
   ) {
     previous.end = step.end
@@ -145,6 +153,8 @@ export function reverseWalk(walk: TraceWalk): TraceWalk {
         start: step.end,
         end: step.start,
         startDistance: walk.length - step.startDistance - step.length,
+        startViaLength: step.endViaLength,
+        endViaLength: step.startViaLength,
       }))
       .reverse(),
   }

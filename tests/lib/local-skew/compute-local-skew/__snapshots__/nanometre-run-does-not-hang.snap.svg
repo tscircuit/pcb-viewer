@@ -14,15 +14,15 @@
     <line x1="4.000001000000001" y1="-0.3" x2="4.000001000000001" y2="-3.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="4.000001000000001" y1="-3.3" x2="12" y2="-3.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="12" y1="-3.3" x2="12" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
-    <line x1="-12" y1="0.3" x2="4" y2="0.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="4" y1="0.3" x2="4.000001000000001" y2="0.3" stroke="rgb(77, 141, 255)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="4.000001000000001" y1="0.3" x2="12" y2="0.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-12" y1="-0.3" x2="-12" y2="-3.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-12" y1="-3.3" x2="4" y2="-3.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="4" y1="-3.3" x2="4" y2="-0.2999999999999998" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="4" y1="-0.3" x2="4.000001000000001" y2="-0.3" stroke="rgb(255, 77, 77)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="4.000001000000001" y1="-0.3" x2="4.000001000000001" y2="-3.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="4.000001000000001" y1="-3.3" x2="12" y2="-3.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="12" y1="-3.3" x2="12" y2="-0.2999999999999998" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="0.3" x2="4" y2="0.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="4" y1="0.3" x2="4.000001000000001" y2="0.3" stroke="rgb(255, 0, 0)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="4.000001000000001" y1="0.3" x2="12" y2="0.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="-0.3" x2="-12" y2="-3.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="-3.3" x2="4" y2="-3.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="4" y1="-3.3" x2="4" y2="-0.2999999999999998" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="4" y1="-0.3" x2="4.000001000000001" y2="-0.3" stroke="rgb(0, 0, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="4.000001000000001" y1="-0.3" x2="4.000001000000001" y2="-3.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="4.000001000000001" y1="-3.3" x2="12" y2="-3.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="12" y1="-3.3" x2="12" y2="-0.2999999999999998" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
   </g>
 </svg>
