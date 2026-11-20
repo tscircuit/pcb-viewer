@@ -2,6 +2,8 @@ import type { Point } from "@tscircuit/math-utils"
 import type {
   CircuitJson,
   LayerRef,
+  PcbBoard,
+  PcbStackup,
   PcbTrace,
   SourceBus,
   SourceTrace,
@@ -84,14 +86,23 @@ type TracesBySource = Map<SourceTrace["source_trace_id"], PcbTrace[]>
  * Computes local skew along every routed differential pair: at each point,
  * how much farther one trace has run than the other, not only at the ends.
  *
- * Distances are copper length as in `pcb_trace.trace_length` (planar
- * length plus a fixed length per via), measured from the positive trace's
- * first route point. The negative trace is walked from the end that
- * matches it.
+ * Distances are copper length (planar length plus each via's Z-distance
+ * between layers), measured from the positive trace's first route point.
+ * The negative trace is walked from the end that matches it.
  */
 export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const tracesBySource: TracesBySource = new Map()
+  const boards: PcbBoard[] = []
+  const stackups: PcbStackup[] = []
   for (const element of circuitJson) {
+    if (element.type === "pcb_board") {
+      boards.push(element)
+      continue
+    }
+    if (element.type === "pcb_stackup") {
+      stackups.push(element)
+      continue
+    }
     if (element.type !== "pcb_trace") continue
     if (element.source_trace_id === undefined) continue
     const traces = tracesBySource.get(element.source_trace_id) ?? []
@@ -102,7 +113,12 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const pairs: LocalSkewPair[] = []
   for (const element of circuitJson) {
     if (element.type !== "source_bus") continue
-    const pair = computePairSkew({ bus: element, tracesBySource })
+    const pair = computePairSkew({
+      bus: element,
+      tracesBySource,
+      boards,
+      stackups,
+    })
     if (pair) pairs.push(pair)
   }
   return pairs
@@ -117,9 +133,13 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
 function computePairSkew({
   bus,
   tracesBySource,
+  boards,
+  stackups,
 }: {
   bus: SourceBus
   tracesBySource: TracesBySource
+  boards: PcbBoard[]
+  stackups: PcbStackup[]
 }): LocalSkewPair | null {
   const differentialPair = bus.differential_pair
   if (!differentialPair) return null
@@ -133,9 +153,37 @@ function computePairSkew({
   const positiveTrace = positiveTraces[0]
   const negativeTrace = negativeTraces[0]
 
-  const positive = walkTrace(positiveTrace)
+  const subcircuitId =
+    positiveTrace.subcircuit_id ??
+    negativeTrace.subcircuit_id ??
+    bus.subcircuit_id
+  const board =
+    (subcircuitId
+      ? boards.find((candidate) => candidate.subcircuit_id === subcircuitId)
+      : undefined) ?? boards[0]
+  const stackup =
+    (board
+      ? stackups.find(
+          (candidate) => candidate.pcb_board_id === board.pcb_board_id,
+        )
+      : undefined) ??
+    (subcircuitId
+      ? stackups.find((candidate) => candidate.subcircuit_id === subcircuitId)
+      : undefined) ??
+    stackups[0]
+  const boardThickness = board?.thickness
+
+  const positive = walkTrace({
+    trace: positiveTrace,
+    stackup,
+    boardThickness,
+  })
   if (!isMeasurable(positive)) return null
-  let negative = walkTrace(negativeTrace)
+  let negative = walkTrace({
+    trace: negativeTrace,
+    stackup,
+    boardThickness,
+  })
   if (!isMeasurable(negative)) return null
   if (
     isNegativeRouteReversed({

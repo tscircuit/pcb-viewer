@@ -1,5 +1,5 @@
 import type { Point } from "@tscircuit/math-utils"
-import type { LayerRef, PcbTrace } from "circuit-json"
+import type { LayerRef, PcbStackup, PcbTrace } from "circuit-json"
 
 /** One straight copper piece of a trace, and how far along the trace it starts. */
 export type TraceStep = {
@@ -27,14 +27,11 @@ type RouteCorner = {
   point: Point
   layer: LayerRef
   width: number
-  isVia: boolean
+  viaLength: number
 }
 
-/**
- * Length each via adds, in mm: the constant core's `getTraceLength` uses
- * for `pcb_trace.trace_length` (a 1.6 mm board), so skew agrees with it.
- */
-const VIA_LENGTH = 1.6
+/** Default via length, in mm, when neither `pcb_stackup` nor `pcb_board.thickness` is present. */
+const DEFAULT_VIA_LENGTH = 1.6
 
 /**
  * Splits a trace route into straight pieces in stored route order.
@@ -42,17 +39,26 @@ const VIA_LENGTH = 1.6
  * Copper arriving at a wire point is on that wire's layer and width, the
  * same rule the viewer draws with. Copper arriving at a via is on the
  * via's `from_layer`, so the run between two vias is on the layer they
- * connect. Each via adds {@link VIA_LENGTH}, as in `pcb_trace.trace_length`.
+ * connect. A via between two different layers adds their Z-distance from
+ * `stackup`, else `boardThickness`, else {@link DEFAULT_VIA_LENGTH}.
  *
  * Consecutive pieces that continue in a straight line on the same copper
  * are joined, so how finely a route is split into points doesn't matter.
  */
-export function walkTrace(trace: PcbTrace): TraceWalk {
+export function walkTrace({
+  trace,
+  stackup,
+  boardThickness,
+}: {
+  trace: PcbTrace
+  stackup?: PcbStackup
+  boardThickness?: number
+}): TraceWalk {
   const steps: TraceStep[] = []
   let distance = 0
   let from: RouteCorner | undefined
   let pendingViaLength = 0
-  for (const to of routeCorners(trace)) {
+  for (const to of routeCorners({ trace, stackup, boardThickness })) {
     if (from) {
       const length = Math.hypot(
         to.point.x - from.point.x,
@@ -71,11 +77,11 @@ export function walkTrace(trace: PcbTrace): TraceWalk {
       }
       distance += length
     }
-    if (to.isVia) {
-      distance += VIA_LENGTH
-      pendingViaLength += VIA_LENGTH
+    if (to.viaLength > 0) {
+      distance += to.viaLength
+      pendingViaLength += to.viaLength
       const previous = steps[steps.length - 1]
-      if (previous) previous.endViaLength += VIA_LENGTH
+      if (previous) previous.endViaLength += to.viaLength
     }
     from = to
   }
@@ -161,7 +167,15 @@ export function reverseWalk(walk: TraceWalk): TraceWalk {
 }
 
 /** The route's points in order, each with the copper arriving at it. */
-function routeCorners(trace: PcbTrace): RouteCorner[] {
+function routeCorners({
+  trace,
+  stackup,
+  boardThickness,
+}: {
+  trace: PcbTrace
+  stackup?: PcbStackup
+  boardThickness?: number
+}): RouteCorner[] {
   const corners: RouteCorner[] = []
   let width = 0
   for (const routePoint of trace.route) {
@@ -171,7 +185,7 @@ function routeCorners(trace: PcbTrace): RouteCorner[] {
         point: { x: routePoint.x, y: routePoint.y },
         layer: routePoint.layer,
         width,
-        isVia: false,
+        viaLength: 0,
       })
       continue
     }
@@ -180,7 +194,12 @@ function routeCorners(trace: PcbTrace): RouteCorner[] {
         point: { x: routePoint.x, y: routePoint.y },
         layer: routePoint.from_layer,
         width,
-        isVia: true,
+        viaLength: viaLayerDistance({
+          fromLayer: routePoint.from_layer,
+          toLayer: routePoint.to_layer,
+          stackup,
+          boardThickness,
+        }),
       })
       continue
     }
@@ -190,14 +209,87 @@ function routeCorners(trace: PcbTrace): RouteCorner[] {
       point: routePoint.start,
       layer: routePoint.start_layer,
       width,
-      isVia: false,
+      viaLength: 0,
     })
     corners.push({
       point: routePoint.end,
       layer: routePoint.start_layer,
       width,
-      isVia: false,
+      viaLength: 0,
     })
   }
   return corners
+}
+
+/**
+ * Z-distance a via travels between two copper layers, in mm. Equal layers add
+ * nothing; otherwise uses `stackup` (full outer copper, half inner endpoint
+ * copper, all intervening copper and dielectrics), else `boardThickness`, else
+ * {@link DEFAULT_VIA_LENGTH}.
+ */
+function viaLayerDistance({
+  fromLayer,
+  toLayer,
+  stackup,
+  boardThickness,
+}: {
+  fromLayer: LayerRef
+  toLayer: LayerRef
+  stackup?: PcbStackup
+  boardThickness?: number
+}): number {
+  if (fromLayer === toLayer) return 0
+  if (stackup) {
+    const distance = stackupLayerDistance({ stackup, fromLayer, toLayer })
+    if (distance !== undefined) return distance
+  }
+  if (
+    boardThickness !== undefined &&
+    Number.isFinite(boardThickness) &&
+    boardThickness >= 0
+  ) {
+    return boardThickness
+  }
+  return DEFAULT_VIA_LENGTH
+}
+
+/** Z-distance between two copper layers in `stackup`, in mm, or undefined if either is missing. */
+function stackupLayerDistance({
+  stackup,
+  fromLayer,
+  toLayer,
+}: {
+  stackup: PcbStackup
+  fromLayer: LayerRef
+  toLayer: LayerRef
+}): number | undefined {
+  const fromIndex = stackup.layers.findIndex(
+    (layer) => layer.layer_type === "copper" && layer.layer === fromLayer,
+  )
+  const toIndex = stackup.layers.findIndex(
+    (layer) => layer.layer_type === "copper" && layer.layer === toLayer,
+  )
+  if (fromIndex < 0 || toIndex < 0) return undefined
+
+  const start = Math.min(fromIndex, toIndex)
+  const end = Math.max(fromIndex, toIndex)
+  let total = 0
+  for (let index = start; index <= end; index++) {
+    const layer = stackup.layers[index]
+    if (layer.layer_type === "soldermask") continue
+    if (!Number.isFinite(layer.thickness) || layer.thickness < 0) {
+      return undefined
+    }
+    if (
+      layer.layer_type === "copper" &&
+      (index === start || index === end) &&
+      layer.layer !== "top" &&
+      layer.layer !== "bottom"
+    ) {
+      total += layer.thickness / 2
+      continue
+    }
+    total += layer.thickness
+  }
+  return total
 }
