@@ -8,8 +8,16 @@ import { describeSkew } from "../../../../src/lib/local-skew/describe-skew"
 const pair: LocalSkewPair = {
   source_bus_id: "source_bus_0",
   name: "USB",
-  positive: { pcb_trace_id: "pcb_trace_0", segments: [] },
-  negative: { pcb_trace_id: "pcb_trace_1", segments: [] },
+  positive: {
+    pcb_trace_id: "pcb_trace_0",
+    segments: [],
+    scale: { positive: 0, negative: 0 },
+  },
+  negative: {
+    pcb_trace_id: "pcb_trace_1",
+    segments: [],
+    scale: { positive: 0, negative: 0 },
+  },
   max_skew: 1.23607,
   max_length_skew: 0.1,
 }

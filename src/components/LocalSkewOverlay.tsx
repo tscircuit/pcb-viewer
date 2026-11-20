@@ -24,7 +24,7 @@ import {
 import { getCopperPoursUnderPoint } from "../lib/draw-copper-pour"
 import type { LocalSkewPair } from "../lib/local-skew/compute-local-skew"
 import { describeSkew } from "../lib/local-skew/describe-skew"
-import { skewColor, skewScaleFor } from "../lib/local-skew/skew-color"
+import { skewColor } from "../lib/local-skew/skew-color"
 import {
   type PrimitiveSpatialIndex,
   getPrimitivesNearPoint,
@@ -262,7 +262,7 @@ function groupLines({ pairs }: { pairs: LocalSkewPair[] }): LineGroup[] {
   const groups = new Map<string, LineGroup>()
   for (const pair of pairs) {
     for (const side of ["positive", "negative"] as const) {
-      const fullScale = skewScaleFor(pair[side].segments)
+      const fullScale = pair[side].scale
       pair[side].segments.forEach((segment, segmentIndex) => {
         const key = `${segment.layer}|${segment.width}`
         let group = groups.get(key)
