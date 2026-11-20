@@ -33,6 +33,8 @@ export type PairBoardProps = {
   sourcePadHalfPitch?: number
   /** Half the centre-to-centre distance between the load pads, in mm. Defaults to 0.3. */
   loadPadHalfPitch?: number
+  /** Differential pair name. Defaults to "PAIR". */
+  pairName?: string
 }
 
 /**
@@ -52,6 +54,7 @@ export function PairBoard({
   fabricatorPreset,
   sourcePadHalfPitch = 0.3,
   loadPadHalfPitch = 0.3,
+  pairName = "PAIR",
 }: PairBoardProps): ReactElement {
   let negativeFrom = ".TN_SRC > .pin1"
   let negativeTo = ".TN_LOAD > .pin1"
@@ -116,7 +119,7 @@ export function PairBoard({
         pcbPath={negativePath}
       />
       <differentialpair
-        name="PAIR"
+        name={pairName}
         positiveConnection="DP"
         negativeConnection={negativeConnection}
         pcbTraceGap={pcbTraceGap}

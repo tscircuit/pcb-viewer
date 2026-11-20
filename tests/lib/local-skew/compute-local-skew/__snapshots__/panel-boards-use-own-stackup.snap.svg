@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2720" height="104" viewBox="-34 -1.3 68 2.6">
+  <title>STACKUP: max local skew 2.9800 mm; PLAIN: max local skew 1.6000 mm</title>
+  <rect x="-34" y="-1.3" width="68" height="2.6" fill="rgb(0, 16, 35)"/>
+  <g transform="scale(1 -1)">
+    <line x1="-27" y1="-0.3" x2="-14.999999999999996" y2="-0.3" stroke="rgb(128, 128, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="15" y1="-0.3" x2="27" y2="-0.3" stroke="rgb(128, 128, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <circle cx="-33" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="-33" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="-9" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="-9" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="9" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="9" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="33" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="33" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <line x1="-33" y1="0.3" x2="-9" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="9" y1="0.3" x2="33" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-33" y1="0.3" x2="-27" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-27" y1="0.3" x2="-15" y2="0.3" stroke="rgb(255, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-15" y1="0.3" x2="-9" y2="0.3" stroke="rgb(255, 0, 0)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-33" y1="-0.3" x2="-27" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-15" y1="-0.3" x2="-9" y2="-0.3" stroke="rgb(0, 0, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="9" y1="0.3" x2="15" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="15" y1="0.3" x2="27" y2="0.3" stroke="rgb(255, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="27" y1="0.3" x2="33" y2="0.3" stroke="rgb(255, 0, 0)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="9" y1="-0.3" x2="15" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="27" y1="-0.3" x2="33" y2="-0.3" stroke="rgb(0, 0, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <circle cx="-27" cy="-0.3" r="0.15" fill="rgb(255, 38, 226)"/>
+    <circle cx="-15" cy="-0.3" r="0.15" fill="rgb(255, 38, 226)"/>
+    <circle cx="15" cy="-0.3" r="0.15" fill="rgb(255, 38, 226)"/>
+    <circle cx="27" cy="-0.3" r="0.15" fill="rgb(255, 38, 226)"/>
+  </g>
+</svg>
