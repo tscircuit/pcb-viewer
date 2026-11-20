@@ -44,10 +44,9 @@ export type PickSkewLayer = (request: {
   onPick: (layer?: LayerRef) => void
 }) => void
 
-/** The renderer's last answer: the candidates it was asked about and the layer it picked. */
+/** The renderer's last answer: the candidate layers it was asked about and the one it picked. */
 type PickedLayer = {
-  pickLayer: PickSkewLayer
-  candidates: HoverCandidates
+  candidateLayers: LayerRef[]
   layer?: LayerRef
 }
 
@@ -133,11 +132,12 @@ export function LocalSkewOverlay({
   useEffect(() => {
     if (!pickLayer || !pointer || candidates.size === 0) return
     let active = true
+    const candidateLayers = [...candidates.keys()]
     pickLayer({
       pointer,
-      candidates: [...candidates.keys()],
+      candidates: candidateLayers,
       onPick: (layer) => {
-        if (active) setPicked({ pickLayer, candidates, layer })
+        if (active) setPicked({ candidateLayers, layer })
       },
     })
     return () => {
@@ -147,7 +147,7 @@ export function LocalSkewOverlay({
 
   let hovered: PaintedSegment | undefined
   if (pointer && pickLayer) {
-    hovered = pickedSegment({ picked, pickLayer, candidates })
+    hovered = pickedSegment({ picked, candidates })
   }
   if (pointer && !pickLayer) {
     hovered = frontCanvasSegment({
@@ -317,19 +317,23 @@ function findHoverCandidates({
   return candidates
 }
 
-/** The candidate on the layer the renderer picked for exactly these candidates. */
+/**
+ * The candidate on the layer the renderer last picked. While a new pick for
+ * the same candidate layers is in flight, the last answer still holds, so
+ * the readout does not blink as the pointer moves along a segment or the
+ * render options change under it.
+ */
 function pickedSegment({
   picked,
-  pickLayer,
   candidates,
 }: {
   picked: PickedLayer | undefined
-  pickLayer: PickSkewLayer
   candidates: HoverCandidates
 }): PaintedSegment | undefined {
   if (!picked?.layer) return undefined
-  if (picked.pickLayer !== pickLayer || picked.candidates !== candidates) {
-    return undefined
+  if (picked.candidateLayers.length !== candidates.size) return undefined
+  for (const layer of picked.candidateLayers) {
+    if (!candidates.has(layer)) return undefined
   }
   return candidates.get(picked.layer)
 }
