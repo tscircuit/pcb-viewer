@@ -64,6 +64,7 @@ export function groupSkewStrokes(
             positiveScale: trace.positive_skew_scale,
             negativeScale: trace.negative_skew_scale,
             colors,
+            pair,
             useLogScale,
           }),
         })

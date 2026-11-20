@@ -6,10 +6,18 @@ import {
   screenshotPixelsAt,
 } from "./local-skew-overlay/open-overlay-page"
 
-test("custom colours and KiCad's log scale change the rendered skew pixels", async () => {
+test("viewer colours override stored skew colours and respond to KiCad's log scale", async () => {
+  const circuitJson = renderAsymmetricSkewBoard()
+  const pair = circuitJson.find(
+    (element) => element.type === "pcb_differential_pair_local_skew",
+  )
+  if (!pair) throw new Error("Missing stored skew for the differential pair")
+  pair.positive_skew_color = "lime"
+  pair.negative_skew_color = "blue"
+
   const { page, errors, close } = await openOverlayPage({
     initialState: { is_showing_local_skew: true },
-    circuitJson: renderAsymmetricSkewBoard(),
+    circuitJson,
   })
   try {
     // DP at x = 0 is halfway to its negative peak; at x = -6 it reaches
@@ -18,12 +26,12 @@ test("custom colours and KiCad's log scale change the rendered skew pixels", asy
       await screenPointOf({ page, x: 0, y: 0.3 }),
       await screenPointOf({ page, x: -6, y: 0.3 }),
     ]
-    const [defaultNegative, defaultPositive] = await screenshotPixelsAt({
+    const [storedNegative, storedPositive] = await screenshotPixelsAt({
       page,
       points,
     })
-    expect(defaultNegative[0]).toBeGreaterThan(220)
-    expect(defaultPositive[2]).toBeGreaterThan(220)
+    expect(storedNegative).toEqual([128, 128, 255])
+    expect(storedPositive).toEqual([0, 255, 0])
 
     const localSkewColors = {
       zero: "#00ff00",
