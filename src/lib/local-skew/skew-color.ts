@@ -24,23 +24,6 @@ export type SkewScale = {
 }
 
 /**
- * Computes the per-sign full scales for one trace's segments: the largest
- * positive skew and the largest negative skew magnitude, in mm.
- */
-export function skewScaleFor(
-  segments: readonly { skew: number | null }[],
-): SkewScale {
-  let positive = 0
-  let negative = 0
-  for (const { skew } of segments) {
-    if (skew === null) continue
-    if (skew > positive) positive = skew
-    if (-skew > negative) negative = -skew
-  }
-  return { positive, negative }
-}
-
-/**
  * KiCad's default local-skew colour: opaque white at zero skew, linearly
  * blended to pure blue for positive skew (this trace is longer than its
  * partner) or pure red for negative skew (shorter), and 50% grey when
@@ -52,7 +35,7 @@ export function skewColor({
   fullScale,
 }: {
   skew: number | null
-  /** Skew magnitude, in mm, that reaches full blue or red, or per-sign scales from {@link skewScaleFor}. */
+  /** Skew magnitude, in mm, that reaches full blue or red, or per-sign scales from `LocalSkewTrace.scale`. */
   fullScale: number | SkewScale
 }): string {
   if (skew === null) return UNKNOWN_SKEW_COLOR

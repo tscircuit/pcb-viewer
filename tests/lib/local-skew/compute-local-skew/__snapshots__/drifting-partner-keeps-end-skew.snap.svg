@@ -12,10 +12,10 @@
     <line x1="-10" y1="-0.3" x2="10" y2="-0.4" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="10" y1="-0.4" x2="12" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="-12" y1="0.3" x2="-10" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
-    <line x1="-10" y1="0.3" x2="10" y2="0.3" stroke="rgb(255, 0, 0)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-10" y1="0.3" x2="10" y2="0.3" stroke="rgb(255, 133, 133)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
     <line x1="10" y1="0.3" x2="12" y2="0.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
     <line x1="-12" y1="-0.3" x2="-10" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
-    <line x1="-10" y1="-0.3" x2="10" y2="-0.4" stroke="rgb(0, 0, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-10" y1="-0.3" x2="10" y2="-0.4" stroke="rgb(133, 133, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
     <line x1="10" y1="-0.4" x2="12" y2="-0.29999999999999993" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
   </g>
 </svg>

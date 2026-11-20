@@ -55,10 +55,12 @@ export type LocalSkewSegment = {
   coupling: SkewCoupling
 }
 
-/** The overlay pieces for one trace of a pair. */
+/** The overlay pieces and colour scale for one trace of a pair. */
 export type LocalSkewTrace = {
   pcb_trace_id: PcbTrace["pcb_trace_id"]
   segments: LocalSkewSegment[]
+  /** Per-sign full-scale skew magnitudes from this trace's known values, in mm. */
+  scale: SkewScale
 }
 
 /** Local skew along both traces of one differential pair. */
@@ -247,6 +249,7 @@ function computePairSkew({
         steps: positive.steps,
         spans: positiveTrack.spans,
       }),
+      scale: positiveTrack.scale,
     },
     negative: {
       pcb_trace_id: negativeTrace.pcb_trace_id,
@@ -254,6 +257,7 @@ function computePairSkew({
         steps: negative.steps,
         spans: negativeTrack.spans,
       }),
+      scale: negativeTrack.scale,
     },
     max_skew:
       runs.length === 0

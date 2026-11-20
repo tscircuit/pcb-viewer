@@ -2,7 +2,7 @@ import type { AnyCircuitElement, CircuitJson, LayerRef } from "circuit-json"
 import { LAYER_NAME_TO_COLOR } from "../../../src/lib/Drawer"
 import colors from "../../../src/lib/colors"
 import { computeLocalSkew } from "../../../src/lib/local-skew/compute-local-skew"
-import { skewColor, skewScaleFor } from "../../../src/lib/local-skew/skew-color"
+import { skewColor } from "../../../src/lib/local-skew/skew-color"
 
 /** Board millimetres to snapshot pixels. */
 const PIXELS_PER_MM = 40
@@ -63,7 +63,6 @@ export function localSkewSvg(circuitJson: CircuitJson): string {
     }
     for (const pair of pairs) {
       for (const trace of [pair.positive, pair.negative]) {
-        const fullScale = skewScaleFor(trace.segments)
         for (const segment of trace.segments) {
           if (segment.layer !== layer) continue
           shapes.push(
@@ -73,7 +72,7 @@ export function localSkewSvg(circuitJson: CircuitJson): string {
               width: segment.width * SKEW_WIDTH_FACTOR,
               color: skewColor({
                 skew: segment.skew,
-                fullScale,
+                fullScale: trace.scale,
               }),
             }),
           )
