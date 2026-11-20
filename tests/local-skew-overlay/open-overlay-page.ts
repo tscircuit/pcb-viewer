@@ -117,11 +117,13 @@ export async function openOverlayPage({
           .getAttribute("data-webgpu-error")
       : null
     if (gpuError) throw new Error(gpuError)
-    await page.waitForFunction((renderer) => {
-      const selector =
-        renderer === "canvas" ? ".pcb-layer-board" : ".pcb-webgpu-canvas"
-      return document.querySelector<HTMLCanvasElement>(selector)?.width === 600
-    }, renderer)
+    if (renderer === "canvas") {
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLCanvasElement>(".pcb-layer-board")
+            ?.width === 600,
+      )
+    }
     // The initial fit is scheduled on an animation frame after measuring the viewer.
     await page.evaluate(
       () =>

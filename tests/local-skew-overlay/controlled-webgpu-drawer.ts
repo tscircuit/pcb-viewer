@@ -1,14 +1,12 @@
 import type { AnyCircuitElement } from "circuit-json"
 
-/** Exercise the real viewer and worker with an opaque copper plane in CI. */
+/** Exercise the production viewer and worker without a GPU adapter in CI. */
 export class CircuitToWebGpuDrawer {
   stats = { geometryUploads: 0, frames: 0, compileMs: 0 }
   diagnostics: Array<{ type: string; message: string }> = []
 
-  constructor(private canvas: OffscreenCanvas) {}
-
-  static async create(canvas: OffscreenCanvas) {
-    return new CircuitToWebGpuDrawer(canvas)
+  static async create() {
+    return new CircuitToWebGpuDrawer()
   }
 
   setCircuitJson(elements: AnyCircuitElement[]) {
@@ -26,9 +24,6 @@ export class CircuitToWebGpuDrawer {
   }
 
   render() {
-    const context = this.canvas.getContext("2d")!
-    context.fillStyle = "rgb(200, 52, 52)"
-    context.fillRect(0, 0, this.canvas.width, this.canvas.height)
     this.stats.frames++
   }
 

@@ -479,7 +479,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       transform={transform}
                       elements={elements}
                     >
-                      {props.renderer === "canvas" ? (
+                      {isShowingLocalSkew || props.renderer === "canvas" ? (
                         <CanvasPrimitiveRenderer
                           transform={transform}
                           primitives={primitives}
@@ -510,7 +510,6 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           elements={elements}
                           colors={props.localSkewColors}
                           useLogScale={props.localSkewUseLogScale}
-                          renderer={props.renderer}
                           showCopperPours={
                             isShowingCopperPours && copperPourOpacity > 0
                           }

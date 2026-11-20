@@ -53,14 +53,12 @@ export function LocalSkewOverlay({
   elements,
   colors,
   useLogScale,
-  renderer,
   showCopperPours,
 }: {
   transform?: Matrix
   elements: AnyCircuitElement[]
   colors?: LocalSkewColors
   useLogScale?: boolean
-  renderer?: "canvas" | "webgpu"
   showCopperPours: boolean
 }) {
   const selectedLayer = useGlobalStore((s) => s.selected_layer)
@@ -87,10 +85,10 @@ export function LocalSkewOverlay({
 
   const hitCanvasCopper = useMemo(
     () =>
-      renderer === "canvas" && hasStrokes
+      hasStrokes
         ? createCanvasCopperHitTest(elements, showCopperPours)
         : undefined,
-    [elements, hasStrokes, renderer, showCopperPours],
+    [elements, hasStrokes, showCopperPours],
   )
 
   useEffect(() => {

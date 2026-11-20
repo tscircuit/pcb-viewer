@@ -94,7 +94,7 @@ The PCBViewer component accepts these props:
 
 Choose **View → Show Local Skew** to colour the local skew recorded in the board's Circuit JSON. Hover a segment to see its measured or interpolated skew, the pair's peak, and its configured limit when available. Each trace reaches full colour at the larger of its per-sign peak and 0.001 mm. Magnitudes below 0.0005 mm use the zero-skew colour.
 
-Canvas places each skew layer over its own copper. WebGPU places the overlay over the composite board, so skew can appear over copper on higher layers.
+Enabling the overlay temporarily uses Canvas so each skew layer paints directly above its own copper. Turning it off restores the configured renderer.
 
 ### WebGPU rendering
 
@@ -118,7 +118,7 @@ triangle tessellation and can show facets at extreme zoom.
 Right-click the board and choose **Rendering Engine → Canvas** or
 **WebGPU (experimental)** to switch without resetting pan, zoom, or layer visibility.
 The `renderer` prop sets the initial selection; changing that prop updates the selection.
-Switching to Canvas always requires an explicit engine selection.
+The rendering engine preference is saved when you choose an engine from the menu.
 
 Run `bun run test:webgpu` after `bunx playwright install chromium` to test the built
 viewer bundle, AM3352 wheel zoom, resize, StrictMode cleanup, context-menu switching,
