@@ -12,11 +12,11 @@
     <line x1="-12" y1="-0.3" x2="-12" y2="-0.95" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="-12" y1="-0.95" x2="12" y2="-0.95" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="12" y1="-0.95" x2="12" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
-    <line x1="-12" y1="0.3" x2="-12" y2="2.6999999999999997" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-12" y1="2.6999999999999997" x2="12" y2="2.6999999999999997" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="12" y1="2.6999999999999997" x2="12" y2="0.30000000000000115" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-12" y1="-0.3" x2="-12" y2="-0.95" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-12" y1="-0.95" x2="12" y2="-0.95" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="12" y1="-0.95" x2="12" y2="-0.3000000000000014" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="0.3" x2="-12" y2="2.6999999999999997" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="2.6999999999999997" x2="12" y2="2.6999999999999997" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="12" y1="2.6999999999999997" x2="12" y2="0.30000000000000115" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="-0.3" x2="-12" y2="-0.95" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="-0.95" x2="12" y2="-0.95" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="12" y1="-0.95" x2="12" y2="-0.3000000000000014" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
   </g>
 </svg>
