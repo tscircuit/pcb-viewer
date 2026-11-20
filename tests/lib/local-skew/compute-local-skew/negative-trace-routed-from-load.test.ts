@@ -1,10 +1,12 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
+import { localSkewSvg } from "../../../fixtures/local-skew/local-skew-svg"
 import type { PcbTrace, SourceTrace } from "circuit-json"
 import { computeLocalSkew } from "../../../../src/lib/local-skew/compute-local-skew"
 import { renderPairBoard } from "../../../fixtures/local-skew/pair-board"
 import { segmentAtX } from "../../../fixtures/local-skew/segment-at-x"
 
-test("a negative trace routed from its load pad still lines up", () => {
+test("a negative trace routed from its load pad still lines up", async () => {
   const circuitJson = renderPairBoard({
     positivePath: [
       { x: 2, y: 0 },
@@ -36,4 +38,6 @@ test("a negative trace routed from its load pad still lines up", () => {
   expect(
     segmentAtX({ segments: pair.negative.segments, x: 0 }).skew,
   ).toBeCloseTo(-1.23607, 5)
+
+  await expect(localSkewSvg(circuitJson)).toMatchSvgSnapshot(import.meta.path)
 })

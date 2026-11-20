@@ -1,10 +1,12 @@
+import "bun-match-svg"
 import { expect, test } from "bun:test"
+import { localSkewSvg } from "../../../fixtures/local-skew/local-skew-svg"
 import type { PcbTrace } from "circuit-json"
 import { computeLocalSkew } from "../../../../src/lib/local-skew/compute-local-skew"
 import { renderPairBoard } from "../../../fixtures/local-skew/pair-board"
 import { segmentAtX } from "../../../fixtures/local-skew/segment-at-x"
 
-test("each via adds the same length to skew as to trace_length", () => {
+test("each via adds the same length to skew as to trace_length", async () => {
   // Both traces take the same path, but DN hops to the bottom layer and
   // back between x = -6 and x = 6.
   const circuitJson = renderPairBoard({
@@ -28,4 +30,6 @@ test("each via adds the same length to skew as to trace_length", () => {
   expect(after.coupling).toBe("coupled")
   expect(after.skew).toBeCloseTo(positiveLength - negativeLength, 5)
   expect(after.skew).toBeLessThan(0)
+
+  await expect(localSkewSvg(circuitJson)).toMatchSvgSnapshot(import.meta.path)
 })
