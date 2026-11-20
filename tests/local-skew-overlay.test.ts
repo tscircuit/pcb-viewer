@@ -8,10 +8,12 @@ import {
 } from "./local-skew-overlay/open-overlay-page"
 
 /**
- * Plain top copper is rgb(200, 52, 52) and its edges blend darker; the
- * overlay's "longer" red is rgb(255, 77, 77), so even blended it is brighter.
+ * Plain top copper is rgb(200, 52, 52) and its edges blend darker; KiCad's
+ * negative (shorter) overlay is rgb(255, 0, 0), so even blended it is
+ * brighter than copper, while blue/white channels exceed copper's 52 by far.
  */
 const MIN_OVERLAY_RED = 215
+const MIN_NON_RED_OVERLAY_CHANNEL = 180
 
 test("Show Local Skew colours the out-of-phase stretch without remounting the board", async () => {
   const { page, errors, close } = await openOverlayPage({ initialState: {} })
@@ -43,8 +45,8 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
             .marker,
       ),
     ).toBe("before-toggle")
-    // The detours are estimated between measured stretches, so drawn
-    // darker, and opaque so the copper beneath can't change their hue.
+    // Like KiCad, interpolated stretches are opaque and full brightness,
+    // blending linearly from white to blue or red with no darkening.
     const estimates = await page
       .locator('line[data-coupling="interpolated"]')
       .evaluateAll((lines) =>
@@ -54,13 +56,18 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
         })),
       )
     expect(estimates.length).toBeGreaterThan(0)
+    let hasBlendedEstimate = false
     for (const { stroke, opacity } of estimates) {
       expect(opacity).toBe("1")
       const channels = (stroke?.match(/\d+/g) ?? []).map(Number)
-      expect(Math.max(...channels)).toBeLessThanOrEqual(141)
+      expect(Math.max(...channels)).toBe(255)
+      const minChannel = Math.min(...channels)
+      if (minChannel > 0 && minChannel < 255) hasBlendedEstimate = true
     }
+    expect(hasBlendedEstimate).toBe(true)
 
     // Read the real rendered pixels, so a hidden or covered overlay fails.
+    const inStep = await screenPointOf({ page, x: -11, y: 0.3 })
     const positive = await screenPointOf({ page, x: 0, y: 0.3 })
     const negative = await screenPointOf({ page, x: 0, y: -0.3 })
     const screenshot = (await page.screenshot()).toString("base64")
@@ -81,13 +88,22 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
           ).slice(0, 3),
         )
       },
-      { png: screenshot, points: [positive, negative] },
+      { png: screenshot, points: [inStep, positive, negative] },
     )
-    // Thin lines blend at their edges, so check which colour dominates.
-    const [[red1, green1, blue1], [red2, green2, blue2]] = pixels
-    expect(red1).toBeGreaterThan(MIN_OVERLAY_RED)
-    expect(red1).toBeGreaterThan(2 * Math.max(green1, blue1))
-    expect(blue2).toBeGreaterThan(1.5 * Math.max(red2, green2))
+    // Thin lines blend at their edges, so check which colour dominates:
+    // white in step, blue where longer (+), red where shorter (-).
+    const [
+      [red0, green0, blue0],
+      [red1, green1, blue1],
+      [red2, green2, blue2],
+    ] = pixels
+    expect(Math.min(red0, green0, blue0)).toBeGreaterThan(
+      MIN_NON_RED_OVERLAY_CHANNEL,
+    )
+    expect(blue1).toBeGreaterThan(MIN_NON_RED_OVERLAY_CHANNEL)
+    expect(blue1).toBeGreaterThan(2 * Math.max(red1, green1))
+    expect(red2).toBeGreaterThan(MIN_OVERLAY_RED)
+    expect(red2).toBeGreaterThan(2 * Math.max(green2, blue2))
 
     // Snapshot the board canvases plus the live overlay, leaving out the
     // toolbar and labels drawn with OS fonts that differ between machines.

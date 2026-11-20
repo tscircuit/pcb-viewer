@@ -23,7 +23,7 @@ import {
   computeLocalSkew,
 } from "../lib/local-skew/compute-local-skew"
 import { describeSkew } from "../lib/local-skew/describe-skew"
-import { fullScaleFor, skewColor } from "../lib/local-skew/skew-color"
+import { skewColor, skewScaleFor } from "../lib/local-skew/skew-color"
 import { zIndexMap } from "../lib/util/z-index-map"
 
 /** Draw the overlay 10% wider than the copper so it covers the trace. */
@@ -232,11 +232,8 @@ function strokeWidth({
 function groupLines({ pairs }: { pairs: LocalSkewPair[] }): LineGroup[] {
   const groups = new Map<string, LineGroup>()
   for (const pair of pairs) {
-    const fullScale = fullScaleFor({
-      maxLengthSkew: pair.max_length_skew,
-      maxSkew: pair.max_skew,
-    })
     for (const side of ["positive", "negative"] as const) {
+      const fullScale = skewScaleFor(pair[side].segments)
       pair[side].segments.forEach((segment, segmentIndex) => {
         const key = `${segment.layer}|${segment.width}`
         let group = groups.get(key)
@@ -255,7 +252,6 @@ function groupLines({ pairs }: { pairs: LocalSkewPair[] }): LineGroup[] {
             stroke={skewColor({
               skew: segment.skew,
               fullScale,
-              isEstimate: segment.coupling === "interpolated",
             })}
           />,
         )
