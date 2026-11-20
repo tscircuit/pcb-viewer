@@ -15,28 +15,22 @@ type RouteEndComponents = {
 }
 
 /**
- * True when the negative route is stored from the other end than the
- * positive one. A shared start or end component (the same IC or connector)
- * decides it; otherwise the route ends that lie closer together are taken
- * as the same end.
+ * Whether a shared start or end component (the same IC or connector) says
+ * the negative route is stored from the other end than the positive one.
+ * Undefined when no component is shared with exactly one end (none, or all
+ * four pads on one part as on a loopback).
  */
-export function isNegativeRouteReversed({
+export function componentsSayNegativeReversed({
   positiveTrace,
   negativeTrace,
-  positiveSteps,
-  negativeSteps,
   portComponents,
 }: {
   positiveTrace: PcbTrace
   negativeTrace: PcbTrace
-  positiveSteps: TraceStep[]
-  negativeSteps: TraceStep[]
   portComponents: PortComponents
-}): boolean {
+}): boolean | undefined {
   const positive = routeEndComponents({ trace: positiveTrace, portComponents })
   const negative = routeEndComponents({ trace: negativeTrace, portComponents })
-  // A component decides only when it is shared with one end, not both
-  // (as on a loopback where all four pads are on one part).
   for (const shared of [positive.start, positive.end]) {
     if (shared === undefined) continue
     const sameEnd =
@@ -48,7 +42,20 @@ export function isNegativeRouteReversed({
     if (sameEnd && !otherEnd) return false
     if (otherEnd && !sameEnd) return true
   }
+  return undefined
+}
 
+/**
+ * Whether the route ends say the negative route is stored from the other
+ * end: true when its ends lie closer to the positive route's ends that way.
+ */
+export function endsSayNegativeReversed({
+  positiveSteps,
+  negativeSteps,
+}: {
+  positiveSteps: TraceStep[]
+  negativeSteps: TraceStep[]
+}): boolean {
   const positiveStart = positiveSteps[0].start
   const positiveEnd = positiveSteps[positiveSteps.length - 1].end
   const negativeStart = negativeSteps[0].start

@@ -9,10 +9,20 @@ import type {
 import { findCoupledRuns } from "./find-coupled-runs"
 import {
   type PortComponents,
-  isNegativeRouteReversed,
-} from "./is-negative-route-reversed"
-import type { CoupledRun } from "./select-coupled-runs"
-import { type TraceStep, reverseWalk, walkTrace } from "./walk-trace"
+  componentsSayNegativeReversed,
+  endsSayNegativeReversed,
+} from "./negative-route-direction"
+import {
+  type CoupledRun,
+  MIN_OVERLAP,
+  coupledLength,
+} from "./select-coupled-runs"
+import {
+  type TraceStep,
+  type TraceWalk,
+  reverseWalk,
+  walkTrace,
+} from "./walk-trace"
 
 /** Skew ramps are cut into pieces at most this long, in mm, so they look smooth. */
 const SAMPLE_LENGTH = 0.05
@@ -22,6 +32,9 @@ const SKEW_STEP = 0.001
 
 /** Skew is rounded to 1/this mm (10 nm), so equal traces don't flicker between colours. */
 const SKEW_ROUNDING = 1e5
+
+/** Coordinates and widths beyond this many mm (10 m) are corrupt; such pairs are skipped. */
+const MAX_COORDINATE = 1e4
 
 /**
  * How a piece's skew is known:
@@ -79,9 +92,10 @@ type TracesBySource = Map<SourceTrace["source_trace_id"], PcbTrace[]>
  * Computes local skew along every routed differential pair: at each point,
  * how much farther one trace has run than the other, not only at the ends.
  *
- * Distances are planar copper length, like `pcb_trace.trace_length`, and
- * are measured from the positive trace's first route point. The negative
- * trace is walked from the end that matches it.
+ * Distances are copper length as in `pcb_trace.trace_length` (planar
+ * length plus a fixed length per via), measured from the positive trace's
+ * first route point. The negative trace is walked from the end that
+ * matches it.
  */
 export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const tracesBySource: TracesBySource = new Map()
@@ -115,8 +129,9 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
 
 /**
  * Local skew for one differential pair. Null when the bus isn't a pair of
- * two different traces each routed as one pcb_trace, because the order of
- * split pieces along the signal isn't recorded.
+ * two different traces each routed as one pcb_trace (the order of split
+ * pieces along the signal isn't recorded), or when a route is empty or has
+ * non-finite or absurd geometry.
  */
 function computePairSkew({
   bus,
@@ -139,21 +154,18 @@ function computePairSkew({
   const positiveTrace = positiveTraces[0]
   const negativeTrace = negativeTraces[0]
 
-  const positiveSteps = walkTrace(positiveTrace)
-  let negativeSteps = walkTrace(negativeTrace)
-  if (positiveSteps.length === 0 || negativeSteps.length === 0) return null
-  const reversed = isNegativeRouteReversed({
-    positiveTrace,
-    negativeTrace,
-    positiveSteps,
-    negativeSteps,
-    portComponents,
-  })
-  if (reversed) negativeSteps = reverseWalk(negativeSteps)
-
-  const runs = findCoupledRuns({
-    positive: positiveSteps,
-    negative: negativeSteps,
+  const positive = walkTrace(positiveTrace)
+  if (!isMeasurable(positive)) return null
+  const forward = walkTrace(negativeTrace)
+  if (!isMeasurable(forward)) return null
+  const { negative, runs } = orientNegative({
+    positive,
+    forward,
+    byComponents: componentsSayNegativeReversed({
+      positiveTrace,
+      negativeTrace,
+      portComponents,
+    }),
     traceGap: differentialPair.trace_gap,
   })
 
@@ -163,15 +175,15 @@ function computePairSkew({
     positive: {
       pcb_trace_id: positiveTrace.pcb_trace_id,
       segments: sampleSkew({
-        steps: positiveSteps,
-        spans: skewSpans({ runs, side: "positive", steps: positiveSteps }),
+        steps: positive.steps,
+        spans: skewSpans({ runs, side: "positive", length: positive.length }),
       }),
     },
     negative: {
       pcb_trace_id: negativeTrace.pcb_trace_id,
       segments: sampleSkew({
-        steps: negativeSteps,
-        spans: skewSpans({ runs, side: "negative", steps: negativeSteps }),
+        steps: negative.steps,
+        spans: skewSpans({ runs, side: "negative", length: negative.length }),
       }),
     },
     max_skew: maxSkew(runs),
@@ -180,6 +192,58 @@ function computePairSkew({
     pair.max_length_skew = bus.max_length_skew
   }
   return pair
+}
+
+/** True when a walk has copper, a finite length, and every coordinate and width within {@link MAX_COORDINATE}. */
+function isMeasurable(walk: TraceWalk): boolean {
+  if (walk.steps.length === 0 || !Number.isFinite(walk.length)) return false
+  return walk.steps.every((step) =>
+    [step.start.x, step.start.y, step.end.x, step.end.y, step.width].every(
+      (value) => Math.abs(value) <= MAX_COORDINATE,
+    ),
+  )
+}
+
+/**
+ * Walks the negative trace from the end that matches the positive one and
+ * finds the coupled runs. A shared component decides the direction when the
+ * route ends agree with it, and the route ends decide without one. When the
+ * two disagree (say a connector spans both ends of the pair), the direction
+ * that couples more copper wins, the component on a tie.
+ */
+function orientNegative({
+  positive,
+  forward,
+  byComponents,
+  traceGap,
+}: {
+  positive: TraceWalk
+  /** The negative trace in stored route order. */
+  forward: TraceWalk
+  byComponents: boolean | undefined
+  traceGap: number | undefined
+}): { negative: TraceWalk; runs: CoupledRun[] } {
+  const couple = (reversed: boolean) => {
+    let negative = forward
+    if (reversed) negative = reverseWalk(forward)
+    const runs = findCoupledRuns({
+      positive: positive.steps,
+      negative: negative.steps,
+      traceGap,
+    })
+    return { negative, runs }
+  }
+  const byEnds = endsSayNegativeReversed({
+    positiveSteps: positive.steps,
+    negativeSteps: forward.steps,
+  })
+  const preferred = couple(byComponents ?? byEnds)
+  if (byComponents === undefined || byComponents === byEnds) return preferred
+  const other = couple(byEnds)
+  if (coupledLength(other.runs) > coupledLength(preferred.runs) + MIN_OVERLAP) {
+    return other
+  }
+  return preferred
 }
 
 /** Largest measured skew, in mm, or null without coupled runs. */
@@ -200,14 +264,13 @@ function maxSkew(runs: CoupledRun[]): number | null {
 function skewSpans({
   runs,
   side,
-  steps,
+  length: totalLength,
 }: {
   runs: CoupledRun[]
   side: "positive" | "negative"
-  steps: TraceStep[]
+  /** The trace's walk length, in mm. */
+  length: number
 }): SkewSpan[] {
-  const last = steps[steps.length - 1]
-  const totalLength = last.startDistance + last.length
   const coupled: SkewSpan[] = runs.map((run) => {
     if (side === "positive") {
       return {

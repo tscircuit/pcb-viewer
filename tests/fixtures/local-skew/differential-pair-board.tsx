@@ -105,5 +105,5 @@ export function renderDifferentialPairBoard({
 }): CircuitJson {
   const circuit = new Circuit()
   circuit.add(<DifferentialPairBoard compensated={compensated} />)
-  return circuit.getCircuitJson() as CircuitJson
+  return circuit.getCircuitJson()
 }

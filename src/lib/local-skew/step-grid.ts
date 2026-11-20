@@ -11,7 +11,7 @@ export type StepGrid = {
 /** Cells smaller than this, in mm, only add bookkeeping. */
 const MIN_CELL_SIZE = 0.1
 
-/** Places each step in every cell its bounds, grown by `reach`, touch. */
+/** Places each step in every cell within `reach` of it. */
 export function buildStepGrid({
   steps,
   reach,
@@ -30,23 +30,19 @@ export function buildStepGrid({
 
   const cells = new Map<string, number[]>()
   steps.forEach((step, index) => {
-    const range = cellRange({ step, cellSize, margin: reach })
-    for (let column = range.minColumn; column <= range.maxColumn; column++) {
-      for (let row = range.minRow; row <= range.maxRow; row++) {
-        const key = `${column},${row}`
-        const cell = cells.get(key)
-        if (cell) {
-          cell.push(index)
-          continue
-        }
-        cells.set(key, [index])
+    for (const key of cellsAlong({ step, cellSize, margin: reach })) {
+      const cell = cells.get(key)
+      if (cell) {
+        cell.push(index)
+        continue
       }
+      cells.set(key, [index])
     }
   })
   return { cellSize, cells, steps }
 }
 
-/** Steps whose grown bounds share a cell with `step`, in their original order. */
+/** Steps placed in a cell `step` passes through, in their original order. */
 export function stepsNear({
   grid,
   step,
@@ -54,28 +50,20 @@ export function stepsNear({
   grid: StepGrid
   step: TraceStep
 }): TraceStep[] {
-  const range = cellRange({ step, cellSize: grid.cellSize, margin: 0 })
   const found = new Set<number>()
-  for (let column = range.minColumn; column <= range.maxColumn; column++) {
-    for (let row = range.minRow; row <= range.maxRow; row++) {
-      for (const index of grid.cells.get(`${column},${row}`) ?? []) {
-        found.add(index)
-      }
-    }
+  for (const key of cellsAlong({ step, cellSize: grid.cellSize, margin: 0 })) {
+    for (const index of grid.cells.get(key) ?? []) found.add(index)
   }
   return [...found].sort((a, b) => a - b).map((index) => grid.steps[index])
 }
 
-/** The block of grid cells covered by a step's bounds grown by `margin`. */
-type CellRange = {
-  minColumn: number
-  maxColumn: number
-  minRow: number
-  maxRow: number
-}
-
-/** The cells a step covers, grown by `margin` mm on every side. */
-function cellRange({
+/**
+ * Keys of the cells within `margin` mm of a step. The step is sampled every
+ * cell, and each sample takes the cells within `margin` plus one cell, so
+ * every point within `margin` of the step is covered without visiting the
+ * empty cells of a long diagonal's bounding box.
+ */
+function cellsAlong({
   step,
   cellSize,
   margin,
@@ -83,19 +71,23 @@ function cellRange({
   step: TraceStep
   cellSize: number
   margin: number
-}): CellRange {
-  return {
-    minColumn: Math.floor(
-      (Math.min(step.start.x, step.end.x) - margin) / cellSize,
-    ),
-    maxColumn: Math.floor(
-      (Math.max(step.start.x, step.end.x) + margin) / cellSize,
-    ),
-    minRow: Math.floor(
-      (Math.min(step.start.y, step.end.y) - margin) / cellSize,
-    ),
-    maxRow: Math.floor(
-      (Math.max(step.start.y, step.end.y) + margin) / cellSize,
-    ),
+}): Set<string> {
+  const keys = new Set<string>()
+  const sampleCount = Math.ceil(step.length / cellSize)
+  const span = Math.ceil(margin / cellSize) + 1
+  for (let sample = 0; sample <= sampleCount; sample++) {
+    const fraction = sample / sampleCount
+    const column = Math.floor(
+      (step.start.x + (step.end.x - step.start.x) * fraction) / cellSize,
+    )
+    const row = Math.floor(
+      (step.start.y + (step.end.y - step.start.y) * fraction) / cellSize,
+    )
+    for (let dx = -span; dx <= span; dx++) {
+      for (let dy = -span; dy <= span; dy++) {
+        keys.add(`${column + dx},${row + dy}`)
+      }
+    }
   }
+  return keys
 }

@@ -23,6 +23,12 @@ test("a stretch where the traces split apart is marked interpolated, not measure
   expect(beside.coupling).toBe("coupled")
   expect(beside.skew).toBe(0)
   expect(apart.coupling).toBe("interpolated")
+  // Halfway through the split, skew is halfway from 0 to the 12 mm detour,
+  // to within the 0.05 mm sampling.
+  expect(apart.skew).toBeCloseTo(-6, 1)
+  const negativeApart = segmentAtX({ segments: pair.negative.segments, x: 0 })
+  expect(negativeApart.coupling).toBe("interpolated")
+  expect(negativeApart.skew).toBeCloseTo(6, 1)
   // Only the measured stretches count toward the maximum: 12 mm of detour.
   expect(pair.max_skew).toBeCloseTo(12, 5)
 })
