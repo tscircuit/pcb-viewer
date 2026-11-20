@@ -1,4 +1,3 @@
-import { createServer as createTcpServer } from "node:net"
 import { fileURLToPath } from "node:url"
 import type { CircuitJson } from "circuit-json"
 import {
@@ -34,32 +33,17 @@ export async function openOverlayPage({
   /** Rendered from a TSX fixture through core. */
   circuitJson?: CircuitJson
 }): Promise<OverlayPage> {
-  const host = "127.0.0.1"
-  const port = await new Promise<number>((resolve, reject) => {
-    const probe = createTcpServer().once("error", reject)
-    probe.listen(0, host, () => {
-      const { port } = probe.address() as { port: number }
-      probe.close((error) => (error ? reject(error) : resolve(port)))
-    })
-  })
-
   let server: ViteDevServer | undefined
   let browser: Browser | undefined
-  const close = async () => {
-    try {
-      await browser?.close()
-    } finally {
-      await server?.close()
-    }
-  }
-
   try {
+    // Port 0 lets the operating system pick a free port when Vite binds.
     server = await createServer({
       root: fileURLToPath(new URL("../../", import.meta.url)),
-      server: { host, port, strictPort: true },
+      server: { host: "127.0.0.1", port: 0, strictPort: true },
       logLevel: "error",
     })
     await server.listen()
+    const [baseUrl] = server.resolvedUrls?.local ?? []
     const launchOptions: LaunchOptions = { headless: true }
     if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) {
       launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
@@ -80,7 +64,7 @@ export async function openOverlayPage({
         state: initialState,
       },
     )
-    await page.goto(`http://${host}:${port}/tests/local-skew-overlay/`)
+    await page.goto(`${baseUrl}tests/local-skew-overlay/`)
     await page
       .locator('#root[data-rendered="true"]')
       .waitFor({ state: "attached" })
@@ -96,9 +80,30 @@ export async function openOverlayPage({
           requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
         }),
     )
-    return { page, errors, close }
+    const openBrowser = browser
+    const openServer = server
+    return {
+      page,
+      errors,
+      close: () => closeOverlay({ browser: openBrowser, server: openServer }),
+    }
   } catch (error) {
-    await close().catch(() => {})
+    await closeOverlay({ browser, server }).catch(() => {})
     throw error
+  }
+}
+
+/** Closes the browser, then the Vite server, whichever were started. */
+async function closeOverlay({
+  browser,
+  server,
+}: {
+  browser: Browser | undefined
+  server: ViteDevServer | undefined
+}): Promise<void> {
+  try {
+    await browser?.close()
+  } finally {
+    await server?.close()
   }
 }
