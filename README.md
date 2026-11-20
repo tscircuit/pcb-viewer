@@ -78,6 +78,8 @@ The PCBViewer component accepts these props:
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
 - `initialState`: Initial state for the viewer
+- `localSkewColors` accepts optional `zero`, `positive`, `negative`, and `unknown` colours. The KiCad defaults are white, blue, red, and grey.
+- `localSkewUseLogScale` applies KiCad's logarithmic colour scale when true. It defaults to false, which uses a linear scale.
 
 ### Features
 
@@ -87,6 +89,12 @@ The PCBViewer component accepts these props:
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
+
+### Differential-pair local skew
+
+Choose **View → Show Local Skew** to colour the local skew recorded in the board's Circuit JSON. Hover a segment to see its measured or interpolated skew, the pair's peak, and its configured limit when available. Each trace reaches full colour at the larger of its per-sign peak and 0.001 mm. Magnitudes below 0.0005 mm use the zero-skew colour.
+
+Canvas places each skew layer over its own copper. WebGPU places the overlay over the composite board, so skew can appear over copper on higher layers.
 
 ### WebGPU rendering
 

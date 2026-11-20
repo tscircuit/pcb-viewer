@@ -178,6 +178,7 @@ export const ToolbarOverlay = ({
     setIsShowingDrcErrors,
     setIsShowingDrcWarnings,
     setIsShowingCopperPours,
+    setIsShowingLocalSkew,
     setIsShowingCourtyards,
     setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets,
@@ -200,6 +201,7 @@ export const ToolbarOverlay = ({
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_drc_warnings: s.is_showing_drc_warnings,
       is_showing_copper_pours: s.is_showing_copper_pours,
+      is_showing_local_skew: s.is_showing_local_skew,
       is_showing_courtyards: s.is_showing_courtyards,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
       is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
@@ -215,6 +217,7 @@ export const ToolbarOverlay = ({
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingDrcWarnings: s.setIsShowingDrcWarnings,
     setIsShowingCopperPours: s.setIsShowingCopperPours,
+    setIsShowingLocalSkew: s.setIsShowingLocalSkew,
     setIsShowingCourtyards: s.setIsShowingCourtyards,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
@@ -713,6 +716,13 @@ export const ToolbarOverlay = ({
                     setIsShowingCopperPours(
                       !viewSettings.is_showing_copper_pours,
                     )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Local Skew"
+                  checked={viewSettings.is_showing_local_skew}
+                  onClick={() => {
+                    setIsShowingLocalSkew(!viewSettings.is_showing_local_skew)
                   }}
                 />
                 <CheckboxMenuItem

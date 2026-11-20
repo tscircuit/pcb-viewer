@@ -1,9 +1,6 @@
 import { expect, test } from "bun:test"
 import { renderDifferentialPairBoard } from "./fixtures/local-skew/differential-pair-board"
-import {
-  MENU_CLICK_DELAY_MS,
-  openOverlayPage,
-} from "./local-skew-overlay/open-overlay-page"
+import { openOverlayPage } from "./local-skew-overlay/open-overlay-page"
 
 test("the viewer opens a length-matched USB pair with stored local skew", async () => {
   const circuitJson = renderDifferentialPairBoard({ compensated: true })
@@ -31,13 +28,7 @@ test("the viewer opens a length-matched USB pair with stored local skew", async 
         return pixels.data.some((value, index) => index % 4 === 3 && value > 0)
       }),
     ).toBe(true)
-    await page.locator("[data-view-menu] > div > div").first().click({
-      delay: MENU_CLICK_DELAY_MS,
-    })
-    await page.getByText("Show Copper Pours", { exact: true }).waitFor()
-    expect(
-      await page.getByText("Show Local Skew", { exact: true }).count(),
-    ).toBe(0)
+    expect(await page.locator(".pcb-local-skew-overlay").count()).toBe(0)
     expect(errors).toEqual([])
   } finally {
     await close()

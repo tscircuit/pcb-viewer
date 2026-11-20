@@ -525,76 +525,16 @@ export class Drawer {
    */
   orderAndFadeLayers() {
     const { canvasLayerMap, foregroundLayer } = this
-    const innerLayers = Object.keys(canvasLayerMap)
-      .filter((layer) => /^inner\d+$/.test(layer))
-      .sort(
-        (a, b) =>
-          Number(b.slice("inner".length)) - Number(a.slice("inner".length)),
-      )
-    const defaultDrawOrder = [
-      "board",
-      ...innerLayers,
-      ...DEFAULT_DRAW_ORDER.filter((layer) => layer !== "board"),
-    ]
-    const associatedSoldermask =
-      foregroundLayer === "top"
-        ? "soldermask_top"
-        : foregroundLayer === "bottom"
-          ? "soldermask_bottom"
-          : undefined
-    const associatedSilkscreen =
-      foregroundLayer === "top"
-        ? "top_silkscreen"
-        : foregroundLayer === "bottom"
-          ? "bottom_silkscreen"
-          : undefined
-    const associatedNotes =
-      foregroundLayer === "top"
-        ? "top_notes"
-        : foregroundLayer === "bottom"
-          ? "bottom_notes"
-          : undefined
-    const associatedFabrication =
-      foregroundLayer === "top"
-        ? "top_fabrication"
-        : foregroundLayer === "bottom"
-          ? "bottom_fabrication"
-          : undefined
-    const associatedCourtyard =
-      foregroundLayer === "top"
-        ? "top_courtyard"
-        : foregroundLayer === "bottom"
-          ? "bottom_courtyard"
-          : undefined
-
-    const layersToShiftToTop = [
+    const zIndexes = getCanvasLayerZIndexes({
+      innerLayers: Object.keys(canvasLayerMap).filter((layer) =>
+        /^inner\d+$/.test(layer),
+      ),
       foregroundLayer,
-      "edge_cuts",
-      ...(associatedSoldermask ? [associatedSoldermask] : []),
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
-      ...(associatedNotes ? [associatedNotes] : []),
-      ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(associatedCourtyard ? [associatedCourtyard] : []),
-    ]
-
-    const order = [
-      ...defaultDrawOrder.filter((l) => !layersToShiftToTop.includes(l)),
-      ...(foregroundLayer === "drill" ? [] : [foregroundLayer]),
-      ...(associatedSoldermask ? [associatedSoldermask] : []),
-      "edge_cuts",
-      ...(associatedSilkscreen ? [associatedSilkscreen] : []),
-      ...(associatedNotes ? [associatedNotes] : []),
-      ...(associatedFabrication ? [associatedFabrication] : []),
-      ...(associatedCourtyard ? [associatedCourtyard] : []),
-      "drill",
-    ]
-
-    order.forEach((layer, i) => {
-      const canvas = canvasLayerMap[layer]
-      if (!canvas) return
-
-      canvas.style.zIndex = `${zIndexMap.topLayer - (order.length - i)}`
     })
+    for (const [layer, zIndex] of zIndexes) {
+      const canvas = canvasLayerMap[layer]
+      if (canvas) canvas.style.zIndex = String(zIndex)
+    }
 
     for (const [layer, canvas] of Object.entries(canvasLayerMap)) {
       const opacity = this.getLayerOpacity(layer)
@@ -757,4 +697,40 @@ export class Drawer {
 
     ctx.fill("evenodd")
   }
+}
+
+/** CSS stacking order shared by Canvas copper and overlays drawn above it. */
+export function getCanvasLayerZIndexes({
+  innerLayers,
+  foregroundLayer,
+}: {
+  innerLayers: string[]
+  foregroundLayer: string
+}): Map<string, number> {
+  const sortedInnerLayers = [...innerLayers].sort(
+    (a, b) => Number(b.slice(5)) - Number(a.slice(5)),
+  )
+  const isOuter = foregroundLayer === "top" || foregroundLayer === "bottom"
+  const soldermask = isOuter ? [`soldermask_${foregroundLayer}`] : []
+  const details = isOuter
+    ? ["silkscreen", "notes", "fabrication", "courtyard"].map(
+        (name) => `${foregroundLayer}_${name}`,
+      )
+    : []
+  const foreground = [
+    ...(foregroundLayer === "drill" ? [] : [foregroundLayer]),
+    ...soldermask,
+    "edge_cuts",
+    ...details,
+    "drill",
+  ]
+  const order = ["board", ...sortedInnerLayers, ...DEFAULT_DRAW_ORDER.slice(1)]
+    .filter((layer) => !foreground.includes(layer))
+    .concat(foreground)
+  return new Map(
+    order.map((layer, index) => [
+      layer,
+      zIndexMap.topLayer - (order.length - index),
+    ]),
+  )
 }

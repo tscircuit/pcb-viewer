@@ -22,7 +22,15 @@ type Props = {
 
 /** Retains a GPU canvas in a worker; the UI thread sends scene/camera changes only. */
 export function WebGpuElementsRenderer(props: Props) {
-  const { elements, primitives, transform, width = 500, height = 500 } = props
+  const { primitives, transform, width = 500, height = 500 } = props
+  // Local-skew annotations are painted by the overlay outside the GPU scene.
+  const elements = useMemo(
+    () =>
+      props.elements.filter(
+        (element) => element.type !== "pcb_differential_pair_local_skew",
+      ),
+    [props.elements],
+  )
   const holder = useRef<HTMLDivElement>(null)
   const workerRef = useRef<Worker | undefined>(undefined)
   const onRenderCompleteRef = useRef(props.onRenderComplete)

@@ -1,6 +1,6 @@
 import { Circuit } from "@tscircuit/core"
 import type { CircuitJson } from "circuit-json"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 
 /** Height of the positive trace's triangular detour, in mm. */
 const POSITIVE_DETOUR_HEIGHT = 1
@@ -22,8 +22,12 @@ const NEGATIVE_DETOUR_DEPTH = DETOUR_EXTRA_LENGTH / 2
  */
 export function DifferentialPairBoard({
   compensated,
+  width = "30mm",
+  children,
 }: {
   compensated: boolean
+  width?: string
+  children?: ReactNode
 }): ReactElement {
   let negativePath: { x: number; y: number }[] = []
   if (compensated) {
@@ -35,7 +39,7 @@ export function DifferentialPairBoard({
     ]
   }
   return (
-    <board routeRemaining={false} width="30mm" height="8mm">
+    <board routeRemaining={false} width={width} height="8mm">
       <testpoint
         name="TP_DP_SRC"
         footprintVariant="pad"
@@ -93,6 +97,7 @@ export function DifferentialPairBoard({
         pcbTraceGap="0.45mm"
         maxLengthSkew="0.1mm"
       />
+      {children}
     </board>
   )
 }

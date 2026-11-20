@@ -8,6 +8,7 @@ import {
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { getHighlightedCopperPourIds } from "lib/get-highlighted-copper-pour-ids"
+import type { LocalSkewColors } from "lib/local-skew/skew-color"
 import {
   type PrimitiveSpatialIndex,
   createPrimitiveSpatialIndex,
@@ -45,6 +46,7 @@ import { type BoundsSelection, DimensionOverlay } from "./DimensionOverlay"
 import { EditPlacementOverlay } from "./EditPlacementOverlay"
 import { ErrorOverlay } from "./ErrorOverlay"
 import { FocusedPcbComponentOverlay } from "./FocusedPcbComponentOverlay"
+import { LocalSkewOverlay } from "./LocalSkewOverlay"
 import {
   MouseElementTracker,
   getPrimitivesUnderPoint,
@@ -63,6 +65,8 @@ export interface CanvasElementsRendererProps {
   width?: number
   height?: number
   renderer?: "webgpu" | "canvas"
+  localSkewColors?: LocalSkewColors
+  localSkewUseLogScale?: boolean
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
@@ -104,12 +108,14 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
+    isShowingLocalSkew,
     copperPourOpacity,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
+    isShowingLocalSkew: state.is_showing_local_skew,
     copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
   }))
@@ -496,6 +502,18 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           height={props.height}
                           grid={props.grid}
                           onRenderComplete={props.onRenderComplete}
+                        />
+                      )}
+                      {isShowingLocalSkew && !xRayElements && (
+                        <LocalSkewOverlay
+                          transform={transform}
+                          elements={elements}
+                          colors={props.localSkewColors}
+                          useLogScale={props.localSkewUseLogScale}
+                          renderer={props.renderer}
+                          showCopperPours={
+                            isShowingCopperPours && copperPourOpacity > 0
+                          }
                         />
                       )}
                     </WarningGraphicsOverlay>
