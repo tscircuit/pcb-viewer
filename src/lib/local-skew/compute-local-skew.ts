@@ -161,15 +161,20 @@ export function computeLocalSkew(circuitJson: CircuitJson): LocalSkewPair[] {
   const pairs: LocalSkewPair[] = []
   for (const element of circuitJson) {
     if (element.type !== "source_bus") continue
-    const pair = computePairSkew({
-      bus: element,
-      tracesBySource,
-      pcbPortsById,
-      sourcePortsById,
-      findBoard,
-      stackupsByBoard,
-    })
-    if (pair) pairs.push(pair)
+    try {
+      const pair = computePairSkew({
+        bus: element,
+        tracesBySource,
+        pcbPortsById,
+        sourcePortsById,
+        findBoard,
+        stackupsByBoard,
+      })
+      if (pair) pairs.push(pair)
+    } catch {
+      // A failed pair must not hide skew on the rest of the board.
+      continue
+    }
   }
   return pairs
 }
