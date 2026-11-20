@@ -11,10 +11,10 @@
     <line x1="-10" y1="-0.3" x2="10" y2="-0.5800000000000001" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="10" y1="-0.5800000000000001" x2="12" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="-12" y1="0.3" x2="-10" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
-    <line x1="-10" y1="0.3" x2="-1.4285714285714342" y2="0.3" stroke="rgb(255, 0, 0)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-10" y1="0.3" x2="-1.4285714285714342" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
     <line x1="-1.4285714285714342" y1="0.3" x2="12" y2="0.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
     <line x1="-12" y1="-0.3" x2="-10" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
-    <line x1="-10" y1="-0.3" x2="-1.4285714285714342" y2="-0.41999999999999993" stroke="rgb(0, 0, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-10" y1="-0.3" x2="-1.4285714285714342" y2="-0.41999999999999993" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
     <line x1="-1.4285714285714342" y1="-0.41999999999999993" x2="10" y2="-0.5800000000000001" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
     <line x1="10" y1="-0.5800000000000001" x2="12" y2="-0.3000000000000001" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
   </g>

@@ -14,6 +14,13 @@ const NEGATIVE_SKEW_COLOR: Rgb = [255, 0, 0]
 export const UNKNOWN_SKEW_COLOR = "rgb(128, 128, 128)"
 
 /**
+ * Skew magnitudes below this, in mm (half of the 1 µm / 3-decimal readout
+ * precision), format as `0.000 mm` ("in step") and paint white instead of
+ * saturating against a sub-micron scale.
+ */
+const ZERO_SKEW_THRESHOLD = 0.0005
+
+/**
  * Full-scale positive and negative skew magnitudes for one trace, in mm.
  * KiCad scales positive skew against the trace's maximum and negative skew
  * against its minimum independently.
@@ -24,46 +31,25 @@ export type SkewScale = {
 }
 
 /**
- * Computes the per-sign full scales for one trace's segments: the largest
- * positive skew and the largest negative skew magnitude, in mm.
- */
-export function skewScaleFor(
-  segments: readonly { skew: number | null }[],
-): SkewScale {
-  let positive = 0
-  let negative = 0
-  for (const { skew } of segments) {
-    if (skew === null) continue
-    if (skew > positive) positive = skew
-    if (-skew > negative) negative = -skew
-  }
-  return { positive, negative }
-}
-
-/**
- * KiCad's default local-skew colour: opaque white at zero skew, linearly
- * blended to pure blue for positive skew (this trace is longer than its
- * partner) or pure red for negative skew (shorter), and 50% grey when
+ * KiCad's default local-skew colour: opaque white at zero skew (including
+ * magnitudes below {@link ZERO_SKEW_THRESHOLD} that format as `0.000 mm`),
+ * linearly blended to pure blue for positive skew (this trace is longer than
+ * its partner) or pure red for negative skew (shorter), and 50% grey when
  * unknown. Values beyond `fullScale` clamp to the full colour; a zero
- * `fullScale` saturates any non-zero skew.
+ * `fullScale` saturates any non-zero skew at or above the display threshold.
  */
 export function skewColor({
   skew,
   fullScale,
 }: {
   skew: number | null
-  /** Skew magnitude, in mm, that reaches full blue or red, or per-sign scales from {@link skewScaleFor}. */
-  fullScale: number | SkewScale
+  /** Per-sign full-scale skew magnitudes, in mm, from `LocalSkewTrace.scale`. */
+  fullScale: SkewScale
 }): string {
   if (skew === null) return UNKNOWN_SKEW_COLOR
-  if (skew === 0) return toCss(ZERO_SKEW_COLOR)
+  if (Math.abs(skew) < ZERO_SKEW_THRESHOLD) return toCss(ZERO_SKEW_COLOR)
 
-  const limit =
-    typeof fullScale === "number"
-      ? fullScale
-      : skew > 0
-        ? fullScale.positive
-        : fullScale.negative
+  const limit = skew > 0 ? fullScale.positive : fullScale.negative
   const fraction = limit > 0 ? Math.min(1, Math.abs(skew) / limit) : 1
   const target = skew > 0 ? POSITIVE_SKEW_COLOR : NEGATIVE_SKEW_COLOR
   return toCss(

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="104" viewBox="-13 -1.3005 26 2.6005000000000003">
+  <title>PAIR: max local skew 0.0004 mm</title>
+  <rect x="-13" y="-1.3005" width="26" height="2.6005000000000003" fill="rgb(0, 16, 35)"/>
+  <g transform="scale(1 -1)">
+    <circle cx="-12" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="-12" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="12" cy="0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <circle cx="12" cy="-0.3" r="0.15" fill="rgb(200, 52, 52)" opacity="0.35"/>
+    <line x1="-12" y1="0.3" x2="-2" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-2" y1="0.3" x2="-1.9994999999999994" y2="0.3005" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-1.9994999999999994" y1="0.3005" x2="-1.9990000000000006" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-1.9990000000000006" y1="0.3" x2="12" y2="0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-12" y1="-0.3" x2="12" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-12" y1="0.3" x2="-2" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-2" y1="0.3" x2="-1.9994999999999996" y2="0.3004999999999999" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-1.9994999999999994" y1="0.3005" x2="-1.999000000000001" y2="0.3000000000000005" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-1.9990000000000006" y1="0.3" x2="12" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="-0.3" x2="-2" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-2" y1="-0.3" x2="-1.9990000000000006" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-1.9990000000000006" y1="-0.3" x2="12" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+  </g>
+</svg>

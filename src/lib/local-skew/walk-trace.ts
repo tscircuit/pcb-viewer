@@ -102,7 +102,7 @@ function addStep({
   to: RouteCorner
   startDistance: number
   length: number
-  /** A via between the previous step and this one adds length, so they can't be joined. */
+  /** Length of any via directly before `start`, in mm. */
   startViaLength: number
 }): void {
   const step: TraceStep = {
@@ -116,11 +116,7 @@ function addStep({
     endViaLength: 0,
   }
   const previous = steps[steps.length - 1]
-  if (
-    previous &&
-    startViaLength === 0 &&
-    continuesStraight({ previous, next: step })
-  ) {
+  if (previous && continuesStraight({ previous, next: step })) {
     previous.end = step.end
     previous.length += step.length
     return
@@ -276,8 +272,12 @@ function stackupLayerDistance({
   let total = 0
   for (let index = start; index <= end; index++) {
     const layer = stackup.layers[index]
-    if (layer.layer_type === "soldermask") continue
-    if (!Number.isFinite(layer.thickness) || layer.thickness < 0) {
+    const { thickness } = layer
+    if (
+      thickness === undefined ||
+      !Number.isFinite(thickness) ||
+      thickness < 0
+    ) {
       return undefined
     }
     if (
@@ -286,10 +286,10 @@ function stackupLayerDistance({
       layer.layer !== "top" &&
       layer.layer !== "bottom"
     ) {
-      total += layer.thickness / 2
+      total += thickness / 2
       continue
     }
-    total += layer.thickness
+    total += thickness
   }
   return total
 }
