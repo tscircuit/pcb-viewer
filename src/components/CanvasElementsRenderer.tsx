@@ -102,6 +102,14 @@ function getHitTestCandidates({
   }
 }
 
+/** True for a local skew element with at least one segment to paint. */
+function hasLocalSkewSegment(element: AnyCircuitElement): boolean {
+  if (element.type !== "pcb_differential_pair_local_skew") return false
+  return (
+    element.positive.segments.length > 0 || element.negative.segments.length > 0
+  )
+}
+
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   const { transform, elements } = props
   const {
@@ -167,6 +175,14 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
         : undefined,
     [elementsToRender, connectivityMap, xRayNetIds, copperPourOpacity],
   )
+  const hasLocalSkewSegments = useMemo(
+    () => elements.some(hasLocalSkewSegment),
+    [elements],
+  )
+  // The overlay paints only on layered Canvas, so switch to it only when
+  // there is skew to paint.
+  const isPaintingLocalSkew =
+    isShowingLocalSkew && !xRayElements && hasLocalSkewSegments
   const hoverPrimitives = useMemo(() => {
     if (!xRayElements) return primitivesWithoutInteractionMetadata
     const selectedElements = new Set(xRayElements)
@@ -479,7 +495,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                       transform={transform}
                       elements={elements}
                     >
-                      {isShowingLocalSkew || props.renderer === "canvas" ? (
+                      {isPaintingLocalSkew || props.renderer === "canvas" ? (
                         <CanvasPrimitiveRenderer
                           transform={transform}
                           primitives={primitives}
@@ -504,7 +520,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           onRenderComplete={props.onRenderComplete}
                         />
                       )}
-                      {isShowingLocalSkew && !xRayElements && (
+                      {isPaintingLocalSkew && (
                         <LocalSkewOverlay
                           transform={transform}
                           elements={elements}

@@ -39,12 +39,12 @@ test("hover sees lower skew through a top trace clipped by a translucent pour", 
 
     await page.mouse.move(outsideVia.x, outsideVia.y)
     await readout.waitFor({ timeout: 2000 })
-    expect(await readout.textContent()).toStartWith("PAIR: in step")
+    expect(await readout.textContent()).toStartWith("PAIR: local skew 0.000 mm")
     await page.mouse.move(via.x, via.y)
     await readout.waitFor({ state: "detached", timeout: 2000 })
     await page.mouse.move(pour.x, pour.y)
     await readout.waitFor({ timeout: 2000 })
-    expect(await readout.textContent()).toStartWith("PAIR: in step")
+    expect(await readout.textContent()).toStartWith("PAIR: local skew 0.000 mm")
 
     // Hiding the pour restores the solid trace at the same point.
     const viewMenu = page.locator("[data-view-menu] > div > div").first()
@@ -64,7 +64,7 @@ test("hover sees lower skew through a top trace clipped by a translucent pour", 
     await page.getByText("inner1", { exact: true }).waitFor()
     await page.mouse.move(trace.x, trace.y)
     await readout.waitFor({ timeout: 2000 })
-    expect(await readout.textContent()).toStartWith("PAIR: in step")
+    expect(await readout.textContent()).toStartWith("PAIR: local skew 0.000 mm")
     expect(errors).toEqual([])
   } finally {
     await close()

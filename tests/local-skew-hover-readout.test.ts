@@ -11,15 +11,15 @@ const VIEWER_WIDTH = 600
 const HOVERS = [
   {
     x: -11.5,
-    text: "USB: in step with its partner (measured) · max 1.236 mm · limit 0.100 mm",
+    text: "USB: local skew 0.000 mm · max 1.236 mm · end-to-end limit 0.100 mm",
   },
   {
     x: -6,
-    text: "USB: 1.236 mm longer than its partner (measured) · max 1.236 mm · limit 0.100 mm",
+    text: "USB: local skew 1.236 mm · max 1.236 mm · end-to-end limit 0.100 mm",
   },
   {
     x: 8,
-    text: "USB: 1.236 mm longer than its partner (measured) · max 1.236 mm · limit 0.100 mm",
+    text: "USB: local skew 1.236 mm · max 1.236 mm · end-to-end limit 0.100 mm",
   },
 ]
 

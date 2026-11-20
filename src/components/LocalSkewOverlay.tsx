@@ -16,19 +16,36 @@ import {
 import { useGlobalStore } from "../global-store"
 import { getCanvasLayerZIndexes } from "../lib/Drawer"
 import { getCopperLayerRefsFromElements } from "../lib/copper-layers"
-import { createCanvasCopperHitTest } from "../lib/local-skew/canvas-copper-hit"
+import {
+  type CanvasCopperHitTest,
+  createCanvasCopperHitTest,
+} from "../lib/local-skew/canvas-copper-hit"
 import { describeSkew } from "../lib/local-skew/describe-skew"
-import { type LocalSkewColors, skewColor } from "../lib/local-skew/skew-color"
+import {
+  type LocalSkewColors,
+  resolveSkewPalette,
+  rgbString,
+  skewColor,
+} from "../lib/local-skew/skew-color"
 import { zIndexMap } from "../lib/util/z-index-map"
 
+/** Strokes are never thinner than this on screen, in pixels. */
 const MIN_STROKE_PIXELS = 2
+/** Width of the dark border around the strokes, in pixels. */
 const CASING_PIXELS = 2
+/** How far outside a stroke the pointer still hovers it, in pixels. */
 const HOVER_SLACK_PIXELS = 2
+/** Gap between the pointer and the readout, in pixels. */
 const READOUT_OFFSET_PIXELS = 12
+/** Closer than this to the top of the viewer, the readout goes below the pointer, in pixels. */
 const READOUT_FLIP_PIXELS = 100
+/** Strokes are this much wider than their copper, so no copper edge shows beside them. */
+export const SKEW_STROKE_WIDTH_FACTOR = 1.1
 
+/** The pointer in viewer pixels, and the viewer's width. */
 type Pointer = Point & { viewerWidth: number }
 
+/** One stored segment and the colour it is painted with. */
 type PaintedSegment = {
   key: string
   pair: PcbDifferentialPairLocalSkew
@@ -36,10 +53,14 @@ type PaintedSegment = {
   color: string
 }
 
+/** Segments of one copper width: their casing path and coloured lines. */
 type StrokeGroup = {
   casing: string
   lines: PaintedSegment[]
 }
+
+/** Stroke groups by copper layer, then by copper width in mm. */
+type SkewStrokes = Map<LayerRef, Map<number, StrokeGroup>>
 
 const OVERLAY_STYLE: CSSProperties = {
   position: "absolute",
@@ -78,92 +99,48 @@ export function LocalSkewOverlay({
     [copperLayers, selectedLayer],
   )
   const layers = useMemo(
-    () => groupStrokes(elements, colors, useLogScale),
+    () => groupStrokes({ elements, colors, useLogScale }),
     [elements, colors, useLogScale],
   )
   const hasStrokes = layers.size > 0
-
   const hitCanvasCopper = useMemo(
-    () =>
-      hasStrokes
-        ? createCanvasCopperHitTest(elements, showCopperPours)
-        : undefined,
-    [elements, hasStrokes, showCopperPours],
+    () => createCanvasCopperHitTest({ elements, showCopperPours }),
+    [elements, showCopperPours],
   )
 
   useEffect(() => {
     setPointer(null)
     const viewer = containerRef.current?.parentElement
     if (!viewer || !hasStrokes) return
-    const onMove = (event: MouseEvent) => {
-      const bounds = viewer.getBoundingClientRect()
-      setPointer({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-        viewerWidth: bounds.width,
-      })
-    }
-    const onLeave = () => setPointer(null)
-    viewer.addEventListener("mousemove", onMove)
-    viewer.addEventListener("mouseleave", onLeave)
-    return () => {
-      viewer.removeEventListener("mousemove", onMove)
-      viewer.removeEventListener("mouseleave", onLeave)
-    }
+    const listeners = new AbortController()
+    viewer.addEventListener(
+      "mousemove",
+      (event) => setPointer(pointerInViewer({ event, viewer })),
+      { signal: listeners.signal },
+    )
+    viewer.addEventListener("mouseleave", () => setPointer(null), {
+      signal: listeners.signal,
+    })
+    return () => listeners.abort()
   }, [hasStrokes])
 
   if (!hasStrokes) return null
 
   const matrix = transform ?? identity()
   const pixelsPerMm = Math.hypot(matrix.a, matrix.b)
-  const opacityOf = (layer: LayerRef) =>
-    layer === selectedLayer ? 1 : hiddenLayerOpacity
-  function getHoveredLine(pointer: Pointer) {
-    const point = applyToPoint(inverse(matrix), pointer)
-    let best: PaintedSegment | undefined
-    let bestDistance = Infinity
-    let bestZIndex = -Infinity
-
-    for (const [layer, groups] of layers) {
-      const zIndex = zIndexes.get(layer) ?? 0
-      if (opacityOf(layer) === 0 || zIndex < bestZIndex) continue
-      for (const [width, group] of groups) {
-        const reach =
-          strokeWidth(width, pixelsPerMm) / 2 + HOVER_SLACK_PIXELS / pixelsPerMm
-        for (const line of group.lines) {
-          const { start, end } = line.segment
-          const distance = pointToSegmentDistance(point, start, end)
-          if (distance > reach) continue
-          if (zIndex === bestZIndex && distance >= bestDistance) continue
-          best = line
-          bestDistance = distance
-          bestZIndex = zIndex
-        }
-      }
-    }
-
-    if (
-      best &&
-      hitCanvasCopper &&
-      copperLayers.some(
-        (layer) =>
-          (zIndexes.get(layer) ?? 0) > bestZIndex &&
-          opacityOf(layer) === 1 &&
-          hitCanvasCopper(layer, matrix, pointer.x, pointer.y),
-      )
-    )
-      return undefined
-    return best
+  let hovered: PaintedSegment | undefined
+  if (pointer) {
+    hovered = findHoveredSegment({
+      pointer,
+      layers,
+      matrix,
+      zIndexes,
+      copperLayers,
+      hitCanvasCopper,
+      selectedLayer,
+      hiddenLayerOpacity,
+    })
   }
-
-  const hovered = pointer ? getHoveredLine(pointer) : undefined
-  const bus =
-    hovered &&
-    elements.find(
-      (element) =>
-        element.type === "source_bus" &&
-        element.source_bus_id === hovered.pair.source_bus_id,
-    )
   return (
     <div
       ref={containerRef}
@@ -171,7 +148,11 @@ export function LocalSkewOverlay({
       style={OVERLAY_STYLE}
     >
       {[...layers].map(([layer, groups]) => {
-        const opacity = opacityOf(layer)
+        const opacity = layerOpacity({
+          layer,
+          selectedLayer,
+          hiddenLayerOpacity,
+        })
         if (opacity === 0) return null
         return (
           <svg
@@ -187,7 +168,7 @@ export function LocalSkewOverlay({
           >
             <g transform={toSVG(matrix)} strokeLinecap="round">
               {[...groups].map(([width, group]) => {
-                const stroke = strokeWidth(width, pixelsPerMm)
+                const stroke = strokeWidth({ width, pixelsPerMm })
                 // At fit zoom the coloured stroke may already be wider than
                 // the copper. Cap its dark border in board units.
                 const casingWidth = Math.min(
@@ -206,11 +187,13 @@ export function LocalSkewOverlay({
                 )
               })}
               {[...groups].map(([width, group]) => (
-                <g key={width} strokeWidth={strokeWidth(width, pixelsPerMm)}>
+                <g
+                  key={width}
+                  strokeWidth={strokeWidth({ width, pixelsPerMm })}
+                >
                   {group.lines.map(({ key, segment, color }) => (
                     <line
                       key={key}
-                      data-coupling={segment.coupling}
                       x1={segment.start.x}
                       y1={segment.start.y}
                       x2={segment.end.x}
@@ -232,7 +215,10 @@ export function LocalSkewOverlay({
           {describeSkew({
             pair: hovered.pair,
             segment: hovered.segment,
-            name: bus?.type === "source_bus" ? bus.name : undefined,
+            name: findBusName({
+              elements,
+              sourceBusId: hovered.pair.source_bus_id,
+            }),
           })}
         </div>
       )}
@@ -240,39 +226,171 @@ export function LocalSkewOverlay({
   )
 }
 
-function strokeWidth(width: number, pixelsPerMm: number) {
-  return Math.max(1.1 * width, MIN_STROKE_PIXELS / pixelsPerMm)
+/** The pointer position relative to the viewer. */
+function pointerInViewer({
+  event,
+  viewer,
+}: {
+  event: MouseEvent
+  viewer: HTMLElement
+}): Pointer {
+  const bounds = viewer.getBoundingClientRect()
+  return {
+    x: event.clientX - bounds.left,
+    y: event.clientY - bounds.top,
+    viewerWidth: bounds.width,
+  }
 }
 
-function groupStrokes(
-  elements: AnyCircuitElement[],
-  colors?: LocalSkewColors,
-  useLogScale?: boolean,
-) {
-  const layers = new Map<LayerRef, Map<number, StrokeGroup>>()
+/** Full opacity on the selected layer, the hidden-layer opacity elsewhere. */
+function layerOpacity({
+  layer,
+  selectedLayer,
+  hiddenLayerOpacity,
+}: {
+  layer: LayerRef
+  selectedLayer: LayerRef
+  hiddenLayerOpacity: number
+}): number {
+  if (layer === selectedLayer) return 1
+  return hiddenLayerOpacity
+}
+
+/**
+ * The visible segment under the pointer: on the highest visible layer, the
+ * nearest one. None when opaque copper on a layer above covers the pointer.
+ */
+function findHoveredSegment({
+  pointer,
+  layers,
+  matrix,
+  zIndexes,
+  copperLayers,
+  hitCanvasCopper,
+  selectedLayer,
+  hiddenLayerOpacity,
+}: {
+  pointer: Pointer
+  layers: SkewStrokes
+  matrix: Matrix
+  zIndexes: Map<string, number>
+  copperLayers: LayerRef[]
+  hitCanvasCopper: CanvasCopperHitTest
+  selectedLayer: LayerRef
+  hiddenLayerOpacity: number
+}): PaintedSegment | undefined {
+  const pixelsPerMm = Math.hypot(matrix.a, matrix.b)
+  const point = applyToPoint(inverse(matrix), pointer)
+  let best: PaintedSegment | undefined
+  let bestDistance = Number.POSITIVE_INFINITY
+  let bestZIndex = Number.NEGATIVE_INFINITY
+
+  for (const [layer, groups] of layers) {
+    const zIndex = zIndexes.get(layer) ?? 0
+    if (layerOpacity({ layer, selectedLayer, hiddenLayerOpacity }) === 0) {
+      continue
+    }
+    if (zIndex < bestZIndex) continue
+    for (const [width, group] of groups) {
+      const reach =
+        strokeWidth({ width, pixelsPerMm }) / 2 +
+        HOVER_SLACK_PIXELS / pixelsPerMm
+      for (const line of group.lines) {
+        const { start, end } = line.segment
+        const distance = pointToSegmentDistance(point, start, end)
+        if (distance > reach) continue
+        if (zIndex === bestZIndex && distance >= bestDistance) continue
+        best = line
+        bestDistance = distance
+        bestZIndex = zIndex
+      }
+    }
+  }
+  if (!best) return undefined
+
+  for (const layer of copperLayers) {
+    if ((zIndexes.get(layer) ?? 0) <= bestZIndex) continue
+    if (layerOpacity({ layer, selectedLayer, hiddenLayerOpacity }) !== 1) {
+      continue
+    }
+    if (hitCanvasCopper({ layer, transform: matrix, ...pointer })) {
+      return undefined
+    }
+  }
+  return best
+}
+
+/** The name of a source bus, if it has one. */
+function findBusName({
+  elements,
+  sourceBusId,
+}: {
+  elements: AnyCircuitElement[]
+  sourceBusId: string
+}): string | undefined {
+  for (const element of elements) {
+    if (element.type !== "source_bus") continue
+    if (element.source_bus_id === sourceBusId) return element.name
+  }
+  return undefined
+}
+
+/** A stroke's width in mm: a little wider than its copper, and at least the minimum on screen. */
+function strokeWidth({
+  width,
+  pixelsPerMm,
+}: {
+  width: number
+  pixelsPerMm: number
+}): number {
+  return Math.max(
+    SKEW_STROKE_WIDTH_FACTOR * width,
+    MIN_STROKE_PIXELS / pixelsPerMm,
+  )
+}
+
+/** Every stored segment, coloured with its pair's palette and grouped by layer and copper width. */
+function groupStrokes({
+  elements,
+  colors,
+  useLogScale,
+}: {
+  elements: AnyCircuitElement[]
+  colors?: LocalSkewColors
+  useLogScale?: boolean
+}): SkewStrokes {
+  const layers: SkewStrokes = new Map()
   for (const pair of elements) {
     if (pair.type !== "pcb_differential_pair_local_skew") continue
+    const palette = resolveSkewPalette({ colors, pair })
     for (const side of ["positive", "negative"] as const) {
       const trace = pair[side]
       trace.segments.forEach((segment, index) => {
         const { layer, width, start, end, local_skew } = segment
         let groups = layers.get(layer)
-        if (!groups) layers.set(layer, (groups = new Map()))
+        if (!groups) {
+          groups = new Map()
+          layers.set(layer, groups)
+        }
         let group = groups.get(width)
-        if (!group) groups.set(width, (group = { casing: "", lines: [] }))
+        if (!group) {
+          group = { casing: "", lines: [] }
+          groups.set(width, group)
+        }
         group.casing += `M${start.x} ${start.y}L${end.x} ${end.y}`
         group.lines.push({
           key: `${pair.pcb_differential_pair_local_skew_id}-${side}-${index}`,
           pair,
           segment,
-          color: skewColor({
-            skew: local_skew,
-            positiveScale: trace.positive_skew_scale,
-            negativeScale: trace.negative_skew_scale,
-            colors,
-            pair,
-            useLogScale,
-          }),
+          color: rgbString(
+            skewColor({
+              skew: local_skew,
+              positiveScale: trace.positive_skew_scale,
+              negativeScale: trace.negative_skew_scale,
+              palette,
+              useLogScale,
+            }),
+          ),
         })
       })
     }
@@ -280,17 +398,13 @@ function groupStrokes(
   return layers
 }
 
+/** Places the readout beside the pointer, below it near the top and to its left on the right half. */
 function readoutPlacement(pointer: Pointer): CSSProperties {
-  const below = pointer.y < READOUT_FLIP_PIXELS
-  const alignment =
-    pointer.x > pointer.viewerWidth / 2
-      ? { right: pointer.viewerWidth - pointer.x + READOUT_OFFSET_PIXELS }
-      : { left: pointer.x + READOUT_OFFSET_PIXELS }
-
-  return {
+  const placement: CSSProperties = {
     position: "absolute",
-    top: pointer.y + (below ? READOUT_OFFSET_PIXELS : -READOUT_OFFSET_PIXELS),
-    transform: below ? undefined : "translateY(-100%)",
+    top: pointer.y - READOUT_OFFSET_PIXELS,
+    transform: "translateY(-100%)",
+    left: pointer.x + READOUT_OFFSET_PIXELS,
     zIndex: zIndexMap.localSkewReadout,
     pointerEvents: "none",
     background: "#222",
@@ -299,6 +413,14 @@ function readoutPlacement(pointer: Pointer): CSSProperties {
     borderRadius: 4,
     padding: "4px 6px",
     font: "12px sans-serif",
-    ...alignment,
   }
+  if (pointer.y < READOUT_FLIP_PIXELS) {
+    placement.top = pointer.y + READOUT_OFFSET_PIXELS
+    placement.transform = undefined
+  }
+  if (pointer.x > pointer.viewerWidth / 2) {
+    placement.left = undefined
+    placement.right = pointer.viewerWidth - pointer.x + READOUT_OFFSET_PIXELS
+  }
+  return placement
 }
