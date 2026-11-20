@@ -91,14 +91,14 @@ export function LocalSkewOverlay({
       }),
     [copperLayers, selectedLayer],
   )
-  const hitCanvasCopper = useMemo(
-    () =>
-      createCanvasCopperHitTest({
-        elements,
-        showCopperPours: showCopperPours === true,
-      }),
-    [elements, showCopperPours],
-  )
+  // Only Canvas tests copper itself; WebGPU answers through `pickLayer`.
+  const hitCanvasCopper = useMemo(() => {
+    if (pickLayer) return undefined
+    return createCanvasCopperHitTest({
+      elements,
+      showCopperPours: showCopperPours === true,
+    })
+  }, [elements, pickLayer, showCopperPours])
 
   useEffect(() => {
     const viewer = containerRef.current?.parentElement
@@ -149,7 +149,7 @@ export function LocalSkewOverlay({
   if (pointer && pickLayer) {
     hovered = pickedSegment({ picked, candidates })
   }
-  if (pointer && !pickLayer) {
+  if (pointer && hitCanvasCopper) {
     hovered = frontCanvasSegment({
       pointer,
       matrix,

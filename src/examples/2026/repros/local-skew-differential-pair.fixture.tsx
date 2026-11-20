@@ -16,7 +16,7 @@ export default function LocalSkewDifferentialPair(): ReactElement {
         USB_DP and USB_DN match end to end. Circuit JSON records{" "}
         {skew?.max_local_skew?.toFixed(3)} mm of local skew between the detours.
       </p>
-      <PCBViewer renderer="canvas" height={600} circuitJson={circuitJson} />
+      <PCBViewer height={600} circuitJson={circuitJson} />
     </div>
   )
 }
