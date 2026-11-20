@@ -2,6 +2,13 @@
 export const MIN_OVERLAP = 1e-6
 
 /**
+ * Corner tolerance when chaining runs in route order, in mm: half
+ * {@link MIN_OVERLAP}, so every run is strictly longer than the tolerance
+ * and can never precede itself or an earlier-started run.
+ */
+const CHAIN_TOLERANCE = MIN_OVERLAP / 2
+
+/**
  * A stretch where the two traces of a pair run side by side. Distances are
  * measured along each walk from its first point, in mm.
  */
@@ -142,7 +149,8 @@ function bestOrderedChain(runs: CandidateRun[]): CandidateRun[] {
     // Chains that end before this run on the positive trace become available.
     while (
       ended < byPositiveEnd.length &&
-      runs[byPositiveEnd[ended]].positiveEnd <= run.positiveStart + MIN_OVERLAP
+      runs[byPositiveEnd[ended]].positiveEnd <
+        run.positiveStart + CHAIN_TOLERANCE
     ) {
       const done = byPositiveEnd[ended++]
       for (let at = rank[done]; at < tree.length; at += at & -at) {
@@ -152,9 +160,9 @@ function bestOrderedChain(runs: CandidateRun[]): CandidateRun[] {
     // The best of them that also ends before this run on the negative trace.
     let before = -1
     for (
-      let at = countAtMost({
+      let at = countLessThan({
         sorted: negativeEnds,
-        value: run.negativeStart + MIN_OVERLAP,
+        value: run.negativeStart + CHAIN_TOLERANCE,
       });
       at > 0;
       at -= at & -at
@@ -182,8 +190,8 @@ function bestOrderedChain(runs: CandidateRun[]): CandidateRun[] {
   return chain.reverse()
 }
 
-/** How many values in an ascending list are at most `value` (binary search). */
-function countAtMost({
+/** How many values in an ascending list are strictly below `value` (binary search). */
+function countLessThan({
   sorted,
   value,
 }: {
@@ -194,7 +202,7 @@ function countAtMost({
   let high = sorted.length
   while (low < high) {
     const middle = (low + high) >> 1
-    if (sorted[middle] <= value) {
+    if (sorted[middle] < value) {
       low = middle + 1
       continue
     }
