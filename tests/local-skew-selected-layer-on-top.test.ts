@@ -48,7 +48,7 @@ test("each layer's overlay paints real pixels with the selected layer in front",
     })
     expect(topAfter[2]).toBeGreaterThan(90)
     expect(topAfter[2]).toBeLessThan(190)
-    expect(Math.max(topAfter[0], topAfter[1])).toBeLessThan(30)
+    expect(topAfter[2]).toBeGreaterThan(2 * Math.max(topAfter[0], topAfter[1]))
     expect(Math.min(...bottomAfter)).toBeGreaterThan(220)
     expect(Math.min(...crossAfter)).toBeGreaterThan(220)
 

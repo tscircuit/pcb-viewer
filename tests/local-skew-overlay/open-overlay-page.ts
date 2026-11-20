@@ -85,7 +85,21 @@ export async function openOverlayPage({
       },
     )
     await page.goto(`http://${host}:${port}/tests/local-skew-overlay/`)
-    await page.waitForSelector(".pcb-layer-top", { state: "attached" })
+    await page
+      .locator('#root[data-rendered="true"]')
+      .waitFor({ state: "attached" })
+    await page.waitForFunction(() => {
+      const board =
+        document.querySelector<HTMLCanvasElement>(".pcb-layer-board")
+      return board?.width === 600
+    })
+    // The initial fit is scheduled on an animation frame after measuring the viewer.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        }),
+    )
     return { page, errors, close }
   } catch (error) {
     await close().catch(() => {})

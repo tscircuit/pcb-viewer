@@ -8,7 +8,7 @@ const NEGATIVE_DETOUR_DEPTH = DETOUR_EXTRA_LENGTH / 2
 
 /**
  * A compensated top-layer differential pair (USB_DN renders pure red at
- * (0, -0.3)) alongside an ordinary 0.5 mm top copper trace at y = -2 so a
+ * (0, -0.3)) alongside an ordinary 0.5 mm top copper trace at y = -2.5 so a
  * test can compare red-overlay and plain-copper pixels side by side.
  */
 export function CopperContrastBoard(): ReactElement {

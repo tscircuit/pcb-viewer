@@ -488,10 +488,6 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           elements={elementsToRender}
                           circuitJson={elements}
                           xRayElements={xRayElements}
-                          dimCopper={
-                            localSkewPairs.length > 0 &&
-                            xRayElements === undefined
-                          }
                           width={props.width}
                           height={props.height}
                           grid={props.grid}

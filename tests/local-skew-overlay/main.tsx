@@ -12,12 +12,16 @@ declare global {
   }
 }
 
-createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root")!
+createRoot(root).render(
   <PCBViewer
     circuitJson={window.localSkewCircuitJson}
     // `StateProps` only types boolean fields; the store accepts any field.
     initialState={window.localSkewInitialState as Partial<StateProps>}
     renderer="canvas"
     height={400}
+    onRenderComplete={() => {
+      root.dataset.rendered = "true"
+    }}
   />,
 )

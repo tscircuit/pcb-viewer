@@ -39,6 +39,9 @@ const OVERLAY_WIDTH_FACTOR = 1.1
 /** Keep overlay lines visible, in screen pixels, when zoomed far out. */
 const MIN_STROKE_PIXELS = 2
 
+/** Dark border on each side of a skew line, in screen pixels. */
+const CASING_PIXELS = 2
+
 /** Extra reach, in screen pixels, beyond a line's drawn half-width that still hovers it. */
 const HOVER_SLACK_PIXELS = 2
 
@@ -70,6 +73,7 @@ type Pointer = {
 type LineGroup = {
   layer: LayerRef
   width: number
+  casing: string
   lines: ReactElement[]
 }
 
@@ -194,6 +198,7 @@ export const LocalSkewOverlay = ({
       }}
     >
       {layers.map((layer) => {
+        const layerGroups = groups.filter((group) => group.layer === layer)
         const opacity = opacityOf(layer)
         if (opacity === 0) return null
         return (
@@ -211,19 +216,29 @@ export const LocalSkewOverlay = ({
             }}
           >
             <g transform={toSVG(matrix)} strokeLinecap="round">
-              {groups
-                .filter((group) => group.layer === layer)
-                .map((group) => (
-                  <g
-                    key={group.width}
-                    strokeWidth={strokeWidth({
-                      width: group.width,
-                      pixelsPerMm,
-                    })}
-                  >
-                    {group.lines}
-                  </g>
-                ))}
+              {layerGroups.map((group) => (
+                <path
+                  key={group.width}
+                  d={group.casing}
+                  fill="none"
+                  stroke="black"
+                  strokeWidth={
+                    strokeWidth({ width: group.width, pixelsPerMm }) +
+                    (2 * CASING_PIXELS) / pixelsPerMm
+                  }
+                />
+              ))}
+              {layerGroups.map((group) => (
+                <g
+                  key={group.width}
+                  strokeWidth={strokeWidth({
+                    width: group.width,
+                    pixelsPerMm,
+                  })}
+                >
+                  {group.lines}
+                </g>
+              ))}
             </g>
           </svg>
         )
@@ -267,9 +282,15 @@ function groupLines({ pairs }: { pairs: LocalSkewPair[] }): LineGroup[] {
         const key = `${segment.layer}|${segment.width}`
         let group = groups.get(key)
         if (!group) {
-          group = { layer: segment.layer, width: segment.width, lines: [] }
+          group = {
+            layer: segment.layer,
+            width: segment.width,
+            casing: "",
+            lines: [],
+          }
           groups.set(key, group)
         }
+        group.casing += `M${segment.start.x} ${segment.start.y}L${segment.end.x} ${segment.end.y}`
         group.lines.push(
           <line
             key={`${pair.source_bus_id}-${side}-${segmentIndex}`}

@@ -38,7 +38,6 @@ interface Props {
   elements: AnyCircuitElement[]
   circuitJson: AnyCircuitElement[]
   xRayElements?: AnyCircuitElement[]
-  dimCopper?: boolean
   defaultUnit?: string
   transform?: Matrix
   grid?: GridConfig
@@ -52,7 +51,6 @@ export const CanvasPrimitiveRenderer = ({
   elements,
   circuitJson,
   xRayElements,
-  dimCopper = false,
   transform,
   grid,
   width = 500,
@@ -101,7 +99,6 @@ export const CanvasPrimitiveRenderer = ({
     drawer.foregroundLayer = selectedLayer
     drawer.hiddenLayerOpacity = hiddenLayerOpacity
     drawer.xRayNetActive = Boolean(xRayElements)
-    drawer.dimCopper = dimCopper
     // Clear every canvas above, then omit drawing completely hidden layers.
     const visibleCanvasRefs = Object.fromEntries(
       Object.entries(availableCanvasRefs).filter(
@@ -435,7 +432,6 @@ export const CanvasPrimitiveRenderer = ({
     elements,
     circuitJson,
     xRayElements,
-    dimCopper,
     width,
     height,
     transform,

@@ -91,7 +91,7 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
       const ctx = composite.getContext("2d")!
       ctx.fillStyle = "#111"
       ctx.fillRect(0, 0, 600, 400)
-      // Each layer's canvas (with its live opacity and filter), then that layer's overlay above it.
+      // Each layer's canvas (with its live opacity), then that layer's overlay above it.
       for (const name of ["board", "top"]) {
         const canvas = document.querySelector(
           `.pcb-layer-${name}`,
@@ -99,7 +99,6 @@ test("Show Local Skew colours the out-of-phase stretch without remounting the bo
         const style = getComputedStyle(canvas)
         ctx.save()
         ctx.globalAlpha = Number(style.opacity)
-        ctx.filter = style.filter
         ctx.drawImage(canvas, 0, 0)
         ctx.restore()
         const overlay = document.querySelector(
