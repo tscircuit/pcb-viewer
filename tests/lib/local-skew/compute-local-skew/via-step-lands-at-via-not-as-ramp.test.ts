@@ -39,7 +39,63 @@ test("an asymmetric via lands as a step at the via instead of smearing across th
   expect(negativeInterpolated).toHaveLength(1)
   expect(positiveInterpolated[0].skew).toBeCloseTo(1.6, 5)
   expect(negativeInterpolated[0].skew).toBeCloseTo(-1.6, 5)
+  expect(pair.positive.scale).toEqual({ positive: 1.6, negative: 0 })
+  expect(pair.negative.scale).toEqual({ positive: 0, negative: 1.6 })
   expect(pair.max_skew).toBeCloseTo(1.6, 5)
+
+  // Routing DN from its load pad must reverse start/end via lengths identically.
+  const [reversed] = computeLocalSkew(
+    renderPairBoard({
+      positivePath: [
+        { x: 6, y: 0, via: true, fromLayer: "top", toLayer: "bottom" },
+        { x: 18, y: 0, via: true, fromLayer: "bottom", toLayer: "top" },
+      ],
+      negativePath: [
+        { x: -6, y: 0, via: true, fromLayer: "top", toLayer: "bottom" },
+        { x: -12, y: 0, via: true, fromLayer: "bottom", toLayer: "top" },
+      ],
+      pcbTraceGap: "0.45mm",
+      negativeFromLoad: true,
+    }),
+  )
+  const reversedPositiveInterpolated = reversed.positive.segments.filter(
+    (segment) => segment.coupling === "interpolated",
+  )
+  const reversedNegativeInterpolated = reversed.negative.segments.filter(
+    (segment) => segment.coupling === "interpolated",
+  )
+  expect(reversedPositiveInterpolated).toHaveLength(1)
+  expect(reversedNegativeInterpolated).toHaveLength(1)
+  expect(reversedPositiveInterpolated[0].skew).toBeCloseTo(1.6, 5)
+  expect(reversedNegativeInterpolated[0].skew).toBeCloseTo(-1.6, 5)
+  expect(reversed.positive.scale).toEqual({ positive: 1.6, negative: 0 })
+  expect(reversed.negative.scale).toEqual({ positive: 0, negative: 1.6 })
+
+  // Mirror: DN drops first at x = -6 while routed from load, so DN's endViaLength
+  // on the reversed first step is what creates the flat step instead of a ramp.
+  const [reversedNegativeFirst] = computeLocalSkew(
+    renderPairBoard({
+      positivePath: [
+        { x: 12, y: 0, via: true, fromLayer: "top", toLayer: "bottom" },
+        { x: 18, y: 0, via: true, fromLayer: "bottom", toLayer: "top" },
+      ],
+      negativePath: [
+        { x: -6, y: 0, via: true, fromLayer: "top", toLayer: "bottom" },
+        { x: -18, y: 0, via: true, fromLayer: "bottom", toLayer: "top" },
+      ],
+      pcbTraceGap: "0.45mm",
+      negativeFromLoad: true,
+    }),
+  )
+  const negFirstInterpolated = reversedNegativeFirst.negative.segments.filter(
+    (segment) => segment.coupling === "interpolated",
+  )
+  expect(negFirstInterpolated).toHaveLength(1)
+  expect(negFirstInterpolated[0].skew).toBeCloseTo(1.6, 5)
+  expect(reversedNegativeFirst.negative.scale).toEqual({
+    positive: 1.6,
+    negative: 0,
+  })
 
   await expect(localSkewSvg(circuitJson)).toMatchSvgSnapshot(import.meta.path)
 })

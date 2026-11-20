@@ -11,6 +11,8 @@ export type DirectedPairBoardProps = {
   bothEndsOutput?: boolean
   /** Route the negative trace from the output chip instead of the receiver. */
   negativeFromOutput?: boolean
+  /** Which trace(s) have `isOutput` set on `U_TX`. Defaults to `"both"`. */
+  outputSide?: "both" | "positive" | "negative"
 }
 
 /**
@@ -22,8 +24,11 @@ export type DirectedPairBoardProps = {
 export function DirectedPairBoard({
   bothEndsOutput = false,
   negativeFromOutput = false,
+  outputSide = "both",
 }: DirectedPairBoardProps): ReactElement {
   const rxPinAttrs = bothEndsOutput ? { isOutput: true } : { isInput: true }
+  const txPin1Attrs = outputSide === "negative" ? {} : { isOutput: true }
+  const txPin2Attrs = outputSide === "positive" ? {} : { isOutput: true }
   return (
     <board width="40mm" height="20mm" layers={2}>
       <chip
@@ -60,8 +65,8 @@ export function DirectedPairBoard({
         pcbX={12}
         pcbY={0}
         pinAttributes={{
-          pin1: { isOutput: true },
-          pin2: { isOutput: true },
+          pin1: txPin1Attrs,
+          pin2: txPin2Attrs,
         }}
         footprint={
           <footprint>

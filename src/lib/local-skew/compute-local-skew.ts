@@ -92,8 +92,9 @@ type TracesBySource = Map<SourceTrace["source_trace_id"], PcbTrace[]>
  * how much farther one trace has run than the other, not only at the ends.
  *
  * Distances are copper length (planar length plus each via's Z-distance
- * between layers). When each trace has exactly one end port marked
- * `is_output`, both traces are walked from that end; otherwise distances are
+ * between layers). Each trace with exactly one end port marked `is_output`
+ * is walked from that end; if only one trace has such a port, the other is
+ * oriented to match it by end distance; if neither does, distances are
  * measured from the positive trace's first route point and the negative
  * trace is walked from the end that matches it.
  */
@@ -208,16 +209,20 @@ function computePairSkew({
     pcbPortsById,
     sourcePortsById,
   })
-  if (positiveOutput && negativeOutput) {
-    if (positiveOutput === "end") positive = reverseWalk(positive)
-    if (negativeOutput === "end") negative = reverseWalk(negative)
-  } else if (
+  if (positiveOutput === "end") positive = reverseWalk(positive)
+  if (negativeOutput === "end") negative = reverseWalk(negative)
+  if (
+    (!positiveOutput || !negativeOutput) &&
     isNegativeRouteReversed({
       positiveSteps: positive.steps,
       negativeSteps: negative.steps,
     })
   ) {
-    negative = reverseWalk(negative)
+    if (negativeOutput) {
+      positive = reverseWalk(positive)
+    } else {
+      negative = reverseWalk(negative)
+    }
   }
   const runs = findCoupledRuns({
     positive: positive.steps,
