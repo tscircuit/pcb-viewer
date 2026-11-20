@@ -10,10 +10,6 @@ export type CoupledRun = {
   positiveEnd: number
   negativeStart: number
   negativeEnd: number
-  /** How much farther the positive trace has run than the negative one at the run's start, in mm. */
-  startSkew: number
-  /** The same at the run's end. It differs from `startSkew` when the traces are not exactly parallel. */
-  endSkew: number
 }
 
 /** A coupled run before selection, with how far apart its traces are. */
@@ -36,13 +32,6 @@ type Interval = { start: number; end: number }
 export function selectCoupledRuns(candidates: CandidateRun[]): CoupledRun[] {
   const options = candidates.concat(trimNearestFirst(candidates))
   return bestOrderedChain(options).map(({ offset: _offset, ...run }) => run)
-}
-
-/** Total length of the positive trace covered by runs, in mm. */
-export function coupledLength(runs: CoupledRun[]): number {
-  let length = 0
-  for (const run of runs) length += run.positiveEnd - run.positiveStart
-  return length
 }
 
 /** Trims candidates, nearest first, so no stretch of either trace is used twice. */
@@ -241,11 +230,13 @@ function insertInterval({
   intervals: Interval[]
   interval: Interval
 }): void {
-  intervals.splice(
-    firstEndingAfter({ intervals, position: interval.start }),
-    0,
-    interval,
-  )
+  // Insert by start: a trimmed piece can begin a rounding error before the
+  // end of the interval it follows, and must still sort after it.
+  let index = firstEndingAfter({ intervals, position: interval.start })
+  while (index < intervals.length && intervals[index].start <= interval.start) {
+    index++
+  }
+  intervals.splice(index, 0, interval)
 }
 
 /** Index of the first interval that ends after `position` (binary search). */
@@ -290,8 +281,6 @@ function sliceRun({
     positiveEnd: to,
     negativeStart,
     negativeEnd,
-    startSkew: from - negativeStart,
-    endSkew: to - negativeEnd,
     offset: run.offset,
   }
 }

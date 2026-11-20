@@ -21,6 +21,8 @@ export type PairBoardProps = {
   negativeFromLoad?: boolean
   /** Declare the positive trace as both members, which core accepts. */
   positiveOnBothSides?: boolean
+  /** Copper width of the positive trace. Defaults to "0.15mm", like the negative. */
+  positiveThickness?: string
 }
 
 /**
@@ -34,6 +36,7 @@ export function PairBoard({
   pcbTraceGap,
   negativeFromLoad,
   positiveOnBothSides,
+  positiveThickness = "0.15mm",
 }: PairBoardProps): ReactElement {
   let negativeFrom = ".TN_SRC > .pin1"
   let negativeTo = ".TN_LOAD > .pin1"
@@ -81,7 +84,7 @@ export function PairBoard({
         name="DP"
         from=".TP_SRC > .pin1"
         to=".TP_LOAD > .pin1"
-        thickness="0.15mm"
+        thickness={positiveThickness}
         pcbPath={positivePath}
       />
       <trace
@@ -105,5 +108,5 @@ export function PairBoard({
 export function renderPairBoard(props: PairBoardProps): CircuitJson {
   const circuit = new Circuit()
   circuit.add(<PairBoard {...props} />)
-  return circuit.getCircuitJson() as CircuitJson
+  return circuit.getCircuitJson()
 }
