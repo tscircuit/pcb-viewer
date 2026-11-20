@@ -185,6 +185,9 @@ function bestOrderedChain(runs: CandidateRun[]): CandidateRun[] {
   })
   const chain: CandidateRun[] = []
   for (let index = best; index >= 0; index = previous[index]) {
+    if (chain.length >= runs.length) {
+      throw new Error("Coupled run chain contains a cycle")
+    }
     chain.push(runs[index])
   }
   return chain.reverse()
