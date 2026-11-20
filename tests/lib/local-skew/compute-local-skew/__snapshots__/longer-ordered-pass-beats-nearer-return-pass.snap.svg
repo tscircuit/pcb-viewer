@@ -18,18 +18,18 @@
     <line x1="6" y1="1.9999999999999998" x2="13" y2="1.9999999999999998" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="13" y1="1.9999999999999998" x2="13" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
     <line x1="13" y1="-0.3" x2="12" y2="-0.3" stroke="rgb(200, 52, 52)" stroke-width="0.15" stroke-linecap="round" opacity="0.35"/>
-    <line x1="-12" y1="0.3" x2="10" y2="0.3" stroke="rgb(46, 204, 113)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="10" y1="0.3" x2="12" y2="0.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-12" y1="-0.3" x2="10" y2="-0.3" stroke="rgb(46, 204, 113)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="10" y1="-0.3" x2="10" y2="-1.9999999999999993" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="10" y1="-2" x2="14" y2="-2" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="14" y1="-2" x2="14" y2="3.0000000000000036" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="14" y1="3" x2="-6" y2="3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-6" y1="3" x2="-6" y2="0.7999999999999972" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="-6" y1="0.8" x2="6" y2="0.8" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="6" y1="0.8" x2="6" y2="2.0000000000000027" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="6" y1="1.9999999999999998" x2="13" y2="1.9999999999999998" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="13" y1="1.9999999999999998" x2="13" y2="-0.2999999999999974" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
-    <line x1="13" y1="-0.3" x2="12" y2="-0.3" stroke="rgb(136, 136, 136)" stroke-width="0.09" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="0.3" x2="10" y2="0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="10" y1="0.3" x2="12" y2="0.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-12" y1="-0.3" x2="10" y2="-0.3" stroke="rgb(255, 255, 255)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="10" y1="-0.3" x2="10" y2="-1.9999999999999993" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="10" y1="-2" x2="14" y2="-2" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="14" y1="-2" x2="14" y2="3.0000000000000036" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="14" y1="3" x2="-6" y2="3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-6" y1="3" x2="-6" y2="0.7999999999999972" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="-6" y1="0.8" x2="6" y2="0.8" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="6" y1="0.8" x2="6" y2="2.0000000000000027" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="6" y1="1.9999999999999998" x2="13" y2="1.9999999999999998" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="13" y1="1.9999999999999998" x2="13" y2="-0.2999999999999974" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
+    <line x1="13" y1="-0.3" x2="12" y2="-0.3" stroke="rgb(128, 128, 128)" stroke-width="0.165" stroke-linecap="round" opacity="1"/>
   </g>
 </svg>
