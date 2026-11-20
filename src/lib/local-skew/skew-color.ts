@@ -10,6 +10,9 @@ const POSITIVE_SKEW_COLOR: Rgb = [0, 0, 255]
 /** Colour where this trace has run less far than its partner (KiCad's default negative-skew colour). */
 const NEGATIVE_SKEW_COLOR: Rgb = [255, 0, 0]
 
+/** Overlay stroke width relative to the trace, matching KiCad's 1.1× inflation. */
+export const OVERLAY_WIDTH_FACTOR = 1.1
+
 /** Colour where skew is unknown because the traces have not run together yet or have stopped doing so. */
 export const UNKNOWN_SKEW_COLOR = "rgb(128, 128, 128)"
 
