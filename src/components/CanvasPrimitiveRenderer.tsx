@@ -87,11 +87,7 @@ export const CanvasPrimitiveRenderer = ({
   }, [phaseSkewStrokes])
   // Found once per scene; their drills are cut again through the overlay.
   const drilledElements = useMemo(
-    () =>
-      elements.filter(
-        (element) =>
-          element.type === "pcb_via" || element.type === "pcb_plated_hole",
-      ),
+    () => elements.filter(isDrilledElement),
     [elements],
   )
 
@@ -240,6 +236,7 @@ export const CanvasPrimitiveRenderer = ({
             canvas,
             copperLayer,
             drilledElements,
+            elements,
             phaseSkewStrokes: layerPhaseSkewStrokes,
             realToCanvasMat: transform,
           })
@@ -551,4 +548,15 @@ export const CanvasPrimitiveRenderer = ({
         ))}
     </div>
   )
+}
+
+/**
+ * Whether the copper pass cuts a drill for `element`: a via, a plated hole,
+ * or a trace whose route passes through a via.
+ */
+function isDrilledElement(element: AnyCircuitElement): boolean {
+  if (element.type === "pcb_via") return true
+  if (element.type === "pcb_plated_hole") return true
+  if (element.type !== "pcb_trace") return false
+  return element.route.some((point) => point.route_type === "via")
 }

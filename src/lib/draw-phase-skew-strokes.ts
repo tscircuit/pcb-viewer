@@ -32,13 +32,19 @@ export function drawPhaseSkewStrokes({
   canvas,
   copperLayer,
   drilledElements,
+  elements,
   phaseSkewStrokes,
   realToCanvasMat,
 }: {
   canvas: HTMLCanvasElement
   copperLayer: PcbRenderLayer
-  /** The scene's vias and plated holes. */
+  /**
+   * The scene's vias, plated holes and traces with a via in their route,
+   * from which circuit-to-canvas makes the vias stored only as route points.
+   */
   drilledElements: AnyCircuitElement[]
+  /** The whole scene, which resolves each via's board as the base pass does. */
+  elements: AnyCircuitElement[]
   /** The strokes on `copperLayer`. */
   phaseSkewStrokes: LayerStroke[]
   realToCanvasMat: Matrix
@@ -72,5 +78,6 @@ export function drawPhaseSkewStrokes({
   drillDrawer.drawElements(drilledElements, {
     layers: [copperLayer],
     drawSoldermask: false,
+    clipContextElements: elements,
   })
 }

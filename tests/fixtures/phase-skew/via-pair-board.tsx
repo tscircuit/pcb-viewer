@@ -93,3 +93,11 @@ export function renderViaPairBoard(): CircuitJson {
   circuit.render()
   return circuit.getCircuitJson() as CircuitJson
 }
+
+/**
+ * {@link ViaPairBoard} without its `pcb_via` records, so each via exists only
+ * as a route point of its trace, as some autorouters store them.
+ */
+export function renderRouteOnlyViaPairBoard(): CircuitJson {
+  return renderViaPairBoard().filter((element) => element.type !== "pcb_via")
+}
