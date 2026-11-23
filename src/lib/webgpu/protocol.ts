@@ -10,6 +10,8 @@ export type WebGpuRequest =
       type: "scene"
       elements: AnyCircuitElement[]
       sceneGeneration: number
+      /** The strokes for these elements, drawn from the same frame. */
+      layerStrokes?: LayerStroke[]
     }
   | {
       type: "view"
@@ -18,6 +20,7 @@ export type WebGpuRequest =
       transform: Matrix
       options: RenderOptions & { xRayElementIds?: readonly string[] }
     }
+  /** New strokes for the latest scene, such as after a colour change. */
   | { type: "layer_strokes"; layerStrokes?: LayerStroke[] }
   | { type: "dispose" }
 export type WebGpuResponse =

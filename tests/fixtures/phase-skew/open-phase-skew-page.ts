@@ -64,7 +64,7 @@ export async function openPhaseSkewPage({
   circuitJson: CircuitJson
   renderer: "canvas" | "webgpu"
 }): Promise<PhaseSkewPage> {
-  const server = await startPhaseSkewServer()
+  const server = await startPhaseSkewServer({ alias: {} })
   let browser: Browser | undefined
   try {
     const launchOptions: LaunchOptions = { headless: true }
@@ -105,14 +105,60 @@ export async function openPhaseSkewPage({
 }
 
 /**
+ * The worker test page, whose WebGPU drawer is replaced by one that reports
+ * what each frame draws, with the worker ready.
+ */
+export async function openPhaseSkewWorkerPage(): Promise<PhaseSkewPage> {
+  const server = await startPhaseSkewServer({
+    alias: {
+      "@tscircuit/circuit-json-webgpu": fileURLToPath(
+        new URL(
+          "../../webgpu-scene-coalescing/controlled-drawer.ts",
+          import.meta.url,
+        ),
+      ),
+    },
+  })
+  let browser: Browser | undefined
+  try {
+    const launchOptions: LaunchOptions = { headless: true }
+    if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) {
+      launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+    }
+    browser = await chromium.launch(launchOptions)
+    const page = await browser.newPage()
+    const errors: string[] = []
+    page.on("pageerror", (error) => errors.push(error.message))
+    await page.goto(`${server.url}tests/fixtures/phase-skew-worker/`)
+    await page.evaluate(() => window.phaseSkewWorkerTest.start())
+    await page.waitForFunction(() => window.phaseSkewWorkerTest.stats.ready)
+    const openBrowser = browser
+    return {
+      page,
+      errors,
+      close: () => closePhaseSkewPage({ browser: openBrowser, server }),
+    }
+  } catch (error) {
+    await closePhaseSkewPage({ browser, server })
+    throw error
+  }
+}
+
+/**
  * Serves the repository through Vite's middleware on port 0, which the
  * operating system replaces with a free port. Vite's own `listen()` treats
  * port 0 as unset and tries 5173 first.
  */
-async function startPhaseSkewServer(): Promise<PhaseSkewServer> {
+async function startPhaseSkewServer({
+  alias,
+}: {
+  /** Modules to serve in place of others, by import specifier. */
+  alias: Record<string, string>
+}): Promise<PhaseSkewServer> {
   const httpServer = createHttpServer()
   const vite = await createServer({
     root: fileURLToPath(new URL("../../../", import.meta.url)),
+    resolve: { alias },
     // The HMR WebSocket shares the HTTP server's port. On its own default
     // port it would clash with another test's server.
     server: { middlewareMode: true, hmr: { server: httpServer } },

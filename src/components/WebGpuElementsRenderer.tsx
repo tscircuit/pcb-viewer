@@ -29,10 +29,7 @@ export function WebGpuElementsRenderer(props: Props) {
   const workerRef = useRef<Worker | undefined>(undefined)
   const onRenderCompleteRef = useRef(props.onRenderComplete)
   const sceneRef = useRef({ elements, sceneGeneration: 0 })
-  const layerStrokesRequestRef = useRef<WebGpuRequest>({
-    type: "layer_strokes",
-    layerStrokes: props.phaseSkewStrokes,
-  })
+  const phaseSkewStrokesRef = useRef(props.phaseSkewStrokes)
   const latestSubmittedSceneGenerationRef = useRef(0)
   const completedSceneGenerationRef = useRef(0)
   const ready = useRef(false)
@@ -126,19 +123,22 @@ export function WebGpuElementsRenderer(props: Props) {
     sceneRef.current = { elements, sceneGeneration }
     if (!ready.current || !workerRef.current) return
     latestSubmittedSceneGenerationRef.current = sceneGeneration
+    // Strokes travel with their scene, so a frame between two messages can't
+    // draw the new board with the previous board's strokes.
     workerRef.current.postMessage({
       type: "scene",
       elements,
       sceneGeneration,
+      layerStrokes: props.phaseSkewStrokes,
     } satisfies WebGpuRequest)
   }, [elements])
   useLayoutEffect(() => {
-    layerStrokesRequestRef.current = {
+    phaseSkewStrokesRef.current = props.phaseSkewStrokes
+    if (!ready.current) return
+    workerRef.current?.postMessage({
       type: "layer_strokes",
       layerStrokes: props.phaseSkewStrokes,
-    }
-    if (!ready.current) return
-    workerRef.current?.postMessage(layerStrokesRequestRef.current)
+    } satisfies WebGpuRequest)
   }, [props.phaseSkewStrokes])
   useEffect(() => {
     let disposed = false,
@@ -211,8 +211,8 @@ export function WebGpuElementsRenderer(props: Props) {
               type: "scene",
               elements: scene.elements,
               sceneGeneration: scene.sceneGeneration,
+              layerStrokes: phaseSkewStrokesRef.current,
             } satisfies WebGpuRequest)
-            worker!.postMessage(layerStrokesRequestRef.current)
             if (viewRef.current) worker!.postMessage(viewRef.current)
           }
         }

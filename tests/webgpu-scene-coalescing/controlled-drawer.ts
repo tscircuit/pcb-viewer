@@ -23,6 +23,7 @@ export class CircuitToWebGpuDrawer {
   static supportsXRayNet = true
   diagnostics: Array<{ type: string; message: string }> = []
   stats = { geometryUploads: 0, frames: 0, compileMs: 0 }
+  private elementCount = 0
 
   static async create() {
     return new CircuitToWebGpuDrawer()
@@ -30,14 +31,20 @@ export class CircuitToWebGpuDrawer {
 
   setCircuitJson(elements: AnyCircuitElement[]) {
     this.stats.geometryUploads++
+    this.elementCount = elements.length
     self.postMessage({
       type: "test_scene_compiled",
       elementCount: elements.length,
     })
   }
 
-  render() {
+  render(options: { layerStrokes?: readonly unknown[] }) {
     this.stats.frames++
+    self.postMessage({
+      type: "test_frame_drawn",
+      elementCount: this.elementCount,
+      layerStrokeCount: options.layerStrokes?.length ?? 0,
+    })
   }
 
   dispose() {}

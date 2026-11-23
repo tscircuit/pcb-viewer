@@ -39,6 +39,8 @@ function renderFrame() {
       const scene = pendingScene
       pendingScene = undefined
       drawer.setCircuitJson(scene.elements)
+      // The scene's own strokes, so it is never drawn with the last scene's.
+      layerStrokes = scene.layerStrokes
       if (drawer.diagnostics.length)
         throw new Error(
           `Unsupported WebGPU geometry: ${drawer.diagnostics.map((d) => `${d.type}: ${d.message}`).join("; ")}`,
@@ -94,6 +96,10 @@ scope.onmessage = async (event) => {
       schedule()
     } else if (workerRequest.type === "layer_strokes") {
       layerStrokes = workerRequest.layerStrokes
+      // Sent after the pending scene, so they replace the strokes it carries.
+      if (pendingScene) {
+        pendingScene = { ...pendingScene, layerStrokes: layerStrokes }
+      }
       schedule()
     } else {
       failed = true
