@@ -29,7 +29,6 @@ export function getPhaseSkewLabel({
     label = `phase skew max ${max_abs_phase_skew.toFixed(LENGTH_DECIMALS)} mm`
   }
   if (max_length_skew === undefined) return label
-  if (end_to_end_length_delta === undefined) return label
   const lengthSkew = Math.abs(end_to_end_length_delta).toFixed(LENGTH_DECIMALS)
   return `${label}, length skew ${lengthSkew} / ${max_length_skew} mm`
 }
