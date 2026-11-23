@@ -254,8 +254,30 @@ for (const example of cases) {
         ? await screenshotPixelsAt({ page, points: drillPoints })
         : []
 
+      const matchSnapshot = async (name: string, title: string) => {
+        if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) return
+        const svg = await snapshotCopper({
+          page,
+          title,
+          layers: example.copperLayers,
+        })
+        await expect(svg).toMatchSvgSnapshot(
+          import.meta.path,
+          `differential-pair-phase-skew-${name}`,
+        )
+      }
+      if (!example.toggleOff) {
+        await matchSnapshot(
+          `${example.name}-before`,
+          `${example.title} (plain copper)`,
+        )
+      }
       await togglePhaseSkew({ page })
       if (example.toggleOff) {
+        await matchSnapshot(
+          `${example.name}-after`,
+          "Renderer comparison with phase skew enabled",
+        )
         expect(await screenshotPixelsAt({ page, points })).toEqual([BLUE, RED])
         await togglePhaseSkew({ page })
       }
@@ -265,17 +287,7 @@ for (const example of cases) {
       ).toEqual([...expected, ...drillPixels])
       expect(errors).toEqual([])
 
-      if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE === undefined) {
-        const svg = await snapshotCopper({
-          page,
-          title: example.title,
-          layers: example.copperLayers,
-        })
-        await expect(svg).toMatchSvgSnapshot(
-          import.meta.path,
-          `differential-pair-phase-skew-${example.name}`,
-        )
-      }
+      await matchSnapshot(example.name, example.title)
     } finally {
       await close()
     }

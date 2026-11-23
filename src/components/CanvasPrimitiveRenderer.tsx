@@ -86,10 +86,10 @@ export const CanvasPrimitiveRenderer = ({
     if (!phaseSkewStrokes) return undefined
     return groupPhaseSkewStrokesByLayer(phaseSkewStrokes)
   }, [phaseSkewStrokes])
-  // Resolved once per scene; their drills are cut again through the overlay.
+  const hasPhaseSkewStrokes = Boolean(phaseSkewStrokes?.length)
   const drilledElements = useMemo(
-    () => getPhaseSkewDrilledElements({ elements }),
-    [elements],
+    () => (hasPhaseSkewStrokes ? getPhaseSkewDrilledElements(elements) : []),
+    [elements, hasPhaseSkewStrokes],
   )
 
   useEffect(() => {
@@ -237,6 +237,7 @@ export const CanvasPrimitiveRenderer = ({
             canvas,
             copperLayer,
             drilledElements,
+            elements,
             phaseSkewStrokes: layerPhaseSkewStrokes,
             realToCanvasMat: transform,
           })

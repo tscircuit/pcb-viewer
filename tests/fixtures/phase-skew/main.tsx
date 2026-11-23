@@ -1,5 +1,6 @@
 import type { CircuitJson } from "circuit-json"
 import { type ReactElement, useState } from "react"
+import { flushSync } from "react-dom"
 import { createRoot } from "react-dom/client"
 import { PCBViewer } from "../../../src/index"
 import type { PhaseSkewColorOverrides } from "../../../src/lib/get-phase-skew-strokes"
@@ -18,13 +19,19 @@ declare global {
     setPhaseSkewCircuitJson: (circuitJson: CircuitJson) => void
     /** Every message posted to a worker on this page, in order. */
     phaseSkewWorkerMessages: RecordedWorkerMessage[]
+    /** Delivers the real worker's ready message when startup is held. */
+    releasePhaseSkewWorker?: () => void
   }
 }
 
 /** The viewer on the test's board, which the test can replace. */
 function PhaseSkewPage({ root }: { root: HTMLElement }): ReactElement {
-  const [circuitJson, setCircuitJson] = useState(window.phaseSkewCircuitJson)
-  window.setPhaseSkewCircuitJson = setCircuitJson
+  const [{ circuitJson }, setScene] = useState({
+    circuitJson: window.phaseSkewCircuitJson,
+  })
+  window.setPhaseSkewCircuitJson = (circuitJson) => {
+    flushSync(() => setScene({ circuitJson }))
+  }
   return (
     <PCBViewer
       circuitJson={circuitJson}

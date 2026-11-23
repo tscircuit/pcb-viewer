@@ -1,12 +1,11 @@
 import type { LayerStroke } from "@tscircuit/circuit-json-webgpu"
-import type { PcbRenderLayer } from "circuit-json"
+import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
   type PcbColorMap,
 } from "circuit-to-canvas"
 import type { Matrix } from "transformation-matrix"
-import type { PhaseSkewDrilledElement } from "./get-phase-skew-drilled-elements"
 
 /** The largest channel of an 8-bit CSS colour. */
 const CHANNEL_MAX = 255
@@ -33,13 +32,15 @@ export function drawPhaseSkewStrokes({
   canvas,
   copperLayer,
   drilledElements,
+  elements,
   phaseSkewStrokes,
   realToCanvasMat,
 }: {
   canvas: HTMLCanvasElement
   copperLayer: PcbRenderLayer
-  /** The scene's vias, including route-point vias, and plated holes. */
-  drilledElements: PhaseSkewDrilledElement[]
+  /** Vias, plated holes and traces containing only their via route points. */
+  drilledElements: AnyCircuitElement[]
+  elements: AnyCircuitElement[]
   /** The strokes on `copperLayer`. */
   phaseSkewStrokes: LayerStroke[]
   realToCanvasMat: Matrix
@@ -72,6 +73,6 @@ export function drawPhaseSkewStrokes({
   drillDrawer.realToCanvasMat = realToCanvasMat
   drillDrawer.drawElements(drilledElements, {
     layers: [copperLayer],
-    drawSoldermask: false,
+    clipContextElements: elements,
   })
 }

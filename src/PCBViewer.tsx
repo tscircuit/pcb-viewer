@@ -64,7 +64,23 @@ type Props = {
   controller?: PcbViewerController
 }
 
-export const PCBViewer = ({
+export function PCBViewer(props: Props) {
+  const { circuitJson } = props
+  // A host can edit a pair's input in place. Capture its content on host
+  // renders so a change reaches both renderers as a new scene.
+  const sceneContent = circuitJson?.some(
+    (element) => element.type === "source_bus" && element.differential_pair,
+  )
+    ? JSON.stringify(circuitJson)
+    : undefined
+  const scene = useMemo(
+    () => (sceneContent === undefined ? circuitJson : circuitJson?.slice()),
+    [circuitJson, sceneContent],
+  )
+  return <PCBViewerContent {...props} circuitJson={scene} />
+}
+
+function PCBViewerContent({
   circuitJson,
   debugGraphics,
   height = 600,
@@ -81,7 +97,7 @@ export const PCBViewer = ({
   clickToInteractEnabled = false,
   disablePcbGroups = false,
   controller,
-}: Props) => {
+}: Props) {
   const [activeRenderer, setActiveRenderer] = useState<RenderingEngine>(
     () => renderer ?? getPreferredRenderer(),
   )
