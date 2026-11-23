@@ -8,7 +8,7 @@ import {
 } from "./fixtures/phase-skew/open-phase-skew-page"
 import { renderUsbPairBoard } from "./fixtures/phase-skew/usb-pair-board"
 
-test("a length-matched USB pair shows no phase skew between its detours", async () => {
+test("the View menu lacks the phase skew toggle for a length-matched USB pair", async () => {
   const circuitJson = renderUsbPairBoard()
   const [usbPair] = cju(circuitJson).source_bus.list()
   expect(usbPair.differential_pair).toBeDefined()
