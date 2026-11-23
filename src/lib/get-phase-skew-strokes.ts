@@ -37,10 +37,7 @@ export function getPhaseSkewStrokes({
   differentialPairPhaseSkews: DifferentialPairPhaseSkew[]
   phaseSkewColors?: PhaseSkewColorOverrides
 }): LayerStroke[] {
-  const palette = parsePhaseSkewPalette({
-    ...DEFAULT_PHASE_SKEW_COLORS,
-    ...phaseSkewColors,
-  })
+  const palette = parsePhaseSkewPalette({ phaseSkewColors })
   return differentialPairPhaseSkews
     .flatMap((pair) => [pair.positive_trace, pair.negative_trace])
     .flatMap((trace) =>
@@ -54,15 +51,52 @@ export function getPhaseSkewStrokes({
     )
 }
 
-/** Parses each CSS colour of `phaseSkewColors`. */
-function parsePhaseSkewPalette(
-  phaseSkewColors: PhaseSkewColors,
-): PhaseSkewPalette {
+/** Each phase skew colour: its override where one parses, otherwise KiCad's. */
+function parsePhaseSkewPalette({
+  phaseSkewColors,
+}: {
+  phaseSkewColors?: PhaseSkewColorOverrides
+}): PhaseSkewPalette {
   return {
-    positive: parseCssColor(phaseSkewColors.positive),
-    negative: parseCssColor(phaseSkewColors.negative),
-    zero: parseCssColor(phaseSkewColors.zero),
-    unknown: parseCssColor(phaseSkewColors.unknown),
+    positive: parsePhaseSkewColor({
+      cssColor: phaseSkewColors?.positive,
+      defaultCssColor: DEFAULT_PHASE_SKEW_COLORS.positive,
+    }),
+    negative: parsePhaseSkewColor({
+      cssColor: phaseSkewColors?.negative,
+      defaultCssColor: DEFAULT_PHASE_SKEW_COLORS.negative,
+    }),
+    zero: parsePhaseSkewColor({
+      cssColor: phaseSkewColors?.zero,
+      defaultCssColor: DEFAULT_PHASE_SKEW_COLORS.zero,
+    }),
+    unknown: parsePhaseSkewColor({
+      cssColor: phaseSkewColors?.unknown,
+      defaultCssColor: DEFAULT_PHASE_SKEW_COLORS.unknown,
+    }),
+  }
+}
+
+/**
+ * `cssColor` as red, green, blue and alpha from 0 to 1. An unset colour, or
+ * one the `color` package can't parse (such as `oklch()`), keeps the
+ * default, so a bad prop never stops the viewer rendering.
+ */
+function parsePhaseSkewColor({
+  cssColor,
+  defaultCssColor,
+}: {
+  cssColor?: string
+  defaultCssColor: string
+}): Color {
+  if (cssColor === undefined) return parseCssColor(defaultCssColor)
+  try {
+    return parseCssColor(cssColor)
+  } catch {
+    console.warn(
+      `Invalid phase skew colour '${cssColor}', using '${defaultCssColor}'`,
+    )
+    return parseCssColor(defaultCssColor)
   }
 }
 
