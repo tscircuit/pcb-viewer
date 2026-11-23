@@ -26,7 +26,7 @@
         "@swc/core": "^1.4.12",
         "@tscircuit/checks": "^0.0.282",
         "@tscircuit/circuit-json-util": "^0.0.135",
-        "@tscircuit/circuit-json-webgpu": "https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@30e4abc",
+        "@tscircuit/circuit-json-webgpu": "https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@70e79a5",
         "@tscircuit/core": "^0.0.2462",
         "@tscircuit/eagle-xml-converter": "^1.0.0",
         "@tscircuit/footprinter": "^0.0.451",
@@ -39,7 +39,7 @@
         "@webgpu/types": "^0.1.72",
         "bun-match-svg": "0.0.9",
         "circuit-json-to-connectivity-map": "^0.0.35",
-        "circuit-json-to-differential-pair-phase-skew": "https://pkg.pr.new/tscircuit/circuit-json-to-differential-pair-phase-skew@5e8d2cc",
+        "circuit-json-to-differential-pair-phase-skew": "https://pkg.pr.new/tscircuit/circuit-json-to-differential-pair-phase-skew@7063302",
         "earcut": "3.2.4",
         "esbuild": "^0.25.2",
         "format-si-unit": "^0.0.12",
@@ -433,7 +433,7 @@
 
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.135", "", { "dependencies": { "@flatten-js/core": "^1.6.14", "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": ">=0.0.560", "transformation-matrix": "*", "zod": "3" } }, "sha512-4sQvqHpeh5m4YTjUHSWP0pBzw0u29m/+AXTLEKOqNGR7qlGinUyQKI8s+7y9V37YbYOuuwfhny9KO6FU4T2u8Q=="],
 
-    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@30e4abc", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-D6XyanFv4GK33eMloSH1Ft7bBkOno4CoI2n0m2HFqUs8w7gb+qz6Rao5grd7J/1vE0S2EkHpZCC34ZEKG+dy9g=="],
+    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@70e79a5", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-D6XyanFv4GK33eMloSH1Ft7bBkOno4CoI2n0m2HFqUs8w7gb+qz6Rao5grd7J/1vE0S2EkHpZCC34ZEKG+dy9g=="],
 
     "@tscircuit/cli": ["@tscircuit/cli@0.1.2485", "", { "dependencies": { "typescript": "~5.9.3" }, "peerDependencies": { "tscircuit": "*" }, "bin": { "tscircuit-cli": "cli/entrypoint.js" } }, "sha512-EOtlgb3GfkZW+ZCY929IqeyFeYwr1YoPpj9I31f1p8vU1N6ABNJOSY/ebdUZoNU9WdMSEL+WiscUke2DQLlZKA=="],
 
@@ -667,7 +667,7 @@
 
     "circuit-json-to-connectivity-map": ["circuit-json-to-connectivity-map@0.0.35", "", { "dependencies": { "@tscircuit/math-utils": "^0.0.9" }, "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-+9qsZDxsKuzukIzg3gfUxusZWaZs+A4CZfgaULbIfjiIxaTrNY9MdLPBofFxVcNX37j6Hcymoc4oMJr4Uelqog=="],
 
-    "circuit-json-to-differential-pair-phase-skew": ["circuit-json-to-differential-pair-phase-skew@https://pkg.pr.new/tscircuit/circuit-json-to-differential-pair-phase-skew@5e8d2cc", { "dependencies": { "@tscircuit/circuit-json-util": "0.0.135" }, "peerDependencies": { "circuit-json": ">=0.0.561" } }, "sha512-Cu6w9lWKobrfRiMQI7/fSji+eL6fyBg+kixDIMDGh0Do0Gw1D8MAPUKE6/P4RwXCNp34GHMP6byLI2ynB+SdqQ=="],
+    "circuit-json-to-differential-pair-phase-skew": ["circuit-json-to-differential-pair-phase-skew@https://pkg.pr.new/tscircuit/circuit-json-to-differential-pair-phase-skew@7063302", { "dependencies": { "@tscircuit/circuit-json-util": "0.0.135" }, "peerDependencies": { "circuit-json": ">=0.0.561" } }, "sha512-xHImQ6WfE6lLgGjhpdabvtT+HFjrMXEQ8NqvQuCf6GSZ0tW0tNYoWLbuAK9Tejx5O7+F5YbyDkeFyqUeohWMfQ=="],
 
     "circuit-json-to-gltf": ["circuit-json-to-gltf@0.0.164", "", { "dependencies": { "@jscad/modeling": "^2.12.6", "@tscircuit/alphabet": "^0.0.25", "@tscircuit/cableprinter": "^0.0.6", "@tscircuit/footprinter": "^0.0.431", "earcut": "^3.0.2", "gl-matrix": "^3.4.4", "jscad-electronics": "^0.0.243", "jscad-planner": "^0.0.19", "jscad-to-gltf": "^0.0.5", "occt-import-js": "^0.0.23" }, "peerDependencies": { "@resvg/resvg-js": "2", "@resvg/resvg-wasm": "2", "@tscircuit/circuit-json-util": "*", "circuit-json": ">=0.0.539", "circuit-to-svg": ">=0.0.445", "typescript": "^5" }, "optionalPeers": ["@resvg/resvg-js", "@resvg/resvg-wasm"] }, "sha512-a03y7Md+EnM2wO+KKKpAg+i5TVpbJEbGvPUSq58VT5ybx9ui5CxeLiuyE5EcubDTeP2Y0IQd/XUfqlbz2eYO6A=="],
 
