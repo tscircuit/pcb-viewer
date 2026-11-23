@@ -1,3 +1,5 @@
+import { type Server, createServer as createHttpServer } from "node:http"
+import type { AddressInfo } from "node:net"
 import { fileURLToPath } from "node:url"
 import type { CircuitJson, Point } from "circuit-json"
 import {
@@ -39,6 +41,13 @@ const SCREENSHOT_RETRY_MS = 100
 /** A colour read from a page screenshot. */
 export type RgbPixel = [red: number, green: number, blue: number]
 
+/** Vite's middleware, served on a port the operating system picked. */
+type PhaseSkewServer = {
+  vite: ViteDevServer
+  httpServer: Server
+  url: string
+}
+
 /** A browser page showing a board in the viewer, and how to shut it down. */
 export type PhaseSkewPage = {
   page: Page
@@ -55,55 +64,85 @@ export async function openPhaseSkewPage({
   circuitJson: CircuitJson
   renderer: "canvas" | "webgpu"
 }): Promise<PhaseSkewPage> {
-  // Port 0 lets the operating system pick a free port when Vite binds.
-  const server = await createServer({
-    root: fileURLToPath(new URL("../../../", import.meta.url)),
-    server: { host: "127.0.0.1", port: 0, strictPort: true },
-    logLevel: "error",
-  })
-  await server.listen()
-  const launchOptions: LaunchOptions = {
-    headless: true,
-    args: SOFTWARE_WEBGPU_ARGS,
-  }
-  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) {
-    launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
-  }
-  const browser = await chromium.launch(launchOptions)
-  const page = await browser.newPage({
-    viewport: { width: VIEWER_WIDTH, height: VIEWER_HEIGHT },
-  })
-  const errors: string[] = []
-  page.on("pageerror", (error) => errors.push(error.message))
-  await page.addInitScript(
-    (pageSetup) => {
-      window.phaseSkewCircuitJson = pageSetup.circuitJson
-      window.phaseSkewRenderer = pageSetup.renderer
-    },
-    { circuitJson, renderer },
-  )
-  await page.goto(`${server.resolvedUrls?.local[0]}tests/fixtures/phase-skew/`)
-  await page
-    .locator('#root[data-rendered="true"]')
-    .waitFor({ state: "attached" })
-  await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
-  return {
-    page,
-    errors,
-    close: () => closePhaseSkewPage({ browser, server }),
+  const server = await startPhaseSkewServer()
+  let browser: Browser | undefined
+  try {
+    const launchOptions: LaunchOptions = {
+      headless: true,
+      args: SOFTWARE_WEBGPU_ARGS,
+    }
+    if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) {
+      launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+    }
+    browser = await chromium.launch(launchOptions)
+    const page = await browser.newPage({
+      viewport: { width: VIEWER_WIDTH, height: VIEWER_HEIGHT },
+    })
+    const errors: string[] = []
+    page.on("pageerror", (error) => errors.push(error.message))
+    await page.addInitScript(
+      (pageSetup) => {
+        window.phaseSkewCircuitJson = pageSetup.circuitJson
+        window.phaseSkewRenderer = pageSetup.renderer
+      },
+      { circuitJson, renderer },
+    )
+    await page.goto(`${server.url}tests/fixtures/phase-skew/`)
+    await page
+      .locator('#root[data-rendered="true"]')
+      .waitFor({ state: "attached" })
+    await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
+    const openBrowser = browser
+    return {
+      page,
+      errors,
+      close: () => closePhaseSkewPage({ browser: openBrowser, server }),
+    }
+  } catch (error) {
+    await closePhaseSkewPage({ browser, server })
+    throw error
   }
 }
 
-/** Closes the browser, then the Vite server. */
+/**
+ * Serves the repository through Vite's middleware on port 0, which the
+ * operating system replaces with a free port. Vite's own `listen()` treats
+ * port 0 as unset and tries 5173 first.
+ */
+async function startPhaseSkewServer(): Promise<PhaseSkewServer> {
+  const vite = await createServer({
+    root: fileURLToPath(new URL("../../../", import.meta.url)),
+    server: { middlewareMode: true, hmr: false },
+    logLevel: "error",
+  })
+  const httpServer = createHttpServer(vite.middlewares)
+  try {
+    await new Promise<void>((resolve, reject) => {
+      httpServer.once("error", reject)
+      httpServer.listen(0, "127.0.0.1", resolve)
+    })
+  } catch (error) {
+    await vite.close()
+    throw error
+  }
+  const { port } = httpServer.address() as AddressInfo
+  return { vite, httpServer, url: `http://127.0.0.1:${port}/` }
+}
+
+/** Closes the browser if one was launched, then the server. */
 async function closePhaseSkewPage({
   browser,
   server,
 }: {
-  browser: Browser
-  server: ViteDevServer
+  browser: Browser | undefined
+  server: PhaseSkewServer
 }): Promise<void> {
-  await browser.close()
-  await server.close()
+  try {
+    await browser?.close()
+  } finally {
+    server.httpServer.close()
+    await server.vite.close()
+  }
 }
 
 /** Opens or closes the toolbar's View menu. */
