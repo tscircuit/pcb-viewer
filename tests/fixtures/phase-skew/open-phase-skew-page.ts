@@ -67,10 +67,10 @@ export async function openPhaseSkewPage({
   const server = await startPhaseSkewServer()
   let browser: Browser | undefined
   try {
-    const launchOptions: LaunchOptions = {
-      headless: true,
-      args: SOFTWARE_WEBGPU_ARGS,
-    }
+    const launchOptions: LaunchOptions = { headless: true }
+    // Canvas runs keep Chromium's default rasteriser, which the snapshot was
+    // recorded with.
+    if (renderer === "webgpu") launchOptions.args = SOFTWARE_WEBGPU_ARGS
     if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) {
       launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
     }
