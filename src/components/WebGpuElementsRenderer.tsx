@@ -29,8 +29,8 @@ export function WebGpuElementsRenderer(props: Props) {
   const workerRef = useRef<Worker | undefined>(undefined)
   const onRenderCompleteRef = useRef(props.onRenderComplete)
   const sceneRef = useRef({ elements, sceneGeneration: 0 })
-  const layerStrokesRef = useRef<WebGpuRequest>({
-    type: "layer-strokes",
+  const layerStrokesRequestRef = useRef<WebGpuRequest>({
+    type: "layer_strokes",
     layerStrokes: props.phaseSkewStrokes,
   })
   const latestSubmittedSceneGenerationRef = useRef(0)
@@ -133,12 +133,12 @@ export function WebGpuElementsRenderer(props: Props) {
     } satisfies WebGpuRequest)
   }, [elements])
   useLayoutEffect(() => {
-    layerStrokesRef.current = {
-      type: "layer-strokes",
+    layerStrokesRequestRef.current = {
+      type: "layer_strokes",
       layerStrokes: props.phaseSkewStrokes,
     }
     if (!ready.current) return
-    workerRef.current?.postMessage(layerStrokesRef.current)
+    workerRef.current?.postMessage(layerStrokesRequestRef.current)
   }, [props.phaseSkewStrokes])
   useEffect(() => {
     let disposed = false,
@@ -212,7 +212,7 @@ export function WebGpuElementsRenderer(props: Props) {
               elements: scene.elements,
               sceneGeneration: scene.sceneGeneration,
             } satisfies WebGpuRequest)
-            worker!.postMessage(layerStrokesRef.current)
+            worker!.postMessage(layerStrokesRequestRef.current)
             if (viewRef.current) worker!.postMessage(viewRef.current)
           }
         }

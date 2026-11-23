@@ -18,7 +18,7 @@ export type WebGpuRequest =
       transform: Matrix
       options: RenderOptions & { xRayElementIds?: readonly string[] }
     }
-  | { type: "layer-strokes"; layerStrokes?: LayerStroke[] }
+  | { type: "layer_strokes"; layerStrokes?: LayerStroke[] }
   | { type: "dispose" }
 export type WebGpuResponse =
   | { type: "ready"; supportsXRayNet: boolean }

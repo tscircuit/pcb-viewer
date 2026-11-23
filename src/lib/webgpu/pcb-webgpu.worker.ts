@@ -92,7 +92,7 @@ scope.onmessage = async (event) => {
     } else if (workerRequest.type === "view") {
       latestView = workerRequest
       schedule()
-    } else if (workerRequest.type === "layer-strokes") {
+    } else if (workerRequest.type === "layer_strokes") {
       layerStrokes = workerRequest.layerStrokes
       schedule()
     } else {

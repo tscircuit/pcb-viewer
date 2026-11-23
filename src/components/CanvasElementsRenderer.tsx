@@ -110,14 +110,14 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
-    isShowingDifferentialPairPhaseSkew,
+    is_showing_differential_pair_phase_skew,
     copperPourOpacity,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
-    isShowingDifferentialPairPhaseSkew:
+    is_showing_differential_pair_phase_skew:
       state.is_showing_differential_pair_phase_skew,
     copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
@@ -144,9 +144,9 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   )
   // Phase skew walks every pair, so it is computed only while shown.
   const differentialPairPhaseSkews = useMemo(() => {
-    if (!isShowingDifferentialPairPhaseSkew) return undefined
+    if (!is_showing_differential_pair_phase_skew) return undefined
     return getDifferentialPairPhaseSkew({ circuitJson: elements })
-  }, [isShowingDifferentialPairPhaseSkew, elements])
+  }, [is_showing_differential_pair_phase_skew, elements])
   const phaseSkewStrokes = useMemo(() => {
     if (!differentialPairPhaseSkews) return undefined
     return getPhaseSkewStrokes({
