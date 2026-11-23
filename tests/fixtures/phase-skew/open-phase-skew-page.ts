@@ -1,7 +1,7 @@
 import { type Server, createServer as createHttpServer } from "node:http"
 import type { AddressInfo } from "node:net"
 import { fileURLToPath } from "node:url"
-import type { CircuitJson, Point } from "circuit-json"
+import type { CircuitJson, LayerRef, Point } from "circuit-json"
 import {
   type Browser,
   type LaunchOptions,
@@ -174,6 +174,19 @@ export async function exitXRay({ page }: { page: Page }): Promise<void> {
   await page.waitForSelector(ACTIVE_X_RAY_SELECTOR, { state: "detached" })
 }
 
+/** Brings `layer` to the front from the toolbar's layer menu. */
+export async function selectLayer({
+  page,
+  layer,
+}: {
+  page: Page
+  layer: LayerRef
+}): Promise<void> {
+  await page.getByText("layer:").click()
+  await page.getByText(layer, { exact: true }).first().click()
+  await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
+}
+
 /** Opens or closes the toolbar's View menu. */
 export async function toggleViewMenu({ page }: { page: Page }): Promise<void> {
   await page.locator("[data-view-menu] > div > div").first().click({
@@ -265,6 +278,24 @@ export async function screenshotPixelsAt({
     },
     { pngBase64, points },
   )
+}
+
+/** The colours at `points` once two screenshots in a row agree, since the WebGPU worker paints in a later frame. */
+export async function screenshotSettledPixelsAt({
+  page,
+  points,
+}: {
+  page: Page
+  points: Point[]
+}): Promise<RgbPixel[]> {
+  let previousPixels = await screenshotPixelsAt({ page, points })
+  for (let attempt = 1; attempt < SCREENSHOT_ATTEMPTS; attempt++) {
+    await page.waitForTimeout(SCREENSHOT_RETRY_MS)
+    const pixels = await screenshotPixelsAt({ page, points })
+    if (Bun.deepEquals(pixels, previousPixels)) return pixels
+    previousPixels = pixels
+  }
+  return previousPixels
 }
 
 /** The colours at `points`, retried until they match `expected`, since the WebGPU worker paints in a later frame. */
