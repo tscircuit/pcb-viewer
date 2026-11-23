@@ -1,11 +1,11 @@
 import type { ReactElement } from "react"
-import { Pair, PhaseSkewViewer, detour, renderBoard } from "./pair-board"
+import {
+  RendererComparisonBoard,
+  renderBoard,
+} from "../../../../tests/fixtures/phase-skew/example-boards"
+import { PhaseSkewViewer } from "./phase-skew-viewer"
 
-const circuitJson = renderBoard(
-  <board width={28} height={8} routeRemaining={false}>
-    <Pair name="COMPARISON" positivePath={detour(7, 1.3)} />
-  </board>,
-)
+const circuitJson = renderBoard(<RendererComparisonBoard />)
 
 /** Compare the same white-to-blue and white-to-red transitions in Canvas and WebGPU. */
 export default function RendererComparison(): ReactElement {

@@ -1,16 +1,11 @@
 import type { ReactElement } from "react"
-import { Pair, PhaseSkewViewer, detour, renderBoard } from "./pair-board"
+import {
+  PadTapersBoard,
+  renderBoard,
+} from "../../../../tests/fixtures/phase-skew/example-boards"
+import { PhaseSkewViewer } from "./phase-skew-viewer"
 
-const circuitJson = renderBoard(
-  <board width={28} height={8} routeRemaining={false}>
-    <Pair
-      name="TAPERED"
-      positivePath={detour(6, 1.3)}
-      padDiameter={1}
-      teardrops
-    />
-  </board>,
-)
+const circuitJson = renderBoard(<PadTapersBoard />)
 
 /** The overlay widens with the teardrop tapers as the traces approach the pads. */
 export default function PadTapers(): ReactElement {
