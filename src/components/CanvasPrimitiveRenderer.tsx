@@ -1,3 +1,4 @@
+import type { LayerStroke } from "@tscircuit/circuit-json-webgpu"
 import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
@@ -20,6 +21,7 @@ import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbPanelElements } from "lib/draw-pcb-panel"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
 import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
+import { drawPhaseSkewStrokes } from "lib/draw-phase-skew-strokes"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
@@ -38,6 +40,8 @@ interface Props {
   elements: AnyCircuitElement[]
   circuitJson: AnyCircuitElement[]
   xRayElements?: AnyCircuitElement[]
+  /** Drawn on each copper layer above its copper, while the overlay is on. */
+  phaseSkewStrokes?: LayerStroke[]
   defaultUnit?: string
   transform?: Matrix
   grid?: GridConfig
@@ -51,6 +55,7 @@ export const CanvasPrimitiveRenderer = ({
   elements,
   circuitJson,
   xRayElements,
+  phaseSkewStrokes,
   transform,
   grid,
   width = 500,
@@ -208,6 +213,18 @@ export const CanvasPrimitiveRenderer = ({
           drawSoldermask:
             isShowingSolderMask && (layer === "top" || layer === "bottom"),
         })
+      }
+
+      if (phaseSkewStrokes) {
+        for (const { canvas, layer } of copperLayers) {
+          if (!canvas) continue
+          drawPhaseSkewStrokes({
+            canvas,
+            layer,
+            phaseSkewStrokes,
+            realToCanvasMat: transform,
+          })
+        }
       }
 
       if (isShowingSolderMask) {
@@ -432,6 +449,7 @@ export const CanvasPrimitiveRenderer = ({
     elements,
     circuitJson,
     xRayElements,
+    phaseSkewStrokes,
     width,
     height,
     transform,

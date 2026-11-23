@@ -37,6 +37,7 @@ export interface State {
   is_showing_multiple_traces_length: boolean
   is_showing_rats_nest: boolean
   is_showing_copper_pours: boolean
+  is_showing_differential_pair_phase_skew: boolean
   is_showing_courtyards: boolean
   is_showing_pcb_groups: boolean
   is_showing_group_anchor_offsets: boolean
@@ -59,6 +60,7 @@ export interface State {
   setIsShowingDrcErrors: (is_showing: boolean) => void
   setIsShowingDrcWarnings: (is_showing: boolean) => void
   setIsShowingCopperPours: (is_showing: boolean) => void
+  setIsShowingDifferentialPairPhaseSkew: (is_showing: boolean) => void
   setIsShowingCourtyards: (is_showing: boolean) => void
   setIsShowingPcbGroups: (is_showing: boolean) => void
   setIsShowingGroupAnchorOffsets: (is_showing: boolean) => void
@@ -124,6 +126,10 @@ export const createStore = (
           STORAGE_KEYS.IS_SHOWING_COPPER_POURS,
           true,
         ),
+        is_showing_differential_pair_phase_skew: getStoredBoolean(
+          STORAGE_KEYS.IS_SHOWING_DIFFERENTIAL_PAIR_PHASE_SKEW,
+          false,
+        ),
         is_showing_courtyards: getStoredBoolean(
           STORAGE_KEYS.IS_SHOWING_COURTYARDS,
           true,
@@ -186,6 +192,13 @@ export const createStore = (
         setIsShowingCopperPours: (is_showing) => {
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_COPPER_POURS, is_showing)
           set({ is_showing_copper_pours: is_showing })
+        },
+        setIsShowingDifferentialPairPhaseSkew: (is_showing) => {
+          setStoredBoolean(
+            STORAGE_KEYS.IS_SHOWING_DIFFERENTIAL_PAIR_PHASE_SKEW,
+            is_showing,
+          )
+          set({ is_showing_differential_pair_phase_skew: is_showing })
         },
         setIsShowingCourtyards: (is_showing) => {
           setStoredBoolean(STORAGE_KEYS.IS_SHOWING_COURTYARDS, is_showing)

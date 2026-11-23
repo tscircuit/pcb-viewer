@@ -1,5 +1,9 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { Matrix, RenderOptions } from "@tscircuit/circuit-json-webgpu"
+import type {
+  LayerStroke,
+  Matrix,
+  RenderOptions,
+} from "@tscircuit/circuit-json-webgpu"
 export type WebGpuRequest =
   | { type: "init"; canvas: OffscreenCanvas }
   | {
@@ -14,6 +18,7 @@ export type WebGpuRequest =
       transform: Matrix
       options: RenderOptions & { xRayElementIds?: readonly string[] }
     }
+  | { type: "layer-strokes"; layerStrokes?: LayerStroke[] }
   | { type: "dispose" }
 export type WebGpuResponse =
   | { type: "ready"; supportsXRayNet: boolean }

@@ -1,5 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { RenderOptions } from "@tscircuit/circuit-json-webgpu"
+import type { LayerStroke, RenderOptions } from "@tscircuit/circuit-json-webgpu"
 import type { GridConfig, Primitive } from "lib/types"
 import { createWebGpuWorker } from "lib/webgpu/create-worker"
 import type { WebGpuRequest, WebGpuResponse } from "lib/webgpu/protocol"
@@ -13,6 +13,8 @@ type Props = {
   primitives: Primitive[]
   highlightedCopperPourIds?: string[]
   xRayElements?: AnyCircuitElement[]
+  /** Drawn inside each copper layer's paint pass, while the overlay is on. */
+  phaseSkewStrokes?: LayerStroke[]
   transform?: Matrix
   width?: number
   height?: number
@@ -27,6 +29,10 @@ export function WebGpuElementsRenderer(props: Props) {
   const workerRef = useRef<Worker | undefined>(undefined)
   const onRenderCompleteRef = useRef(props.onRenderComplete)
   const sceneRef = useRef({ elements, sceneGeneration: 0 })
+  const layerStrokesRef = useRef<WebGpuRequest>({
+    type: "layer-strokes",
+    layerStrokes: props.phaseSkewStrokes,
+  })
   const latestSubmittedSceneGenerationRef = useRef(0)
   const completedSceneGenerationRef = useRef(0)
   const ready = useRef(false)
@@ -126,6 +132,14 @@ export function WebGpuElementsRenderer(props: Props) {
       sceneGeneration,
     } satisfies WebGpuRequest)
   }, [elements])
+  useLayoutEffect(() => {
+    layerStrokesRef.current = {
+      type: "layer-strokes",
+      layerStrokes: props.phaseSkewStrokes,
+    }
+    if (!ready.current) return
+    workerRef.current?.postMessage(layerStrokesRef.current)
+  }, [props.phaseSkewStrokes])
   useEffect(() => {
     let disposed = false,
       failed = false,
@@ -198,6 +212,7 @@ export function WebGpuElementsRenderer(props: Props) {
               elements: scene.elements,
               sceneGeneration: scene.sceneGeneration,
             } satisfies WebGpuRequest)
+            worker!.postMessage(layerStrokesRef.current)
             if (viewRef.current) worker!.postMessage(viewRef.current)
           }
         }

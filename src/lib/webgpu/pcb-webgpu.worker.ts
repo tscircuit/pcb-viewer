@@ -1,4 +1,7 @@
-import { CircuitToWebGpuDrawer } from "@tscircuit/circuit-json-webgpu"
+import {
+  CircuitToWebGpuDrawer,
+  type LayerStroke,
+} from "@tscircuit/circuit-json-webgpu"
 import type { WebGpuRequest, WebGpuResponse } from "./protocol"
 const scope = self as unknown as {
   onmessage: (event: MessageEvent<WebGpuRequest>) => void
@@ -12,6 +15,8 @@ let drawer: CircuitToWebGpuDrawer | undefined
 let canvas: OffscreenCanvas
 let latestView: Extract<WebGpuRequest, { type: "view" }> | undefined
 let pendingScene: Extract<WebGpuRequest, { type: "scene" }> | undefined
+// Kept between frames, so the drawer reuses the uploaded stroke buffers.
+let layerStrokes: LayerStroke[] | undefined
 let sceneGeneration = 0
 let scheduled = false,
   failed = false
@@ -44,7 +49,7 @@ function renderFrame() {
     const renderedSceneGeneration = sceneGeneration
     if (canvas.width !== view.width) canvas.width = view.width
     if (canvas.height !== view.height) canvas.height = view.height
-    drawer.render({ ...view.options, transform: view.transform })
+    drawer.render({ ...view.options, transform: view.transform, layerStrokes })
     scope.postMessage({
       type: "rendered",
       xRayActive:
@@ -86,6 +91,9 @@ scope.onmessage = async (event) => {
       schedule()
     } else if (workerRequest.type === "view") {
       latestView = workerRequest
+      schedule()
+    } else if (workerRequest.type === "layer-strokes") {
+      layerStrokes = workerRequest.layerStrokes
       schedule()
     } else {
       failed = true

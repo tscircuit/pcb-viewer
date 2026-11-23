@@ -178,6 +178,7 @@ export const ToolbarOverlay = ({
     setIsShowingDrcErrors,
     setIsShowingDrcWarnings,
     setIsShowingCopperPours,
+    setIsShowingDifferentialPairPhaseSkew,
     setIsShowingCourtyards,
     setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets,
@@ -200,6 +201,8 @@ export const ToolbarOverlay = ({
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_drc_warnings: s.is_showing_drc_warnings,
       is_showing_copper_pours: s.is_showing_copper_pours,
+      is_showing_differential_pair_phase_skew:
+        s.is_showing_differential_pair_phase_skew,
       is_showing_courtyards: s.is_showing_courtyards,
       is_showing_pcb_groups: s.is_showing_pcb_groups,
       is_showing_group_anchor_offsets: s.is_showing_group_anchor_offsets,
@@ -215,6 +218,8 @@ export const ToolbarOverlay = ({
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingDrcWarnings: s.setIsShowingDrcWarnings,
     setIsShowingCopperPours: s.setIsShowingCopperPours,
+    setIsShowingDifferentialPairPhaseSkew:
+      s.setIsShowingDifferentialPairPhaseSkew,
     setIsShowingCourtyards: s.setIsShowingCourtyards,
     setIsShowingPcbGroups: s.setIsShowingPcbGroups,
     setIsShowingGroupAnchorOffsets: s.setIsShowingGroupAnchorOffsets,
@@ -712,6 +717,15 @@ export const ToolbarOverlay = ({
                   onClick={() => {
                     setIsShowingCopperPours(
                       !viewSettings.is_showing_copper_pours,
+                    )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Differential Pair Phase Skew"
+                  checked={viewSettings.is_showing_differential_pair_phase_skew}
+                  onClick={() => {
+                    setIsShowingDifferentialPairPhaseSkew(
+                      !viewSettings.is_showing_differential_pair_phase_skew,
                     )
                   }}
                 />

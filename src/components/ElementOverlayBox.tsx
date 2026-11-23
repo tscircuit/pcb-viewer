@@ -3,7 +3,9 @@ import type {
   PcbPlatedHoleOval,
   PcbSmtPadRotatedPill,
 } from "circuit-json"
+import type { DifferentialPairPhaseSkew } from "circuit-json-to-differential-pair-phase-skew"
 import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
+import { getPhaseSkewLabel } from "lib/get-phase-skew-label"
 import {
   type TraceOverlayElementIndex,
   createTraceOverlayElementIndex,
@@ -94,10 +96,12 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
   traceOverlayElementIndex,
+  differentialPairPhaseSkews,
 }: {
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
   traceOverlayElementIndex: TraceOverlayElementIndex
+  differentialPairPhaseSkews?: DifferentialPairPhaseSkew[]
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -151,6 +155,13 @@ export const HighlightedPrimitiveBoxWithText = ({
     const traceTextContext = { primitiveElement, traceOverlayElementIndex }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
     if (!overlayInfo) return null
+    let phaseSkewLabel: string | undefined
+    if (differentialPairPhaseSkews) {
+      phaseSkewLabel = getPhaseSkewLabel({
+        differentialPairPhaseSkews,
+        pcb_trace_id: primitiveElement.pcb_trace_id,
+      })
+    }
 
     return (
       <div
@@ -186,6 +197,11 @@ export const HighlightedPrimitiveBoxWithText = ({
               }}
             >
               {overlayInfo.name}
+            </div>
+          )}
+          {phaseSkewLabel && (
+            <div className="pcb-phase-skew-label" style={{ marginTop: "2px" }}>
+              {phaseSkewLabel}
             </div>
           )}
         </div>
@@ -259,10 +275,12 @@ export const ElementOverlayBox = ({
   highlightedPrimitives,
   mousePos,
   elements,
+  differentialPairPhaseSkews,
 }: {
   elements: AnyCircuitElement[]
   highlightedPrimitives: HighlightedPrimitive[]
   mousePos: { x: number; y: number }
+  differentialPairPhaseSkews?: DifferentialPairPhaseSkew[]
 }) => {
   const [is_moving_component, is_showing_multiple_traces_length] =
     useGlobalStore((s) => [
@@ -298,6 +316,7 @@ export const ElementOverlayBox = ({
             primitive={primitive}
             mousePos={mousePos}
             traceOverlayElementIndex={traceOverlayElementIndex}
+            differentialPairPhaseSkews={differentialPairPhaseSkews}
           />
         ))}
     </div>

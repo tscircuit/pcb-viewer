@@ -29,6 +29,7 @@ import { usePcbComponentSearchFocus } from "./hooks/usePcbComponentSearchFocus"
 import type { PcbViewerController } from "./hooks/usePcbViewerController"
 import type { ViewSchematicComponentEvent } from "./lib/get-pad-component"
 import { getPcbComponentFocus } from "./lib/get-pcb-component-focus"
+import type { PhaseSkewColorOverrides } from "./lib/get-phase-skew-strokes"
 
 const defaultTransform = compose(translate(400, 300), scale(40, -40))
 
@@ -44,6 +45,8 @@ type Props = {
    * Users can switch via the context menu. Prop changes reset it.
    * WebGPU runs in a worker and reports failures without changing engines. */
   renderer?: "webgpu" | "canvas"
+  /** CSS colours for View → Show Differential Pair Phase Skew; unset ones keep KiCad's. */
+  phaseSkewColors?: PhaseSkewColorOverrides
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
@@ -66,6 +69,7 @@ export const PCBViewer = ({
   debugGraphics,
   height = 600,
   renderer,
+  phaseSkewColors,
   initialState,
   allowEditing = true,
   editEvents: editEventsProp,
@@ -306,6 +310,7 @@ export const PCBViewer = ({
           >
             <CanvasElementsRenderer
               renderer={activeRenderer}
+              phaseSkewColors={phaseSkewColors}
               transform={transform}
               setTransform={setTransform}
               height={height}

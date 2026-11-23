@@ -78,6 +78,7 @@ The PCBViewer component accepts these props:
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
 - `onViewSchematicComponent`: Optional callback for the pad context menu action `↗︎ U1 on Schematic`. Receives `{ source_component_id, pcb_component_id, refdes }`. Omit it when the host schematic tab is disabled.
 - `initialState`: Initial state for the viewer
+- `phaseSkewColors`: Optional `positive`, `negative`, `zero` and `unknown` CSS colours for the differential pair phase skew overlay. Unset ones keep KiCad's blue, red, white and grey.
 
 ### Features
 
@@ -87,6 +88,10 @@ The PCBViewer component accepts these props:
 - Trace routing
 - DRC (Design Rule Check) visualization
 - Measurement tools
+
+### Differential pair phase skew
+
+Choose **View → Show Differential Pair Phase Skew** to colour each `<differentialpair>` by how far each trace has run ahead of its partner, like KiCad's differential phase skew tool. [`circuit-json-to-differential-pair-phase-skew`](https://github.com/tscircuit/circuit-json-to-differential-pair-phase-skew) computes it from the Circuit JSON while the overlay is on. Both renderers draw it on each copper layer, 1.1 times the trace width. Hovering a trace of the pair shows the pair's peak phase skew and, when `maxLengthSkew` is set, its end to end length skew against that limit.
 
 ### WebGPU rendering
 

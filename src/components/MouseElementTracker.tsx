@@ -1,6 +1,7 @@
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import { distance } from "circuit-json"
+import type { DifferentialPairPhaseSkew } from "circuit-json-to-differential-pair-phase-skew"
 import {
   createPrimitiveSpatialIndex,
   getPrimitivesNearPoint,
@@ -199,8 +200,11 @@ export const MouseElementTracker = ({
   primitives,
   selectedLayer,
   onMouseHoverOverPrimitives,
+  differentialPairPhaseSkews,
 }: {
   elements: AnyCircuitElement[]
+  /** Set while phase skew is shown, for the trace hover box. */
+  differentialPairPhaseSkews?: DifferentialPairPhaseSkew[]
   children: React.ReactNode
   transform?: Matrix
   primitives: Primitive[]
@@ -374,6 +378,7 @@ export const MouseElementTracker = ({
         elements={elements}
         mousePos={mousePos}
         highlightedPrimitives={highlightedPrimitives}
+        differentialPairPhaseSkews={differentialPairPhaseSkews}
       />
       {transform && (
         <>

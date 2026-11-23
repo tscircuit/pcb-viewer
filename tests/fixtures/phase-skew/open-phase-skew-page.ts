@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url"
-import type { CircuitJson } from "circuit-json"
+import type { CircuitJson, Point } from "circuit-json"
 import {
   type Browser,
   type LaunchOptions,
@@ -18,6 +18,27 @@ const MENU_CLICK_DELAY_MS = 350
 /** A pointer position outside the board, so no hover overlay is drawn. */
 const OFF_BOARD_POINT = { x: 590, y: 390 }
 
+/** Chromium flags for software WebGPU (SwiftShader), so the tests run without a GPU. */
+const SOFTWARE_WEBGPU_ARGS = [
+  "--enable-unsafe-webgpu",
+  "--enable-gpu",
+  "--use-angle=swiftshader",
+  "--use-vulkan=swiftshader",
+  "--enable-features=Vulkan",
+  "--enable-unsafe-swiftshader",
+  "--ignore-gpu-blocklist",
+]
+
+/** The viewer fits the 30 mm board to 75% of its 600 px width. */
+const FIT_PIXELS_PER_MM = 15
+
+/** Screenshots taken while waiting for a frame the WebGPU worker paints later. */
+const SCREENSHOT_ATTEMPTS = 10
+const SCREENSHOT_RETRY_MS = 100
+
+/** A colour read from a page screenshot. */
+export type RgbPixel = [red: number, green: number, blue: number]
+
 /** A browser page showing a board in the viewer, and how to shut it down. */
 export type PhaseSkewPage = {
   page: Page
@@ -29,8 +50,10 @@ export type PhaseSkewPage = {
 /** Opens `circuitJson`, rendered from a TSX fixture through core, in the viewer in Chromium. */
 export async function openPhaseSkewPage({
   circuitJson,
+  renderer,
 }: {
   circuitJson: CircuitJson
+  renderer: "canvas" | "webgpu"
 }): Promise<PhaseSkewPage> {
   // Port 0 lets the operating system pick a free port when Vite binds.
   const server = await createServer({
@@ -39,7 +62,10 @@ export async function openPhaseSkewPage({
     logLevel: "error",
   })
   await server.listen()
-  const launchOptions: LaunchOptions = { headless: true }
+  const launchOptions: LaunchOptions = {
+    headless: true,
+    args: SOFTWARE_WEBGPU_ARGS,
+  }
   if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) {
     launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
   }
@@ -49,9 +75,13 @@ export async function openPhaseSkewPage({
   })
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
-  await page.addInitScript((renderedCircuitJson) => {
-    window.phaseSkewCircuitJson = renderedCircuitJson
-  }, circuitJson)
+  await page.addInitScript(
+    (pageSetup) => {
+      window.phaseSkewCircuitJson = pageSetup.circuitJson
+      window.phaseSkewRenderer = pageSetup.renderer
+    },
+    { circuitJson, renderer },
+  )
   await page.goto(`${server.resolvedUrls?.local[0]}tests/fixtures/phase-skew/`)
   await page
     .locator('#root[data-rendered="true"]')
@@ -81,6 +111,15 @@ export async function toggleViewMenu({ page }: { page: Page }): Promise<void> {
   await page.locator("[data-view-menu] > div > div").first().click({
     delay: MENU_CLICK_DELAY_MS,
   })
+}
+
+/** Turns View → Show Differential Pair Phase Skew on or off and closes the menu again. */
+export async function togglePhaseSkew({ page }: { page: Page }): Promise<void> {
+  await toggleViewMenu({ page })
+  await page
+    .getByText("Show Differential Pair Phase Skew", { exact: true })
+    .click()
+  await toggleViewMenu({ page })
 }
 
 /**
@@ -116,4 +155,64 @@ export async function snapshotTopCopper({
     { width: VIEWER_WIDTH, height: VIEWER_HEIGHT },
   )
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEWER_WIDTH}" height="${VIEWER_HEIGHT}"><title>${title}</title><image width="${VIEWER_WIDTH}" height="${VIEWER_HEIGHT}" href="${pngUrl}"/></svg>`
+}
+
+/** Where a board point appears in the viewer once it has fit the USB pair board. */
+export function boardPointToScreen(boardPoint: Point): Point {
+  return {
+    x: VIEWER_WIDTH / 2 + boardPoint.x * FIT_PIXELS_PER_MM,
+    y: VIEWER_HEIGHT / 2 - boardPoint.y * FIT_PIXELS_PER_MM,
+  }
+}
+
+/** The colours a page screenshot shows at `points`, whichever renderer painted them. */
+export async function screenshotPixelsAt({
+  page,
+  points,
+}: {
+  page: Page
+  points: Point[]
+}): Promise<RgbPixel[]> {
+  const pngBase64 = (await page.screenshot()).toString("base64")
+  return page.evaluate(
+    async (screenshot) => {
+      const image = new Image()
+      image.src = `data:image/png;base64,${screenshot.pngBase64}`
+      await image.decode()
+      const canvas = document.createElement("canvas")
+      canvas.width = image.width
+      canvas.height = image.height
+      const context = canvas.getContext("2d")
+      if (context === null) throw new Error("No 2D canvas context")
+      context.drawImage(image, 0, 0)
+      return screenshot.points.map((point): RgbPixel => {
+        const [red, green, blue] = context.getImageData(
+          Math.floor(point.x),
+          Math.floor(point.y),
+          1,
+          1,
+        ).data
+        return [red, green, blue]
+      })
+    },
+    { pngBase64, points },
+  )
+}
+
+/** The colours at `points`, retried until they match `expected`, since the WebGPU worker paints in a later frame. */
+export async function waitForScreenshotPixels({
+  page,
+  points,
+  expected,
+}: {
+  page: Page
+  points: Point[]
+  expected: RgbPixel[]
+}): Promise<RgbPixel[]> {
+  for (let attempt = 1; attempt < SCREENSHOT_ATTEMPTS; attempt++) {
+    const pixels = await screenshotPixelsAt({ page, points })
+    if (Bun.deepEquals(pixels, expected)) return pixels
+    await page.waitForTimeout(SCREENSHOT_RETRY_MS)
+  }
+  return screenshotPixelsAt({ page, points })
 }
