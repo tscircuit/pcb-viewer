@@ -27,6 +27,7 @@ import { drawPrimitives } from "lib/draw-primitives"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
+import { getPhaseSkewDrilledElements } from "lib/get-phase-skew-drilled-elements"
 import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
 import { groupPhaseSkewStrokesByLayer } from "lib/group-phase-skew-strokes-by-layer"
 import { zIndexMap } from "lib/util/z-index-map"
@@ -85,9 +86,9 @@ export const CanvasPrimitiveRenderer = ({
     if (!phaseSkewStrokes) return undefined
     return groupPhaseSkewStrokesByLayer(phaseSkewStrokes)
   }, [phaseSkewStrokes])
-  // Found once per scene; their drills are cut again through the overlay.
+  // Resolved once per scene; their drills are cut again through the overlay.
   const drilledElements = useMemo(
-    () => elements.filter(isDrilledElement),
+    () => getPhaseSkewDrilledElements({ elements }),
     [elements],
   )
 
@@ -236,7 +237,6 @@ export const CanvasPrimitiveRenderer = ({
             canvas,
             copperLayer,
             drilledElements,
-            elements,
             phaseSkewStrokes: layerPhaseSkewStrokes,
             realToCanvasMat: transform,
           })
@@ -548,15 +548,4 @@ export const CanvasPrimitiveRenderer = ({
         ))}
     </div>
   )
-}
-
-/**
- * Whether the copper pass cuts a drill for `element`: a via, a plated hole,
- * or a trace whose route passes through a via.
- */
-function isDrilledElement(element: AnyCircuitElement): boolean {
-  if (element.type === "pcb_via") return true
-  if (element.type === "pcb_plated_hole") return true
-  if (element.type !== "pcb_trace") return false
-  return element.route.some((point) => point.route_type === "via")
 }
