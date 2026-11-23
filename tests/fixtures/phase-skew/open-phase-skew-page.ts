@@ -80,13 +80,15 @@ export async function openPhaseSkewPage({
  * port 0 as unset and tries 5173 first.
  */
 async function startPhaseSkewServer(): Promise<PhaseSkewServer> {
+  const httpServer = createHttpServer()
   const vite = await createServer({
     root: fileURLToPath(new URL("../../../", import.meta.url)),
-    // No HMR WebSocket: its fixed port would clash between test servers.
-    server: { middlewareMode: true, hmr: false, ws: false },
+    // The HMR WebSocket shares the HTTP server's port. On its own default
+    // port it would clash with another test's server.
+    server: { middlewareMode: true, hmr: { server: httpServer } },
     logLevel: "error",
   })
-  const httpServer = createHttpServer(vite.middlewares)
+  httpServer.on("request", vite.middlewares)
   try {
     await new Promise<void>((resolve, reject) => {
       httpServer.once("error", reject)
