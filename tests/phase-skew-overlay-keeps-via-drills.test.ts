@@ -2,9 +2,9 @@ import { expect, test } from "bun:test"
 import {
   type RgbPixel,
   boardPointToScreen,
-  openPhaseSkewPage,
   screenshotSettledPixelsAt,
   selectLayer,
+  startPhaseSkewBrowser,
   togglePhaseSkew,
   waitForScreenshotPixels,
 } from "./fixtures/phase-skew/open-phase-skew-page"
@@ -35,43 +35,50 @@ const VIA_BOARDS = [
   },
 ]
 
-test("phase skew continues on the bottom layer past a via, leaves its drill showing and clears when turned off", async () => {
-  const viaCentre = boardPointToScreen({ x: VIA_X_MM, y: 0.3 })
-  const afterVia = boardPointToScreen({ x: VIA_X_MM + 0.5, y: 0.3 })
-  const points = [viaCentre, afterVia]
-  for (const { vias, circuitJson, renderers } of VIA_BOARDS) {
-    for (const renderer of renderers) {
-      const { page, errors, close } = await openPhaseSkewPage({
-        circuitJson,
-        renderer,
-      })
-      try {
-        // The positive trace runs on the bottom layer after its via.
-        await selectLayer({ page, layer: "bottom" })
-        const baselinePixels = await screenshotSettledPixelsAt({ page, points })
-        await togglePhaseSkew({ page })
-        const expected: RgbPixel[] = [baselinePixels[0], POSITIVE_PEAK_PIXEL]
-        const overlayPixels = await waitForScreenshotPixels({
-          page,
-          points,
-          expected,
-        })
-        await togglePhaseSkew({ page })
-        const clearedPixels = await waitForScreenshotPixels({
-          page,
-          points,
-          expected: baselinePixels,
-        })
-        expect({ vias, renderer, overlayPixels, clearedPixels }).toEqual({
-          vias,
-          renderer,
-          overlayPixels: expected,
-          clearedPixels: baselinePixels,
-        })
-        expect(errors).toEqual([])
-      } finally {
-        await close()
+test.each(["canvas", "webgpu"] as const)(
+  "%s keeps the via drill open, shows skew past it and restores copper when disabled",
+  async (renderer) => {
+    const viaCentre = boardPointToScreen({ x: VIA_X_MM, y: 0.3 })
+    const afterVia = boardPointToScreen({ x: VIA_X_MM + 0.5, y: 0.3 })
+    const points = [viaCentre, afterVia]
+    const harness = await startPhaseSkewBrowser(renderer)
+    try {
+      for (const { vias, circuitJson, renderers } of VIA_BOARDS) {
+        if (!renderers.some((candidate) => candidate === renderer)) continue
+        const { page, errors, close } = await harness.open({ circuitJson })
+        try {
+          // The positive trace runs on the bottom layer after its via.
+          await selectLayer({ page, layer: "bottom" })
+          const baselinePixels = await screenshotSettledPixelsAt({
+            page,
+            points,
+          })
+          await togglePhaseSkew({ page })
+          const expected: RgbPixel[] = [baselinePixels[0], POSITIVE_PEAK_PIXEL]
+          const overlayPixels = await waitForScreenshotPixels({
+            page,
+            points,
+            expected,
+          })
+          await togglePhaseSkew({ page })
+          const clearedPixels = await waitForScreenshotPixels({
+            page,
+            points,
+            expected: baselinePixels,
+          })
+          expect({ vias, overlayPixels, clearedPixels }).toEqual({
+            vias,
+            overlayPixels: expected,
+            clearedPixels: baselinePixels,
+          })
+          expect(errors).toEqual([])
+        } finally {
+          await close()
+        }
       }
+    } finally {
+      await harness.close()
     }
-  }
-}, 120000)
+  },
+  60000,
+)

@@ -57,6 +57,7 @@ export type PhaseSkewPage = {
 type PhaseSkewPageOptions = {
   circuitJson: CircuitJson
   phaseSkewColors?: PhaseSkewColorOverrides
+  holdWorkerReady?: boolean
 }
 
 type Renderer = "canvas" | "webgpu"
@@ -108,6 +109,7 @@ async function openViewerPage({
   circuitJson,
   renderer,
   phaseSkewColors,
+  holdWorkerReady = false,
 }: PhaseSkewPageOptions & {
   browser: Browser
   server: PhaseSkewServer
@@ -124,6 +126,25 @@ async function openViewerPage({
         window.phaseSkewCircuitJson = pageSetup.circuitJson
         window.phaseSkewRenderer = pageSetup.renderer
         window.phaseSkewColors = pageSetup.phaseSkewColors
+        if (pageSetup.holdWorkerReady) {
+          const onmessage = Object.getOwnPropertyDescriptor(
+            Worker.prototype,
+            "onmessage",
+          )!
+          Object.defineProperty(Worker.prototype, "onmessage", {
+            ...onmessage,
+            set(this: Worker, handler: (event: MessageEvent) => void) {
+              onmessage.set!.call(this, (event: MessageEvent) => {
+                if (event.data.type === "ready") {
+                  window.releasePhaseSkewWorker = () =>
+                    handler.call(this, event)
+                  return
+                }
+                handler.call(this, event)
+              })
+            },
+          })
+        }
         // Record what the viewer sends its WebGPU worker.
         window.phaseSkewWorkerMessages = []
         const postMessage = Worker.prototype.postMessage
@@ -139,12 +160,20 @@ async function openViewerPage({
           return postMessage.call(this, message, ...rest)
         } as Worker["postMessage"]
       },
-      { circuitJson, renderer, phaseSkewColors },
+      { circuitJson, renderer, phaseSkewColors, holdWorkerReady },
     )
     await page.goto(`${server.url}tests/fixtures/phase-skew/`)
-    await page
-      .locator('#root[data-rendered="true"]')
-      .waitFor({ state: "attached" })
+    if (holdWorkerReady) {
+      await page.waitForFunction(
+        () => Boolean(window.releasePhaseSkewWorker),
+        undefined,
+        { timeout: 15000 },
+      )
+    } else {
+      await page
+        .locator('#root[data-rendered="true"]')
+        .waitFor({ state: "attached" })
+    }
     await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
     return { page, errors, close: () => page.close() }
   } catch (error) {

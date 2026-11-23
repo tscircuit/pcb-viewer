@@ -99,5 +99,14 @@ export function renderViaPairBoard(): CircuitJson {
  * as a route point of its trace, as some autorouters store them.
  */
 export function renderRouteOnlyViaPairBoard(): CircuitJson {
-  return renderViaPairBoard().filter((element) => element.type !== "pcb_via")
+  const elements = renderViaPairBoard().filter(
+    (element) => element.type !== "pcb_via",
+  )
+  for (const element of elements) {
+    if (element.type !== "pcb_board") continue
+    // With neither route-point dimensions nor board minima, Canvas uses its defaults.
+    delete element.min_via_hole_diameter
+    delete element.min_via_pad_diameter
+  }
+  return elements
 }

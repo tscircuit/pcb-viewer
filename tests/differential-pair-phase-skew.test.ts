@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import "bun-match-svg"
 import { cju } from "@tscircuit/circuit-json-util"
 import {
+  type RgbPixel,
   boardPointToScreen,
   openPhaseSkewPage,
   screenshotPixelsAt,
@@ -25,6 +26,16 @@ test("Show Differential Pair Phase Skew colours a length-matched USB pair betwee
     renderer: "canvas",
   })
   try {
+    if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE === undefined) {
+      const svg = await snapshotTopCopper({
+        page,
+        title: "USB pair with plain copper",
+      })
+      await expect(svg).toMatchSvgSnapshot(
+        import.meta.path,
+        "differential-pair-phase-skew-before",
+      )
+    }
     await togglePhaseSkew({ page })
     expect(
       await page.evaluate(() =>
@@ -66,6 +77,48 @@ test("Show Differential Pair Phase Skew colours a length-matched USB pair betwee
     expect(await label.textContent()).toBe(
       "phase skew max 1.236 mm, length skew 0.000 / 0.1 mm",
     )
+    expect(errors).toEqual([])
+  } finally {
+    await close()
+  }
+}, 60000)
+
+test("phase skew updates when a host edits the same Circuit JSON array", async () => {
+  const { page, errors, close } = await openPhaseSkewPage({
+    circuitJson: renderUsbPairBoard(),
+    renderer: "canvas",
+  })
+  const points = [
+    boardPointToScreen({ x: 0, y: 0.3 }),
+    boardPointToScreen({ x: 0, y: -0.3 }),
+  ]
+  const measure = () => screenshotPixelsAt({ page, points })
+  const matchedPixels: RgbPixel[] = [
+    [255, 255, 255],
+    [255, 255, 255],
+  ]
+  try {
+    await togglePhaseSkew({ page })
+    expect(await measure()).toEqual([
+      [0, 0, 255],
+      [255, 0, 0],
+    ])
+
+    await page.evaluate(() => {
+      const circuitJson = window.phaseSkewCircuitJson
+      for (const element of circuitJson) {
+        if (element.type === "pcb_trace") {
+          // Keep the original endpoints and remove every point in the detour.
+          element.route.splice(1, element.route.length - 2)
+        }
+      }
+      window.setPhaseSkewCircuitJson(circuitJson)
+    })
+    expect(await measure()).toEqual(matchedPixels)
+
+    await togglePhaseSkew({ page })
+    await togglePhaseSkew({ page })
+    expect(await measure()).toEqual(matchedPixels)
     expect(errors).toEqual([])
   } finally {
     await close()

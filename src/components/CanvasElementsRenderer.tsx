@@ -1,6 +1,7 @@
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { getDifferentialPairPhaseSkew } from "circuit-json-to-differential-pair-phase-skew"
 import type { GraphicsObject } from "graphics-debug"
 import {
   convertElementToPrimitives,
@@ -8,7 +9,6 @@ import {
 } from "lib/convert-element-to-primitive"
 import { getCopperPoursUnderPoint } from "lib/draw-copper-pour"
 import { getHighlightedCopperPourIds } from "lib/get-highlighted-copper-pour-ids"
-import { getSceneDifferentialPairPhaseSkews } from "lib/get-scene-differential-pair-phase-skews"
 import {
   type PhaseSkewColorOverrides,
   getPhaseSkewStrokes,
@@ -142,10 +142,10 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     () => getFullConnectivityMapFromCircuitJson(elements as any),
     [elements],
   )
-  // Phase skew walks every pair, so it is computed only once shown.
+  // Compute phase skew when shown, and on scene changes while it is visible.
   const differentialPairPhaseSkews = useMemo(() => {
     if (!is_showing_differential_pair_phase_skew) return undefined
-    return getSceneDifferentialPairPhaseSkews({ elements })
+    return getDifferentialPairPhaseSkew({ circuitJson: elements })
   }, [is_showing_differential_pair_phase_skew, elements])
   // Keyed by the colours, so an inline phaseSkewColors object doesn't
   // rebuild the strokes (and reupload them to WebGPU) on every render.
