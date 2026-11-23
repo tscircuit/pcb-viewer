@@ -48,7 +48,7 @@ export function getPhaseSkewStrokes({
         layer: segment.layer,
         start: segment.start,
         end: segment.end,
-        width: segment.width * OVERLAY_WIDTH_FACTOR,
+        widthMm: segment.width * OVERLAY_WIDTH_FACTOR,
         color: getPhaseSkewColor({ segment, trace, palette }),
       })),
     )

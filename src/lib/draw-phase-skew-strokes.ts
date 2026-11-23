@@ -32,7 +32,7 @@ export function drawPhaseSkewStrokes({
     if (stroke.layer !== layer) continue
     const [red, green, blue, alpha] = stroke.color
     context.strokeStyle = `rgba(${red * CHANNEL_MAX}, ${green * CHANNEL_MAX}, ${blue * CHANNEL_MAX}, ${alpha})`
-    context.lineWidth = stroke.width
+    context.lineWidth = stroke.widthMm
     context.beginPath()
     context.moveTo(stroke.start.x, stroke.start.y)
     context.lineTo(stroke.end.x, stroke.end.y)
