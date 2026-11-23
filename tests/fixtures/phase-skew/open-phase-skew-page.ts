@@ -84,6 +84,20 @@ export async function openPhaseSkewPage({
       (pageSetup) => {
         window.phaseSkewCircuitJson = pageSetup.circuitJson
         window.phaseSkewRenderer = pageSetup.renderer
+        // Record what the viewer sends its WebGPU worker.
+        window.phaseSkewWorkerMessages = []
+        const postMessage = Worker.prototype.postMessage
+        Worker.prototype.postMessage = function (
+          this: Worker,
+          message: { type: string; layerStrokes?: unknown[] },
+          ...rest: [StructuredSerializeOptions?]
+        ) {
+          window.phaseSkewWorkerMessages.push({
+            type: message.type,
+            layerStrokeCount: message.layerStrokes?.length,
+          })
+          return postMessage.call(this, message, ...rest)
+        } as Worker["postMessage"]
       },
       { circuitJson, renderer },
     )

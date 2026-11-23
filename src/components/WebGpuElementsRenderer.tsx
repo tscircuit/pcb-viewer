@@ -118,28 +118,36 @@ export function WebGpuElementsRenderer(props: Props) {
   useLayoutEffect(() => {
     onRenderCompleteRef.current = props.onRenderComplete
   }, [props.onRenderComplete])
+  // One message per change: a new scene carries its strokes, so a frame
+  // can't draw it with the previous scene's, and a colour or toggle change
+  // within a scene sends only the strokes.
   useLayoutEffect(() => {
-    const sceneGeneration = sceneRef.current.sceneGeneration + 1
-    sceneRef.current = { elements, sceneGeneration }
+    phaseSkewStrokesRef.current = props.phaseSkewStrokes
+    const isNewScene =
+      sceneRef.current.sceneGeneration === 0 ||
+      sceneRef.current.elements !== elements
+    if (isNewScene) {
+      sceneRef.current = {
+        elements,
+        sceneGeneration: sceneRef.current.sceneGeneration + 1,
+      }
+    }
     if (!ready.current || !workerRef.current) return
-    latestSubmittedSceneGenerationRef.current = sceneGeneration
-    // Strokes travel with their scene, so a frame between two messages can't
-    // draw the new board with the previous board's strokes.
+    if (!isNewScene) {
+      workerRef.current.postMessage({
+        type: "layer_strokes",
+        layerStrokes: props.phaseSkewStrokes,
+      } satisfies WebGpuRequest)
+      return
+    }
+    latestSubmittedSceneGenerationRef.current = sceneRef.current.sceneGeneration
     workerRef.current.postMessage({
       type: "scene",
       elements,
-      sceneGeneration,
+      sceneGeneration: sceneRef.current.sceneGeneration,
       layerStrokes: props.phaseSkewStrokes,
     } satisfies WebGpuRequest)
-  }, [elements])
-  useLayoutEffect(() => {
-    phaseSkewStrokesRef.current = props.phaseSkewStrokes
-    if (!ready.current) return
-    workerRef.current?.postMessage({
-      type: "layer_strokes",
-      layerStrokes: props.phaseSkewStrokes,
-    } satisfies WebGpuRequest)
-  }, [props.phaseSkewStrokes])
+  }, [elements, props.phaseSkewStrokes])
   useEffect(() => {
     let disposed = false,
       failed = false,
