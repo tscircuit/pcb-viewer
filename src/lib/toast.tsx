@@ -20,6 +20,12 @@ export const useToast = () => {
       ...opts,
     })
 
+  toast.info = (message: string, opts?: Parameters<typeof ogToast.info>[1]) =>
+    ogToast.info(message, {
+      containerId: pcb_viewer_id,
+      ...opts,
+    })
+
   // TODO add container id to this
   toast.promise = ogToast.promise
 

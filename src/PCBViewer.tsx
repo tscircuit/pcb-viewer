@@ -6,6 +6,12 @@ import { applyEditEvents } from "lib/apply-edit-events"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
 import { ToastContainer } from "lib/toast"
+import {
+  type CompletedComponentMove,
+  canUndoEditEvents,
+  hasMovementDelta,
+  resolveUndoEditEvents,
+} from "lib/undo-edit-events"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMeasure } from "react-use"
@@ -157,6 +163,17 @@ export const PCBViewer = ({
 
   let [editEvents, setEditEvents] = useState<ManualEditEvent[]>([])
   editEvents = editEventsProp ?? editEvents
+  const [completedMoves, setCompletedMoves] = useState<
+    CompletedComponentMove[]
+  >([])
+  const viewerFocusRef = useRef<HTMLDivElement | null>(null)
+  const editEventsRef = useRef<ManualEditEvent[]>(editEvents)
+  editEventsRef.current = editEvents
+  const completedMovesRef = useRef<CompletedComponentMove[]>(completedMoves)
+  completedMovesRef.current = completedMoves
+  const undoGeneratedEventIdsRef = useRef<Set<string>>(new Set())
+  const onEditEventsChangedRef = useRef(onEditEventsChanged)
+  onEditEventsChangedRef.current = onEditEventsChanged
 
   const initialRenderCompleted = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
@@ -263,18 +280,85 @@ export const PCBViewer = ({
   )
 
   const onCreateEditEvent = (event: ManualEditEvent) => {
-    setEditEvents([...editEvents, event])
-    onEditEventsChanged?.([...editEvents, event])
+    const nextEditEvents = [...editEventsRef.current, event]
+    editEventsRef.current = nextEditEvents
+    setEditEvents(nextEditEvents)
+    onEditEventsChangedRef.current?.(nextEditEvents)
   }
+
+  const onCompleteComponentMove = useCallback(
+    (move: CompletedComponentMove) => {
+      if (!hasMovementDelta(move.from_center, move.to_center)) return
+      const alreadyRecorded = completedMovesRef.current.some(
+        (existing) => existing.edit_event_id === move.edit_event_id,
+      )
+      if (alreadyRecorded) return
+      const nextMoves = [...completedMovesRef.current, move]
+      completedMovesRef.current = nextMoves
+      setCompletedMoves(nextMoves)
+    },
+    [],
+  )
+
   const onModifyEditEvent = (modifiedEvent: Partial<ManualEditEvent>) => {
-    const newEditEvents: ManualEditEvent[] = editEvents.map((e) =>
+    const newEditEvents: ManualEditEvent[] = editEventsRef.current.map((e) =>
       e.edit_event_id === modifiedEvent.edit_event_id
         ? ({ ...e, ...modifiedEvent } as ManualEditEvent)
         : e,
     )
+    if (modifiedEvent.in_progress === false && modifiedEvent.edit_event_id) {
+      const finished = newEditEvents.find(
+        (e) => e.edit_event_id === modifiedEvent.edit_event_id,
+      )
+      if (
+        finished &&
+        finished.edit_event_type === "edit_pcb_component_location" &&
+        hasMovementDelta(finished.original_center, finished.new_center)
+      ) {
+        onCompleteComponentMove({
+          edit_event_id: finished.edit_event_id,
+          pcb_component_id: finished.pcb_component_id,
+          from_center: finished.original_center,
+          to_center: finished.new_center,
+        })
+      }
+    }
+    editEventsRef.current = newEditEvents
     setEditEvents(newEditEvents)
-    onEditEventsChanged?.(newEditEvents)
+    onEditEventsChangedRef.current?.(newEditEvents)
   }
+
+  const pcbElmsPreEditRef = useRef(pcbElmsPreEdit)
+  pcbElmsPreEditRef.current = pcbElmsPreEdit
+
+  const onUndoEditEvent = useCallback((): boolean => {
+    const result = resolveUndoEditEvents({
+      editEvents: editEventsRef.current,
+      completedMoves: completedMovesRef.current,
+      circuitJson: pcbElmsPreEditRef.current,
+      undoGeneratedEventIds: undoGeneratedEventIdsRef.current,
+    })
+    if (!result.didUndo) return false
+    if (result.generatedUndoEventId) {
+      undoGeneratedEventIdsRef.current.add(result.generatedUndoEventId)
+    }
+    completedMovesRef.current = result.nextCompletedMoves
+    setCompletedMoves(result.nextCompletedMoves)
+    editEventsRef.current = result.nextEditEvents
+    setEditEvents(result.nextEditEvents)
+    onEditEventsChangedRef.current?.(result.nextEditEvents)
+    return true
+  }, [])
+
+  const canUndo = useMemo(
+    () =>
+      canUndoEditEvents({
+        editEvents,
+        completedMoves,
+        undoGeneratedEventIds: undoGeneratedEventIdsRef.current,
+      }),
+    [editEvents, completedMoves],
+  )
 
   const mergedInitialState = useMemo(
     () => ({
@@ -284,14 +368,44 @@ export const PCBViewer = ({
     [initialState, disablePcbGroups],
   )
 
+  const focusViewerOnInteraction = useCallback(
+    (target: EventTarget | null) => {
+      if (clickToInteractEnabled && !isInteractionEnabled) return
+      if (target instanceof HTMLElement) {
+        const tag = target.tagName.toUpperCase()
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          tag === "SELECT" ||
+          target.isContentEditable
+        ) {
+          return
+        }
+      }
+      const root = viewerFocusRef.current
+      if (!root) return
+      if (document.activeElement && root.contains(document.activeElement)) {
+        return
+      }
+      const focusTarget =
+        (root.querySelector("[data-pcb-viewer]") as HTMLElement | null) ?? root
+      focusTarget.focus({ preventScroll: true })
+    },
+    [clickToInteractEnabled, isInteractionEnabled],
+  )
+
   return (
     <RenderingEngineContext.Provider value={renderingEngine}>
       <div
         ref={transformRef as any}
         style={{ position: "relative" }}
         onPointerDownCapture={(event) => {
+          focusViewerOnInteraction(event.target)
           if (!(event.target as Element).closest("[data-toolbar-overlay]"))
             cancelSearchAnimation()
+        }}
+        onMouseDownCapture={(event) => {
+          focusViewerOnInteraction(event.target)
         }}
         onWheelCapture={(event) => {
           if (!(event.target as Element).closest("[data-toolbar-overlay]"))
@@ -299,7 +413,14 @@ export const PCBViewer = ({
         }}
         onContextMenu={(event) => event.preventDefault()}
       >
-        <div ref={ref as any}>
+        <div
+          ref={(node) => {
+            ;(ref as (el: HTMLDivElement | null) => void)(node)
+            viewerFocusRef.current = node
+          }}
+          tabIndex={-1}
+          style={{ outline: "none" }}
+        >
           <ContextProviders
             initialState={mergedInitialState}
             disablePcbGroups={disablePcbGroups}
@@ -320,6 +441,10 @@ export const PCBViewer = ({
               onContextMenuOpenChange={onContextMenuOpenChange}
               onCreateEditEvent={onCreateEditEvent}
               onModifyEditEvent={onModifyEditEvent}
+              onCompleteComponentMove={onCompleteComponentMove}
+              onUndoEditEvent={onUndoEditEvent}
+              canUndo={canUndo}
+              viewerContainerRef={viewerFocusRef}
               onRenderComplete={onRenderComplete}
               grid={{
                 spacing: 1,

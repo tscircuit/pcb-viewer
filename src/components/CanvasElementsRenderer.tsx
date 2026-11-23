@@ -32,7 +32,20 @@ import {
   getXRayGroups,
   isXRayCopper,
 } from "lib/x-ray-net"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useToast } from "lib/toast"
+import {
+  type CompletedComponentMove,
+  isEditableDomElement,
+  shouldHandleViewerUndoKeyDown,
+} from "lib/undo-edit-events"
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { type Matrix, applyToPoint, inverse } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import {
@@ -75,6 +88,10 @@ export interface CanvasElementsRendererProps {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  onCompleteComponentMove?: (move: CompletedComponentMove) => void
+  onUndoEditEvent?: () => boolean
+  canUndo?: boolean
+  viewerContainerRef?: RefObject<HTMLElement | null>
 }
 
 function getHitTestCandidates({
@@ -106,14 +123,67 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     isShowingCopperPours,
     copperPourOpacity,
     selectedLayer,
+    isMovingComponent,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
     copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
+    isMovingComponent: state.is_moving_component,
   }))
   const activeErrorId = focusedErrorId ?? hoveredErrorId
+  const toast = useToast()
+  const fallbackContainerRef = useRef<HTMLDivElement | null>(null)
+
+  const triggerUndo = useCallback(() => {
+    if (!props.allowEditing || isMovingComponent || !props.onUndoEditEvent)
+      return
+    const didUndo = props.onUndoEditEvent()
+    if (!didUndo) {
+      toast.info("No edits to undo", {
+        toastId: "no-edits-to-undo",
+        autoClose: 2000,
+      })
+    }
+  }, [props.allowEditing, isMovingComponent, props.onUndoEditEvent, toast])
+
+  const triggerUndoRef = useRef(triggerUndo)
+  triggerUndoRef.current = triggerUndo
+  const allowEditingRef = useRef(props.allowEditing)
+  allowEditingRef.current = props.allowEditing
+  const isMovingComponentRef = useRef(isMovingComponent)
+  isMovingComponentRef.current = isMovingComponent
+  const onUndoEditEventRef = useRef(props.onUndoEditEvent)
+  onUndoEditEventRef.current = props.onUndoEditEvent
+  const viewerContainerRefProp = useRef(props.viewerContainerRef)
+  viewerContainerRefProp.current = props.viewerContainerRef
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!onUndoEditEventRef.current) return
+      const viewerRoot =
+        viewerContainerRefProp.current?.current ?? fallbackContainerRef.current
+      if (
+        !shouldHandleViewerUndoKeyDown({
+          event,
+          allowEditing: allowEditingRef.current,
+          isMovingComponent: isMovingComponentRef.current,
+          viewerRoot,
+          activeElement: document.activeElement,
+        })
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+      triggerUndoRef.current()
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [])
 
   const elementsToRender = useMemo(
     () =>
@@ -417,95 +487,111 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   )
 
   return (
-    <MouseElementTracker
-      elements={elementsToRender}
-      transform={transform}
-      primitives={hoverPrimitives}
-      selectedLayer={selectedLayer}
-      onMouseHoverOverPrimitives={onMouseOverPrimitives}
+    <div
+      ref={fallbackContainerRef}
+      tabIndex={props.viewerContainerRef ? undefined : -1}
+      style={{ outline: "none" }}
+      onMouseDownCapture={(event) => {
+        if (props.viewerContainerRef) return
+        if (!isEditableDomElement(event.target)) {
+          fallbackContainerRef.current?.focus({ preventScroll: true })
+        }
+      }}
     >
-      <FocusedPcbComponentOverlay
-        focusRequest={props.focusedPcbComponent}
-        elements={elements}
+      <MouseElementTracker
+        elements={elementsToRender}
         transform={transform}
-      />
-      <EditPlacementOverlay
-        disabled={!props.allowEditing}
-        transform={transform}
-        soup={elements}
-        cancelPanDrag={props.cancelPanDrag}
-        onCreateEditEvent={props.onCreateEditEvent}
-        onModifyEditEvent={props.onModifyEditEvent}
+        primitives={hoverPrimitives}
+        selectedLayer={selectedLayer}
+        onMouseHoverOverPrimitives={onMouseOverPrimitives}
       >
-        <DimensionOverlay
-          transform={transform!}
-          focusOnHover={props.focusOnHover}
-          primitives={primitivesWithoutInteractionMetadata}
-          onBoundsSelected={props.onBoundsSelected}
+        <FocusedPcbComponentOverlay
+          focusRequest={props.focusedPcbComponent}
+          elements={elements}
+          transform={transform}
+        />
+        <EditPlacementOverlay
+          disabled={!props.allowEditing}
+          transform={transform}
+          soup={elements}
           cancelPanDrag={props.cancelPanDrag}
+          onCreateEditEvent={props.onCreateEditEvent}
+          onModifyEditEvent={props.onModifyEditEvent}
+          onCompleteComponentMove={props.onCompleteComponentMove}
         >
-          <ToolbarOverlay
-            elements={elements}
-            onSearchComponent={props.onSearchComponent}
-            getNetAtPoint={getNetAtPoint}
-            xRayNetIds={xRayNetIds}
-            onXRayNetsChange={setXRayNetIds}
-            onContextMenuOpenChange={props.onContextMenuOpenChange}
-            getComponentAtPoint={getComponentAtPoint}
-            onViewSchematicComponent={props.onViewSchematicComponent}
+          <DimensionOverlay
+            transform={transform!}
+            focusOnHover={props.focusOnHover}
+            primitives={primitivesWithoutInteractionMetadata}
+            onBoundsSelected={props.onBoundsSelected}
+            cancelPanDrag={props.cancelPanDrag}
           >
-            <ErrorOverlay transform={transform} elements={elements}>
-              <RatsNestOverlay
-                transform={transform}
-                soup={elements}
-                connectivityMap={connectivityMap}
-              >
-                <PcbGroupOverlay
+            <ToolbarOverlay
+              elements={elements}
+              onSearchComponent={props.onSearchComponent}
+              getNetAtPoint={getNetAtPoint}
+              xRayNetIds={xRayNetIds}
+              onXRayNetsChange={setXRayNetIds}
+              onContextMenuOpenChange={props.onContextMenuOpenChange}
+              getComponentAtPoint={getComponentAtPoint}
+              onViewSchematicComponent={props.onViewSchematicComponent}
+              allowEditing={props.allowEditing}
+              canUndo={props.canUndo}
+              onUndo={triggerUndo}
+            >
+              <ErrorOverlay transform={transform} elements={elements}>
+                <RatsNestOverlay
                   transform={transform}
-                  elements={elements}
-                  hoveredComponentIds={hoveredComponentIds}
+                  soup={elements}
+                  connectivityMap={connectivityMap}
                 >
-                  <DebugGraphicsOverlay
+                  <PcbGroupOverlay
                     transform={transform}
-                    debugGraphics={props.debugGraphics}
+                    elements={elements}
+                    hoveredComponentIds={hoveredComponentIds}
                   >
-                    <WarningGraphicsOverlay
+                    <DebugGraphicsOverlay
                       transform={transform}
-                      elements={elements}
+                      debugGraphics={props.debugGraphics}
                     >
-                      {props.renderer === "canvas" ? (
-                        <CanvasPrimitiveRenderer
-                          transform={transform}
-                          primitives={primitives}
-                          elements={elementsToRender}
-                          circuitJson={elements}
-                          xRayElements={xRayElements}
-                          width={props.width}
-                          height={props.height}
-                          grid={props.grid}
-                          onRenderComplete={props.onRenderComplete}
-                        />
-                      ) : (
-                        <WebGpuElementsRenderer
-                          highlightedCopperPourIds={highlightedCopperPourIds}
-                          transform={transform}
-                          primitives={primitives}
-                          elements={elements}
-                          xRayElements={xRayElements}
-                          width={props.width}
-                          height={props.height}
-                          grid={props.grid}
-                          onRenderComplete={props.onRenderComplete}
-                        />
-                      )}
-                    </WarningGraphicsOverlay>
-                  </DebugGraphicsOverlay>
-                </PcbGroupOverlay>
-              </RatsNestOverlay>
-            </ErrorOverlay>
-          </ToolbarOverlay>
-        </DimensionOverlay>
-      </EditPlacementOverlay>
-    </MouseElementTracker>
+                      <WarningGraphicsOverlay
+                        transform={transform}
+                        elements={elements}
+                      >
+                        {props.renderer === "canvas" ? (
+                          <CanvasPrimitiveRenderer
+                            transform={transform}
+                            primitives={primitives}
+                            elements={elementsToRender}
+                            circuitJson={elements}
+                            xRayElements={xRayElements}
+                            width={props.width}
+                            height={props.height}
+                            grid={props.grid}
+                            onRenderComplete={props.onRenderComplete}
+                          />
+                        ) : (
+                          <WebGpuElementsRenderer
+                            highlightedCopperPourIds={highlightedCopperPourIds}
+                            transform={transform}
+                            primitives={primitives}
+                            elements={elements}
+                            xRayElements={xRayElements}
+                            width={props.width}
+                            height={props.height}
+                            grid={props.grid}
+                            onRenderComplete={props.onRenderComplete}
+                          />
+                        )}
+                      </WarningGraphicsOverlay>
+                    </DebugGraphicsOverlay>
+                  </PcbGroupOverlay>
+                </RatsNestOverlay>
+              </ErrorOverlay>
+            </ToolbarOverlay>
+          </DimensionOverlay>
+        </EditPlacementOverlay>
+      </MouseElementTracker>
+    </div>
   )
 }

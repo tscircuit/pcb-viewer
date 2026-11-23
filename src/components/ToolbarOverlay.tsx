@@ -39,6 +39,9 @@ interface Props {
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onSearchComponent?: (pcbComponentId: string) => void
+  allowEditing?: boolean
+  canUndo?: boolean
+  onUndo?: () => void
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -163,6 +166,9 @@ export const ToolbarOverlay = ({
   onViewSchematicComponent,
   xRayNetIds = [],
   onXRayNetsChange,
+  allowEditing = false,
+  canUndo = false,
+  onUndo,
 }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
@@ -244,6 +250,8 @@ export const ToolbarOverlay = ({
   }
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const inEditMode = useGlobalStore((s) => s.in_edit_mode)
+  const inMoveFootprintMode = useGlobalStore((s) => s.in_move_footprint_mode)
+  const setEditMode = useGlobalStore((s) => s.setEditMode)
   const netAtEvent = (event: React.MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect()
     return getNetAtPoint?.({
@@ -644,6 +652,34 @@ export const ToolbarOverlay = ({
         >
           <div>Bounds</div>
         </ToolbarButton>
+
+        {allowEditing && (
+          <ToolbarButton
+            data-edit-button
+            isSmallScreen={isSmallScreen}
+            title="Toggle component placement editing"
+            style={inMoveFootprintMode ? { backgroundColor: "#444" } : {}}
+            onClick={() => {
+              setEditMode(inMoveFootprintMode ? "off" : "move_footprint")
+            }}
+          >
+            <div>{inMoveFootprintMode ? "✖ " : ""}Edit</div>
+          </ToolbarButton>
+        )}
+
+        {allowEditing && (inMoveFootprintMode || canUndo) && (
+          <ToolbarButton
+            data-undo-button
+            isSmallScreen={isSmallScreen}
+            title="Undo move (Ctrl+Z / Cmd+Z)"
+            style={canUndo ? {} : { opacity: 0.6 }}
+            onClick={() => {
+              onUndo?.()
+            }}
+          >
+            <div>↩ Undo</div>
+          </ToolbarButton>
+        )}
 
         <ToolbarButton
           data-view-menu

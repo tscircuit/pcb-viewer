@@ -2,6 +2,7 @@ import { su, transformPCBElement } from "@tscircuit/circuit-json-util"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { CircuitJson, PcbTraceHint } from "circuit-json"
 import { translate } from "transformation-matrix"
+export { undoLastEditEvent } from "./undo-edit-events"
 
 export function applyEditEvents({
   circuitJson,
