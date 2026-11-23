@@ -45,7 +45,7 @@ type Props = {
    * Users can switch via the context menu. Prop changes reset it.
    * WebGPU runs in a worker and reports failures without changing engines. */
   renderer?: "webgpu" | "canvas"
-  /** Hex, rgb(), hsl() or named colours for View → Show Differential Pair Phase Skew; unset or unparsable ones keep KiCad's. */
+  /** Hex, rgb(), hsl() or named colours for View → Show Differential Pair Phase Skew, drawn opaque; unset or unparsable ones keep KiCad's. */
   phaseSkewColors?: PhaseSkewColorOverrides
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]

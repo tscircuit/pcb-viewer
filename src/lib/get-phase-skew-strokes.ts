@@ -8,6 +8,9 @@ import {
   type PhaseSkewTrace,
 } from "circuit-json-to-differential-pair-phase-skew"
 
+/** Every phase skew colour is drawn fully opaque, as KiCad draws them. */
+const OPAQUE_ALPHA = 1
+
 /** KiCad draws the overlay this much wider than its copper, so no copper edge shows beside it. */
 const OVERLAY_WIDTH_FACTOR = 1.1
 
@@ -100,11 +103,14 @@ function parsePhaseSkewColor({
   }
 }
 
-/** A CSS colour as red, green, blue and alpha from 0 to 1. */
+/**
+ * A CSS colour as red, green and blue from 0 to 1, always opaque.
+ * Neighbouring pieces overlap at their round caps, so a translucent colour
+ * would darken at every join, most along a taper's many short pieces.
+ */
 function parseCssColor(cssColor: string): Color {
-  const parsedColor = color(cssColor)
-  const [red, green, blue] = parsedColor.rgb().unitArray()
-  return [red, green, blue, parsedColor.alpha()]
+  const [red, green, blue] = color(cssColor).rgb().unitArray()
+  return [red, green, blue, OPAQUE_ALPHA]
 }
 
 /** The colour of one segment of `trace`. */
