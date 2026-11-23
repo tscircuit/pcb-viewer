@@ -113,7 +113,11 @@ async function closePhaseSkewPage({
   try {
     await browser?.close()
   } finally {
-    server.httpServer.close()
+    // Drop keep-alive connections so close() resolves straight away.
+    server.httpServer.closeAllConnections()
+    await new Promise<void>((resolve) =>
+      server.httpServer.close(() => resolve()),
+    )
     await server.vite.close()
   }
 }
