@@ -28,9 +28,10 @@ import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
+import { groupPhaseSkewStrokesByLayer } from "lib/group-phase-skew-strokes-by-layer"
 import { zIndexMap } from "lib/util/z-index-map"
 import type { GridConfig, Primitive } from "lib/types"
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
@@ -79,6 +80,11 @@ export const CanvasPrimitiveRenderer = ({
   const isShowingPcbNotes = useGlobalStore((s) => s.is_showing_pcb_notes)
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
+  // Grouped once per stroke array, not per copper layer on every redraw.
+  const phaseSkewStrokesByLayer = useMemo(() => {
+    if (!phaseSkewStrokes) return undefined
+    return groupPhaseSkewStrokesByLayer(phaseSkewStrokes)
+  }, [phaseSkewStrokes])
 
   useEffect(() => {
     onRenderCompleteRef.current = onRenderComplete
@@ -215,13 +221,14 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      if (phaseSkewStrokes) {
+      if (phaseSkewStrokesByLayer) {
         for (const { canvas, layer } of copperLayers) {
           if (!canvas) continue
+          const layerPhaseSkewStrokes = phaseSkewStrokesByLayer.get(layer)
+          if (!layerPhaseSkewStrokes) continue
           drawPhaseSkewStrokes({
             canvas,
-            layer,
-            phaseSkewStrokes,
+            phaseSkewStrokes: layerPhaseSkewStrokes,
             realToCanvasMat: transform,
           })
         }
@@ -449,7 +456,7 @@ export const CanvasPrimitiveRenderer = ({
     elements,
     circuitJson,
     xRayElements,
-    phaseSkewStrokes,
+    phaseSkewStrokesByLayer,
     width,
     height,
     transform,
