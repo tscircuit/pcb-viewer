@@ -3,7 +3,10 @@
   "plugins": ["react-cosmos-plugin-vite"],
   "fixturesDir": "src/examples",
   "fixtureFileSuffix": "fixture",
-  "ignore": ["*.ts"],
+  "ignore": [
+    "*.ts",
+    "src/examples/2026/differential-pair-phase-skew/pair-board.tsx"
+  ],
   "vite": {
     "configPath": "./vite.config.ts"
   }
