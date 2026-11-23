@@ -82,7 +82,8 @@ export async function openPhaseSkewPage({
 async function startPhaseSkewServer(): Promise<PhaseSkewServer> {
   const vite = await createServer({
     root: fileURLToPath(new URL("../../../", import.meta.url)),
-    server: { middlewareMode: true, hmr: false },
+    // No HMR WebSocket: its fixed port would clash between test servers.
+    server: { middlewareMode: true, hmr: false, ws: false },
     logLevel: "error",
   })
   const httpServer = createHttpServer(vite.middlewares)
