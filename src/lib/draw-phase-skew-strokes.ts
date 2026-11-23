@@ -31,13 +31,14 @@ const DRILLS_ONLY_COLOR_OVERRIDES: Partial<PcbColorMap> = {
 export function drawPhaseSkewStrokes({
   canvas,
   copperLayer,
-  elements,
+  drilledElements,
   phaseSkewStrokes,
   realToCanvasMat,
 }: {
   canvas: HTMLCanvasElement
   copperLayer: PcbRenderLayer
-  elements: AnyCircuitElement[]
+  /** The scene's vias and plated holes. */
+  drilledElements: AnyCircuitElement[]
   /** The strokes on `copperLayer`. */
   phaseSkewStrokes: LayerStroke[]
   realToCanvasMat: Matrix
@@ -67,11 +68,8 @@ export function drawPhaseSkewStrokes({
   const drillDrawer = new CircuitToCanvasDrawer(canvas)
   drillDrawer.configure({ colorOverrides: DRILLS_ONLY_COLOR_OVERRIDES })
   drillDrawer.realToCanvasMat = realToCanvasMat
-  drillDrawer.drawElements(
-    elements.filter(
-      (element) =>
-        element.type === "pcb_via" || element.type === "pcb_plated_hole",
-    ),
-    { layers: [copperLayer], drawSoldermask: false },
-  )
+  drillDrawer.drawElements(drilledElements, {
+    layers: [copperLayer],
+    drawSoldermask: false,
+  })
 }

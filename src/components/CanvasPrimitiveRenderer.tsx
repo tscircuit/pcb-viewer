@@ -85,6 +85,15 @@ export const CanvasPrimitiveRenderer = ({
     if (!phaseSkewStrokes) return undefined
     return groupPhaseSkewStrokesByLayer(phaseSkewStrokes)
   }, [phaseSkewStrokes])
+  // Found once per scene; their drills are cut again through the overlay.
+  const drilledElements = useMemo(
+    () =>
+      elements.filter(
+        (element) =>
+          element.type === "pcb_via" || element.type === "pcb_plated_hole",
+      ),
+    [elements],
+  )
 
   useEffect(() => {
     onRenderCompleteRef.current = onRenderComplete
@@ -230,7 +239,7 @@ export const CanvasPrimitiveRenderer = ({
           drawPhaseSkewStrokes({
             canvas,
             copperLayer,
-            elements,
+            drilledElements,
             phaseSkewStrokes: layerPhaseSkewStrokes,
             realToCanvasMat: transform,
           })
@@ -460,6 +469,7 @@ export const CanvasPrimitiveRenderer = ({
     circuitJson,
     xRayElements,
     phaseSkewStrokesByLayer,
+    drilledElements,
     width,
     height,
     transform,
