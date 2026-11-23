@@ -221,7 +221,8 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      if (phaseSkewStrokesByLayer) {
+      // Hidden while X-ray inspects a net, as in WebGPU.
+      if (phaseSkewStrokesByLayer && !xRayElements) {
         for (const { canvas, layer, copperLayer } of copperLayers) {
           if (!canvas) continue
           const layerPhaseSkewStrokes = phaseSkewStrokesByLayer.get(layer)

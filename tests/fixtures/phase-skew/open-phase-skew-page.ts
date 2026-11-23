@@ -145,6 +145,32 @@ async function closePhaseSkewPage({
   }
 }
 
+/** CSS selector present while X-ray inspects a net, in either renderer. */
+const ACTIVE_X_RAY_SELECTOR = '.pcb-x-ray-net, [data-x-ray-net-active="true"]'
+
+/** X-rays the net of the trace at `point` from its click menu, then moves the pointer off the board. */
+export async function xRayNetAt({
+  page,
+  point,
+}: {
+  page: Page
+  point: Point
+}): Promise<void> {
+  await page.mouse.click(point.x, point.y)
+  await page
+    .getByRole("menuitem", { name: /^X-Ray / })
+    .first()
+    .click()
+  await page.waitForSelector(ACTIVE_X_RAY_SELECTOR)
+  await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
+}
+
+/** Leaves X-ray with Escape. */
+export async function exitXRay({ page }: { page: Page }): Promise<void> {
+  await page.keyboard.press("Escape")
+  await page.waitForSelector(ACTIVE_X_RAY_SELECTOR, { state: "detached" })
+}
+
 /** Opens or closes the toolbar's View menu. */
 export async function toggleViewMenu({ page }: { page: Page }): Promise<void> {
   await page.locator("[data-view-menu] > div > div").first().click({
