@@ -154,7 +154,6 @@ export const HighlightedPrimitiveBoxWithText = ({
   if (primitiveElement.type === "pcb_trace") {
     const traceTextContext = { primitiveElement, traceOverlayElementIndex }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
-    if (!overlayInfo) return null
     let phaseSkewLabel: string | undefined
     if (differentialPairPhaseSkews) {
       phaseSkewLabel = getPhaseSkewLabel({
@@ -162,6 +161,8 @@ export const HighlightedPrimitiveBoxWithText = ({
         pcb_trace_id: primitiveElement.pcb_trace_id,
       })
     }
+    // A pair trace with no name or length still shows its phase skew.
+    if (!overlayInfo && phaseSkewLabel === undefined) return null
 
     return (
       <div
@@ -177,7 +178,7 @@ export const HighlightedPrimitiveBoxWithText = ({
         <div
           style={{
             backgroundColor: "#f2efcc",
-            color: overlayInfo.isOverLength ? "red" : "black",
+            color: overlayInfo?.isOverLength ? "red" : "black",
             textShadow: "none",
             WebkitFontSmoothing: "antialiased",
             MozOsxFontSmoothing: "grayscale",
@@ -189,8 +190,8 @@ export const HighlightedPrimitiveBoxWithText = ({
             whiteSpace: "nowrap",
           }}
         >
-          {overlayInfo.text && <div>{overlayInfo.text}</div>}
-          {overlayInfo.name && (
+          {overlayInfo?.text && <div>{overlayInfo.text}</div>}
+          {overlayInfo?.name && (
             <div
               style={{
                 marginTop: overlayInfo.text ? "2px" : 0,
@@ -200,7 +201,10 @@ export const HighlightedPrimitiveBoxWithText = ({
             </div>
           )}
           {phaseSkewLabel && (
-            <div className="pcb-phase-skew-label" style={{ marginTop: "2px" }}>
+            <div
+              className="pcb-phase-skew-label"
+              style={{ marginTop: overlayInfo ? "2px" : 0 }}
+            >
               {phaseSkewLabel}
             </div>
           )}
@@ -291,6 +295,15 @@ export const ElementOverlayBox = ({
     () => createTraceOverlayElementIndex(elements),
     [elements],
   )
+  const phaseSkewPcbTraceIds = useMemo(() => {
+    if (!differentialPairPhaseSkews) return undefined
+    return new Set(
+      differentialPairPhaseSkews.flatMap((differentialPairPhaseSkew) => [
+        differentialPairPhaseSkew.positive_trace.pcb_trace_id,
+        differentialPairPhaseSkew.negative_trace.pcb_trace_id,
+      ]),
+    )
+  }, [differentialPairPhaseSkews])
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
@@ -305,6 +318,7 @@ export const ElementOverlayBox = ({
     primitives,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
+    phaseSkewPcbTraceIds,
   })
 
   return (

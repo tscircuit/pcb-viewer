@@ -8,11 +8,14 @@ export function filterTracesIfMultiple(filterTraces: {
   primitives: HighlightedPrimitive[]
   is_showing_multiple_traces_length: boolean
   traceOverlayElementIndex: TraceOverlayElementIndex
+  /** Traces of differential pairs while phase skew is shown, which always get a hover label. */
+  phaseSkewPcbTraceIds?: ReadonlySet<string>
 }): HighlightedPrimitive[] {
   const {
     primitives,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
+    phaseSkewPcbTraceIds,
   } = filterTraces
 
   // Filter traces to get only PCB traces
@@ -42,6 +45,7 @@ export function filterTracesIfMultiple(filterTraces: {
 
     return (
       hasMaxLength ||
+      phaseSkewPcbTraceIds?.has(trace._element.pcb_trace_id) === true ||
       getAssociatedTraceName({
         primitiveElement: trace._element,
         traceOverlayElementIndex,
