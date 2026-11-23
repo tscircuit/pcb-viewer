@@ -65,6 +65,7 @@ export function drawPhaseSkewStrokes({
   }
   context.restore()
 
+  if (drilledElements.length === 0) return
   const drillDrawer = new CircuitToCanvasDrawer(canvas)
   drillDrawer.configure({ colorOverrides: DRILLS_ONLY_COLOR_OVERRIDES })
   drillDrawer.realToCanvasMat = realToCanvasMat
