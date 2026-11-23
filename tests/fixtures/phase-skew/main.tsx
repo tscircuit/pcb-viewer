@@ -2,6 +2,7 @@ import type { CircuitJson } from "circuit-json"
 import { type ReactElement, useState } from "react"
 import { createRoot } from "react-dom/client"
 import { PCBViewer } from "../../../src/index"
+import type { PhaseSkewColorOverrides } from "../../../src/lib/get-phase-skew-strokes"
 
 /** A message the viewer posted to its WebGPU worker, as the test records it. */
 type RecordedWorkerMessage = { type: string; layerStrokeCount?: number }
@@ -12,6 +13,7 @@ declare global {
     phaseSkewCircuitJson: CircuitJson
     /** The renderer the test opens the viewer with. */
     phaseSkewRenderer: "canvas" | "webgpu"
+    phaseSkewColors?: PhaseSkewColorOverrides
     /** Replaces the board the viewer shows, as a host app passing new Circuit JSON would. */
     setPhaseSkewCircuitJson: (circuitJson: CircuitJson) => void
     /** Every message posted to a worker on this page, in order. */
@@ -27,6 +29,7 @@ function PhaseSkewPage({ root }: { root: HTMLElement }): ReactElement {
     <PCBViewer
       circuitJson={circuitJson}
       renderer={window.phaseSkewRenderer}
+      phaseSkewColors={window.phaseSkewColors}
       height={400}
       onRenderComplete={() => {
         root.dataset.rendered = "true"
