@@ -5,7 +5,7 @@
   "fixtureFileSuffix": "fixture",
   "ignore": [
     "*.ts",
-    "src/examples/2026/differential-pair-phase-skew/pair-board.tsx"
+    "src/examples/2026/differential-pair-phase-skew/phase-skew-viewer.tsx"
   ],
   "vite": {
     "configPath": "./vite.config.ts"
