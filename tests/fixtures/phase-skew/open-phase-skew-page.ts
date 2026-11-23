@@ -9,6 +9,7 @@ import {
   chromium,
 } from "playwright"
 import { type ViteDevServer, createServer } from "vite"
+import type { PhaseSkewColorOverrides } from "../../../src/lib/get-phase-skew-strokes"
 
 /** Viewer size in CSS pixels, matching the page's root width and the viewer height. */
 const VIEWER_WIDTH = 600
@@ -30,9 +31,6 @@ const SOFTWARE_WEBGPU_ARGS = [
   "--enable-unsafe-swiftshader",
   "--ignore-gpu-blocklist",
 ]
-
-/** The viewer fits the 30 mm board to 75% of its 600 px width. */
-const FIT_PIXELS_PER_MM = 15
 
 /** Screenshots taken while waiting for a frame the WebGPU worker paints later. */
 const SCREENSHOT_ATTEMPTS = 10
@@ -56,34 +54,76 @@ export type PhaseSkewPage = {
   close: () => Promise<void>
 }
 
-/** Opens `circuitJson`, rendered from a TSX fixture through core, in the viewer in Chromium. */
+type PhaseSkewPageOptions = {
+  circuitJson: CircuitJson
+  phaseSkewColors?: PhaseSkewColorOverrides
+}
+
+type Renderer = "canvas" | "webgpu"
+
+/** Opens a single viewer and owns its Chromium and Vite processes. */
 export async function openPhaseSkewPage({
+  renderer,
+  ...options
+}: PhaseSkewPageOptions & { renderer: Renderer }): Promise<PhaseSkewPage> {
+  const harness = await startPhaseSkewBrowser(renderer)
+  try {
+    const { page, errors } = await harness.open(options)
+    return { page, errors, close: harness.close }
+  } catch (error) {
+    await harness.close()
+    throw error
+  }
+}
+
+/** Shares Chromium and Vite between tests, with a fresh page context for each board. */
+export async function startPhaseSkewBrowser(renderer: Renderer): Promise<{
+  open: (options: PhaseSkewPageOptions) => Promise<PhaseSkewPage>
+  close: () => Promise<void>
+}> {
+  const server = await startPhaseSkewServer({ alias: {} })
+  const launchOptions: LaunchOptions = { headless: true }
+  // Canvas runs keep the default rasteriser used to record the snapshots.
+  if (renderer === "webgpu") launchOptions.args = SOFTWARE_WEBGPU_ARGS
+  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) {
+    launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+  }
+  try {
+    const browser = await chromium.launch(launchOptions)
+    return {
+      open: (options) =>
+        openViewerPage({ browser, server, renderer, ...options }),
+      close: () => closePhaseSkewPage({ browser, server }),
+    }
+  } catch (error) {
+    await closePhaseSkewPage({ server })
+    throw error
+  }
+}
+
+/** Opens the TSX board rendered by core in its own context. */
+async function openViewerPage({
+  browser,
+  server,
   circuitJson,
   renderer,
-}: {
-  circuitJson: CircuitJson
-  renderer: "canvas" | "webgpu"
+  phaseSkewColors,
+}: PhaseSkewPageOptions & {
+  browser: Browser
+  server: PhaseSkewServer
+  renderer: Renderer
 }): Promise<PhaseSkewPage> {
-  const server = await startPhaseSkewServer({ alias: {} })
-  let browser: Browser | undefined
+  const page = await browser.newPage({
+    viewport: { width: VIEWER_WIDTH, height: VIEWER_HEIGHT },
+  })
   try {
-    const launchOptions: LaunchOptions = { headless: true }
-    // Canvas runs keep Chromium's default rasteriser, which the snapshot was
-    // recorded with.
-    if (renderer === "webgpu") launchOptions.args = SOFTWARE_WEBGPU_ARGS
-    if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE !== undefined) {
-      launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
-    }
-    browser = await chromium.launch(launchOptions)
-    const page = await browser.newPage({
-      viewport: { width: VIEWER_WIDTH, height: VIEWER_HEIGHT },
-    })
     const errors: string[] = []
     page.on("pageerror", (error) => errors.push(error.message))
     await page.addInitScript(
       (pageSetup) => {
         window.phaseSkewCircuitJson = pageSetup.circuitJson
         window.phaseSkewRenderer = pageSetup.renderer
+        window.phaseSkewColors = pageSetup.phaseSkewColors
         // Record what the viewer sends its WebGPU worker.
         window.phaseSkewWorkerMessages = []
         const postMessage = Worker.prototype.postMessage
@@ -99,21 +139,16 @@ export async function openPhaseSkewPage({
           return postMessage.call(this, message, ...rest)
         } as Worker["postMessage"]
       },
-      { circuitJson, renderer },
+      { circuitJson, renderer, phaseSkewColors },
     )
     await page.goto(`${server.url}tests/fixtures/phase-skew/`)
     await page
       .locator('#root[data-rendered="true"]')
       .waitFor({ state: "attached" })
     await page.mouse.move(OFF_BOARD_POINT.x, OFF_BOARD_POINT.y)
-    const openBrowser = browser
-    return {
-      page,
-      errors,
-      close: () => closePhaseSkewPage({ browser: openBrowser, server }),
-    }
+    return { page, errors, close: () => page.close() }
   } catch (error) {
-    await closePhaseSkewPage({ browser, server })
+    await page.close()
     throw error
   }
 }
@@ -197,7 +232,7 @@ async function closePhaseSkewPage({
   browser,
   server,
 }: {
-  browser: Browser | undefined
+  browser?: Browser
   server: PhaseSkewServer
 }): Promise<void> {
   try {
@@ -278,8 +313,23 @@ export async function snapshotTopCopper({
   page: Page
   title: string
 }): Promise<string> {
+  return snapshotCopper({ page, title, showTitle: false })
+}
+
+/** Composites copper in back-to-front order, with a caption above the board. */
+export async function snapshotCopper({
+  page,
+  title,
+  layers = ["top"],
+  showTitle = true,
+}: {
+  page: Page
+  title: string
+  layers?: ("top" | "bottom")[]
+  showTitle?: boolean
+}): Promise<string> {
   const pngUrl = await page.evaluate(
-    ({ width, height }) => {
+    ({ width, height, layers }) => {
       const composite = document.createElement("canvas")
       composite.width = width
       composite.height = height
@@ -287,7 +337,7 @@ export async function snapshotTopCopper({
       if (context === null) throw new Error("No 2D canvas context")
       context.fillStyle = "#111"
       context.fillRect(0, 0, width, height)
-      for (const layer of ["board", "top"]) {
+      for (const layer of ["board", ...layers]) {
         const canvas = document.querySelector<HTMLCanvasElement>(
           `.pcb-layer-${layer}`,
         )
@@ -297,16 +347,25 @@ export async function snapshotTopCopper({
       }
       return composite.toDataURL()
     },
-    { width: VIEWER_WIDTH, height: VIEWER_HEIGHT },
+    { width: VIEWER_WIDTH, height: VIEWER_HEIGHT, layers },
   )
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEWER_WIDTH}" height="${VIEWER_HEIGHT}"><title>${title}</title><image width="${VIEWER_WIDTH}" height="${VIEWER_HEIGHT}" href="${pngUrl}"/></svg>`
+  const svgTitle = title.replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+  const caption = showTitle
+    ? `<text x="50%" y="30" text-anchor="middle" fill="white" font-family="sans-serif" font-size="16">${svgTitle}</text>`
+    : ""
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEWER_WIDTH}" height="${VIEWER_HEIGHT}"><title>${svgTitle}</title><image width="${VIEWER_WIDTH}" height="${VIEWER_HEIGHT}" href="${pngUrl}"/>${caption}</svg>`
 }
 
-/** Where a board point appears in the viewer once it has fit the USB pair board. */
-export function boardPointToScreen(boardPoint: Point): Point {
+/** Where a point on a centred board appears after the viewer fits it. */
+export function boardPointToScreen(
+  boardPoint: Point,
+  { width, height } = { width: 30, height: 8 },
+): Point {
+  const pixelsPerMm =
+    0.75 * Math.min(VIEWER_WIDTH / width, VIEWER_HEIGHT / height)
   return {
-    x: VIEWER_WIDTH / 2 + boardPoint.x * FIT_PIXELS_PER_MM,
-    y: VIEWER_HEIGHT / 2 - boardPoint.y * FIT_PIXELS_PER_MM,
+    x: VIEWER_WIDTH / 2 + boardPoint.x * pixelsPerMm,
+    y: VIEWER_HEIGHT / 2 - boardPoint.y * pixelsPerMm,
   }
 }
 

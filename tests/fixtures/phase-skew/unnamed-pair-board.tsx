@@ -1,12 +1,15 @@
 import { Circuit } from "@tscircuit/core"
+import type { PcbPath } from "@tscircuit/props"
 import type { CircuitJson } from "circuit-json"
 import type { ReactElement } from "react"
 
 /**
- * A straight differential pair whose traces have no names, so the trace
+ * A differential pair whose traces have no names, so the trace
  * hover box has no name or length limit of its own to show.
  */
-export function UnnamedPairBoard(): ReactElement {
+export function UnnamedPairBoard({
+  positivePath = [],
+}: { positivePath?: PcbPath }): ReactElement {
   return (
     <board width="30mm" height="8mm" routeRemaining={false}>
       <testpoint
@@ -45,7 +48,7 @@ export function UnnamedPairBoard(): ReactElement {
         from=".TP_P_SRC > .pin1"
         to=".TP_P_DST > .pin1"
         thickness="0.15mm"
-        pcbPath={[]}
+        pcbPath={positivePath}
       />
       <trace
         from=".TP_N_SRC > .pin1"
@@ -63,9 +66,9 @@ export function UnnamedPairBoard(): ReactElement {
 }
 
 /** Renders {@link UnnamedPairBoard} through core. */
-export function renderUnnamedPairBoard(): CircuitJson {
+export function renderUnnamedPairBoard(positivePath?: PcbPath): CircuitJson {
   const circuit = new Circuit({ platform: { drcChecksDisabled: true } })
-  circuit.add(<UnnamedPairBoard />)
+  circuit.add(<UnnamedPairBoard positivePath={positivePath} />)
   circuit.render()
   return circuit.getCircuitJson() as CircuitJson
 }
