@@ -222,12 +222,14 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       if (phaseSkewStrokesByLayer) {
-        for (const { canvas, layer } of copperLayers) {
+        for (const { canvas, layer, copperLayer } of copperLayers) {
           if (!canvas) continue
           const layerPhaseSkewStrokes = phaseSkewStrokesByLayer.get(layer)
           if (!layerPhaseSkewStrokes) continue
           drawPhaseSkewStrokes({
             canvas,
+            copperLayer,
+            elements,
             phaseSkewStrokes: layerPhaseSkewStrokes,
             realToCanvasMat: transform,
           })
