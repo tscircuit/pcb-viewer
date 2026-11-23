@@ -26,7 +26,7 @@
         "@swc/core": "^1.4.12",
         "@tscircuit/checks": "^0.0.282",
         "@tscircuit/circuit-json-util": "^0.0.135",
-        "@tscircuit/circuit-json-webgpu": "https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@339456c",
+        "@tscircuit/circuit-json-webgpu": "https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@49a7c24",
         "@tscircuit/core": "^0.0.2462",
         "@tscircuit/eagle-xml-converter": "^1.0.0",
         "@tscircuit/footprinter": "^0.0.451",
@@ -433,7 +433,7 @@
 
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.135", "", { "dependencies": { "@flatten-js/core": "^1.6.14", "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": ">=0.0.560", "transformation-matrix": "*", "zod": "3" } }, "sha512-4sQvqHpeh5m4YTjUHSWP0pBzw0u29m/+AXTLEKOqNGR7qlGinUyQKI8s+7y9V37YbYOuuwfhny9KO6FU4T2u8Q=="],
 
-    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@339456c", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-1qEw+/exZnYzO7iv0atdfp6yjv5nNtQvG3XcAk2pvOBH0JcAi4xoI6S0VgPiCNc2E4bviHUcjdqPi1LQd5zWRQ=="],
+    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@https://pkg.pr.new/tscircuit/circuit-json-webgpu/@tscircuit/circuit-json-webgpu@49a7c24", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-4CFJCHs0tu+vus8p8VT+N+3F3KdXwyAdw3xfIvC2OuvrC2OPPYaswNUXeeu1DXxDJj6Oi42CgYrQwNcm7p6Uvg=="],
 
     "@tscircuit/cli": ["@tscircuit/cli@0.1.2485", "", { "dependencies": { "typescript": "~5.9.3" }, "peerDependencies": { "tscircuit": "*" }, "bin": { "tscircuit-cli": "cli/entrypoint.js" } }, "sha512-EOtlgb3GfkZW+ZCY929IqeyFeYwr1YoPpj9I31f1p8vU1N6ABNJOSY/ebdUZoNU9WdMSEL+WiscUke2DQLlZKA=="],
 
