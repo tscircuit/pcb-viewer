@@ -1,4 +1,9 @@
-import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  LayerRef,
+  PcbCopperPour,
+  PcbRenderLayer,
+} from "circuit-json"
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
@@ -14,11 +19,11 @@ export function getCopperPoursUnderPoint(
   elements: AnyCircuitElement[],
   point: { x: number; y: number },
   selectedLayer: LayerRef,
-) {
+): PcbCopperPour[] {
   const canvas = document.createElement("canvas")
   canvas.width = canvas.height = 1
   const ctx = canvas.getContext("2d")!
-  return elements.filter((element) => {
+  return elements.filter((element): element is PcbCopperPour => {
     if (element.type !== "pcb_copper_pour" || element.layer !== selectedLayer)
       return false
     // Painting on a scratch canvas leaves the exact path available for testing.
