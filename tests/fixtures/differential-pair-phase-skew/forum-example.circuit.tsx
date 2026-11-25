@@ -2,14 +2,7 @@ import type { Point } from "circuit-json"
 import { Fragment, type ReactElement } from "react"
 import { applyToPoint, compose, scale, translate } from "transformation-matrix"
 
-const boardProps = {
-  width: 22,
-  height: 12,
-  thickness: 1.6,
-  layers: 2,
-  pcbStyle: { viaPadDiameter: 0.6, viaHoleDiameter: 0.3 },
-  routeRemaining: false,
-} as const
+const boardProps = { thickness: 1.6, layers: 2, routeRemaining: false } as const
 
 type ImageVertex = [x: number, y: number, radius?: number]
 
@@ -20,7 +13,6 @@ const SOURCE_X = 194.5
 const LOAD_X = 1087.5
 const POSITIVE_PAD_Y = 306.45
 const NEGATIVE_PAD_Y = POSITIVE_PAD_Y + 1.65 * PIXELS_PER_MM
-const UPPER_STRAIGHT_PAD_Y = POSITIVE_PAD_Y + 5 * PIXELS_PER_MM
 
 const DIAGONAL = Math.SQRT1_2
 const TRACE_WIDTH_MM = 0.2
@@ -158,29 +150,10 @@ const NEGATIVE_PATH = relativePath({
   ],
 })
 
-const VIA_PATH = [
-  { x: 11, y: -0.825 },
-  { x: 11, y: -0.825, via: true, toLayer: "bottom" },
-  { x: 11, y: -0.825 },
-  { x: 13, y: -0.825 },
-  { x: 13, y: -0.825, via: true, toLayer: "top" },
-  { x: 13, y: -0.825 },
-] as const
-
-function Termination({
-  name,
-  x,
-  topY,
-  topPin,
-}: {
-  name: string
-  x: number
-  topY: number
-  topPin: 1 | 2
-}): ReactElement {
+function Termination({ name, x }: { name: string; x: number }): ReactElement {
   const at = applyToPoint(imageToPcb, {
     x,
-    y: topY + (1.65 * PIXELS_PER_MM) / 2,
+    y: POSITIVE_PAD_Y + (1.65 * PIXELS_PER_MM) / 2,
   })
   return (
     <chip
@@ -192,8 +165,8 @@ function Termination({
       footprint={
         <footprint>
           {[
-            { pin: topPin, pcbY: 0.825 },
-            { pin: 3 - topPin, pcbY: -0.825 },
+            { pin: 1, pcbY: 0.825 },
+            { pin: 2, pcbY: -0.825 },
           ].map(({ pin, pcbY }) => (
             <Fragment key={pin}>
               <smtpad
@@ -214,34 +187,32 @@ function Termination({
 }
 
 /**
- * Adapted from circuit-to-canvas #347. Recreates the visible copper in JamesJ's KiCad forum phase skew example.
- * The upper pair is selected and the lower traces retain their copper colors.
+ * Adapted from circuit-to-canvas #347. Shows the differential pair from
+ * JamesJ's KiCad forum phase skew example.
  * https://forum.kicad.info/t/post-v10-new-features-and-development-news/66611/13
  */
 export default function ForumExampleBoard(): ReactElement {
   return (
-    <board {...boardProps}>
-      {(
-        [
-          { name: "R1", x: SOURCE_X, topY: POSITIVE_PAD_Y, topPin: 1 },
-          { name: "R2", x: LOAD_X, topY: POSITIVE_PAD_Y, topPin: 1 },
-          { name: "R3", x: SOURCE_X, topY: UPPER_STRAIGHT_PAD_Y, topPin: 2 },
-          { name: "R4", x: LOAD_X, topY: UPPER_STRAIGHT_PAD_Y, topPin: 2 },
-        ] as const
-      ).map((termination) => (
-        <Termination key={termination.name} {...termination} />
-      ))}
+    <board
+      {...boardProps}
+      outline={[
+        { x: -11, y: -1 },
+        { x: 11, y: -1 },
+        { x: 11, y: 5.5 },
+        { x: -11, y: 5.5 },
+      ]}
+    >
+      <Termination name="R1" x={SOURCE_X} />
+      <Termination name="R2" x={LOAD_X} />
       {[
-        { name: "TRACE_P", upper: true, pin: 1, pcbPath: POSITIVE_PATH },
-        { name: "TRACE_N", upper: true, pin: 2, pcbPath: NEGATIVE_PATH },
-        { name: "TRACE3", upper: false, pin: 2, pcbPath: [] },
-        { name: "TRACE2", upper: false, pin: 1, pcbPath: [...VIA_PATH] },
-      ].map(({ name, upper, pin, pcbPath }) => (
+        { name: "TRACE_P", pin: 1, pcbPath: POSITIVE_PATH },
+        { name: "TRACE_N", pin: 2, pcbPath: NEGATIVE_PATH },
+      ].map(({ name, pin, pcbPath }) => (
         <Fragment key={name}>
           <trace
             name={name}
-            from={`.R${upper ? 1 : 3} > .pin${pin}`}
-            to={`.R${upper ? 2 : 4} > .pin${pin}`}
+            from={`.R1 > .pin${pin}`}
+            to={`.R2 > .pin${pin}`}
             thickness={TRACE_WIDTH_MM}
             pcbPath={pcbPath}
           />
