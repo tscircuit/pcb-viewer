@@ -63,12 +63,6 @@ export const VisibilityContextMenu = ({
   const setCopperPourOpacity = useGlobalStore((s) => s.setCopperPourOpacity)
   const showCopperPours = useGlobalStore((s) => s.is_showing_copper_pours)
   const setShowCopperPours = useGlobalStore((s) => s.setIsShowingCopperPours)
-  const showDifferentialPairPhaseSkew = useGlobalStore(
-    (s) => s.is_showing_differential_pair_phase_skew,
-  )
-  const setIsShowingDifferentialPairPhaseSkew = useGlobalStore(
-    (s) => s.setIsShowingDifferentialPairPhaseSkew,
-  )
   const [copperPourOpacityOpen, setCopperPourOpacityOpen] = useState(false)
   const effectiveCopperPourOpacity = showCopperPours ? copperPourOpacity : 0
   const [visibilityOpen, setVisibilityOpen] = useState(false)
@@ -253,30 +247,6 @@ export const VisibilityContextMenu = ({
             className={menuStyle}
             style={submenuStyle}
           >
-            <button
-              type="button"
-              role="menuitemcheckbox"
-              aria-checked={showDifferentialPairPhaseSkew}
-              className={itemStyle}
-              onMouseEnter={() => {
-                setOpacityOpen(false)
-                setCopperPourOpacityOpen(false)
-              }}
-              onClick={() => {
-                setIsShowingDifferentialPairPhaseSkew(
-                  !showDifferentialPairPhaseSkew,
-                )
-                onClose()
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{ display: "inline-block", width: 16 }}
-              >
-                {showDifferentialPairPhaseSkew ? "✓" : ""}
-              </span>
-              Show Differential Pair Phase Skew
-            </button>
             <div
               style={{ position: "relative" }}
               onMouseEnter={() => {

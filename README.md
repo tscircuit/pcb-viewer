@@ -88,7 +88,7 @@ The PCBViewer component accepts these props:
 - DRC (Design Rule Check) visualization
 - Measurement tools
 
-Right-click the board and choose **Visibility → Show Differential Pair Phase Skew**
+In the toolbar, choose **View ▾ → Show Differential Pair Phase Skew**
 to color differential-pair traces by their local skew when the circuit includes
 phase-skew measurements. The overlay starts off in both rendering engines.
 
