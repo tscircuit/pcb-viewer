@@ -60,9 +60,15 @@ const server = await createServer({
 await server.listen()
 let browser: Browser | undefined
 try {
+  const isLinux = process.platform === "linux"
+  const args = ["--enable-unsafe-webgpu", "--use-angle=swiftshader"]
+  // Use software Vulkan for WebGPU canvas compositing on headless Linux.
+  // https://issues.chromium.org/issues/575926500
+  if (isLinux) args.push("--use-vulkan=swiftshader", "--enable-features=Vulkan")
   browser = await chromium.launch({
+    channel: isLinux ? "chromium" : undefined,
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
-    args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"],
+    args,
   })
   const page = await browser.newPage({
     viewport: { width: 800, height: 600 },
