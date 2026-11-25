@@ -35,12 +35,8 @@ export const normalizePolygonPoints = (points: Point[] | undefined) =>
     y: distance.parse(point.y),
   }))
 
-type PrimitiveMetadataIndexKey = `${AnyCircuitElement["type"]}:${string}`
-
-export function createPrimitiveMetadataIndex(
-  elements: AnyCircuitElement[],
-): Map<PrimitiveMetadataIndexKey, AnyCircuitElement> {
-  const index = new Map<PrimitiveMetadataIndexKey, AnyCircuitElement>()
+export function createPrimitiveMetadataIndex(elements: AnyCircuitElement[]) {
+  const index = new Map<string, AnyCircuitElement>()
   for (const element of elements) {
     const id = (element as any)[`${element.type}_id`]
     if (id !== undefined && !index.has(`${element.type}:${id}`))
