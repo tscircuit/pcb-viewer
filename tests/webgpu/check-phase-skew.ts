@@ -100,25 +100,54 @@ try {
   const xRayCanvas = page.locator(".pcb-x-ray-net")
   const webGpuCanvas = page.locator(".pcb-webgpu-canvas")
   const viewport = { x: 400, y: 450 }
-  // Select the lower trace, leaving the blue overlay on the upper trace exposed.
-  const xRayTrace = { x: 400, y: 313 }
+  const lowerTrace = { x: 400, y: 313 }
   const xRayMenuItem = page.getByRole("menuitem", {
     name: "X-Ray Net",
     exact: true,
   })
+  const lowerTracePixel = () =>
+    canvasLayer.evaluate(
+      (canvas: HTMLCanvasElement, { x, y }) =>
+        Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data),
+      lowerTrace,
+    )
+  const hoverLowerTrace = async () => {
+    await page.mouse.move(lowerTrace.x, lowerTrace.y)
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    )
+    return lowerTracePixel()
+  }
 
   assert.equal(await countBluePixels({ page, renderer: canvasLayer }), 0)
+  const copper = await lowerTracePixel()
+  const highlight = await hoverLowerTrace()
+  assert.notDeepEqual(highlight, copper, "Canvas should highlight the trace")
+  await page.mouse.move(viewport.x, viewport.y)
   await viewMenu.click()
   assert.equal(await checkbox.isChecked(), false)
   await toggle.click()
   assert.equal(await checkbox.isChecked(), true)
-  await viewMenu.click()
-  assert(
-    (await countBluePixels({ page, renderer: canvasLayer })) > 0,
-    "canvasLayer should render the skew overlay",
+  await page.mouse.click(viewport.x, viewport.y)
+  await toggle.waitFor({ state: "detached" })
+  const bluePixels = await countBluePixels({ page, renderer: canvasLayer })
+  assert(bluePixels > 0, "Canvas should render the skew overlay")
+  assert.notDeepEqual(await lowerTracePixel(), highlight)
+  assert.deepEqual(
+    await hoverLowerTrace(),
+    highlight,
+    "Canvas should show the same hover colour with the skew overlay on",
+  )
+  assert.equal(
+    await countBluePixels({ page, renderer: canvasLayer }),
+    bluePixels,
   )
 
-  await page.mouse.click(xRayTrace.x, xRayTrace.y, { button: "right" })
+  // X-ray the lower trace, leaving the upper trace outside the selected net.
+  await page.mouse.click(lowerTrace.x, lowerTrace.y, { button: "right" })
   await xRayMenuItem.click()
   await xRayCanvas.waitFor()
   assert.equal(await countBluePixels({ page, renderer: canvasLayer }), 0)
@@ -147,7 +176,7 @@ try {
     "webGpuCanvas should render the skew overlay",
   )
 
-  await page.mouse.click(xRayTrace.x, xRayTrace.y, { button: "right" })
+  await page.mouse.click(lowerTrace.x, lowerTrace.y, { button: "right" })
   await xRayMenuItem.click()
   await page.waitForSelector('[data-x-ray-net-active="true"]')
   assert.equal(await countBluePixels({ page, renderer: webGpuCanvas }), 0)

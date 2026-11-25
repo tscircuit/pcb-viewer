@@ -162,13 +162,9 @@ export function drawPcbTraceElementsForLayer({
     const highlightDrawer = new CircuitToCanvasDrawer(canvas)
     highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
     highlightDrawer.realToCanvasMat = realToCanvasMat
-    highlightDrawer.drawElements(
-      [...highlightedElements, ...phaseSkewElements],
-      {
-        layers,
-        clipContextElements,
-        showDifferentialPairPhaseSkew,
-      },
-    )
+    highlightDrawer.drawElements(highlightedElements, {
+      layers,
+      clipContextElements,
+    })
   }
 }
