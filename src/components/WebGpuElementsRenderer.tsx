@@ -68,8 +68,8 @@ export function WebGpuElementsRenderer(props: Props) {
       ),
     [props.xRayElements],
   )
-  const options = useMemo(
-    (): RenderOptions & { xRayElementIds: string[] } => ({
+  const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(
+    () => ({
       selectedLayer,
       hiddenLayerOpacity,
       copperPourOpacity,

@@ -12,10 +12,12 @@ const IMAGE_CENTER_Y = 400
 const SOURCE_X = 194.5
 const LOAD_X = 1087.5
 const POSITIVE_PAD_Y = 306.45
-const NEGATIVE_PAD_Y = POSITIVE_PAD_Y + 1.65 * PIXELS_PER_MM
+const PAD_PITCH_MM = 1.65
+const NEGATIVE_PAD_Y = POSITIVE_PAD_Y + PAD_PITCH_MM * PIXELS_PER_MM
 
 const DIAGONAL = Math.SQRT1_2
 const TRACE_WIDTH_MM = 0.2
+const BUMP_DEPTH_PX = 47
 
 // The board coordinates use the center of the forum image as the origin
 // and reverse its Y axis.
@@ -30,13 +32,13 @@ function tuningBump({
   y,
   dx,
   dy,
-  depth,
+  depth = BUMP_DEPTH_PX,
 }: {
   x: number
   y: number
   dx: number
   dy: number
-  depth: number
+  depth?: number
 }): ImageVertex[] {
   const width = 28.2
   const radius = 11.75
@@ -112,17 +114,15 @@ const POSITIVE_PATH = relativePath({
       y: POSITIVE_FANOUT_Y - (423.5 - POSITIVE_RISE_X),
       dx: DIAGONAL,
       dy: -DIAGONAL,
-      depth: 47,
     }),
     [POSITIVE_RISE_X + POSITIVE_FANOUT_Y - POSITIVE_TOP_Y, POSITIVE_TOP_Y],
-    ...tuningBump({ x: 577, y: POSITIVE_TOP_Y, dx: 1, dy: 0, depth: 47 }),
+    ...tuningBump({ x: 577, y: POSITIVE_TOP_Y, dx: 1, dy: 0 }),
     [POSITIVE_FALL_X, POSITIVE_TOP_Y],
     ...tuningBump({
       x: 909.5,
       y: POSITIVE_TOP_Y + (909.5 - POSITIVE_FALL_X),
       dx: DIAGONAL,
       dy: DIAGONAL,
-      depth: 47,
     }),
     [POSITIVE_FALL_X + POSITIVE_FANOUT_Y - POSITIVE_TOP_Y, POSITIVE_FANOUT_Y],
     [1055 - FANOUT_RUN, POSITIVE_FANOUT_Y],
@@ -139,9 +139,9 @@ const NEGATIVE_PATH = relativePath({
     [227 + FANOUT_RUN, NEGATIVE_FANOUT_Y],
     [NEGATIVE_RISE_X, NEGATIVE_FANOUT_Y],
     [NEGATIVE_RISE_X + NEGATIVE_FANOUT_Y - NEGATIVE_TOP_Y, NEGATIVE_TOP_Y],
-    ...tuningBump({ x: 666, y: NEGATIVE_TOP_Y, dx: 1, dy: 0, depth: -47 }),
-    ...tuningBump({ x: 722.4, y: NEGATIVE_TOP_Y, dx: 1, dy: 0, depth: -47 }),
-    ...tuningBump({ x: 778.8, y: NEGATIVE_TOP_Y, dx: 1, dy: 0, depth: -47 }),
+    ...[666, 722.4, 778.8].flatMap((x) =>
+      tuningBump({ x, y: NEGATIVE_TOP_Y, dx: 1, dy: 0, depth: -BUMP_DEPTH_PX }),
+    ),
     [NEGATIVE_FALL_X, NEGATIVE_TOP_Y],
     [NEGATIVE_FALL_X + NEGATIVE_FANOUT_Y - NEGATIVE_TOP_Y, NEGATIVE_FANOUT_Y],
     [1055 - FANOUT_RUN, NEGATIVE_FANOUT_Y],
@@ -153,7 +153,7 @@ const NEGATIVE_PATH = relativePath({
 function Termination({ name, x }: { name: string; x: number }): ReactElement {
   const at = applyToPoint(imageToPcb, {
     x,
-    y: POSITIVE_PAD_Y + (1.65 * PIXELS_PER_MM) / 2,
+    y: POSITIVE_PAD_Y + (PAD_PITCH_MM * PIXELS_PER_MM) / 2,
   })
   return (
     <chip
@@ -165,8 +165,8 @@ function Termination({ name, x }: { name: string; x: number }): ReactElement {
       footprint={
         <footprint>
           {[
-            { pin: 1, pcbY: 0.825 },
-            { pin: 2, pcbY: -0.825 },
+            { pin: 1, pcbY: PAD_PITCH_MM / 2 },
+            { pin: 2, pcbY: -PAD_PITCH_MM / 2 },
           ].map(({ pin, pcbY }) => (
             <Fragment key={pin}>
               <smtpad
