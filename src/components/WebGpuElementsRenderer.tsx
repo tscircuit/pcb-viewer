@@ -79,7 +79,8 @@ export function WebGpuElementsRenderer(props: Props) {
       showFabricationNotes,
       showPcbNotes,
       showCourtyards,
-      showDifferentialPairPhaseSkew,
+      showDifferentialPairPhaseSkew:
+        showDifferentialPairPhaseSkew && !props.xRayElements,
       highlightedElementIds,
       xRayElementIds,
     }),
@@ -96,6 +97,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showDifferentialPairPhaseSkew,
       highlightedElementIds,
       xRayElementIds,
+      props.xRayElements,
     ],
   )
   const viewRef = useRef<WebGpuRequest | undefined>(undefined)

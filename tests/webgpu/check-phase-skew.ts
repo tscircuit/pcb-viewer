@@ -73,6 +73,10 @@ try {
   const page = await browser.newPage({
     viewport: { width: 800, height: 600 },
   })
+  // Keep unselected copper fully visible so dimming cannot mask overlay pixels.
+  await page.addInitScript(() => {
+    localStorage.setItem("pcb_viewer_hidden_layer_opacity", "1")
+  })
   page.setDefaultTimeout(15_000)
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
@@ -93,8 +97,15 @@ try {
   })
   const checkbox = toggle.locator("..").locator("input")
   const canvasLayer = page.locator(".pcb-layer-top")
+  const xRayCanvas = page.locator(".pcb-x-ray-net")
   const webGpuCanvas = page.locator(".pcb-webgpu-canvas")
   const viewport = { x: 400, y: 450 }
+  // Select the lower trace, leaving the blue overlay on the upper trace exposed.
+  const xRayTrace = { x: 400, y: 313 }
+  const xRayMenuItem = page.getByRole("menuitem", {
+    name: "X-Ray Net",
+    exact: true,
+  })
 
   assert.equal(await countBluePixels({ page, renderer: canvasLayer }), 0)
   await viewMenu.click()
@@ -106,6 +117,14 @@ try {
     (await countBluePixels({ page, renderer: canvasLayer })) > 0,
     "canvasLayer should render the skew overlay",
   )
+
+  await page.mouse.click(xRayTrace.x, xRayTrace.y, { button: "right" })
+  await xRayMenuItem.click()
+  await xRayCanvas.waitFor()
+  assert.equal(await countBluePixels({ page, renderer: canvasLayer }), 0)
+  await page.keyboard.press("Escape")
+  await xRayCanvas.waitFor({ state: "detached" })
+  assert((await countBluePixels({ page, renderer: canvasLayer })) > 0)
 
   await page.mouse.click(viewport.x, viewport.y, { button: "right" })
   const engine = page.getByRole("menuitem", { name: "Rendering Engine ▸" })
@@ -127,6 +146,23 @@ try {
     (await countBluePixels({ page, renderer: webGpuCanvas })) > 0,
     "webGpuCanvas should render the skew overlay",
   )
+
+  await page.mouse.click(xRayTrace.x, xRayTrace.y, { button: "right" })
+  await xRayMenuItem.click()
+  await page.waitForSelector('[data-x-ray-net-active="true"]')
+  assert.equal(await countBluePixels({ page, renderer: webGpuCanvas }), 0)
+  assert.equal(
+    await page.evaluate(
+      () =>
+        window.gpuViewerTest.stats.lastView?.options
+          .showDifferentialPairPhaseSkew,
+    ),
+    false,
+    "WebGPU should receive the suppressed flag while X-Ray is active",
+  )
+  await page.keyboard.press("Escape")
+  await page.waitForSelector('[data-x-ray-net-active="false"]')
+  assert((await countBluePixels({ page, renderer: webGpuCanvas })) > 0)
 
   await viewMenu.click()
   assert.equal(await checkbox.isChecked(), true)
