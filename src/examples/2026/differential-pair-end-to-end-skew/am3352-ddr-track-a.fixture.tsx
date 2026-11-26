@@ -8,7 +8,8 @@ export default function Fixture() {
       circuitJson={circuitJson as AnyCircuitElement[]}
       initialState={{
         is_showing_differential_pair_end_to_end_skew: true,
-        selected_layer: "inner2",
+        is_showing_copper_pours: false,
+        is_showing_pcb_groups: false,
       }}
       renderer="canvas"
     />
