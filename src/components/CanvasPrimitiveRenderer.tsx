@@ -19,7 +19,10 @@ import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbPanelElements } from "lib/draw-pcb-panel"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
-import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
+import {
+  drawPcbTraceElementsForLayer,
+  drawPcbTracesOnCopperLayers,
+} from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
@@ -139,22 +142,16 @@ export const CanvasPrimitiveRenderer = ({
       }))
 
       const showPhaseSkew = showDifferentialPairPhaseSkew && !xRayElements
-      const drawTraces = () => {
-        for (const { canvas, copperLayer } of copperLayers) {
-          if (!canvas) continue
-          drawPcbTraceElementsForLayer({
-            canvas,
-            elements,
-            layers: [copperLayer],
-            realToCanvasMat: transform,
-            primitives,
-            showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
-            showDifferentialPairPhaseSkew: showPhaseSkew,
-          })
-        }
+      const traceDrawing = {
+        copperLayers,
+        elements,
+        realToCanvasMat: transform,
+        primitives,
+        showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
+        showDifferentialPairPhaseSkew: showPhaseSkew,
       }
 
-      if (!showPhaseSkew) drawTraces()
+      if (!showPhaseSkew) drawPcbTracesOnCopperLayers(traceDrawing)
 
       for (const { canvas, copperLayer } of copperLayers) {
         if (!canvas) continue
@@ -219,7 +216,7 @@ export const CanvasPrimitiveRenderer = ({
       }
 
       // Show the phase skew at terminal pads and vias above their copper fill.
-      if (showPhaseSkew) drawTraces()
+      if (showPhaseSkew) drawPcbTracesOnCopperLayers(traceDrawing)
 
       if (isShowingSolderMask) {
         const soldermaskLayer = selectedLayer === "bottom" ? "bottom" : "top"

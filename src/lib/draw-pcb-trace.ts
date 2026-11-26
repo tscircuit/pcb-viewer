@@ -104,24 +104,27 @@ export const getHighlightedTraceElementIds = ({
 // as white so a nearly matched pair cannot saturate a color by itself.
 const PHASE_SKEW_DISPLAY_RESOLUTION_MM = 0.001
 
+function getDisplayedPhaseSkewMm(differenceMm: number, sign: 1 | -1): number {
+  return Math.abs(differenceMm) < PHASE_SKEW_DISPLAY_RESOLUTION_MM
+    ? 0
+    : sign * differenceMm
+}
+
 function getDisplayedPhaseSkewTrace(
   trace: PcbDifferentialPairPhaseSkewTrace,
   sign: 1 | -1,
 ): PcbDifferentialPairPhaseSkewTrace {
-  const toDisplayValue = (differenceMm: number) =>
-    Math.abs(differenceMm) < PHASE_SKEW_DISPLAY_RESOLUTION_MM
-      ? 0
-      : sign * differenceMm
-
   return {
     ...trace,
     segments: trace.segments.map((segment) => ({
       ...segment,
-      start_length_difference_mm: toDisplayValue(
+      start_length_difference_mm: getDisplayedPhaseSkewMm(
         segment.start_length_difference_mm,
+        sign,
       ),
-      end_length_difference_mm: toDisplayValue(
+      end_length_difference_mm: getDisplayedPhaseSkewMm(
         segment.end_length_difference_mm,
+        sign,
       ),
     })),
   }
@@ -213,6 +216,28 @@ export function drawPcbTraceElementsForLayer({
     highlightDrawer.drawElements(highlightedElements, {
       layers,
       clipContextElements,
+    })
+  }
+}
+
+export function drawPcbTracesOnCopperLayers({
+  copperLayers,
+  ...traceDrawing
+}: Omit<
+  Parameters<typeof drawPcbTraceElementsForLayer>[0],
+  "canvas" | "layers"
+> & {
+  copperLayers: Array<{
+    canvas?: HTMLCanvasElement
+    copperLayer: PcbRenderLayer
+  }>
+}) {
+  for (const { canvas, copperLayer } of copperLayers) {
+    if (!canvas) continue
+    drawPcbTraceElementsForLayer({
+      ...traceDrawing,
+      canvas,
+      layers: [copperLayer],
     })
   }
 }
