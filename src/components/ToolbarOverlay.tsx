@@ -176,7 +176,7 @@ export const ToolbarOverlay = ({
     viewSettings,
     setIsShowingRatsNest,
     setIsShowingMultipleTracesLength,
-    setIsShowingDifferentialPairEndToEndSkew,
+    setIsShowingDifferentialPairPhaseSkew,
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
     setIsShowingDrcWarnings,
@@ -199,8 +199,8 @@ export const ToolbarOverlay = ({
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
-      is_showing_differential_pair_end_to_end_skew:
-        s.is_showing_differential_pair_end_to_end_skew,
+      is_showing_differential_pair_phase_skew:
+        s.is_showing_differential_pair_phase_skew,
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_drc_warnings: s.is_showing_drc_warnings,
@@ -216,8 +216,8 @@ export const ToolbarOverlay = ({
     },
     setIsShowingRatsNest: s.setIsShowingRatsNest,
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
-    setIsShowingDifferentialPairEndToEndSkew:
-      s.setIsShowingDifferentialPairEndToEndSkew,
+    setIsShowingDifferentialPairPhaseSkew:
+      s.setIsShowingDifferentialPairPhaseSkew,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingDrcWarnings: s.setIsShowingDrcWarnings,
@@ -691,13 +691,13 @@ export const ToolbarOverlay = ({
                 {renderingEngine !== null &&
                   renderingEngine.renderer === "canvas" && (
                     <CheckboxMenuItem
-                      label="Differential pair end-to-end skew"
+                      label="Differential pair phase skew"
                       checked={
-                        viewSettings.is_showing_differential_pair_end_to_end_skew
+                        viewSettings.is_showing_differential_pair_phase_skew
                       }
                       onClick={() => {
-                        setIsShowingDifferentialPairEndToEndSkew(
-                          !viewSettings.is_showing_differential_pair_end_to_end_skew,
+                        setIsShowingDifferentialPairPhaseSkew(
+                          !viewSettings.is_showing_differential_pair_phase_skew,
                         )
                       }}
                     />

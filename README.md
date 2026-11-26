@@ -88,9 +88,9 @@ The PCBViewer component accepts these props:
 - DRC (Design Rule Check) visualization
 - Measurement tools
 
-With the Canvas renderer, choose **View → Differential pair end-to-end skew**
-to color each measured pair by its signed routed length difference (positive
-trace minus negative trace). Zero skew is white.
+With the Canvas renderer, choose **View → Differential pair phase skew** to
+color each trace by its running length difference from its partner. White
+means zero, blue means the trace is ahead, and red means it is behind.
 
 ### WebGPU rendering
 

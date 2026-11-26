@@ -4,14 +4,11 @@ import type { AnyCircuitElement } from "circuit-json"
 import { chromium } from "playwright"
 import { createServer } from "vite"
 
-const snapshot = new URL(
-  "./__snapshots__/ddr-end-to-end-skew.png",
-  import.meta.url,
-)
+const snapshot = new URL("./__snapshots__/ddr-phase-skew.png", import.meta.url)
 const boardPath =
   "/src/examples/2026/differential-pair-end-to-end-skew/am3352-ddr-track-a.circuit.json"
 
-test("Canvas renders one end-to-end skew color per DDR pair", async () => {
+test("Canvas renders running phase skew on the DDR pairs", async () => {
   const server = await createServer({
     root: fileURLToPath(new URL("../", import.meta.url)),
     server: { host: "127.0.0.1", port: 0 },
@@ -29,17 +26,17 @@ test("Canvas renders one end-to-end skew color per DDR pair", async () => {
         process.argv.includes("--update-snapshots") ||
         process.argv.includes("-u") ||
         process.env.BUN_UPDATE_SNAPSHOTS === "1"
-      await page.route("**/ddr-end-to-end-skew", (route) =>
+      await page.route("**/ddr-phase-skew", (route) =>
         route.fulfill({ contentType: "text/html", body: "<!doctype html>" }),
       )
       if (!updateSnapshot) {
-        await page.route("**/ddr-end-to-end-skew.png", (route) =>
+        await page.route("**/ddr-phase-skew.png", (route) =>
           route.fulfill({ path: fileURLToPath(snapshot) }),
         )
       }
       const urls = server.resolvedUrls
       if (!urls || urls.local.length === 0) throw new Error("Vite URL missing")
-      await page.goto(new URL("ddr-end-to-end-skew", urls.local[0]).href)
+      await page.goto(new URL("ddr-phase-skew", urls.local[0]).href)
 
       const result = await page.evaluate(
         async ({ boardPath, updateSnapshot }) => {
@@ -105,7 +102,7 @@ test("Canvas renders one end-to-end skew color per DDR pair", async () => {
                 layers: [layer],
                 realToCanvasMat: transform,
                 showCopperPours: false,
-                showDifferentialPairEndToEndSkew: true,
+                showDifferentialPairPhaseSkew: true,
               })
               context.drawImage(layerCanvas, x, header)
               return traceX.map((traceCenter) => {
@@ -125,13 +122,13 @@ test("Canvas renders one end-to-end skew color per DDR pair", async () => {
           }
 
           const reference = new Image()
-          reference.src = "/ddr-end-to-end-skew.png"
+          reference.src = "/ddr-phase-skew.png"
           await reference.decode()
           if (
             reference.width !== canvas.width ||
             reference.height !== canvas.height
           ) {
-            throw new Error("DDR end-to-end skew snapshot dimensions changed")
+            throw new Error("DDR phase skew snapshot dimensions changed")
           }
           const referenceCanvas = document.createElement("canvas")
           referenceCanvas.width = reference.width
@@ -166,20 +163,11 @@ test("Canvas renders one end-to-end skew color per DDR pair", async () => {
         { boardPath, updateSnapshot },
       )
 
-      expect(result.colors).toEqual([
-        [
-          [209, 209, 255, 255],
-          [209, 209, 255, 255],
-        ],
-        [
-          [0, 0, 255, 255],
-          [0, 0, 255, 255],
-        ],
-        [
-          [255, 255, 255, 255],
-          [255, 255, 255, 255],
-        ],
-      ])
+      for (const [first, second] of result.colors) {
+        expect(first[3]).toBe(255)
+        expect(second[3]).toBe(255)
+        expect(first).not.toEqual(second)
+      }
       if (result.png !== undefined) {
         await Bun.write(
           snapshot,

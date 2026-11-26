@@ -6,7 +6,7 @@ export default function Fixture() {
   return (
     <PCBViewer
       circuitJson={circuitJson as AnyCircuitElement[]}
-      initialState={{ is_showing_differential_pair_end_to_end_skew: true }}
+      initialState={{ is_showing_differential_pair_phase_skew: true }}
       renderer="canvas"
     />
   )
