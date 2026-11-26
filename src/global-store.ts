@@ -35,6 +35,7 @@ export interface State {
   is_showing_drc_warnings: boolean
 
   is_showing_multiple_traces_length: boolean
+  is_showing_differential_pair_end_to_end_skew: boolean
   is_showing_rats_nest: boolean
   is_showing_copper_pours: boolean
   is_showing_courtyards: boolean
@@ -56,6 +57,7 @@ export interface State {
   setIsMouseOverContainer: (is_focused: boolean) => void
   setIsShowingAutorouting: (is_showing: boolean) => void
   setIsShowingMultipleTracesLength: (is_showing: boolean) => void
+  setIsShowingDifferentialPairEndToEndSkew: (is_showing: boolean) => void
   setIsShowingDrcErrors: (is_showing: boolean) => void
   setIsShowingDrcWarnings: (is_showing: boolean) => void
   setIsShowingCopperPours: (is_showing: boolean) => void
@@ -116,6 +118,7 @@ export const createStore = (
         is_mouse_over_container: false,
 
         is_showing_multiple_traces_length: false,
+        is_showing_differential_pair_end_to_end_skew: false,
         is_showing_rats_nest: false,
         is_showing_autorouting: true,
         is_showing_drc_errors: true,
@@ -177,6 +180,8 @@ export const createStore = (
           set({ is_mouse_over_container: is_focused }),
         setIsShowingMultipleTracesLength: (is_showing) =>
           set({ is_showing_multiple_traces_length: is_showing }),
+        setIsShowingDifferentialPairEndToEndSkew: (is_showing) =>
+          set({ is_showing_differential_pair_end_to_end_skew: is_showing }),
         setIsShowingAutorouting: (is_showing) =>
           set({ is_showing_autorouting: is_showing }),
         setIsShowingDrcErrors: (is_showing) =>

@@ -23,6 +23,7 @@ import type {
 } from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
 import { ComponentSearch } from "./ComponentSearch"
+import { useRenderingEngine } from "./RenderingEngineContext"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 import { VisibilityContextMenu } from "./VisibilityContextMenu"
@@ -165,6 +166,7 @@ export const ToolbarOverlay = ({
   onXRayNetsChange,
 }: Props) => {
   const isSmallScreen = useIsSmallScreen()
+  const renderingEngine = useRenderingEngine()
 
   const {
     isMouseOverContainer,
@@ -174,6 +176,7 @@ export const ToolbarOverlay = ({
     viewSettings,
     setIsShowingRatsNest,
     setIsShowingMultipleTracesLength,
+    setIsShowingDifferentialPairEndToEndSkew,
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
     setIsShowingDrcWarnings,
@@ -196,6 +199,8 @@ export const ToolbarOverlay = ({
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
+      is_showing_differential_pair_end_to_end_skew:
+        s.is_showing_differential_pair_end_to_end_skew,
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_drc_warnings: s.is_showing_drc_warnings,
@@ -211,6 +216,8 @@ export const ToolbarOverlay = ({
     },
     setIsShowingRatsNest: s.setIsShowingRatsNest,
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
+    setIsShowingDifferentialPairEndToEndSkew:
+      s.setIsShowingDifferentialPairEndToEndSkew,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingDrcWarnings: s.setIsShowingDrcWarnings,
@@ -681,6 +688,20 @@ export const ToolbarOverlay = ({
                     )
                   }}
                 />
+                {renderingEngine !== null &&
+                  renderingEngine.renderer === "canvas" && (
+                    <CheckboxMenuItem
+                      label="Differential pair end-to-end skew"
+                      checked={
+                        viewSettings.is_showing_differential_pair_end_to_end_skew
+                      }
+                      onClick={() => {
+                        setIsShowingDifferentialPairEndToEndSkew(
+                          !viewSettings.is_showing_differential_pair_end_to_end_skew,
+                        )
+                      }}
+                    />
+                  )}
                 <CheckboxMenuItem
                   label="Show Autorouting Animation"
                   checked={viewSettings.is_showing_autorouting}
