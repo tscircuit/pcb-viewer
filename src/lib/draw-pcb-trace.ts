@@ -103,6 +103,7 @@ export function drawPcbTraceElementsForLayer({
   primitives,
   showCopperPours,
   showDifferentialPairPhaseSkew = false,
+  showDifferentialPairEndToEndSkew = false,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
@@ -111,6 +112,7 @@ export function drawPcbTraceElementsForLayer({
   primitives?: Primitive[]
   showCopperPours: boolean
   showDifferentialPairPhaseSkew?: boolean
+  showDifferentialPairEndToEndSkew?: boolean
 }) {
   const targetLayers = new Set(normalizeCopperRenderLayers(layers))
 
@@ -142,11 +144,12 @@ export function drawPcbTraceElementsForLayer({
     elements,
     showCopperPours,
   )
-  const phaseSkewElements = showDifferentialPairPhaseSkew
-    ? elements.filter(
-        (element) => element.type === "pcb_differential_pair_phase_skew",
-      )
-    : []
+  const phaseSkewElements =
+    showDifferentialPairPhaseSkew || showDifferentialPairEndToEndSkew
+      ? elements.filter(
+          (element) => element.type === "pcb_differential_pair_phase_skew",
+        )
+      : []
 
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
@@ -155,6 +158,7 @@ export function drawPcbTraceElementsForLayer({
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,
+      showDifferentialPairEndToEndSkew,
     })
   }
 

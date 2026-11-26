@@ -75,6 +75,9 @@ export const CanvasPrimitiveRenderer = ({
   const showDifferentialPairPhaseSkew = useGlobalStore(
     (s) => s.is_showing_differential_pair_phase_skew,
   )
+  const showDifferentialPairEndToEndSkew = useGlobalStore(
+    (s) => s.is_showing_differential_pair_end_to_end_skew,
+  )
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
@@ -150,6 +153,8 @@ export const CanvasPrimitiveRenderer = ({
           showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
           showDifferentialPairPhaseSkew:
             showDifferentialPairPhaseSkew && !xRayElements,
+          showDifferentialPairEndToEndSkew:
+            showDifferentialPairEndToEndSkew && !xRayElements,
         })
       }
 
@@ -448,6 +453,7 @@ export const CanvasPrimitiveRenderer = ({
     isShowingFabricationNotes,
     isShowingPcbNotes,
     showDifferentialPairPhaseSkew,
+    showDifferentialPairEndToEndSkew,
     isShowingCourtyards,
     isShowingSilkscreen,
   ])

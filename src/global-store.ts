@@ -45,6 +45,7 @@ export interface State {
   is_showing_fabrication_notes: boolean
   is_showing_pcb_notes: boolean
   is_showing_differential_pair_phase_skew: boolean
+  is_showing_differential_pair_end_to_end_skew: boolean
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
@@ -68,6 +69,7 @@ export interface State {
   setIsShowingFabricationNotes: (is_showing: boolean) => void
   setIsShowingPcbNotes: (is_showing: boolean) => void
   setIsShowingDifferentialPairPhaseSkew: (is_showing: boolean) => void
+  setIsShowingDifferentialPairEndToEndSkew: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
   setFocusedErrorId: (errorId: string | null) => void
@@ -154,6 +156,7 @@ export const createStore = (
           true,
         ),
         is_showing_differential_pair_phase_skew: false,
+        is_showing_differential_pair_end_to_end_skew: false,
         pcb_group_view_mode: disablePcbGroups
           ? "all"
           : (getStoredString(
@@ -182,6 +185,8 @@ export const createStore = (
           set({ is_showing_multiple_traces_length: is_showing }),
         setIsShowingDifferentialPairPhaseSkew: (is_showing) =>
           set({ is_showing_differential_pair_phase_skew: is_showing }),
+        setIsShowingDifferentialPairEndToEndSkew: (is_showing) =>
+          set({ is_showing_differential_pair_end_to_end_skew: is_showing }),
         setIsShowingAutorouting: (is_showing) =>
           set({ is_showing_autorouting: is_showing }),
         setIsShowingDrcErrors: (is_showing) =>
