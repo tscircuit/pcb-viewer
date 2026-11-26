@@ -89,9 +89,8 @@ The PCBViewer component accepts these props:
 - Measurement tools
 
 With the Canvas renderer, choose **View → Differential pair phase skew** to
-color both traces by the running length of the positive trace minus the
-negative trace. Differences under 1 µm are white, a positive lead is blue,
-and a negative lead is red.
+color each trace by its running length difference from its partner. A
+leading trace is blue, a lagging trace is red, and zero is white.
 
 ### WebGPU rendering
 
