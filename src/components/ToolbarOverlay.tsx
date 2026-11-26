@@ -23,7 +23,8 @@ import type {
 } from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
 import { ComponentSearch } from "./ComponentSearch"
-import { ToolbarButton } from "./ToolbarButton"
+import { DifferentialPairLengthSkewPanel } from "./DifferentialPairLengthSkewPanel"
+import { getToolbarButtonStyle, ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 import { VisibilityContextMenu } from "./VisibilityContextMenu"
 
@@ -261,6 +262,14 @@ export const ToolbarOverlay = ({
     onContextMenuOpenChange?.(false)
   }, [onContextMenuOpenChange])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
+  const [isPairSkewOpen, setPairSkewOpen] = useState(false)
+  const hasDifferentialPairs = useMemo(
+    () =>
+      elements?.some(
+        (element) => element.type === "source_bus" && element.differential_pair,
+      ) ?? false,
+    [elements],
+  )
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
@@ -442,6 +451,9 @@ export const ToolbarOverlay = ({
       onPointerDownCapture={(event) => {
         if (!(event.target as HTMLElement).closest("[data-view-menu]")) {
           setViewMenuOpen(false)
+        }
+        if (!(event.target as HTMLElement).closest("[data-pair-skew]")) {
+          setPairSkewOpen(false)
         }
       }}
       onPointerDown={(event) => {
@@ -687,7 +699,7 @@ export const ToolbarOverlay = ({
                   }}
                 />
                 <CheckboxMenuItem
-                  label="Show Differential Pair Phase Skew"
+                  label="Show Accumulated Local Length Skew"
                   checked={viewSettings.is_showing_differential_pair_phase_skew}
                   onClick={() => {
                     setIsShowingDifferentialPairPhaseSkew(
@@ -806,6 +818,27 @@ export const ToolbarOverlay = ({
             )}
           </div>
         </ToolbarButton>
+        {hasDifferentialPairs && elements && (
+          <div data-pair-skew>
+            <button
+              type="button"
+              aria-expanded={isPairSkewOpen}
+              style={getToolbarButtonStyle(isSmallScreen)}
+              onClick={() => {
+                setViewMenuOpen(false)
+                setPairSkewOpen((open) => !open)
+              }}
+            >
+              Pair Skew
+            </button>
+            {isPairSkewOpen && (
+              <DifferentialPairLengthSkewPanel
+                elements={elements}
+                onClose={() => setPairSkewOpen(false)}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -92,7 +92,7 @@ try {
   )
 
   const viewMenu = page.locator("[data-view-menu] > div > div").first()
-  const toggle = page.getByText("Show Differential Pair Phase Skew", {
+  const toggle = page.getByText("Show Accumulated Local Length Skew", {
     exact: true,
   })
   const checkbox = toggle.locator("..").locator("input")
