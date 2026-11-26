@@ -43,8 +43,9 @@ function indexBy<T>(
   return index
 }
 
-const only = <T>(group: T[] | undefined) =>
-  group?.length === 1 ? group[0] : undefined
+function only<T>(group: T[] | undefined) {
+  return group?.length === 1 ? group[0] : undefined
+}
 
 function getLayerPosition(layer: LayerRef, count: number): number | null {
   if (layer === "top") return 0

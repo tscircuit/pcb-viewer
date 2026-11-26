@@ -7,6 +7,10 @@ import {
 import color from "color"
 import type { Matrix } from "transformation-matrix"
 import { normalizeCopperRenderLayers } from "./copper-layers"
+import {
+  getLocalPhaseSkewTraceIndex,
+  UNKNOWN_PHASE_SKEW_COLOR,
+} from "./local-phase-skew"
 import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
@@ -16,6 +20,16 @@ const HOVER_COLOR_MAP: PcbColorMap = {
     Object.entries(DEFAULT_PCB_COLOR_MAP.copper).map(([layer, layerColor]) => [
       layer,
       color(layerColor).lighten(0.5).toString(),
+    ]),
+  ) as PcbColorMap["copper"],
+}
+
+const UNKNOWN_PHASE_SKEW_COLOR_MAP: PcbColorMap = {
+  ...DEFAULT_PCB_COLOR_MAP,
+  copper: Object.fromEntries(
+    Object.keys(DEFAULT_PCB_COLOR_MAP.copper).map((layer) => [
+      layer,
+      UNKNOWN_PHASE_SKEW_COLOR,
     ]),
   ) as PcbColorMap["copper"],
 }
@@ -103,6 +117,7 @@ export function drawPcbTraceElementsForLayer({
   primitives,
   showCopperPours,
   showDifferentialPairPhaseSkew = false,
+  phaseSkewTraceIds,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
@@ -111,6 +126,7 @@ export function drawPcbTraceElementsForLayer({
   primitives?: Primitive[]
   showCopperPours: boolean
   showDifferentialPairPhaseSkew?: boolean
+  phaseSkewTraceIds?: ReadonlySet<string>
 }) {
   const targetLayers = new Set(normalizeCopperRenderLayers(layers))
 
@@ -128,10 +144,19 @@ export function drawPcbTraceElementsForLayer({
     primitives: primitives ?? [],
   })
 
+  // Keep the gradient and unknown color visible instead of replacing them
+  // with the ordinary copper hover highlight while the skew view is active.
+  const pairTraceIds = showDifferentialPairPhaseSkew
+    ? (phaseSkewTraceIds ??
+      new Set(getLocalPhaseSkewTraceIndex(elements).keys()))
+    : undefined
+  const pairElements: PcbTrace[] = []
   const highlightedElements: PcbTrace[] = []
   const nonHighlightedElements: PcbTrace[] = []
   for (const element of traceElements) {
-    if (highlightedElementIds.has(element.pcb_trace_id)) {
+    if (pairTraceIds?.has(element.pcb_trace_id)) {
+      pairElements.push(element)
+    } else if (highlightedElementIds.has(element.pcb_trace_id)) {
       highlightedElements.push(element)
     } else {
       nonHighlightedElements.push(element)
@@ -151,7 +176,17 @@ export function drawPcbTraceElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements([...nonHighlightedElements, ...phaseSkewElements], {
+    drawer.drawElements(nonHighlightedElements, {
+      layers,
+      clipContextElements,
+    })
+  }
+
+  if (pairElements.length > 0) {
+    const drawer = new CircuitToCanvasDrawer(canvas)
+    drawer.configure({ colorOverrides: UNKNOWN_PHASE_SKEW_COLOR_MAP })
+    drawer.realToCanvasMat = realToCanvasMat
+    drawer.drawElements([...pairElements, ...phaseSkewElements], {
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,

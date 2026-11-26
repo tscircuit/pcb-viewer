@@ -1,5 +1,6 @@
 import type {
   AnyCircuitElement,
+  PcbTrace,
   PcbPlatedHoleOval,
   PcbSmtPadRotatedPill,
 } from "circuit-json"
@@ -94,10 +95,12 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
   traceOverlayElementIndex,
+  getPhaseSkewText,
 }: {
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
   traceOverlayElementIndex: TraceOverlayElementIndex
+  getPhaseSkewText?: (trace: PcbTrace) => string | undefined
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -150,7 +153,8 @@ export const HighlightedPrimitiveBoxWithText = ({
   if (primitiveElement.type === "pcb_trace") {
     const traceTextContext = { primitiveElement, traceOverlayElementIndex }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
-    if (!overlayInfo) return null
+    const phaseSkewText = getPhaseSkewText?.(primitiveElement)
+    if (!overlayInfo && !phaseSkewText) return null
 
     return (
       <div
@@ -166,7 +170,7 @@ export const HighlightedPrimitiveBoxWithText = ({
         <div
           style={{
             backgroundColor: "#f2efcc",
-            color: overlayInfo.isOverLength ? "red" : "black",
+            color: overlayInfo?.isOverLength ? "red" : "black",
             textShadow: "none",
             WebkitFontSmoothing: "antialiased",
             MozOsxFontSmoothing: "grayscale",
@@ -178,8 +182,8 @@ export const HighlightedPrimitiveBoxWithText = ({
             whiteSpace: "nowrap",
           }}
         >
-          {overlayInfo.text && <div>{overlayInfo.text}</div>}
-          {overlayInfo.name && (
+          {overlayInfo?.text && <div>{overlayInfo.text}</div>}
+          {overlayInfo?.name && (
             <div
               style={{
                 marginTop: overlayInfo.text ? "2px" : 0,
@@ -188,6 +192,7 @@ export const HighlightedPrimitiveBoxWithText = ({
               {overlayInfo.name}
             </div>
           )}
+          {phaseSkewText && <div>{phaseSkewText}</div>}
         </div>
       </div>
     )
@@ -259,9 +264,11 @@ export const ElementOverlayBox = ({
   highlightedPrimitives,
   mousePos,
   elements,
+  getPhaseSkewText,
 }: {
   elements: AnyCircuitElement[]
   highlightedPrimitives: HighlightedPrimitive[]
+  getPhaseSkewText?: (trace: PcbTrace) => string | undefined
   mousePos: { x: number; y: number }
 }) => {
   const [is_moving_component, is_showing_multiple_traces_length] =
@@ -282,6 +289,20 @@ export const ElementOverlayBox = ({
   if (hasSmtPadAndTrace) {
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
+  // The ordinary trace-length tooltip filter must not hide the local-skew
+  // readout for unnamed traces or when generic length readouts are disabled.
+  const skewTextByTraceId = new Map<string, string>()
+  const tracesWithSkew = primitives.filter(({ _element }) => {
+    if (
+      _element.type !== "pcb_trace" ||
+      skewTextByTraceId.has(_element.pcb_trace_id)
+    )
+      return false
+    const text = getPhaseSkewText?.(_element)
+    if (!text) return false
+    skewTextByTraceId.set(_element.pcb_trace_id, text)
+    return true
+  })
   // When having multiple traces filter traces to get only the shortest one
   primitives = filterTracesIfMultiple({
     primitives,
@@ -292,12 +313,22 @@ export const ElementOverlayBox = ({
   return (
     <div style={containerStyle}>
       {!is_moving_component &&
-        primitives.map((primitive) => (
+        [
+          ...primitives.filter(
+            ({ _element }) =>
+              _element.type !== "pcb_trace" ||
+              !skewTextByTraceId.has(_element.pcb_trace_id),
+          ),
+          ...tracesWithSkew,
+        ].map((primitive) => (
           <HighlightedPrimitiveBoxWithText
             key={primitive._pcb_drawing_object_id}
             primitive={primitive}
             mousePos={mousePos}
             traceOverlayElementIndex={traceOverlayElementIndex}
+            getPhaseSkewText={(trace) =>
+              skewTextByTraceId.get(trace.pcb_trace_id)
+            }
           />
         ))}
     </div>

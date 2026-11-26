@@ -1,5 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { RenderOptions } from "@tscircuit/circuit-json-webgpu"
+import { getLocalPhaseSkewTraceIndex } from "lib/local-phase-skew"
+import type { PcbWebGpuRenderOptions } from "lib/webgpu/protocol"
 import type { GridConfig, Primitive } from "lib/types"
 import { createWebGpuWorker } from "lib/webgpu/create-worker"
 import type { WebGpuRequest, WebGpuResponse } from "lib/webgpu/protocol"
@@ -46,6 +47,13 @@ export function WebGpuElementsRenderer(props: Props) {
   const showDifferentialPairPhaseSkew = useGlobalStore(
     (s) => s.is_showing_differential_pair_phase_skew,
   )
+  const phaseSkewTraceIds = useMemo(
+    () =>
+      showDifferentialPairPhaseSkew && !props.xRayElements
+        ? new Set(getLocalPhaseSkewTraceIndex(elements).keys())
+        : undefined,
+    [elements, showDifferentialPairPhaseSkew, props.xRayElements],
+  )
   const highlightedElementIds = useMemo(
     () => [
       ...new Set([
@@ -54,11 +62,11 @@ export function WebGpuElementsRenderer(props: Props) {
           if (!p.is_mouse_over && !p.is_in_highlighted_net) return []
           const element = p._element as Record<string, any> | undefined
           const id = element?.[`${element.type}_id`]
-          return id ? [id as string] : []
+          return id && !phaseSkewTraceIds?.has(id) ? [id as string] : []
         }),
       ]),
     ],
-    [primitives, props.highlightedCopperPourIds],
+    [primitives, props.highlightedCopperPourIds, phaseSkewTraceIds],
   )
   const xRayElementIds = useMemo(
     () =>
@@ -68,7 +76,7 @@ export function WebGpuElementsRenderer(props: Props) {
       ),
     [props.xRayElements],
   )
-  const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(
+  const options = useMemo<PcbWebGpuRenderOptions>(
     () => ({
       selectedLayer,
       hiddenLayerOpacity,
@@ -81,6 +89,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showCourtyards,
       showDifferentialPairPhaseSkew:
         showDifferentialPairPhaseSkew && !props.xRayElements,
+      phaseSkewUnknownTraceIds: phaseSkewTraceIds && [...phaseSkewTraceIds],
       highlightedElementIds,
       xRayElementIds,
     }),
@@ -96,6 +105,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showCourtyards,
       showDifferentialPairPhaseSkew,
       highlightedElementIds,
+      phaseSkewTraceIds,
       xRayElementIds,
       props.xRayElements,
     ],

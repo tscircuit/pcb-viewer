@@ -26,6 +26,7 @@ const stats = {
       copperPourOpacity?: number
       showCopperPours?: boolean
       showDifferentialPairPhaseSkew?: boolean
+      phaseSkewUnknownTraceIds?: readonly string[]
       highlightedElementIds?: string[]
       xRayElementIds?: string[]
     }

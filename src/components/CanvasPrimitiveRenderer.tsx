@@ -26,9 +26,10 @@ import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
 import { drawSoldermaskElementsForLayer } from "lib/draw-soldermask"
 import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
+import { getLocalPhaseSkewTraceIndex } from "lib/local-phase-skew"
 import { zIndexMap } from "lib/util/z-index-map"
 import type { GridConfig, Primitive } from "lib/types"
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
@@ -77,6 +78,13 @@ export const CanvasPrimitiveRenderer = ({
   )
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
+  const phaseSkewTraceIds = useMemo(
+    () =>
+      showDifferentialPairPhaseSkew && !xRayElements
+        ? new Set(getLocalPhaseSkewTraceIndex(elements).keys())
+        : undefined,
+    [elements, showDifferentialPairPhaseSkew, xRayElements],
+  )
 
   useEffect(() => {
     onRenderCompleteRef.current = onRenderComplete
@@ -148,6 +156,7 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
           primitives,
           showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
+          phaseSkewTraceIds,
           showDifferentialPairPhaseSkew:
             showDifferentialPairPhaseSkew && !xRayElements,
         })
@@ -448,6 +457,7 @@ export const CanvasPrimitiveRenderer = ({
     isShowingFabricationNotes,
     isShowingPcbNotes,
     showDifferentialPairPhaseSkew,
+    phaseSkewTraceIds,
     isShowingCourtyards,
     isShowingSilkscreen,
   ])

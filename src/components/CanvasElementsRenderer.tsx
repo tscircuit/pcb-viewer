@@ -422,6 +422,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       transform={transform}
       primitives={hoverPrimitives}
       selectedLayer={selectedLayer}
+      suppressPhaseSkew={Boolean(xRayElements)}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
     >
       <FocusedPcbComponentOverlay
