@@ -3,7 +3,7 @@
 The fixture uses v0.0.17 of the [AM3352 DDR Track A package](https://tscircuit.com/0hmX/am3352-ddr-track-a-local-dfm-wip-20261007).
 
 Clone the board source with `tsci clone 0hmX/am3352-ddr-track-a-local-dfm-wip-20261007`.
-In a separate render environment with `tscircuit@0.0.3294` (Core `0.0.2480`),
+In a separate render environment with `tscircuit@0.0.3295` (Core `0.0.2483`),
 load the default board from `index.tsx`. Append these `<differentialpair>`
 declarations to the board's children using the existing trace names.
 
