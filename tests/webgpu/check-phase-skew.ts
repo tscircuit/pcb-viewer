@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { fileURLToPath } from "node:url"
+import type { AnyCircuitElement } from "circuit-json"
 import { type Browser, type Locator, type Page, chromium } from "playwright"
 import { createServer } from "vite"
 
@@ -86,13 +87,24 @@ try {
     "circuitJsonUrl",
     "/src/examples/2026/differential-pair-phase-skew/tuning-bump.circuit.json",
   )
+  // Keep the actual trace, but start its first zero-skew span a little later
+  // so this fixture has known zero and unknown on the same visible copper.
+  await page.route("**/tuning-bump.circuit.json", async (route) => {
+    const response = await route.fetch()
+    const elements: AnyCircuitElement[] = await response.json()
+    const skew = elements.find(
+      (element) => element.type === "pcb_differential_pair_phase_skew",
+    )!
+    skew.negative_trace.segments[0]!.start.x += 1.5
+    await route.fulfill({ response, json: elements })
+  })
   await page.goto(url.href)
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.renderCompletions === 1,
   )
 
   const viewMenu = page.locator("[data-view-menu] > div > div").first()
-  const toggle = page.getByText("Show Differential Pair Phase Skew", {
+  const toggle = page.getByText("Show Accumulated Local Length Skew", {
     exact: true,
   })
   const checkbox = toggle.locator("..").locator("input")
@@ -105,12 +117,13 @@ try {
     name: "X-Ray Net",
     exact: true,
   })
-  const lowerTracePixel = () =>
+  const tracePixel = (point: { x: number; y: number }) =>
     canvasLayer.evaluate(
       (canvas: HTMLCanvasElement, { x, y }) =>
         Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data),
-      lowerTrace,
+      point,
     )
+  const lowerTracePixel = () => tracePixel(lowerTrace)
   const hoverLowerTrace = async () => {
     await page.mouse.move(lowerTrace.x, lowerTrace.y)
     await page.evaluate(
@@ -135,12 +148,27 @@ try {
   await toggle.waitFor({ state: "detached" })
   const bluePixels = await countBluePixels({ page, renderer: canvasLayer })
   assert(bluePixels > 0, "Canvas should render the skew overlay")
-  assert.notDeepEqual(await lowerTracePixel(), highlight)
+  const unknownPoint = { x: 161, y: lowerTrace.y }
+  const zeroPoint = { x: 177, y: lowerTrace.y }
+  const unknownPixel = await tracePixel(unknownPoint)
+  const zeroPixel = await tracePixel(zeroPoint)
+  assert.deepEqual(unknownPixel, [128, 128, 128, 255], "Unknown skew is gray")
+  assert.deepEqual(zeroPixel, [255, 255, 255, 255], "Known zero skew is white")
+  await page.mouse.move(unknownPoint.x, unknownPoint.y)
+  await page.getByText("Local skew: unknown", { exact: true }).first().waitFor()
+  assert.deepEqual(await tracePixel(unknownPoint), unknownPixel)
+  await page.mouse.move(viewport.x, viewport.y)
+  const localSkewPixel = await lowerTracePixel()
+  assert.notDeepEqual(localSkewPixel, highlight)
   assert.deepEqual(
     await hoverLowerTrace(),
-    highlight,
-    "Canvas should show the same hover colour with the skew overlay on",
+    localSkewPixel,
+    "Trace hover should keep the accumulated skew color visible",
   )
+  await page
+    .getByText(/^Local skew: -?1\.82/)
+    .first()
+    .waitFor()
   assert.equal(
     await countBluePixels({ page, renderer: canvasLayer }),
     bluePixels,
@@ -171,6 +199,40 @@ try {
     .locator('[data-pcb-renderer="webgpu"]')
     .getAttribute("data-webgpu-error")
   assert.equal(webGpuError, null)
+  assert(
+    await page.evaluate(() =>
+      Boolean(
+        window.gpuViewerTest.stats.lastView?.options.phaseSkewUnknownTraceIds
+          ?.length,
+      ),
+    ),
+    "The Viewer should forward its identified pair traces to WebGPU",
+  )
+  // The Viewer still ships the established package until the renderer support
+  // is released. Exercise the actual pixels when using an integrated build.
+  if (process.env.EXPECT_WEBGPU_UNKNOWN_SKEW === "1") {
+    const encoded = (await webGpuCanvas.screenshot()).toString("base64")
+    const pixels = await page.evaluate(
+      async ({ encoded, points }) => {
+        const image = new Image()
+        image.src = `data:image/png;base64,${encoded}`
+        await image.decode()
+        const bitmap = document.createElement("canvas")
+        bitmap.width = image.width
+        bitmap.height = image.height
+        const context = bitmap.getContext("2d")!
+        context.drawImage(image, 0, 0)
+        return points.map(({ x, y }) => [
+          ...context.getImageData(x, y, 1, 1).data,
+        ])
+      },
+      { encoded, points: [unknownPoint, zeroPoint] },
+    )
+    assert.deepEqual(pixels, [
+      [128, 128, 128, 255],
+      [255, 255, 255, 255],
+    ])
+  }
   assert(
     (await countBluePixels({ page, renderer: webGpuCanvas })) > 0,
     "webGpuCanvas should render the skew overlay",

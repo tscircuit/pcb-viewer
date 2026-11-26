@@ -26,6 +26,7 @@ const stats = {
       copperPourOpacity?: number
       showCopperPours?: boolean
       showDifferentialPairPhaseSkew?: boolean
+      phaseSkewUnknownTraceIds?: readonly string[]
       highlightedElementIds?: string[]
       xRayElementIds?: string[]
     }
@@ -151,6 +152,13 @@ async function mount(
   strict = false,
   unsupported = false,
 ) {
+  if (scenario === "ddr-pair-skew-defaults") {
+    const { default: DdrFixture } = await import(
+      "../../src/examples/2026/differential-pair-phase-skew/am3352-ddr-track-a-phase-skew.fixture"
+    )
+    root.render(<DdrFixture />)
+    return
+  }
   const shouldLoadCircuitJson = large || circuitJsonUrl !== null
   elements = shouldLoadCircuitJson
     ? await (

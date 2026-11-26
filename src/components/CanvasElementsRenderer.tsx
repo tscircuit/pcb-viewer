@@ -63,6 +63,7 @@ export interface CanvasElementsRendererProps {
   width?: number
   height?: number
   renderer?: "webgpu" | "canvas"
+  pairSkewBusId?: string
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
@@ -422,6 +423,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
       transform={transform}
       primitives={hoverPrimitives}
       selectedLayer={selectedLayer}
+      suppressPhaseSkew={Boolean(xRayElements)}
       onMouseHoverOverPrimitives={onMouseOverPrimitives}
     >
       <FocusedPcbComponentOverlay
@@ -445,6 +447,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           cancelPanDrag={props.cancelPanDrag}
         >
           <ToolbarOverlay
+            pairSkewBusId={props.pairSkewBusId}
             elements={elements}
             onSearchComponent={props.onSearchComponent}
             getNetAtPoint={getNetAtPoint}

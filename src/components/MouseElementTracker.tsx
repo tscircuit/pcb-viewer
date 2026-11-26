@@ -5,6 +5,11 @@ import {
   createPrimitiveSpatialIndex,
   getPrimitivesNearPoint,
 } from "lib/primitive-spatial-index"
+import {
+  getLocalPhaseSkewAtPoint,
+  getLocalPhaseSkewTraceIndex,
+  isPointOnTraceCopper,
+} from "lib/local-phase-skew"
 import type { Primitive } from "lib/types"
 import { getPrimitiveBoundingBox } from "lib/util/get-primitive-bounding-box"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
@@ -19,6 +24,7 @@ import {
   GroupAnchorOffsetOverlay,
   PanelAnchorOffsetOverlay,
 } from "./AnchorOffsetOverlay"
+import { useGlobalStore } from "../global-store"
 import { ElementOverlayBox } from "./ElementOverlayBox"
 
 const getPolygonBoundingBox = (
@@ -198,6 +204,7 @@ export const MouseElementTracker = ({
   transform,
   primitives,
   selectedLayer,
+  suppressPhaseSkew = false,
   onMouseHoverOverPrimitives,
 }: {
   elements: AnyCircuitElement[]
@@ -205,8 +212,19 @@ export const MouseElementTracker = ({
   transform?: Matrix
   primitives: Primitive[]
   selectedLayer: LayerRef
+  suppressPhaseSkew?: boolean
   onMouseHoverOverPrimitives: (primitivesHoveredOver: Primitive[]) => void
 }) => {
+  const overlayEnabled = useGlobalStore(
+    (s) => s.is_showing_differential_pair_phase_skew,
+  )
+  const phaseSkewIndex = useMemo(
+    () =>
+      overlayEnabled && !suppressPhaseSkew
+        ? getLocalPhaseSkewTraceIndex(elements)
+        : undefined,
+    [overlayEnabled, suppressPhaseSkew, elements],
+  )
   const [mousedPrimitives, setMousedPrimitives] = useState<Primitive[]>([])
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [containerRef, { width, height }] = useMeasure<HTMLDivElement>()
@@ -359,6 +377,12 @@ export const MouseElementTracker = ({
           handleInteraction({ screenPoint: { x, y }, transform })
         }
       }}
+      onMouseLeave={() => {
+        if (mousedPrimitives.length > 0) {
+          setMousedPrimitives([])
+          onMouseHoverOverPrimitives([])
+        }
+      }}
       onTouchStart={(e) => {
         if (transform) {
           const touch = e.touches[0]
@@ -374,6 +398,24 @@ export const MouseElementTracker = ({
         elements={elements}
         mousePos={mousePos}
         highlightedPrimitives={highlightedPrimitives}
+        getPhaseSkewText={
+          phaseSkewIndex && transform
+            ? (trace) => {
+                const segments = phaseSkewIndex.get(trace.pcb_trace_id)
+                if (!segments) return
+                const point = applyToPoint(inverse(transform), mousePos)
+                if (!isPointOnTraceCopper(trace, selectedLayer, point)) return
+                const skew = getLocalPhaseSkewAtPoint({
+                  segments,
+                  layer: selectedLayer,
+                  point,
+                })
+                return skew === undefined
+                  ? "Local skew: unknown"
+                  : `Local skew: ${skew.toFixed(3)} mm`
+              }
+            : undefined
+        }
       />
       {transform && (
         <>

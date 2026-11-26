@@ -23,6 +23,7 @@ import type {
 } from "../lib/get-pad-component"
 import type { XRayGroup } from "../lib/x-ray-net"
 import { ComponentSearch } from "./ComponentSearch"
+import { DifferentialPairLengthSkewPanel } from "./DifferentialPairLengthSkewPanel"
 import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 import { VisibilityContextMenu } from "./VisibilityContextMenu"
@@ -39,6 +40,7 @@ interface Props {
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onSearchComponent?: (pcbComponentId: string) => void
+  pairSkewBusId?: string
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -156,6 +158,7 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
 export const ToolbarOverlay = ({
   children,
   elements,
+  pairSkewBusId,
   onSearchComponent,
   onContextMenuOpenChange,
   getNetAtPoint,
@@ -261,6 +264,13 @@ export const ToolbarOverlay = ({
     onContextMenuOpenChange?.(false)
   }, [onContextMenuOpenChange])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
+  const hasDifferentialPairs = useMemo(
+    () =>
+      elements?.some(
+        (element) => element.type === "source_bus" && element.differential_pair,
+      ) ?? false,
+    [elements],
+  )
   const [isLayerMenuOpen, setLayerMenuOpen] = useState(false)
   const [isErrorsOpen, setErrorsOpen] = useState(false)
   const [measureToolArmed, setMeasureToolArmed] = useState(false)
@@ -555,7 +565,7 @@ export const ToolbarOverlay = ({
         onWheel={stopCanvasInteractionPropagation}
         style={{
           position: "absolute",
-          opacity: isSmallScreen ? 1 : isMouseOverContainer ? 1 : 0,
+          opacity: isSmallScreen || isMouseOverContainer ? 1 : 0,
           top: 16,
           left: 16,
           right: isSmallScreen ? 16 : "auto",
@@ -687,7 +697,7 @@ export const ToolbarOverlay = ({
                   }}
                 />
                 <CheckboxMenuItem
-                  label="Show Differential Pair Phase Skew"
+                  label="Show Accumulated Local Length Skew"
                   checked={viewSettings.is_showing_differential_pair_phase_skew}
                   onClick={() => {
                     setIsShowingDifferentialPairPhaseSkew(
@@ -807,6 +817,13 @@ export const ToolbarOverlay = ({
           </div>
         </ToolbarButton>
       </div>
+      {hasDifferentialPairs && elements && (
+        <DifferentialPairLengthSkewPanel
+          elements={elements}
+          pairSkewBusId={pairSkewBusId}
+          isSmallScreen={isSmallScreen}
+        />
+      )}
     </div>
   )
 }
