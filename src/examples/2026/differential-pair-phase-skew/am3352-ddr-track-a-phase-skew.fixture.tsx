@@ -12,7 +12,11 @@ export default function Am3352DdrTrackA() {
       circuitJson={circuitJson as AnyCircuitElement[]}
       height={height}
       renderer="canvas"
-      initialPairSkewBusId="source_bus_1"
+      initialState={{
+        is_showing_pcb_groups: false,
+        is_showing_copper_pours: false,
+      }}
+      pairSkewBusId="source_bus_1"
     />
   )
 }

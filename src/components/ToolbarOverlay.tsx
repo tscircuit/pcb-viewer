@@ -24,7 +24,7 @@ import type {
 import type { XRayGroup } from "../lib/x-ray-net"
 import { ComponentSearch } from "./ComponentSearch"
 import { DifferentialPairLengthSkewPanel } from "./DifferentialPairLengthSkewPanel"
-import { getToolbarButtonStyle, ToolbarButton } from "./ToolbarButton"
+import { ToolbarButton } from "./ToolbarButton"
 import { ToolbarErrorDropdown } from "./ToolbarErrorDropdown"
 import { VisibilityContextMenu } from "./VisibilityContextMenu"
 
@@ -40,7 +40,7 @@ interface Props {
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onSearchComponent?: (pcbComponentId: string) => void
-  initialPairSkewBusId?: string
+  pairSkewBusId?: string
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -158,7 +158,7 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
 export const ToolbarOverlay = ({
   children,
   elements,
-  initialPairSkewBusId,
+  pairSkewBusId,
   onSearchComponent,
   onContextMenuOpenChange,
   getNetAtPoint,
@@ -264,9 +264,6 @@ export const ToolbarOverlay = ({
     onContextMenuOpenChange?.(false)
   }, [onContextMenuOpenChange])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
-  const [isPairSkewOpen, setPairSkewOpen] = useState(
-    () => initialPairSkewBusId !== undefined,
-  )
   const hasDifferentialPairs = useMemo(
     () =>
       elements?.some(
@@ -456,9 +453,6 @@ export const ToolbarOverlay = ({
         if (!(event.target as HTMLElement).closest("[data-view-menu]")) {
           setViewMenuOpen(false)
         }
-        if (!(event.target as HTMLElement).closest("[data-pair-skew]")) {
-          setPairSkewOpen(false)
-        }
       }}
       onPointerDown={(event) => {
         pointerStart.current = { x: event.clientX, y: event.clientY }
@@ -571,8 +565,7 @@ export const ToolbarOverlay = ({
         onWheel={stopCanvasInteractionPropagation}
         style={{
           position: "absolute",
-          opacity:
-            isSmallScreen || isMouseOverContainer || isPairSkewOpen ? 1 : 0,
+          opacity: isSmallScreen || isMouseOverContainer ? 1 : 0,
           top: 16,
           left: 16,
           right: isSmallScreen ? 16 : "auto",
@@ -823,29 +816,14 @@ export const ToolbarOverlay = ({
             )}
           </div>
         </ToolbarButton>
-        {hasDifferentialPairs && elements && (
-          <div data-pair-skew>
-            <button
-              type="button"
-              aria-expanded={isPairSkewOpen}
-              style={getToolbarButtonStyle(isSmallScreen)}
-              onClick={() => {
-                setViewMenuOpen(false)
-                setPairSkewOpen((open) => !open)
-              }}
-            >
-              Pair Skew
-            </button>
-            {isPairSkewOpen && (
-              <DifferentialPairLengthSkewPanel
-                elements={elements}
-                initialPairId={initialPairSkewBusId}
-                onClose={() => setPairSkewOpen(false)}
-              />
-            )}
-          </div>
-        )}
       </div>
+      {hasDifferentialPairs && elements && (
+        <DifferentialPairLengthSkewPanel
+          elements={elements}
+          pairSkewBusId={pairSkewBusId}
+          isSmallScreen={isSmallScreen}
+        />
+      )}
     </div>
   )
 }

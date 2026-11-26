@@ -1,113 +1,92 @@
 import type { AnyCircuitElement } from "circuit-json"
-import { useId, useMemo, useState } from "react"
+import { useId, useMemo } from "react"
 import { getDifferentialPairLengthSkews } from "../lib/get-differential-pair-length-skew"
+import { zIndexMap } from "../lib/util/z-index-map"
 
 const formatMm = (value: number | null) =>
   value === null ? "Unavailable" : `${Number(value.toFixed(6))} mm`
 
 export const DifferentialPairLengthSkewPanel = ({
   elements,
-  initialPairId,
-  onClose,
+  pairSkewBusId,
+  isSmallScreen,
 }: {
   elements: AnyCircuitElement[]
-  initialPairId?: string
-  onClose: () => void
+  pairSkewBusId?: string
+  isSmallScreen: boolean
 }) => {
   const pairs = useMemo(
     () => getDifferentialPairLengthSkews(elements),
     [elements],
   )
-  const [selectedPairId, setSelectedPairId] = useState(initialPairId)
-  const pair =
-    pairs.find((row) => row.sourceBusId === selectedPairId) ?? pairs[0]
+  const visiblePairs = pairSkewBusId
+    ? pairs.filter((pair) => pair.sourceBusId === pairSkewBusId)
+    : pairs
   const headingId = useId()
-  if (!pair) return null
+  if (!visiblePairs.length) return null
 
   return (
     <section
       aria-labelledby={headingId}
       style={{
         position: "absolute",
-        top: "calc(100% + 4px)",
-        left: 0,
-        width: 300,
-        maxWidth: "calc(100vw - 32px)",
+        ...(isSmallScreen ? { bottom: 12, left: 12 } : { top: 16, right: 16 }),
+        zIndex: zIndexMap.toolbarOverlay - 1,
+        width: 230,
+        maxWidth: "calc(100% - 24px)",
+        maxHeight: "35%",
+        overflow: "auto",
         boxSizing: "border-box",
         background: "#1f1f1f",
         color: "#eee",
         border: "1px solid #666",
         borderRadius: 4,
-        padding: 12,
-        cursor: "default",
+        padding: 9,
+        font: "12px sans-serif",
       }}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.stopPropagation()
-          onClose()
-        }
-      }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <strong id={headingId}>End-to-end length skew</strong>
-        <button
-          type="button"
-          aria-label="Close pair length skew"
-          onClick={onClose}
+      <strong id={headingId}>End-to-end length skew</strong>
+      {visiblePairs.map((pair) => (
+        <div
+          key={pair.sourceBusId}
+          aria-label={pair.name}
+          role="group"
+          style={{ marginTop: 6 }}
         >
-          ×
-        </button>
-      </div>
-      <label style={{ display: "grid", gap: 4, marginTop: 8 }}>
-        Differential pair
-        <select
-          value={pair.sourceBusId}
-          onChange={(event) => setSelectedPairId(event.target.value)}
-        >
-          {pairs.map((row) => (
-            <option key={row.sourceBusId} value={row.sourceBusId}>
-              {row.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <dl
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto",
-          gap: "6px 12px",
-          marginBottom: 0,
-        }}
-      >
-        <dt>Length skew</dt>
-        <dd style={{ margin: 0, fontWeight: 600 }}>
-          {formatMm(pair.lengthSkewMm)}
-        </dd>
-        <dt>P path</dt>
-        <dd style={{ margin: 0 }}>{formatMm(pair.positiveLengthMm)}</dd>
-        <dt>N path</dt>
-        <dd style={{ margin: 0 }}>{formatMm(pair.negativeLengthMm)}</dd>
-        {pair.toleranceMm !== null && (
-          <>
-            <dt>Limit</dt>
-            <dd style={{ margin: 0 }}>
-              {formatMm(pair.toleranceMm)}
-              {pair.passesTolerance !== null &&
-                (pair.passesTolerance ? " · Pass" : " · Fail")}
+          <div style={{ color: "#bbb", overflowWrap: "anywhere" }}>
+            {pair.name}
+          </div>
+          <dl
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: "4px 8px",
+              margin: "4px 0 0",
+            }}
+          >
+            <dt>Length skew</dt>
+            <dd style={{ margin: 0, fontWeight: 600 }}>
+              {formatMm(pair.lengthSkewMm)}
             </dd>
-          </>
-        )}
-      </dl>
-      <p style={{ margin: "8px 0 0", color: "#bbb" }}>
-        Between declared endpoints. Via travel is estimated if the board has no
-        detailed stackup.
-      </p>
+            <dt>P path</dt>
+            <dd style={{ margin: 0 }}>{formatMm(pair.positiveLengthMm)}</dd>
+            <dt>N path</dt>
+            <dd style={{ margin: 0 }}>{formatMm(pair.negativeLengthMm)}</dd>
+            {pair.toleranceMm !== null && (
+              <>
+                <dt>Limit</dt>
+                <dd style={{ margin: 0 }}>
+                  {formatMm(pair.toleranceMm)}
+                  {pair.passesTolerance !== null &&
+                    (pair.passesTolerance ? " · Pass" : " · Fail")}
+                </dd>
+              </>
+            )}
+          </dl>
+        </div>
+      ))}
     </section>
   )
 }

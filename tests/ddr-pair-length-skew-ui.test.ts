@@ -25,15 +25,13 @@ test("shows AM3352 DQS1 end-to-end lengths with the local overlay disabled", asy
       "/src/examples/2026/differential-pair-phase-skew/am3352-ddr-track-a.circuit.json",
     )
     await page.goto(url.href)
-    await page.mouse.move(400, 300)
-    await page.getByRole("button", { name: "Pair Skew" }).click()
     const panel = page.getByRole("region", { name: "End-to-end length skew" })
-    await panel
-      .getByRole("combobox", { name: "Differential pair" })
-      .selectOption({
-        label: "DDR_DQS_PAIR1",
-      })
-    const [skew, positive, negative] = await panel
+    const dqs1 = panel.getByRole("group", { name: "DDR_DQS_PAIR1" })
+    await dqs1.waitFor()
+    expect(await page.getByRole("button", { name: "Pair Skew" }).count()).toBe(
+      0,
+    )
+    const [skew, positive, negative] = await dqs1
       .locator("dd")
       .allTextContents()
     expect(positive).toMatch(/^\d+(\.\d+)? mm$/)
@@ -43,9 +41,8 @@ test("shows AM3352 DQS1 end-to-end lengths with the local overlay disabled", asy
       5,
     )
     expect(Number.parseFloat(skew)).toBeLessThan(0.001)
-    await panel.getByRole("button", { name: "Close pair length skew" }).click()
-    expect(await panel.count()).toBe(0)
     await page.locator("[data-view-menu] > div > div").first().click()
+    expect(await dqs1.isVisible()).toBe(true)
     const localOverlay = page.getByText("Show Accumulated Local Length Skew", {
       exact: true,
     })
@@ -55,11 +52,14 @@ test("shows AM3352 DQS1 end-to-end lengths with the local overlay disabled", asy
 
     url.searchParams.set("scenario", "ddr-pair-skew-defaults")
     url.searchParams.delete("circuitJsonUrl")
+    await page.setViewportSize({ width: 390, height: 780 })
     await page.goto(url.href)
-    await panel.waitFor()
-    expect(await panel.getByRole("combobox").inputValue()).toBe("source_bus_1")
+    await page.addStyleTag({ content: "#root { width: 100% !important }" })
+    await dqs1.waitFor()
+    expect(await panel.getByRole("group").count()).toBe(1)
     expect(await panel.locator("dd").first().textContent()).toBe("0.000487 mm")
-    await page.mouse.move(400, 300)
+    await page.getByText("layer:", { exact: false }).first().click()
+    expect(await dqs1.isVisible()).toBe(true)
     await page.locator("[data-view-menu] > div > div").first().click()
     expect(await localOverlay.locator("..").locator("input").isChecked()).toBe(
       false,
