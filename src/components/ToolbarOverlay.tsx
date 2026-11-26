@@ -40,6 +40,7 @@ interface Props {
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
   onSearchComponent?: (pcbComponentId: string) => void
+  initialPairSkewBusId?: string
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
 }
@@ -157,6 +158,7 @@ const RadioMenuItem = ({ label, checked, onClick }: RadioMenuItemProps) => {
 export const ToolbarOverlay = ({
   children,
   elements,
+  initialPairSkewBusId,
   onSearchComponent,
   onContextMenuOpenChange,
   getNetAtPoint,
@@ -262,7 +264,9 @@ export const ToolbarOverlay = ({
     onContextMenuOpenChange?.(false)
   }, [onContextMenuOpenChange])
   const [isViewMenuOpen, setViewMenuOpen] = useState(false)
-  const [isPairSkewOpen, setPairSkewOpen] = useState(false)
+  const [isPairSkewOpen, setPairSkewOpen] = useState(
+    () => initialPairSkewBusId !== undefined,
+  )
   const hasDifferentialPairs = useMemo(
     () =>
       elements?.some(
@@ -567,7 +571,8 @@ export const ToolbarOverlay = ({
         onWheel={stopCanvasInteractionPropagation}
         style={{
           position: "absolute",
-          opacity: isSmallScreen ? 1 : isMouseOverContainer ? 1 : 0,
+          opacity:
+            isSmallScreen || isMouseOverContainer || isPairSkewOpen ? 1 : 0,
           top: 16,
           left: 16,
           right: isSmallScreen ? 16 : "auto",
@@ -834,6 +839,7 @@ export const ToolbarOverlay = ({
             {isPairSkewOpen && (
               <DifferentialPairLengthSkewPanel
                 elements={elements}
+                initialPairId={initialPairSkewBusId}
                 onClose={() => setPairSkewOpen(false)}
               />
             )}

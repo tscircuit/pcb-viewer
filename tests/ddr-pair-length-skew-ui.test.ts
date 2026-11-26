@@ -52,6 +52,18 @@ test("shows AM3352 DQS1 end-to-end lengths with the local overlay disabled", asy
     expect(await localOverlay.locator("..").locator("input").isChecked()).toBe(
       false,
     )
+
+    url.searchParams.set("scenario", "ddr-pair-skew-defaults")
+    url.searchParams.delete("circuitJsonUrl")
+    await page.goto(url.href)
+    await panel.waitFor()
+    expect(await panel.getByRole("combobox").inputValue()).toBe("source_bus_1")
+    expect(await panel.locator("dd").first().textContent()).toBe("0.000487 mm")
+    await page.mouse.move(400, 300)
+    await page.locator("[data-view-menu] > div > div").first().click()
+    expect(await localOverlay.locator("..").locator("input").isChecked()).toBe(
+      false,
+    )
   } finally {
     await browser?.close()
     await server.close()

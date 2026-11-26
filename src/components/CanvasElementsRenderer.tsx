@@ -63,6 +63,7 @@ export interface CanvasElementsRendererProps {
   width?: number
   height?: number
   renderer?: "webgpu" | "canvas"
+  initialPairSkewBusId?: string
   grid?: GridConfig
   allowEditing: boolean
   focusOnHover?: boolean
@@ -446,6 +447,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
           cancelPanDrag={props.cancelPanDrag}
         >
           <ToolbarOverlay
+            initialPairSkewBusId={props.initialPairSkewBusId}
             elements={elements}
             onSearchComponent={props.onSearchComponent}
             getNetAtPoint={getNetAtPoint}

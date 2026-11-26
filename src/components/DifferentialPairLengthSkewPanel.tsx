@@ -7,16 +7,18 @@ const formatMm = (value: number | null) =>
 
 export const DifferentialPairLengthSkewPanel = ({
   elements,
+  initialPairId,
   onClose,
 }: {
   elements: AnyCircuitElement[]
+  initialPairId?: string
   onClose: () => void
 }) => {
   const pairs = useMemo(
     () => getDifferentialPairLengthSkews(elements),
     [elements],
   )
-  const [selectedPairId, setSelectedPairId] = useState<string>()
+  const [selectedPairId, setSelectedPairId] = useState(initialPairId)
   const pair =
     pairs.find((row) => row.sourceBusId === selectedPairId) ?? pairs[0]
   const headingId = useId()

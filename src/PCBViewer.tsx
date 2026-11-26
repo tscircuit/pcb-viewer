@@ -47,6 +47,8 @@ type Props = {
   allowEditing?: boolean
   editEvents?: ManualEditEvent[]
   initialState?: Partial<StateProps>
+  /** Open Pair Skew initially with this source bus selected. */
+  initialPairSkewBusId?: string
   onEditEventsChanged?: (editEvents: ManualEditEvent[]) => void
   /** Called once after the active renderer first paints the current Circuit JSON. */
   onRenderComplete?: () => void
@@ -67,6 +69,7 @@ export const PCBViewer = ({
   height = 600,
   renderer,
   initialState,
+  initialPairSkewBusId,
   allowEditing = true,
   editEvents: editEventsProp,
   onEditEventsChanged,
@@ -306,6 +309,7 @@ export const PCBViewer = ({
           >
             <CanvasElementsRenderer
               renderer={activeRenderer}
+              initialPairSkewBusId={initialPairSkewBusId}
               transform={transform}
               setTransform={setTransform}
               height={height}
