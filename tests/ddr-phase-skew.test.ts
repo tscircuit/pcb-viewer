@@ -6,7 +6,7 @@ import { createServer } from "vite"
 
 const snapshot = new URL("./__snapshots__/ddr-phase-skew.png", import.meta.url)
 const boardPath =
-  "/src/examples/2026/differential-pair-end-to-end-skew/am3352-ddr-track-a.circuit.json"
+  "/src/examples/2026/differential-pair-phase-skew/am3352-ddr-track-a.circuit.json"
 
 test("Canvas renders running phase skew on the DDR pairs", async () => {
   const server = await createServer({
@@ -51,19 +51,19 @@ test("Canvas renders running phase skew on the DDR pairs", async () => {
           const elements: AnyCircuitElement[] = await response.json()
           const pairs = [
             {
-              label: "CK (+0.070 mm) / Inner 4",
+              label: "CK / Inner 4",
               layer: "inner4_copper",
               traceX: [-3.98, -4.511],
               traceY: -7.025,
             },
             {
-              label: "DQS0 (+0.387 mm) / Inner 2",
+              label: "DQS0 / Inner 2",
               layer: "inner2_copper",
               traceX: [3.6, 4.0125],
               traceY: -7.05,
             },
             {
-              label: "DQS1 (+0.0005 mm) / Bottom",
+              label: "DQS1 / Bottom",
               layer: "bottom_copper",
               traceX: [1.599, 1.821],
               traceY: -9.2,

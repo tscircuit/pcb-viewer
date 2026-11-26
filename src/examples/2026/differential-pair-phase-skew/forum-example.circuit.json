@@ -2281,7 +2281,6 @@
     "type": "pcb_differential_pair_phase_skew",
     "pcb_differential_pair_phase_skew_id": "pcb_differential_pair_phase_skew_source_bus_0",
     "source_bus_id": "source_bus_0",
-    "end_to_end_length_difference_mm": 0,
     "positive_trace": {
       "pcb_trace_id": "pcb_trace_0",
       "segments": [
