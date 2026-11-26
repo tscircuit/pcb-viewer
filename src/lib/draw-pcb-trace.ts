@@ -1,4 +1,9 @@
-import type { AnyCircuitElement, PcbRenderLayer, PcbTrace } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbDifferentialPairPhaseSkewTrace,
+  PcbRenderLayer,
+  PcbTrace,
+} from "circuit-json"
 import {
   CircuitToCanvasDrawer,
   DEFAULT_PCB_COLOR_MAP,
@@ -95,6 +100,33 @@ export const getHighlightedTraceElementIds = ({
   return highlightedElementIds
 }
 
+// The renderer scales each sign to its peak. Treat sub-micron differences
+// as white so a nearly matched pair cannot saturate a color by itself.
+const PHASE_SKEW_DISPLAY_RESOLUTION_MM = 0.001
+
+function getDisplayedPhaseSkewTrace(
+  trace: PcbDifferentialPairPhaseSkewTrace,
+  sign: 1 | -1,
+): PcbDifferentialPairPhaseSkewTrace {
+  const toDisplayValue = (differenceMm: number) =>
+    Math.abs(differenceMm) < PHASE_SKEW_DISPLAY_RESOLUTION_MM
+      ? 0
+      : sign * differenceMm
+
+  return {
+    ...trace,
+    segments: trace.segments.map((segment) => ({
+      ...segment,
+      start_length_difference_mm: toDisplayValue(
+        segment.start_length_difference_mm,
+      ),
+      end_length_difference_mm: toDisplayValue(
+        segment.end_length_difference_mm,
+      ),
+    })),
+  }
+}
+
 export function drawPcbTraceElementsForLayer({
   canvas,
   elements,
@@ -147,9 +179,22 @@ export function drawPcbTraceElementsForLayer({
     const elementsToDraw = showDifferentialPairPhaseSkew
       ? [
           ...nonHighlightedElements,
-          ...elements.filter(
-            (element) => element.type === "pcb_differential_pair_phase_skew",
-          ),
+          ...elements.flatMap((element) => {
+            if (element.type !== "pcb_differential_pair_phase_skew") return []
+            return [
+              {
+                ...element,
+                positive_trace: getDisplayedPhaseSkewTrace(
+                  element.positive_trace,
+                  1,
+                ),
+                negative_trace: getDisplayedPhaseSkewTrace(
+                  element.negative_trace,
+                  -1,
+                ),
+              },
+            ]
+          }),
         ]
       : nonHighlightedElements
     const drawer = new CircuitToCanvasDrawer(canvas)

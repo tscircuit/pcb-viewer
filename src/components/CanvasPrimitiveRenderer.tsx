@@ -138,20 +138,23 @@ export const CanvasPrimitiveRenderer = ({
         copperLayer: getCopperRenderLayer(layer),
       }))
 
-      // Draw PCB traces using circuit-to-canvas (on copper layers)
-      for (const { canvas, copperLayer } of copperLayers) {
-        if (!canvas) continue
-        drawPcbTraceElementsForLayer({
-          canvas,
-          elements,
-          layers: [copperLayer],
-          realToCanvasMat: transform,
-          primitives,
-          showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
-          showDifferentialPairPhaseSkew:
-            showDifferentialPairPhaseSkew && !xRayElements,
-        })
+      const showPhaseSkew = showDifferentialPairPhaseSkew && !xRayElements
+      const drawTraces = () => {
+        for (const { canvas, copperLayer } of copperLayers) {
+          if (!canvas) continue
+          drawPcbTraceElementsForLayer({
+            canvas,
+            elements,
+            layers: [copperLayer],
+            realToCanvasMat: transform,
+            primitives,
+            showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
+            showDifferentialPairPhaseSkew: showPhaseSkew,
+          })
+        }
       }
+
+      if (!showPhaseSkew) drawTraces()
 
       for (const { canvas, copperLayer } of copperLayers) {
         if (!canvas) continue
@@ -214,6 +217,9 @@ export const CanvasPrimitiveRenderer = ({
             isShowingSolderMask && (layer === "top" || layer === "bottom"),
         })
       }
+
+      // Show the phase skew at terminal pads and vias above their copper fill.
+      if (showPhaseSkew) drawTraces()
 
       if (isShowingSolderMask) {
         const soldermaskLayer = selectedLayer === "bottom" ? "bottom" : "top"

@@ -166,8 +166,13 @@ test("Canvas renders running phase skew on the DDR pairs", async () => {
       for (const [first, second] of result.colors) {
         expect(first[3]).toBe(255)
         expect(second[3]).toBe(255)
-        expect(first).not.toEqual(second)
+        expect(first.includes(255)).toBe(true)
+        expect(second.includes(255)).toBe(true)
       }
+      // At the fanout, DQS0's positive trace lags its partner. Its final
+      // length difference has the opposite sign.
+      const [dqs0Fanout] = result.colors[1]
+      expect(dqs0Fanout[0]).toBeGreaterThan(dqs0Fanout[2])
       if (result.png !== undefined) {
         await Bun.write(
           snapshot,
