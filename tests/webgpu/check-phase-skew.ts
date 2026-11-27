@@ -3,8 +3,13 @@ import { fileURLToPath } from "node:url"
 import { type Browser, type Locator, type Page, chromium } from "playwright"
 import { createServer } from "vite"
 
-const STRONG_BLUE = 180
-const MAX_RED_OR_GREEN = 100
+// The longer trace is pure blue by default and cyan (56, 189, 248) with the
+// viewer's palette. Count pixels close to either.
+const LONGER_TRACE_COLORS = [
+  [0, 0, 255],
+  [56, 189, 248],
+]
+const MAX_CHANNEL_DISTANCE = 20
 
 async function countBluePixels({
   page,
@@ -12,7 +17,7 @@ async function countBluePixels({
 }: { page: Page; renderer: Locator }) {
   const screenshot = await renderer.screenshot()
   return page.evaluate(
-    async ({ encodedScreenshot, strongBlue, maxRedOrGreen }) => {
+    async ({ encodedScreenshot, colors, maxDistance }) => {
       const image = new Image()
       image.src = `data:image/png;base64,${encodedScreenshot}`
       await image.decode()
@@ -29,19 +34,19 @@ async function countBluePixels({
       )
       let count = 0
       for (let i = 0; i < pixels.length; i += 4) {
-        if (
-          pixels[i] < maxRedOrGreen &&
-          pixels[i + 1] < maxRedOrGreen &&
-          pixels[i + 2] > strongBlue
+        const isLongerTrace = colors.some((color) =>
+          color.every(
+            (channel, c) => Math.abs(pixels[i + c] - channel) <= maxDistance,
+          ),
         )
-          count++
+        if (isLongerTrace) count++
       }
       return count
     },
     {
       encodedScreenshot: screenshot.toString("base64"),
-      strongBlue: STRONG_BLUE,
-      maxRedOrGreen: MAX_RED_OR_GREEN,
+      colors: LONGER_TRACE_COLORS,
+      maxDistance: MAX_CHANNEL_DISTANCE,
     },
   )
 }
