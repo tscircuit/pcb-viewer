@@ -4,7 +4,7 @@ import { Circuit } from "@tscircuit/core"
 import { type Browser, type Locator, type Page, chromium } from "playwright"
 import { createElement } from "react"
 import { createServer } from "vite"
-import TuningBumpBoard from "../../src/examples/2026/differential-pair-phase-skew/tuning-bump.circuit"
+import ForumExampleBoard from "../../src/examples/2026/differential-pair-phase-skew/forum-example.circuit"
 
 const STRONG_BLUE = 180
 const MAX_RED_OR_GREEN = 100
@@ -64,7 +64,7 @@ function readCanvasPixel({
 }
 
 const circuit = new Circuit()
-circuit.add(createElement(TuningBumpBoard))
+circuit.add(createElement(ForumExampleBoard))
 await circuit.renderUntilSettled()
 const circuitJson = circuit.getCircuitJson()
 
@@ -102,12 +102,12 @@ try {
   page.setDefaultTimeout(15_000)
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
-  await page.route("**/tuning-bump.circuit.json", (route) =>
+  await page.route("**/forum-example.circuit.json", (route) =>
     route.fulfill({ json: circuitJson }),
   )
   const url = new URL("tests/webgpu/", server.resolvedUrls!.local[0])
   url.searchParams.set("scenario", "canvas")
-  url.searchParams.set("circuitJsonUrl", "/tuning-bump.circuit.json")
+  url.searchParams.set("circuitJsonUrl", "/forum-example.circuit.json")
   await page.goto(url.href)
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.renderCompletions === 1,
@@ -122,12 +122,12 @@ try {
   const xRayCanvas = page.locator(".pcb-x-ray-net")
   const webGpuCanvas = page.locator(".pcb-webgpu-canvas")
   const viewport = { x: 400, y: 450 }
-  const lowerTrace = { x: 400, y: 313 }
+  const lowerTrace = { x: 371, y: 272 }
   const xRayMenuItem = page.getByRole("menuitem", {
-    name: "X-Ray N",
+    name: "X-Ray TRACE_N",
     exact: true,
   })
-  const upperLoadPad = { x: 657, y: 287 }
+  const upperLoadPad = { x: 655, y: 307 }
   const hoverLowerTrace = async () => {
     await page.mouse.move(lowerTrace.x, lowerTrace.y)
     await page.evaluate(
@@ -165,7 +165,7 @@ try {
   })
   assert(
     loadPadWithSkew[2] > loadPadCopper[2] + 100,
-    `Canvas should paint the leading skew over the load pad (off ${loadPadCopper}, on ${loadPadWithSkew})`,
+    `Canvas should paint the in-phase skew over the load pad (off ${loadPadCopper}, on ${loadPadWithSkew})`,
   )
   assert.notDeepEqual(
     await readCanvasPixel({ renderer: canvasLayer, point: lowerTrace }),
@@ -178,9 +178,10 @@ try {
   )
   assert.equal(
     await page.locator("[data-phase-skew-hover]").textContent(),
-    "Lagging 1.823 mm",
-    "Hovering the shorter trace should show how far it lags",
+    "Lagging 2.351 mm",
+    "Hovering the negative trace should show how far it lags there",
   )
+  await page.mouse.move(viewport.x, viewport.y)
   assert.equal(
     await countBluePixels({ page, renderer: canvasLayer }),
     bluePixels,

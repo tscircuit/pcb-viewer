@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { Circuit } from "@tscircuit/core"
-import TuningBumpBoard from "../../src/examples/2026/differential-pair-phase-skew/tuning-bump.circuit"
+import ForumExampleBoard from "../../src/examples/2026/differential-pair-phase-skew/forum-example.circuit"
 import {
   createPhaseSkewTraceIndex,
   getPhaseSkewAtPoint,
@@ -8,7 +8,7 @@ import {
 } from "../../src/lib/get-phase-skew-at-point"
 
 const circuit = new Circuit()
-circuit.add(<TuningBumpBoard />)
+circuit.add(<ForumExampleBoard />)
 await circuit.renderUntilSettled()
 const index = createPhaseSkewTraceIndex(circuit.getCircuitJson())
 
@@ -26,26 +26,41 @@ function getHoverText({
   return differenceMm === null ? null : getPhaseSkewText(differenceMm)
 }
 
-test("the bumped trace leads and its partner lags by the same amount", () => {
-  expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: 5, y: 0.6 })).toBe(
-    "Leading 1.823 mm",
+test("the positive trace leads over its bump while the negative trace lags", () => {
+  expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: -0.934, y: 4.711 })).toBe(
+    "Leading 2.430 mm",
   )
-  expect(getHoverText({ pcbTraceId: "pcb_trace_1", x: 5, y: -0.6 })).toBe(
-    "Lagging 1.823 mm",
+  expect(getHoverText({ pcbTraceId: "pcb_trace_1", x: 1.943, y: 2.28 })).toBe(
+    "Lagging 0.837 mm",
   )
 })
 
-test("phase skew is interpolated along a segment and in phase before the bump", () => {
-  expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: -11, y: 0.6 })).toBe(
+test("phase skew is interpolated along a segment", () => {
+  // Midway along the diagonal from 0.66885 mm to 0.96279 mm ahead.
+  expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: -4.557, y: 3.443 })).toBe(
+    "Leading 0.816 mm",
+  )
+})
+
+test("both traces are in phase at their ends", () => {
+  expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: -9.5, y: 1.99 })).toBe(
     "In phase",
   )
-  expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: -8.9, y: 1.7 })).toBe(
-    "Leading 0.404 mm",
+  expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: 9.5, y: 1.99 })).toBe(
+    "In phase",
+  )
+  expect(getHoverText({ pcbTraceId: "pcb_trace_1", x: 9.5, y: 0.34 })).toBe(
+    "In phase",
   )
 })
 
 test("hovering a trace on one layer ignores phase skew measured on another", () => {
   expect(
-    getHoverText({ pcbTraceId: "pcb_trace_0", x: 5, y: 0.6, layer: "bottom" }),
+    getHoverText({
+      pcbTraceId: "pcb_trace_0",
+      x: -0.934,
+      y: 4.711,
+      layer: "bottom",
+    }),
   ).toBeNull()
 })

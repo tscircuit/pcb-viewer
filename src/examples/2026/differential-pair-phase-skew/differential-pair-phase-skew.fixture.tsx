@@ -1,19 +1,18 @@
 import { Circuit } from "@tscircuit/core"
 import type { AnyCircuitElement } from "circuit-json"
-import { type ReactElement, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { PCBViewer } from "../../../PCBViewer"
 import ForumExampleBoard from "./forum-example.circuit"
-import TuningBumpBoard from "./tuning-bump.circuit"
 
-const PhaseSkewViewer = ({ board }: { board: ReactElement }) => {
+export default function DifferentialPairPhaseSkewFixture() {
   const [circuitJson, setCircuitJson] = useState<AnyCircuitElement[]>()
   useEffect(() => {
     const circuit = new Circuit()
-    circuit.add(board)
+    circuit.add(<ForumExampleBoard />)
     circuit
       .renderUntilSettled()
       .then(() => setCircuitJson(circuit.getCircuitJson()))
-  }, [board])
+  }, [])
   return (
     circuitJson && (
       <PCBViewer
@@ -22,9 +21,4 @@ const PhaseSkewViewer = ({ board }: { board: ReactElement }) => {
       />
     )
   )
-}
-
-export default {
-  "Tuning bump": <PhaseSkewViewer board={<TuningBumpBoard />} />,
-  "KiCad forum": <PhaseSkewViewer board={<ForumExampleBoard />} />,
 }
