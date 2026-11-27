@@ -8,7 +8,6 @@ import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import { PHASE_SKEW_FULL_SCALE_MM } from "../lib/colors"
-import { getPhaseSkewFullScaleMmBySourceBusId } from "../lib/get-phase-skew-full-scale-mm-by-source-bus-id"
 
 type Props = {
   elements: AnyCircuitElement[]
@@ -70,17 +69,12 @@ export function WebGpuElementsRenderer(props: Props) {
       ),
     [props.xRayElements],
   )
-  const phaseSkewFullScaleMmBySourceBusId = useMemo(
-    () => getPhaseSkewFullScaleMmBySourceBusId(elements),
-    [elements],
-  )
   const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(() => {
-    // @tscircuit/circuit-json-webgpu 0.0.26 predates the phase skew full-scale options and ignores them.
+    // @tscircuit/circuit-json-webgpu 0.0.26 predates phaseSkewFullScaleMm and ignores it.
     const phaseSkewOptions = {
       showDifferentialPairPhaseSkew:
         showDifferentialPairPhaseSkew && !props.xRayElements,
       phaseSkewFullScaleMm: PHASE_SKEW_FULL_SCALE_MM,
-      phaseSkewFullScaleMmBySourceBusId,
     }
     return {
       selectedLayer,
@@ -107,7 +101,6 @@ export function WebGpuElementsRenderer(props: Props) {
     showPcbNotes,
     showCourtyards,
     showDifferentialPairPhaseSkew,
-    phaseSkewFullScaleMmBySourceBusId,
     highlightedElementIds,
     xRayElementIds,
     props.xRayElements,
