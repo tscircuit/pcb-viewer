@@ -155,17 +155,12 @@ export function drawPcbTraceElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    // circuit-to-canvas 0.0.143 predates phaseSkewColors and ignores it.
-    const drawOptions = {
+    drawer.drawElements([...nonHighlightedElements, ...phaseSkewElements], {
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,
       phaseSkewColors: PHASE_SKEW_COLORS,
-    }
-    drawer.drawElements(
-      [...nonHighlightedElements, ...phaseSkewElements],
-      drawOptions,
-    )
+    })
   }
 
   if (highlightedElements.length > 0) {
