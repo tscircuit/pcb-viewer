@@ -73,6 +73,7 @@ The PCBViewer component accepts these props:
 - `circuitJson`: Circuit JSON elements array (alternative to children)
 - `height`: Height of viewer in pixels (default: 600)
 - `allowEditing`: Enable/disable editing capabilities (default: true)
+- `focusOnHover`: Opt into focusing PCB elements on hover (default: `false`); use `focusOnHover={false}` to explicitly disable hover focus without the removed `disableAutoFocus` prop.
 - `editEvents`: Array of edit events to apply
 - `onEditEventsChanged`: Callback when edit events change
 - `onBoundsSelected`: Callback when the Bounds tool completes a rectangle selection. Receives `{ minX, minY, maxX, maxY }`.
