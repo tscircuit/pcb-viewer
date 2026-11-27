@@ -12,8 +12,8 @@ export const calculateBoardSizeKey = (
     .map((element) =>
       JSON.stringify([
         element.type,
-        element.center.x,
-        element.center.y,
+        element.center?.x,
+        element.center?.y,
         element.width,
         element.height,
         element.type === "pcb_board"
