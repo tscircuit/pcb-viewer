@@ -305,7 +305,7 @@ export const MouseElementTracker = ({
       highlightedPrimitives.push({
         ...primitive,
         _element: primitive._element,
-        traceSegment:
+        _trace_segment:
           primitive.pcb_drawing_type === "line" ? primitive : undefined,
         x: basePoint.x,
         y: basePoint.y,
@@ -435,7 +435,7 @@ export type HighlightedPrimitive = {
   _parent_source_component?: AnyCircuitElement
   _source_port?: AnyCircuitElement
   layer?: string
-  traceSegment?: Line
+  _trace_segment?: Line
   screen_x: number
   screen_y: number
   screen_w: number

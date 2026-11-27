@@ -339,13 +339,13 @@ export const ElementOverlayBox = ({
                   trace,
                   point,
                   layer: primitive.layer,
-                  maxDistanceMm: primitive.traceSegment
+                  maxDistanceMm: primitive._trace_segment
                     ? getTraceHoverRadiusMm({
-                        traceWidthMm: primitive.traceSegment.width || 0.5,
+                        traceWidthMm: primitive._trace_segment.width || 0.5,
                         pixelsPerMm,
                       })
                     : 0,
-                  measureFromCopperEdge: !primitive.traceSegment,
+                  measureFromCopperEdge: !primitive._trace_segment,
                 })
               : null
           return (

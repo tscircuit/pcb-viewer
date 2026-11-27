@@ -21,8 +21,8 @@ function getNearestTrace({
   let nearestDistanceMm = Infinity
   for (const trace of traces) {
     // Non-line traces have already passed a hit test against their copper.
-    const distanceMm = trace.traceSegment
-      ? getTraceSegmentDistanceMm({ point, line: trace.traceSegment })
+    const distanceMm = trace._trace_segment
+      ? getTraceSegmentDistanceMm({ point, line: trace._trace_segment })
       : 0
     if (distanceMm < nearestDistanceMm) {
       nearestTrace = trace
