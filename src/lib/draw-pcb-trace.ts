@@ -8,6 +8,7 @@ import color from "color"
 import type { Matrix } from "transformation-matrix"
 import { PHASE_SKEW_COLORS, PHASE_SKEW_FULL_SCALE_MM } from "./colors"
 import { normalizeCopperRenderLayers } from "./copper-layers"
+import { getPhaseSkewFullScaleMmBySourceBusId } from "./get-phase-skew-full-scale-mm-by-source-bus-id"
 import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
@@ -152,13 +153,16 @@ export function drawPcbTraceElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    // circuit-to-canvas 0.0.143 predates phaseSkewFullScaleMm and phaseSkewColors and ignores them.
+    // circuit-to-canvas 0.0.143 predates the phase skew full-scale and color options and ignores them.
     const drawOptions = {
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,
       phaseSkewFullScaleMm: PHASE_SKEW_FULL_SCALE_MM,
       phaseSkewColors: PHASE_SKEW_COLORS,
+      phaseSkewFullScaleMmBySourceBusId: showDifferentialPairPhaseSkew
+        ? getPhaseSkewFullScaleMmBySourceBusId(elements)
+        : undefined,
     }
     drawer.drawElements(
       [...nonHighlightedElements, ...phaseSkewElements],
