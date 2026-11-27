@@ -10,7 +10,7 @@
         "@tscircuit/math-utils": "^0.0.36",
         "@vitejs/plugin-react": "^5.0.2",
         "circuit-json": "^0.0.563",
-        "circuit-to-canvas": "https://pkg.pr.new/tscircuit/circuit-to-canvas/circuit-to-canvas@cbceaf1",
+        "circuit-to-canvas": "https://pkg.pr.new/tscircuit/circuit-to-canvas/circuit-to-canvas@88f0b25",
         "color": "^4.2.3",
         "react-supergrid": "^1.0.10",
         "react-toastify": "^10.0.5",
@@ -668,7 +668,7 @@
 
     "circuit-json-to-spice": ["circuit-json-to-spice@0.0.51", "", { "dependencies": { "circuit-json-to-connectivity-map": "^0.0.22" }, "peerDependencies": { "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "spicets": "*", "typescript": "^5.0.0" } }, "sha512-uNbLpL4Dq8186waazZN2OibZ9T7upiHLfEjeKOm/+Z9UB6NL+ud7d/nSR84FqKm/EuJYiWcjy/WfJjykjKGPCw=="],
 
-    "circuit-to-canvas": ["circuit-to-canvas@https://pkg.pr.new/tscircuit/circuit-to-canvas/circuit-to-canvas@cbceaf1", { "dependencies": { "transformation-matrix": "^3.1.0" }, "peerDependencies": { "@tscircuit/alphabet": "*", "@tscircuit/circuit-json-util": ">=0.0.136", "circuit-json": "*", "typescript": "^5" } }, "sha512-l6hXID8hTVO1LHJSWfAvIER/4BjQvD7Gd/k+QJwCqAqDaEK5UqAosNhd/QHVNpG54ffhQwERzoGam5vXcDA3DQ=="],
+    "circuit-to-canvas": ["circuit-to-canvas@https://pkg.pr.new/tscircuit/circuit-to-canvas/circuit-to-canvas@88f0b25", { "dependencies": { "transformation-matrix": "^3.1.0" }, "peerDependencies": { "@tscircuit/alphabet": "*", "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "typescript": "^5" } }, "sha512-Sh/jKnAnGigEr4vF8JUmJv+sDUHPZaLeWCeRnjy8woX0THaIuT1gO+rSgDh7YlpwV7Jlsor1F6EkKfYHTzalyA=="],
 
     "circuit-to-svg": ["circuit-to-svg@0.0.463", "", { "dependencies": { "@types/node": "^22.5.5", "bun-types": "^1.1.40", "calculate-elbow": "0.0.12", "color": "^5.0.3", "debug": "^4.4.3", "svg-path-commander": "^2.1.11", "svgson": "^5.3.1", "transformation-matrix": "^2.16.1" }, "peerDependencies": { "@tscircuit/alphabet": "*", "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-json-to-connectivity-map": "*", "schematic-symbols": "*" } }, "sha512-snja0WpjyOY+Pze8m9wm362NxFrWqVxMd7KFYIi4F/pdcY7YVGndG+FWgXI8KxleNIBul3xCyLHLlTnYWG1+Xw=="],
 
