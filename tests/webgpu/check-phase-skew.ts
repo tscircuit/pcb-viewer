@@ -1,8 +1,10 @@
 import assert from "node:assert/strict"
 import { fileURLToPath } from "node:url"
-import type { AnyCircuitElement } from "circuit-json"
+import { Circuit } from "@tscircuit/core"
 import { type Browser, type Locator, type Page, chromium } from "playwright"
+import { createElement } from "react"
 import { createServer } from "vite"
+import TuningBumpBoard from "../../src/examples/2026/differential-pair-phase-skew/tuning-bump.circuit"
 
 const STRONG_BLUE = 180
 const MAX_RED_OR_GREEN = 100
@@ -61,6 +63,11 @@ function readCanvasPixel({
   )
 }
 
+const circuit = new Circuit()
+circuit.add(createElement(TuningBumpBoard))
+await circuit.renderUntilSettled()
+const circuitJson = circuit.getCircuitJson()
+
 const server = await createServer({
   root: fileURLToPath(new URL("../../", import.meta.url)),
   cacheDir: "node_modules/.vite-phase-skew-test",
@@ -95,32 +102,27 @@ try {
   page.setDefaultTimeout(15_000)
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
-  await page.route("**/tuning-bump.circuit.json", async (route) => {
-    const response = await route.fetch()
-    const elements: AnyCircuitElement[] = await response.json()
-    // Widen the lower trace so its hit area extends past the old tooltip cutoff.
-    for (const element of elements) {
-      if (
-        element.type === "pcb_trace" &&
-        element.pcb_trace_id === "pcb_trace_1"
-      ) {
-        for (const point of element.route) {
-          if (point.route_type === "wire") point.width = 1.4
-        }
-      } else if (element.type === "pcb_differential_pair_phase_skew") {
-        for (const segment of element.negative_trace.segments) {
-          segment.width = 1.4
-        }
+  // Widen the lower trace so its hit area extends past the old tooltip cutoff.
+  for (const element of circuitJson) {
+    if (
+      element.type === "pcb_trace" &&
+      element.pcb_trace_id === "pcb_trace_1"
+    ) {
+      for (const point of element.route) {
+        if (point.route_type === "wire") point.width = 1.4
+      }
+    } else if (element.type === "pcb_differential_pair_phase_skew") {
+      for (const segment of element.negative_trace.segments) {
+        segment.width = 1.4
       }
     }
-    await route.fulfill({ response, json: elements })
-  })
+  }
+  await page.route("**/tuning-bump.circuit.json", (route) =>
+    route.fulfill({ json: circuitJson }),
+  )
   const url = new URL("tests/webgpu/", server.resolvedUrls!.local[0])
   url.searchParams.set("scenario", "canvas")
-  url.searchParams.set(
-    "circuitJsonUrl",
-    "/src/examples/2026/differential-pair-phase-skew/tuning-bump.circuit.json",
-  )
+  url.searchParams.set("circuitJsonUrl", "/tuning-bump.circuit.json")
   await page.goto(url.href)
   await page.waitForFunction(
     () => window.gpuViewerTest.stats.renderCompletions === 1,

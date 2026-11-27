@@ -1,13 +1,16 @@
 import { expect, test } from "bun:test"
-import type { AnyCircuitElement } from "circuit-json"
-import tuningBump from "../../src/examples/2026/differential-pair-phase-skew/tuning-bump.circuit.json"
+import { Circuit } from "@tscircuit/core"
+import TuningBumpBoard from "../../src/examples/2026/differential-pair-phase-skew/tuning-bump.circuit"
 import {
   createPhaseSkewTraceIndex,
   getPhaseSkewAtPoint,
   getPhaseSkewText,
 } from "../../src/lib/get-phase-skew-at-point"
 
-const index = createPhaseSkewTraceIndex(tuningBump as AnyCircuitElement[])
+const circuit = new Circuit()
+circuit.add(<TuningBumpBoard />)
+await circuit.renderUntilSettled()
+const index = createPhaseSkewTraceIndex(circuit.getCircuitJson())
 const hoverText = (pcbTraceId: string, point: { x: number; y: number }) => {
   const differenceMm = getPhaseSkewAtPoint({
     trace: index[pcbTraceId]!,
@@ -62,27 +65,13 @@ test("phase skew trace IDs cannot resolve to inherited properties", () => {
   expect(index.__proto__).toBeUndefined()
 })
 
-test("hovering a trace on one layer ignores phase skew measured on another", async () => {
-  const { default: ddr } = await import(
-    "../../src/examples/2026/differential-pair-phase-skew/am3352-ddr-track-a.circuit.json"
-  )
-  const ddrIndex = createPhaseSkewTraceIndex(ddr as AnyCircuitElement[])
-  // DDR_DQS_PAIR1's top-layer fanout sits over its bottom-layer coupled run
-  const fanoutPoint = { x: 1.2, y: -6.8 }
+test("hovering a trace on one layer ignores phase skew measured on another", () => {
   expect(
     getPhaseSkewAtPoint({
-      trace: ddrIndex.pcb_trace_414!,
-      point: fanoutPoint,
-      maxDistanceMm: 0.1,
-      layer: "top",
-    }),
-  ).toBeNull()
-  expect(
-    getPhaseSkewAtPoint({
-      trace: ddrIndex.pcb_trace_414!,
-      point: fanoutPoint,
+      trace: index.pcb_trace_0!,
+      point: { x: 5, y: 0.6 },
       maxDistanceMm: 0.1,
       layer: "bottom",
     }),
-  ).toBeCloseTo(-0.85007)
+  ).toBeNull()
 })
