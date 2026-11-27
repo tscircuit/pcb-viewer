@@ -239,6 +239,3 @@ export default {
     worksheet: "rgb(192, 0, 0)",
   },
 }
-
-/** Phase skew overlay: the |skew| in mm at which a trace reaches full color. */
-export const PHASE_SKEW_FULL_SCALE_MM = 2
