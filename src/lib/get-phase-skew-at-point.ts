@@ -67,9 +67,9 @@ export function getPhaseSkewAtPoint({
   return nearestDifference
 }
 
-/** Describes how much longer or shorter this trace has run than its partner. */
+/** Labels a trace that has run farther than its partner as leading and one that has run less as lagging. */
 export function getPhaseSkewText(differenceMm: number): string {
-  if (Math.abs(differenceMm) < MATCHED_TOLERANCE_MM) return "Length matched"
-  const direction = differenceMm > 0 ? "longer" : "shorter"
-  return `${Math.abs(differenceMm).toFixed(3)} mm ${direction} than partner`
+  if (Math.abs(differenceMm) < MATCHED_TOLERANCE_MM) return "In phase"
+  const direction = differenceMm > 0 ? "Leading" : "Lagging"
+  return `${direction} ${Math.abs(differenceMm).toFixed(3)} mm`
 }
