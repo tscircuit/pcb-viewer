@@ -3,8 +3,7 @@ import type {
   PcbDifferentialPairPhaseSkew,
   PcbDifferentialPairPhaseSkewTrace,
 } from "circuit-json"
-
-type Point = { x: number; y: number }
+import type { Point } from "./util/expand-stroke"
 
 export type PhaseSkewTraceIndex = Record<
   string,

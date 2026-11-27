@@ -6,9 +6,9 @@ import {
   getAssociatedTraceName,
 } from "./get-trace-overlay-text"
 import { getTraceSegmentDistanceMm } from "./trace-hover"
+import type { Point } from "./util/expand-stroke"
 
 type HighlightedTrace = HighlightedPrimitive & { _element: PcbTrace }
-type Point = { x: number; y: number }
 
 function getNearestTrace({
   traces,
