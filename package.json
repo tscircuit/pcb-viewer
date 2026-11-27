@@ -22,7 +22,8 @@
     "test:measurement-context-menu": "bun run build && bun tests/measurement-context-menu/run.ts",
     "test:sitara-interaction": "bun run build && bun tests/sitara-interaction/run.ts",
     "test:copper-pour-opacity": "bun run build && bun tests/copper-pour-opacity/run.ts",
-    "test:webgpu": "bun run build && bun tests/webgpu/run.ts"
+    "test:webgpu": "bun run build && bun tests/webgpu/run.ts",
+    "test:component-visibility-picking": "bun run build && bun tests/component-visibility-picking/run.ts"
   },
   "files": [
     "dist"

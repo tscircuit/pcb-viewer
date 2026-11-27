@@ -29,3 +29,6 @@ jobs:
 
       - name: Run tests
         run: bun test
+
+      - name: Component visibility and picking browser regressions
+        run: bun run test:component-visibility-picking
