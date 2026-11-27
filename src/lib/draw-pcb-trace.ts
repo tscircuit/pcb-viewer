@@ -142,12 +142,9 @@ export function drawPcbTraceElementsForLayer({
     elements,
     showCopperPours,
   )
-  // The renderer scales each pair's color to its source_bus.max_length_skew.
   const phaseSkewElements = showDifferentialPairPhaseSkew
     ? elements.filter(
-        (element) =>
-          element.type === "pcb_differential_pair_phase_skew" ||
-          element.type === "source_bus",
+        (element) => element.type === "pcb_differential_pair_phase_skew",
       )
     : []
 
