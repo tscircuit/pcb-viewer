@@ -32,6 +32,61 @@ test("points away from the trace have no phase skew", () => {
   expect(hoverText("pcb_trace_0", { x: 5, y: 3 })).toBeNull()
 })
 
+test("zero-length and non-finite segments do not replace a valid skew reading", () => {
+  const trace = index.pcb_trace_0!
+  const point = { x: 5, y: 0.61 }
+  const segment = trace.segments.at(-1)!
+
+  for (const invalidSegment of [
+    { ...segment, start: point, end: point },
+    {
+      ...segment,
+      start: { ...segment.start, y: point.y },
+      end: { ...segment.end, y: point.y },
+      end_length_difference_mm: Number.POSITIVE_INFINITY,
+    },
+  ]) {
+    expect(
+      getPhaseSkewAtPoint({
+        trace: { ...trace, segments: [...trace.segments, invalidSegment] },
+        point,
+        maxDistanceMm: 0.1,
+        layer: "top",
+      }),
+    ).toBeCloseTo(1.82254)
+  }
+})
+
+test("phase skew trace IDs cannot resolve to inherited properties", () => {
+  expect(index.constructor).toBeUndefined()
+  expect(index.__proto__).toBeUndefined()
+})
+
+test("the phase skew index skips pairs missing a trace or segment array", () => {
+  const pair = (tuningBump as AnyCircuitElement[]).find(
+    (element) => element.type === "pcb_differential_pair_phase_skew",
+  )!
+  const { positive_trace, negative_trace, ...pairWithoutTraces } = pair
+  const { segments: _segments, ...negativeTraceWithoutSegments } =
+    negative_trace
+
+  for (const incompletePair of [
+    { ...pairWithoutTraces, negative_trace },
+    { ...pairWithoutTraces, positive_trace },
+    {
+      ...pairWithoutTraces,
+      positive_trace,
+      negative_trace: negativeTraceWithoutSegments,
+    },
+  ]) {
+    expect(
+      Object.keys(
+        createPhaseSkewTraceIndex([incompletePair] as AnyCircuitElement[]),
+      ),
+    ).toEqual([])
+  }
+})
+
 test("hovering a trace on one layer ignores phase skew measured on another", async () => {
   const { default: ddr } = await import(
     "../../src/examples/2026/differential-pair-phase-skew/am3352-ddr-track-a.circuit.json"

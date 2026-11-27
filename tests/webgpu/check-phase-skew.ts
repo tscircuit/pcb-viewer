@@ -1,5 +1,9 @@
 import assert from "node:assert/strict"
 import { fileURLToPath } from "node:url"
+import type {
+  AnyCircuitElement,
+  PcbDifferentialPairPhaseSkew,
+} from "circuit-json"
 import { type Browser, type Locator, type Page, chromium } from "playwright"
 import { createServer } from "vite"
 
@@ -80,6 +84,32 @@ try {
   page.setDefaultTimeout(15_000)
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
+  await page.route("**/tuning-bump.circuit.json", async (route) => {
+    const response = await route.fetch()
+    const elements: AnyCircuitElement[] = await response.json()
+    const incompletePairs: Partial<PcbDifferentialPairPhaseSkew>[] = []
+    // Widen the lower trace so its hit area extends past the old tooltip cutoff.
+    for (const element of elements) {
+      if (
+        element.type === "pcb_trace" &&
+        element.pcb_trace_id === "pcb_trace_1"
+      ) {
+        for (const point of element.route) {
+          if (point.route_type === "wire") point.width = 1.4
+        }
+      } else if (element.type === "pcb_differential_pair_phase_skew") {
+        for (const segment of element.negative_trace.segments) {
+          segment.width = 1.4
+        }
+        const { negative_trace: _negativeTrace, ...incompletePair } = element
+        incompletePairs.push({
+          ...incompletePair,
+          pcb_differential_pair_phase_skew_id: "incomplete_pair",
+        })
+      }
+    }
+    await route.fulfill({ response, json: [...elements, ...incompletePairs] })
+  })
   const url = new URL("tests/webgpu/", server.resolvedUrls!.local[0])
   url.searchParams.set("scenario", "canvas")
   url.searchParams.set(
@@ -150,6 +180,22 @@ try {
     await countBluePixels({ page, renderer: canvasLayer }),
     bluePixels,
   )
+
+  const skewTooltips = page.locator("[data-phase-skew-hover]")
+  const hoveredSkew: string[][] = []
+  for (const { x, y } of [
+    { x: 233, y: 240 }, // Bend shared by two primitives of the upper trace.
+    { x: 400, y: 291 }, // Upper trace, within the hit areas of both traces.
+    { x: 400, y: 339 }, // Lower trace, beyond the previous tooltip cutoff.
+  ]) {
+    await page.mouse.move(x, y)
+    hoveredSkew.push(await skewTooltips.allTextContents())
+  }
+  assert.deepEqual(hoveredSkew, [
+    ["Leading 0.809 mm"],
+    ["Leading 1.823 mm"],
+    ["Lagging 1.823 mm"],
+  ])
 
   // X-ray the lower trace, leaving the upper trace outside the selected net.
   await page.mouse.click(lowerTrace.x, lowerTrace.y, { button: "right" })
