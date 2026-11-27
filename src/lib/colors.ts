@@ -240,6 +240,9 @@ export default {
   },
 }
 
+/** Phase skew overlay: the |skew| in mm at which a trace reaches full color. */
+export const PHASE_SKEW_FULL_SCALE_MM = 2
+
 /** Phase skew overlay: grey where matched, cyan where longer than the partner, amber where shorter. */
 export const PHASE_SKEW_COLORS = {
   zero: "rgb(105, 105, 105)",

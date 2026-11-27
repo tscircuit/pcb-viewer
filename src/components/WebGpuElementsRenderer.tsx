@@ -7,7 +7,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
-import { PHASE_SKEW_COLORS } from "../lib/colors"
+import { PHASE_SKEW_COLORS, PHASE_SKEW_FULL_SCALE_MM } from "../lib/colors"
 
 type Props = {
   elements: AnyCircuitElement[]
@@ -69,24 +69,15 @@ export function WebGpuElementsRenderer(props: Props) {
       ),
     [props.xRayElements],
   )
-  const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(
-    () => ({
-      selectedLayer,
-      hiddenLayerOpacity,
-      copperPourOpacity,
-      showCopperPours,
-      showSolderMask,
-      showSilkscreen,
-      showFabricationNotes,
-      showPcbNotes,
-      showCourtyards,
+  const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(() => {
+    // @tscircuit/circuit-json-webgpu 0.0.26 predates phaseSkewFullScaleMm and phaseSkewColors and ignores them.
+    const phaseSkewOptions = {
       showDifferentialPairPhaseSkew:
         showDifferentialPairPhaseSkew && !props.xRayElements,
+      phaseSkewFullScaleMm: PHASE_SKEW_FULL_SCALE_MM,
       phaseSkewColors: PHASE_SKEW_COLORS,
-      highlightedElementIds,
-      xRayElementIds,
-    }),
-    [
+    }
+    return {
       selectedLayer,
       hiddenLayerOpacity,
       copperPourOpacity,
@@ -96,12 +87,25 @@ export function WebGpuElementsRenderer(props: Props) {
       showFabricationNotes,
       showPcbNotes,
       showCourtyards,
-      showDifferentialPairPhaseSkew,
+      ...phaseSkewOptions,
       highlightedElementIds,
       xRayElementIds,
-      props.xRayElements,
-    ],
-  )
+    }
+  }, [
+    selectedLayer,
+    hiddenLayerOpacity,
+    copperPourOpacity,
+    showCopperPours,
+    showSolderMask,
+    showSilkscreen,
+    showFabricationNotes,
+    showPcbNotes,
+    showCourtyards,
+    showDifferentialPairPhaseSkew,
+    highlightedElementIds,
+    xRayElementIds,
+    props.xRayElements,
+  ])
   const viewRef = useRef<WebGpuRequest | undefined>(undefined)
   if (transform) {
     const ratio =

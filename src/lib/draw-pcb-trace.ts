@@ -6,7 +6,7 @@ import {
 } from "circuit-to-canvas"
 import color from "color"
 import type { Matrix } from "transformation-matrix"
-import { PHASE_SKEW_COLORS } from "./colors"
+import { PHASE_SKEW_COLORS, PHASE_SKEW_FULL_SCALE_MM } from "./colors"
 import { normalizeCopperRenderLayers } from "./copper-layers"
 import type { Primitive } from "./types"
 
@@ -143,23 +143,21 @@ export function drawPcbTraceElementsForLayer({
     elements,
     showCopperPours,
   )
-  // The renderer scales each pair's color to its source_bus.max_length_skew.
   const phaseSkewElements = showDifferentialPairPhaseSkew
     ? elements.filter(
-        (element) =>
-          element.type === "pcb_differential_pair_phase_skew" ||
-          element.type === "source_bus",
+        (element) => element.type === "pcb_differential_pair_phase_skew",
       )
     : []
 
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    // circuit-to-canvas 0.0.143 predates phaseSkewColors and ignores it.
+    // circuit-to-canvas 0.0.143 predates phaseSkewFullScaleMm and phaseSkewColors and ignores them.
     const drawOptions = {
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,
+      phaseSkewFullScaleMm: PHASE_SKEW_FULL_SCALE_MM,
       phaseSkewColors: PHASE_SKEW_COLORS,
     }
     drawer.drawElements(
