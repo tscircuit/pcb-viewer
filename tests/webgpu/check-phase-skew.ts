@@ -142,6 +142,11 @@ try {
     "Canvas should show the same hover colour with the skew overlay on",
   )
   assert.equal(
+    await page.locator("[data-phase-skew-hover]").textContent(),
+    "Lagging by 1.823 mm",
+    "Hovering the shorter trace should show how far it lags",
+  )
+  assert.equal(
     await countBluePixels({ page, renderer: canvasLayer }),
     bluePixels,
   )

@@ -374,6 +374,7 @@ export const MouseElementTracker = ({
         elements={elements}
         mousePos={mousePos}
         highlightedPrimitives={highlightedPrimitives}
+        transform={transform}
       />
       {transform && (
         <>
