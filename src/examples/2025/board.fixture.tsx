@@ -112,7 +112,7 @@ export const AtariBoard = () => {
   )
 }
 
-export const DisabledAutoFocus = () => {
+export const FocusOnHoverDisabled = () => {
   const circuit = new Circuit()
 
   circuit.add(<board pcbX={0} pcbY={0} width="50mm" height="50mm" />)
@@ -121,7 +121,7 @@ export const DisabledAutoFocus = () => {
 
   return (
     <div style={{ backgroundColor: "black" }}>
-      <PCBViewer circuitJson={soup as any} />
+      <PCBViewer circuitJson={soup as any} focusOnHover={false} />
     </div>
   )
 }
