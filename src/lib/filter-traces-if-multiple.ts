@@ -6,6 +6,7 @@ import {
 
 export function filterTracesIfMultiple(filterTraces: {
   primitives: HighlightedPrimitive[]
+  preferredTraceId?: string
   is_showing_multiple_traces_length: boolean
   traceOverlayElementIndex: TraceOverlayElementIndex
 }): HighlightedPrimitive[] {
@@ -29,6 +30,13 @@ export function filterTracesIfMultiple(filterTraces: {
 
   // Get non-trace primitives
   const nonTraces = primitives.filter((p) => p._element.type !== "pcb_trace")
+
+  if (filterTraces.preferredTraceId !== undefined) {
+    const preferred = traces.find(
+      (p) => p._element.pcb_trace_id === filterTraces.preferredTraceId,
+    )
+    if (preferred) return [...nonTraces, preferred]
+  }
 
   // Named traces and nets should always have a hover label, even when the
   // viewer is configured to hide ordinary trace-length overlays.

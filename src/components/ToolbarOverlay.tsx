@@ -174,6 +174,7 @@ export const ToolbarOverlay = ({
     viewSettings,
     setIsShowingRatsNest,
     setIsShowingMultipleTracesLength,
+    setIsShowingDifferentialPairPhaseSkew,
     setIsShowingAutorouting,
     setIsShowingDrcErrors,
     setIsShowingDrcWarnings,
@@ -196,6 +197,8 @@ export const ToolbarOverlay = ({
     viewSettings: {
       is_showing_rats_nest: s.is_showing_rats_nest,
       is_showing_multiple_traces_length: s.is_showing_multiple_traces_length,
+      is_showing_differential_pair_phase_skew:
+        s.is_showing_differential_pair_phase_skew,
       is_showing_autorouting: s.is_showing_autorouting,
       is_showing_drc_errors: s.is_showing_drc_errors,
       is_showing_drc_warnings: s.is_showing_drc_warnings,
@@ -211,6 +214,8 @@ export const ToolbarOverlay = ({
     },
     setIsShowingRatsNest: s.setIsShowingRatsNest,
     setIsShowingMultipleTracesLength: s.setIsShowingMultipleTracesLength,
+    setIsShowingDifferentialPairPhaseSkew:
+      s.setIsShowingDifferentialPairPhaseSkew,
     setIsShowingAutorouting: s.setIsShowingAutorouting,
     setIsShowingDrcErrors: s.setIsShowingDrcErrors,
     setIsShowingDrcWarnings: s.setIsShowingDrcWarnings,
@@ -678,6 +683,15 @@ export const ToolbarOverlay = ({
                   onClick={() => {
                     setIsShowingMultipleTracesLength(
                       !viewSettings.is_showing_multiple_traces_length,
+                    )
+                  }}
+                />
+                <CheckboxMenuItem
+                  label="Show Differential Pair Phase Skew"
+                  checked={viewSettings.is_showing_differential_pair_phase_skew}
+                  onClick={() => {
+                    setIsShowingDifferentialPairPhaseSkew(
+                      !viewSettings.is_showing_differential_pair_phase_skew,
                     )
                   }}
                 />

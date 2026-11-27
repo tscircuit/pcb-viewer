@@ -9,6 +9,7 @@ import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 
 type Props = {
+  showDifferentialPairPhaseSkew: boolean
   elements: AnyCircuitElement[]
   primitives: Primitive[]
   highlightedCopperPourIds?: string[]
@@ -59,11 +60,15 @@ export function WebGpuElementsRenderer(props: Props) {
   )
   const xRayElementIds = useMemo(
     () =>
-      (props.xRayElements ?? []).map(
-        (element) =>
-          (element as unknown as Record<string, string>)[`${element.type}_id`],
-      ),
-    [props.xRayElements],
+      supportsXRayNet === false
+        ? []
+        : (props.xRayElements ?? []).map(
+            (element) =>
+              (element as unknown as Record<string, string>)[
+                `${element.type}_id`
+              ],
+          ),
+    [props.xRayElements, supportsXRayNet],
   )
   const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(
     () => ({
@@ -76,6 +81,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showFabricationNotes,
       showPcbNotes,
       showCourtyards,
+      showDifferentialPairPhaseSkew: props.showDifferentialPairPhaseSkew,
       highlightedElementIds,
       xRayElementIds,
     }),
@@ -89,6 +95,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showFabricationNotes,
       showPcbNotes,
       showCourtyards,
+      props.showDifferentialPairPhaseSkew,
       highlightedElementIds,
       xRayElementIds,
     ],

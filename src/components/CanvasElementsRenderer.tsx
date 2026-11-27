@@ -1,3 +1,4 @@
+import { createPcbPhaseSkewIndex } from "@tscircuit/circuit-json-util"
 import type { ManualEditEvent } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
@@ -104,12 +105,14 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     hoveredErrorId,
     focusedErrorId,
     isShowingCopperPours,
+    showPhaseSkew,
     copperPourOpacity,
     selectedLayer,
   } = useGlobalStore((state) => ({
     hoveredErrorId: state.hovered_error_id,
     focusedErrorId: state.focused_error_id,
     isShowingCopperPours: state.is_showing_copper_pours,
+    showPhaseSkew: state.is_showing_differential_pair_phase_skew,
     copperPourOpacity: state.copper_pour_opacity,
     selectedLayer: state.selected_layer,
   }))
@@ -147,19 +150,22 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
     window.addEventListener("keydown", onKeyDown, true)
     return () => window.removeEventListener("keydown", onKeyDown, true)
   }, [xRayNetIds.length])
-  const xRayElements = useMemo(
+  const xRayElements = useMemo(() => {
+    if (!xRayNetIds.length) return
+    const selected = elementsToRender.filter(
+      (element) =>
+        isXRayCopper(element) &&
+        (element.type !== "pcb_copper_pour" || copperPourOpacity > 0) &&
+        xRayNetIds.includes(getElementNetId(element, connectivityMap) ?? ""),
+    )
+    return selected.length ? selected : undefined
+  }, [elementsToRender, connectivityMap, xRayNetIds, copperPourOpacity])
+  const phaseSkewIndex = useMemo(
     () =>
-      xRayNetIds.length > 0
-        ? elementsToRender.filter(
-            (element) =>
-              isXRayCopper(element) &&
-              (element.type !== "pcb_copper_pour" || copperPourOpacity > 0) &&
-              xRayNetIds.includes(
-                getElementNetId(element, connectivityMap) ?? "",
-              ),
-          )
+      showPhaseSkew && !xRayElements
+        ? createPcbPhaseSkewIndex(elements)
         : undefined,
-    [elementsToRender, connectivityMap, xRayNetIds, copperPourOpacity],
+    [showPhaseSkew, xRayElements, elements],
   )
   const hoverPrimitives = useMemo(() => {
     if (!xRayElements) return primitivesWithoutInteractionMetadata
@@ -419,6 +425,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
   return (
     <MouseElementTracker
       elements={elementsToRender}
+      phaseSkewIndex={phaseSkewIndex}
       transform={transform}
       primitives={hoverPrimitives}
       selectedLayer={selectedLayer}
@@ -478,6 +485,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                           transform={transform}
                           primitives={primitives}
                           elements={elementsToRender}
+                          phaseSkewIndex={phaseSkewIndex}
                           circuitJson={elements}
                           xRayElements={xRayElements}
                           width={props.width}
@@ -487,6 +495,7 @@ export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
                         />
                       ) : (
                         <WebGpuElementsRenderer
+                          showDifferentialPairPhaseSkew={showPhaseSkew}
                           highlightedCopperPourIds={highlightedCopperPourIds}
                           transform={transform}
                           primitives={primitives}
