@@ -21,11 +21,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Resolve the released phase-skew packages
-        run: |
-          CI=false bun install --lockfile-only --ignore-scripts
-          grep -E '^    "(@tscircuit/circuit-json-util|@tscircuit/circuit-json-webgpu|circuit-to-canvas)":' bun.lock
-
       - name: Install dependencies
         run: bun install
 
