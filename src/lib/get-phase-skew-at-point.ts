@@ -10,7 +10,7 @@ export type PhaseSkewTraceIndex = Record<
   PcbDifferentialPairPhaseSkewTrace | undefined
 >
 
-const IN_PHASE_TOLERANCE_MM = 0.0005
+const MATCHED_TOLERANCE_MM = 0.0005
 
 export function createPhaseSkewTraceIndex(
   elements: AnyCircuitElement[],
@@ -67,9 +67,9 @@ export function getPhaseSkewAtPoint({
   return nearestDifference
 }
 
-/** A trace that has run farther than its partner leads it; one that has run less lags. */
+/** Describes how much longer or shorter this trace has run than its partner. */
 export function getPhaseSkewText(differenceMm: number): string {
-  if (Math.abs(differenceMm) < IN_PHASE_TOLERANCE_MM) return "In phase"
-  const direction = differenceMm > 0 ? "Leading" : "Lagging"
-  return `${direction} by ${Math.abs(differenceMm).toFixed(3)} mm`
+  if (Math.abs(differenceMm) < MATCHED_TOLERANCE_MM) return "Length matched"
+  const direction = differenceMm > 0 ? "longer" : "shorter"
+  return `${Math.abs(differenceMm).toFixed(3)} mm ${direction} than partner`
 }

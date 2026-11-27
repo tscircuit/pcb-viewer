@@ -17,17 +17,19 @@ const hoverText = (pcbTraceId: string, point: { x: number; y: number }) => {
   return differenceMm === null ? null : getPhaseSkewText(differenceMm)
 }
 
-test("the bumped trace leads and its partner lags by the same amount", () => {
-  expect(hoverText("pcb_trace_0", { x: 5, y: 0.6 })).toBe("Leading by 1.823 mm")
+test("the bumped trace is longer and its partner shorter by the same amount", () => {
+  expect(hoverText("pcb_trace_0", { x: 5, y: 0.6 })).toBe(
+    "1.823 mm longer than partner",
+  )
   expect(hoverText("pcb_trace_1", { x: 5, y: -0.6 })).toBe(
-    "Lagging by 1.823 mm",
+    "1.823 mm shorter than partner",
   )
 })
 
-test("phase skew is interpolated along a segment and zero before the bump", () => {
-  expect(hoverText("pcb_trace_0", { x: -11, y: 0.6 })).toBe("In phase")
+test("phase skew is interpolated along a segment and matched before the bump", () => {
+  expect(hoverText("pcb_trace_0", { x: -11, y: 0.6 })).toBe("Length matched")
   expect(hoverText("pcb_trace_0", { x: -8.9, y: 1.7 })).toBe(
-    "Leading by 0.404 mm",
+    "0.404 mm longer than partner",
   )
 })
 

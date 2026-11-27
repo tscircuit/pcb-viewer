@@ -143,8 +143,8 @@ try {
   )
   assert.equal(
     await page.locator("[data-phase-skew-hover]").textContent(),
-    "Lagging by 1.823 mm",
-    "Hovering the shorter trace should show how far it lags",
+    "1.823 mm shorter than partner",
+    "Hovering the shorter trace should show how much shorter it is",
   )
   assert.equal(
     await countBluePixels({ page, renderer: canvasLayer }),
