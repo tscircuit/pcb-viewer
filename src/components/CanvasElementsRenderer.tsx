@@ -13,6 +13,7 @@ import {
   createPrimitiveSpatialIndex,
   getPrimitivesNearPoint,
 } from "lib/primitive-spatial-index"
+import { removePhaseSkewWithMissingTraces } from "lib/remove-phase-skew-with-missing-traces"
 import type { GridConfig, Primitive } from "lib/types"
 import { addInteractionMetadataToPrimitives } from "lib/util/addInteractionMetadataToPrimitives"
 import {
@@ -99,7 +100,11 @@ function getHitTestCandidates({
 }
 
 export const CanvasElementsRenderer = (props: CanvasElementsRendererProps) => {
-  const { transform, elements } = props
+  const { transform } = props
+  const elements = useMemo(
+    () => removePhaseSkewWithMissingTraces(props.elements),
+    [props.elements],
+  )
   const {
     hoveredErrorId,
     focusedErrorId,
