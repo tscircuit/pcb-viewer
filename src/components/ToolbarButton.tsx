@@ -26,6 +26,7 @@ export interface ToolbarButtonProps {
     e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
   ) => void
   style?: React.CSSProperties
+  title?: string
   onMouseLeave?: (e: React.MouseEvent<HTMLElement>) => void
 }
 

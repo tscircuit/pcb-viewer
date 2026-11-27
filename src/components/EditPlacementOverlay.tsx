@@ -1,6 +1,10 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
+import {
+  type CompletedComponentMove,
+  hasMovementDelta,
+} from "lib/undo-edit-events"
 import { useGlobalStore } from "../global-store"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, identity, inverse } from "transformation-matrix"
 import type { ManualEditEvent } from "@tscircuit/props"
@@ -13,6 +17,7 @@ interface Props {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
+  onCompleteComponentMove?: (move: CompletedComponentMove) => void
 }
 
 const isInsideOf = (
@@ -39,9 +44,11 @@ export const EditPlacementOverlay = ({
   cancelPanDrag,
   onCreateEditEvent,
   onModifyEditEvent,
+  onCompleteComponentMove,
 }: Props) => {
   if (!transform) transform = identity()
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const latestNewCenterRef = useRef<{ x: number; y: number } | null>(null)
   const [activePcbComponentId, setActivePcbComponent] = useState<null | string>(
     null,
   )
@@ -83,9 +90,11 @@ export const EditPlacementOverlay = ({
             setActivePcbComponent(e.pcb_component_id)
             foundActiveComponent = true
             const edit_event_id = Math.random().toString()
+            const originalCenter = { x: e.center.x, y: e.center.y }
+            latestNewCenterRef.current = originalCenter
             setDragState({
               dragStart: rwMousePoint,
-              originalCenter: e.center,
+              originalCenter,
               dragEnd: rwMousePoint,
               edit_event_id,
             })
@@ -95,8 +104,8 @@ export const EditPlacementOverlay = ({
               edit_event_type: "edit_pcb_component_location",
               pcb_edit_event_type: "edit_component_location",
               pcb_component_id: e.pcb_component_id,
-              original_center: e.center,
-              new_center: e.center,
+              original_center: originalCenter,
+              new_center: originalCenter,
               in_progress: true,
               created_at: Date.now(),
             })
@@ -121,33 +130,52 @@ export const EditPlacementOverlay = ({
         const y = e.clientY - rect.top
         if (Number.isNaN(x) || Number.isNaN(y)) return
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
+        const nextCenter = {
+          x:
+            dragState.originalCenter.x + rwMousePoint.x - dragState.dragStart.x,
+          y:
+            dragState.originalCenter.y + rwMousePoint.y - dragState.dragStart.y,
+        }
+        latestNewCenterRef.current = nextCenter
         setDragState({
           ...dragState,
           dragEnd: rwMousePoint,
         })
         onModifyEditEvent({
           edit_event_id: dragState.edit_event_id,
-          new_center: {
-            x:
-              dragState.originalCenter.x +
-              rwMousePoint.x -
-              dragState.dragStart.x,
-            y:
-              dragState.originalCenter.y +
-              rwMousePoint.y -
-              dragState.dragStart.y,
-          },
+          new_center: nextCenter,
         })
       }}
       onMouseUp={(e) => {
         if (!activePcbComponentId) return
+        const completedComponentId = activePcbComponentId
         setActivePcbComponent(null)
         setIsMovingComponent(false)
         if (dragState) {
+          const finalCenter = latestNewCenterRef.current ?? {
+            x:
+              dragState.originalCenter.x +
+              dragState.dragEnd.x -
+              dragState.dragStart.x,
+            y:
+              dragState.originalCenter.y +
+              dragState.dragEnd.y -
+              dragState.dragStart.y,
+          }
+          if (hasMovementDelta(dragState.originalCenter, finalCenter)) {
+            onCompleteComponentMove?.({
+              edit_event_id: dragState.edit_event_id,
+              pcb_component_id: completedComponentId,
+              from_center: dragState.originalCenter,
+              to_center: finalCenter,
+            })
+          }
           onModifyEditEvent({
             edit_event_id: dragState.edit_event_id,
+            new_center: finalCenter,
             in_progress: false,
           })
+          latestNewCenterRef.current = null
           setDragState(null)
         }
       }}
