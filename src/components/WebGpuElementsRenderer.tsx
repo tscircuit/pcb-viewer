@@ -62,11 +62,15 @@ export function WebGpuElementsRenderer(props: Props) {
   )
   const xRayElementIds = useMemo(
     () =>
-      (props.xRayElements ?? []).map(
-        (element) =>
-          (element as unknown as Record<string, string>)[`${element.type}_id`],
-      ),
-    [props.xRayElements],
+      supportsXRayNet === false
+        ? []
+        : (props.xRayElements ?? []).map(
+            (element) =>
+              (element as unknown as Record<string, string>)[
+                `${element.type}_id`
+              ],
+          ),
+    [props.xRayElements, supportsXRayNet],
   )
   const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(
     () => ({
@@ -79,8 +83,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showFabricationNotes,
       showPcbNotes,
       showCourtyards,
-      showDifferentialPairPhaseSkew:
-        showDifferentialPairPhaseSkew && !props.xRayElements,
+      showDifferentialPairPhaseSkew,
       highlightedElementIds,
       xRayElementIds,
     }),
@@ -97,7 +100,6 @@ export function WebGpuElementsRenderer(props: Props) {
       showDifferentialPairPhaseSkew,
       highlightedElementIds,
       xRayElementIds,
-      props.xRayElements,
     ],
   )
   const viewRef = useRef<WebGpuRequest | undefined>(undefined)
@@ -239,7 +241,7 @@ export function WebGpuElementsRenderer(props: Props) {
   }, [transform, width, height, options])
 
   const xRayUnavailable = Boolean(
-    props.xRayElements && supportsXRayNet === false,
+    props.xRayElements?.length && supportsXRayNet === false,
   )
   return (
     <div
