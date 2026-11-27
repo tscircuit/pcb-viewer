@@ -5,15 +5,13 @@ import type {
 } from "circuit-json"
 import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
 import {
-  createPhaseSkewTraceIndex,
-  getPhaseSkewAtPoint,
-  getPhaseSkewText,
-} from "lib/get-phase-skew-at-point"
-import {
   type TraceOverlayElementIndex,
   createTraceOverlayElementIndex,
   getTraceOverlayInfo,
 } from "lib/get-trace-overlay-text"
+import { createPhaseSkewTraceIndex } from "lib/phase-skew/create-phase-skew-trace-index"
+import { getPhaseSkewAtPoint } from "lib/phase-skew/get-phase-skew-at-point"
+import { getPhaseSkewText } from "lib/phase-skew/get-phase-skew-text"
 import { zIndexMap } from "lib/util/z-index-map"
 import React, { useEffect, useMemo, useState } from "react"
 import { type Matrix, applyToPoint, inverse } from "transformation-matrix"

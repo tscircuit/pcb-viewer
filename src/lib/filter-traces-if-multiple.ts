@@ -1,9 +1,9 @@
 import type { HighlightedPrimitive } from "../components/MouseElementTracker"
-import type { PhaseSkewTraceIndex } from "./get-phase-skew-at-point"
 import {
   type TraceOverlayElementIndex,
   getAssociatedTraceName,
 } from "./get-trace-overlay-text"
+import type { PhaseSkewTraceIndex } from "./phase-skew/create-phase-skew-trace-index"
 
 export function filterTracesIfMultiple(filterTraces: {
   primitives: HighlightedPrimitive[]

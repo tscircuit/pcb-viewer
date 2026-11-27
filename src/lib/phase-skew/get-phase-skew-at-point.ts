@@ -1,25 +1,5 @@
-import type {
-  AnyCircuitElement,
-  PcbDifferentialPairPhaseSkewTrace,
-} from "circuit-json"
-import type { Point } from "./util/expand-stroke"
-
-export type PhaseSkewTraceIndex = Record<
-  string,
-  PcbDifferentialPairPhaseSkewTrace | undefined
->
-
-export function createPhaseSkewTraceIndex(
-  elements: AnyCircuitElement[],
-): PhaseSkewTraceIndex {
-  const index: PhaseSkewTraceIndex = {}
-  for (const element of elements) {
-    if (element.type !== "pcb_differential_pair_phase_skew") continue
-    index[element.positive_trace.pcb_trace_id] = element.positive_trace
-    index[element.negative_trace.pcb_trace_id] = element.negative_trace
-  }
-  return index
-}
+import type { PcbDifferentialPairPhaseSkewTrace } from "circuit-json"
+import type { Point } from "../util/expand-stroke"
 
 /**
  * Returns this trace's routed length so far minus its partner's, in mm,
@@ -60,11 +40,4 @@ export function getPhaseSkewAtPoint({
         (segment.end_length_difference_mm - segment.start_length_difference_mm)
   }
   return nearestDifference
-}
-
-/** Labels a trace that has run farther than its partner as leading and one that has run less as lagging. */
-export function getPhaseSkewText(differenceMm: number): string {
-  if (Math.abs(differenceMm) < 0.0005) return "In phase"
-  const direction = differenceMm > 0 ? "Leading" : "Lagging"
-  return `${direction} ${Math.abs(differenceMm).toFixed(3)} mm`
 }
