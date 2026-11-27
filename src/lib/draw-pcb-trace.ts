@@ -6,6 +6,7 @@ import {
 } from "circuit-to-canvas"
 import color from "color"
 import type { Matrix } from "transformation-matrix"
+import { PHASE_SKEW_COLORS } from "./colors"
 import { normalizeCopperRenderLayers } from "./copper-layers"
 import type { Primitive } from "./types"
 
@@ -158,6 +159,7 @@ export function drawPcbTraceElementsForLayer({
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,
+      phaseSkewColors: PHASE_SKEW_COLORS,
     })
   }
 

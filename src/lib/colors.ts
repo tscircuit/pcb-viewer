@@ -239,3 +239,10 @@ export default {
     worksheet: "rgb(192, 0, 0)",
   },
 }
+
+/** Phase skew overlay: grey where matched, cyan where longer than the partner, amber where shorter. */
+export const PHASE_SKEW_COLORS = {
+  zero: "rgb(105, 105, 105)",
+  positive: "rgb(56, 189, 248)",
+  negative: "rgb(245, 158, 11)",
+}

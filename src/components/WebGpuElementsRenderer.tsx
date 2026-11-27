@@ -7,6 +7,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
+import { PHASE_SKEW_COLORS } from "../lib/colors"
 
 type Props = {
   elements: AnyCircuitElement[]
@@ -81,6 +82,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showCourtyards,
       showDifferentialPairPhaseSkew:
         showDifferentialPairPhaseSkew && !props.xRayElements,
+      phaseSkewColors: PHASE_SKEW_COLORS,
       highlightedElementIds,
       xRayElementIds,
     }),
