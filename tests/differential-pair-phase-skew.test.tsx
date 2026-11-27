@@ -4,7 +4,7 @@ import { createCanvas } from "@napi-rs/canvas"
 import { Circuit } from "@tscircuit/core"
 import { CircuitToCanvasDrawer } from "circuit-to-canvas"
 import { compose, scale, translate } from "transformation-matrix"
-import { ForumExampleBoard } from "../src/examples/2026/differential-pair-phase-skew/forum-example-board/forum-example-board"
+import { ForumExampleBoard } from "./fixtures/differential-pair-phase-skew/forum-example-board/forum-example-board"
 
 test("phase skew overlay on the KiCad forum pair", async () => {
   const circuit = new Circuit()
