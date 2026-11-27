@@ -142,6 +142,11 @@ try {
     "Canvas should show the same hover colour with the skew overlay on",
   )
   assert.equal(
+    await page.locator("[data-phase-skew-hover]").textContent(),
+    "1.823 mm shorter than partner",
+    "Hovering the shorter trace should show how much shorter it is",
+  )
+  assert.equal(
     await countBluePixels({ page, renderer: canvasLayer }),
     bluePixels,
   )
