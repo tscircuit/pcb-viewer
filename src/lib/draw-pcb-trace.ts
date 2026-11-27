@@ -6,6 +6,7 @@ import {
 } from "circuit-to-canvas"
 import color from "color"
 import type { Matrix } from "transformation-matrix"
+import { PHASE_SKEW_FULL_SCALE_MM } from "./colors"
 import { normalizeCopperRenderLayers } from "./copper-layers"
 import type { Primitive } from "./types"
 
@@ -151,11 +152,17 @@ export function drawPcbTraceElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements([...nonHighlightedElements, ...phaseSkewElements], {
+    // circuit-to-canvas 0.0.143 predates phaseSkewFullScaleMm and ignores it.
+    const drawOptions = {
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,
-    })
+      phaseSkewFullScaleMm: PHASE_SKEW_FULL_SCALE_MM,
+    }
+    drawer.drawElements(
+      [...nonHighlightedElements, ...phaseSkewElements],
+      drawOptions,
+    )
   }
 
   if (highlightedElements.length > 0) {
