@@ -30,3 +30,28 @@ test("phase skew is interpolated along a segment and in phase before the bump", 
 test("points away from the trace have no phase skew", () => {
   expect(hoverText("pcb_trace_0", { x: 5, y: 3 })).toBeNull()
 })
+
+test("hovering a trace on one layer ignores phase skew measured on another", async () => {
+  const { default: ddr } = await import(
+    "../../src/examples/2026/differential-pair-phase-skew/am3352-ddr-track-a.circuit.json"
+  )
+  const ddrIndex = createPhaseSkewTraceIndex(ddr as AnyCircuitElement[])
+  // DDR_DQS_PAIR1's top-layer fanout sits over its bottom-layer coupled run
+  const fanoutPoint = { x: 1.2, y: -6.8 }
+  expect(
+    getPhaseSkewAtPoint({
+      trace: ddrIndex.pcb_trace_414!,
+      point: fanoutPoint,
+      maxDistanceMm: 0.1,
+      layer: "top",
+    }),
+  ).toBeNull()
+  expect(
+    getPhaseSkewAtPoint({
+      trace: ddrIndex.pcb_trace_414!,
+      point: fanoutPoint,
+      maxDistanceMm: 0.1,
+      layer: "bottom",
+    }),
+  ).toBeCloseTo(-0.85007)
+})
