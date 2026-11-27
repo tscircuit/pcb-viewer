@@ -1,3 +1,4 @@
+import { su } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, PcbRenderLayer, PcbTrace } from "circuit-json"
 import {
   CircuitToCanvasDrawer,
@@ -150,9 +151,7 @@ export function drawPcbTraceElementsForLayer({
       showDifferentialPairPhaseSkew
         ? [
             ...nonHighlightedElements,
-            ...elements.filter(
-              (element) => element.type === "pcb_differential_pair_phase_skew",
-            ),
+            ...su(elements).pcb_differential_pair_phase_skew.list(),
           ]
         : nonHighlightedElements,
       { layers, clipContextElements, showDifferentialPairPhaseSkew },
