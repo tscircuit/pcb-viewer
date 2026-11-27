@@ -50,6 +50,20 @@ async function countBluePixels({
   )
 }
 
+function readCanvasPixel({
+  renderer,
+  point,
+}: {
+  renderer: Locator
+  point: { x: number; y: number }
+}) {
+  return renderer.evaluate(
+    (canvas: HTMLCanvasElement, { x, y }) =>
+      Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data),
+    point,
+  )
+}
+
 const server = await createServer({
   root: fileURLToPath(new URL("../../", import.meta.url)),
   cacheDir: "node_modules/.vite-phase-skew-test",
@@ -135,12 +149,7 @@ try {
     name: "X-Ray Net",
     exact: true,
   })
-  const lowerTracePixel = () =>
-    canvasLayer.evaluate(
-      (canvas: HTMLCanvasElement, { x, y }) =>
-        Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data),
-      lowerTrace,
-    )
+  const upperLoadPad = { x: 657, y: 287 }
   const hoverLowerTrace = async () => {
     await page.mouse.move(lowerTrace.x, lowerTrace.y)
     await page.evaluate(
@@ -149,11 +158,18 @@ try {
           requestAnimationFrame(() => requestAnimationFrame(resolve)),
         ),
     )
-    return lowerTracePixel()
+    return readCanvasPixel({ renderer: canvasLayer, point: lowerTrace })
   }
 
   assert.equal(await countBluePixels({ page, renderer: canvasLayer }), 0)
-  const copper = await lowerTracePixel()
+  const loadPadCopper = await readCanvasPixel({
+    renderer: canvasLayer,
+    point: upperLoadPad,
+  })
+  const copper = await readCanvasPixel({
+    renderer: canvasLayer,
+    point: lowerTrace,
+  })
   const highlight = await hoverLowerTrace()
   assert.notDeepEqual(highlight, copper, "Canvas should highlight the trace")
   await page.mouse.move(viewport.x, viewport.y)
@@ -165,7 +181,18 @@ try {
   await toggle.waitFor({ state: "detached" })
   const bluePixels = await countBluePixels({ page, renderer: canvasLayer })
   assert(bluePixels > 0, "Canvas should render the skew overlay")
-  assert.notDeepEqual(await lowerTracePixel(), highlight)
+  const loadPadWithSkew = await readCanvasPixel({
+    renderer: canvasLayer,
+    point: upperLoadPad,
+  })
+  assert(
+    loadPadWithSkew[2] > loadPadCopper[2] + 100,
+    `Canvas should paint the leading skew over the load pad (off ${loadPadCopper}, on ${loadPadWithSkew})`,
+  )
+  assert.notDeepEqual(
+    await readCanvasPixel({ renderer: canvasLayer, point: lowerTrace }),
+    highlight,
+  )
   assert.deepEqual(
     await hoverLowerTrace(),
     highlight,
