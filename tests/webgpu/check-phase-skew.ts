@@ -178,7 +178,7 @@ try {
   )
   assert.equal(
     await page.locator("[data-phase-skew-hover]").textContent(),
-    "Lagging 1.82 mm",
+    "Lagging 1.823 mm",
     "Hovering the shorter trace should show how far it lags",
   )
   assert.equal(

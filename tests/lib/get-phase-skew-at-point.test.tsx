@@ -28,19 +28,19 @@ function getHoverText({
 
 test("the bumped trace leads and its partner lags by the same amount", () => {
   expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: 5, y: 0.6 })).toBe(
-    "Leading 1.82 mm",
+    "Leading 1.823 mm",
   )
   expect(getHoverText({ pcbTraceId: "pcb_trace_1", x: 5, y: -0.6 })).toBe(
-    "Lagging 1.82 mm",
+    "Lagging 1.823 mm",
   )
 })
 
-test("hover reads the nearest stored sample", () => {
+test("phase skew is interpolated along a segment and in phase before the bump", () => {
   expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: -11, y: 0.6 })).toBe(
     "In phase",
   )
   expect(getHoverText({ pcbTraceId: "pcb_trace_0", x: -8.9, y: 1.7 })).toBe(
-    "Leading 0.40 mm",
+    "Leading 0.404 mm",
   )
 })
 
