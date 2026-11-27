@@ -102,7 +102,6 @@ export function drawPcbTraceElementsForLayer({
   realToCanvasMat,
   primitives,
   showCopperPours,
-  showDifferentialPairPhaseSkew = false,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
@@ -110,7 +109,6 @@ export function drawPcbTraceElementsForLayer({
   realToCanvasMat: Matrix
   primitives?: Primitive[]
   showCopperPours: boolean
-  showDifferentialPairPhaseSkew?: boolean
 }) {
   const targetLayers = new Set(normalizeCopperRenderLayers(layers))
 
@@ -142,19 +140,13 @@ export function drawPcbTraceElementsForLayer({
     elements,
     showCopperPours,
   )
-  const phaseSkewElements = showDifferentialPairPhaseSkew
-    ? elements.filter(
-        (element) => element.type === "pcb_differential_pair_phase_skew",
-      )
-    : []
 
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements([...nonHighlightedElements, ...phaseSkewElements], {
+    drawer.drawElements(nonHighlightedElements, {
       layers,
       clipContextElements,
-      showDifferentialPairPhaseSkew,
     })
   }
 
@@ -167,4 +159,52 @@ export function drawPcbTraceElementsForLayer({
       clipContextElements,
     })
   }
+}
+
+export function drawPcbPhaseSkewOverlayForLayer({
+  canvas,
+  elements,
+  layers,
+  realToCanvasMat,
+  primitives = [],
+}: {
+  canvas: HTMLCanvasElement
+  elements: AnyCircuitElement[]
+  layers: PcbRenderLayer[]
+  realToCanvasMat: Matrix
+  primitives?: Primitive[]
+}) {
+  const phaseSkewElements = elements.filter(
+    (element) => element.type === "pcb_differential_pair_phase_skew",
+  )
+  if (phaseSkewElements.length === 0) return
+
+  const phaseSkewTraceIds = new Set(
+    phaseSkewElements.flatMap(({ positive_trace, negative_trace }) => [
+      positive_trace.pcb_trace_id,
+      negative_trace.pcb_trace_id,
+    ]),
+  )
+  const highlightedTraceIds = getHighlightedTraceElementIds({ primitives })
+  const targetLayers = new Set(normalizeCopperRenderLayers(layers))
+  const overlayElements: AnyCircuitElement[] = [...phaseSkewElements]
+  for (const element of elements) {
+    if (element.type === "source_bus") overlayElements.push(element)
+    if (
+      element.type === "pcb_trace" &&
+      phaseSkewTraceIds.has(element.pcb_trace_id) &&
+      !highlightedTraceIds.has(element.pcb_trace_id) &&
+      filterTraceByLayers(element, targetLayers)
+    ) {
+      // The drawer matches skew to trace IDs. Empty routes skip copper painting.
+      overlayElements.push({ ...element, route: [] })
+    }
+  }
+
+  const drawer = new CircuitToCanvasDrawer(canvas)
+  drawer.realToCanvasMat = realToCanvasMat
+  drawer.drawElements(overlayElements, {
+    layers,
+    showDifferentialPairPhaseSkew: true,
+  })
 }

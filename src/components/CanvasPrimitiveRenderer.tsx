@@ -19,7 +19,10 @@ import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbPanelElements } from "lib/draw-pcb-panel"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
-import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
+import {
+  drawPcbPhaseSkewOverlayForLayer,
+  drawPcbTraceElementsForLayer,
+} from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
@@ -148,8 +151,6 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
           primitives,
           showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
-          showDifferentialPairPhaseSkew:
-            showDifferentialPairPhaseSkew && !xRayElements,
         })
       }
 
@@ -213,6 +214,19 @@ export const CanvasPrimitiveRenderer = ({
           drawSoldermask:
             isShowingSolderMask && (layer === "top" || layer === "bottom"),
         })
+      }
+
+      if (showDifferentialPairPhaseSkew && !xRayElements) {
+        for (const { canvas, copperLayer } of copperLayers) {
+          if (!canvas) continue
+          drawPcbPhaseSkewOverlayForLayer({
+            canvas,
+            elements,
+            layers: [copperLayer],
+            realToCanvasMat: transform,
+            primitives,
+          })
+        }
       }
 
       if (isShowingSolderMask) {

@@ -40,6 +40,7 @@ test("Canvas phase skew across the three AM3352 DDR pairs", async () => {
       async ({ boardPath, updateSnapshot }) => {
         const modulePath = "/src/lib/draw-pcb-trace.ts"
         const {
+          drawPcbPhaseSkewOverlayForLayer,
           drawPcbTraceElementsForLayer,
         }: typeof import("../src/lib/draw-pcb-trace") = await import(modulePath)
         const elements: AnyCircuitElement[] = await (
@@ -74,14 +75,17 @@ test("Canvas phase skew across the three AM3352 DDR pairs", async () => {
           context.fillStyle = "black"
           context.fillRect(x, header, width, height)
           layerCanvas.getContext("2d")!.clearRect(0, 0, width, height)
-          drawPcbTraceElementsForLayer({
+          const layerOptions = {
             canvas: layerCanvas,
             elements,
             layers: [layer],
             realToCanvasMat: { a: 26, b: 0, c: 0, d: -26, e: 169, f: -104 },
+          }
+          drawPcbTraceElementsForLayer({
+            ...layerOptions,
             showCopperPours: false,
-            showDifferentialPairPhaseSkew: true,
           })
+          drawPcbPhaseSkewOverlayForLayer(layerOptions)
           context.drawImage(layerCanvas, x, header)
         }
 
