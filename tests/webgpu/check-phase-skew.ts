@@ -264,8 +264,8 @@ try {
         window.gpuViewerTest.stats.lastView?.options
           .showDifferentialPairPhaseSkew,
     ),
-    false,
-    "WebGPU should receive the suppressed flag while X-Ray is active",
+    true,
+    "WebGPU should receive the chosen flag and suppress skew while X-Ray is active",
   )
   await page.keyboard.press("Escape")
   await page.waitForSelector('[data-x-ray-net-active="false"]')
@@ -284,6 +284,32 @@ try {
     framesBefore,
   )
   assert.equal(await countBluePixels({ page, renderer: webGpuCanvas }), 0)
+  url.searchParams.set("scenario", "xray-unsupported")
+  await page.goto(url.href)
+  await page.waitForFunction(() => window.gpuViewerTest.stats.frames > 0)
+  await viewMenu.click()
+  await toggle.click()
+  await page.mouse.click(viewport.x, viewport.y)
+  await toggle.waitFor({ state: "detached" })
+  assert((await countBluePixels({ page, renderer: webGpuCanvas })) > 0)
+  await page.mouse.click(lowerTrace.x, lowerTrace.y, { button: "right" })
+  const framesBeforeUnavailableXRay = await page.evaluate(
+    () => window.gpuViewerTest.stats.frames,
+  )
+  await xRayMenuItem.click()
+  await page.getByRole("status").waitFor()
+  await page.waitForFunction((frames) => {
+    const { stats } = window.gpuViewerTest
+    return (
+      stats.frames > frames &&
+      stats.lastView?.options.xRayElementIds?.length === 0
+    )
+  }, framesBeforeUnavailableXRay)
+  assert(
+    (await countBluePixels({ page, renderer: webGpuCanvas })) > 0,
+    "WebGPU skew should remain visible when X-Ray is unavailable",
+  )
+
   assert.deepEqual(errors, [])
 } finally {
   await browser?.close()
