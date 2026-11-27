@@ -64,6 +64,17 @@ function readCanvasPixel({
   )
 }
 
+async function reloadFixture(page: Page) {
+  const completionsBefore = await page.evaluate(
+    () => window.gpuViewerTest.stats.renderCompletions,
+  )
+  await page.evaluate(() => window.gpuViewerTest.mount())
+  await page.waitForFunction(
+    (completions) => window.gpuViewerTest.stats.renderCompletions > completions,
+    completionsBefore,
+  )
+}
+
 const server = await createServer({
   root: fileURLToPath(new URL("../../", import.meta.url)),
   cacheDir: "node_modules/.vite-phase-skew-test",
@@ -269,6 +280,38 @@ try {
   )
   await page.keyboard.press("Escape")
   await page.waitForSelector('[data-x-ray-net-active="false"]')
+  assert((await countBluePixels({ page, renderer: webGpuCanvas })) > 0)
+
+  for (const leg of ["positive_trace", "negative_trace"] as const) {
+    await page.route(
+      "**/tuning-bump.circuit.json",
+      async (route) => {
+        const response = await route.fetch()
+        const elements: AnyCircuitElement[] = await response.json()
+        const phaseSkew = elements.find(
+          (element) => element.type === "pcb_differential_pair_phase_skew",
+        )
+        assert(phaseSkew)
+        await route.fulfill({
+          response,
+          json: elements.filter(
+            (element) =>
+              element.type !== "pcb_trace" ||
+              element.pcb_trace_id !== phaseSkew[leg].pcb_trace_id,
+          ),
+        })
+      },
+      { times: 1 },
+    )
+    await reloadFixture(page)
+    assert.equal(
+      await countBluePixels({ page, renderer: webGpuCanvas }),
+      0,
+      `WebGPU should discard skew after deleting the ${leg}`,
+    )
+  }
+
+  await reloadFixture(page)
   assert((await countBluePixels({ page, renderer: webGpuCanvas })) > 0)
 
   await viewMenu.click()
