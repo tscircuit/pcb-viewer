@@ -75,7 +75,7 @@
     "@tscircuit/math-utils": "^0.0.36",
     "@vitejs/plugin-react": "^5.0.2",
     "circuit-json": "^0.0.563",
-    "circuit-to-canvas": "https://pkg.pr.new/tscircuit/circuit-to-canvas/circuit-to-canvas@cbceaf1",
+    "circuit-to-canvas": "https://pkg.pr.new/tscircuit/circuit-to-canvas/circuit-to-canvas@88f0b25",
     "color": "^4.2.3",
     "react-supergrid": "^1.0.10",
     "react-toastify": "^10.0.5",
