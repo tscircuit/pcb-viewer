@@ -22,12 +22,29 @@ export function getExpandedStroke(
   const leftSide: Point[] = []
   const rightSide: Point[] = []
 
-  function getNormal(p1: Point, p2: Point): Point {
+  function getNormal(p1: Point, p2: Point): Point | undefined {
     const dx = p2.x - p1.x
     const dy = p2.y - p1.y
     const length = Math.sqrt(dx * dx + dy * dy)
+    if (length === 0) return undefined
     return { x: -dy / length, y: dx / length }
   }
+
+  const normals = stroke
+    .slice(1)
+    .map((point, i) => getNormal(stroke[i]!, point))
+  const firstNormal = normals.find(
+    (normal): normal is Point => normal !== undefined,
+  )
+  if (!firstNormal) return []
+
+  // Repeated coordinates can carry distinct widths at through-pad boundaries.
+  // Keep those points, but borrow a direction from a nonzero-length segment.
+  let previousNormal = firstNormal
+  const segmentNormals = normals.map((normal) => {
+    previousNormal = normal ?? previousNormal
+    return previousNormal
+  })
 
   function addPoint(
     point: Point,
@@ -48,19 +65,16 @@ export function getExpandedStroke(
   }
 
   // Handle the first point
-  const firstNormal = getNormal(stroke[0]!, stroke[1]!)
   const firstWidth = stroke[0]!.trace_width ?? defaultWidth
   addPoint(stroke[0]!, firstNormal, 1, firstWidth)
   addPoint(stroke[0]!, firstNormal, -1, firstWidth)
 
   // Handle middle points
   for (let i = 1; i < stroke.length - 1; i++) {
-    const prev = stroke[i - 1]!
     const current = stroke[i]!
-    const next = stroke[i + 1]!
 
-    const normalPrev = getNormal(prev, current)
-    const normalNext = getNormal(current, next)
+    const normalPrev = segmentNormals[i - 1]!
+    const normalNext = segmentNormals[i]!
 
     // Calculate miter line
     const miterX = normalPrev.x + normalNext.x
@@ -71,7 +85,10 @@ export function getExpandedStroke(
 
     // Check if miter is too long (sharp corner)
     const miterLimit = 2 // Adjust this value to control when to bevel
-    if (miterLength / 2 > miterLimit * (currentWidth / 2)) {
+    if (
+      miterLength === 0 ||
+      miterLength / 2 > miterLimit * (currentWidth / 2)
+    ) {
       // Use bevel join
       addPoint(current, normalPrev, 1, currentWidth)
       addPoint(current, normalNext, 1, currentWidth)
@@ -96,10 +113,7 @@ export function getExpandedStroke(
   }
 
   // Handle the last point
-  const lastNormal = getNormal(
-    stroke[stroke.length - 2]!,
-    stroke[stroke.length - 1]!,
-  )
+  const lastNormal = segmentNormals[segmentNormals.length - 1]!
   const lastWidth = stroke[stroke.length - 1]!.trace_width ?? defaultWidth
   addPoint(stroke[stroke.length - 1]!, lastNormal, 1, lastWidth)
   addPoint(stroke[stroke.length - 1]!, lastNormal, -1, lastWidth)
