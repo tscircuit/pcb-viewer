@@ -304,13 +304,19 @@ export const ElementOverlayBox = ({
     [elements, is_showing_differential_pair_phase_skew],
   )
   const getPhaseSkewTextForPrimitive = (primitive: HighlightedPrimitive) => {
-    if (!transform || primitive._element.type !== "pcb_trace") return null
+    if (
+      !transform ||
+      !primitive.layer ||
+      primitive._element.type !== "pcb_trace"
+    )
+      return null
     const trace = phaseSkewTraceIndex[primitive._element.pcb_trace_id]
     if (!trace) return null
     const differenceMm = getPhaseSkewAtPoint({
       trace,
       point: applyToPoint(inverse(transform), mousePos),
       maxDistanceMm: 8 / transform.a,
+      layer: primitive.layer,
     })
     return differenceMm === null ? null : getPhaseSkewText(differenceMm)
   }

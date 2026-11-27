@@ -13,6 +13,7 @@ const hoverText = (pcbTraceId: string, point: { x: number; y: number }) => {
     trace: index[pcbTraceId]!,
     point,
     maxDistanceMm: 0.1,
+    layer: "top",
   })
   return differenceMm === null ? null : getPhaseSkewText(differenceMm)
 }

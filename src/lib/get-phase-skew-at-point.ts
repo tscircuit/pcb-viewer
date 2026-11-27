@@ -26,21 +26,24 @@ export function createPhaseSkewTraceIndex(
 
 /**
  * Returns this trace's routed length so far minus its partner's, in mm, at the
- * segment point nearest to `point`, or null when no segment is within
- * `maxDistanceMm` of the copper edge.
+ * segment point nearest to `point` on `layer`, or null when no segment on that
+ * layer is within `maxDistanceMm` of the copper edge.
  */
 export function getPhaseSkewAtPoint({
   trace,
   point,
   maxDistanceMm,
+  layer,
 }: {
   trace: PcbDifferentialPairPhaseSkewTrace
   point: Point
   maxDistanceMm: number
+  layer: string
 }): number | null {
   let nearestDistance = Number.POSITIVE_INFINITY
   let nearestDifference: number | null = null
   for (const segment of trace.segments) {
+    if (segment.layer !== layer) continue
     const dx = segment.end.x - segment.start.x
     const dy = segment.end.y - segment.start.y
     const t = Math.min(
