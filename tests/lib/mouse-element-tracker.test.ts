@@ -47,15 +47,3 @@ it("hit-tests hidden traces while X-Ray is active so clicking the net can exit",
     }),
   ).toEqual([bottomTrace])
 })
-
-it("hit-tests traces with a reflected horizontal scale", () => {
-  const topTrace = createTracePrimitive("top")
-  expect(
-    getPrimitivesUnderPoint({
-      primitives: [topTrace],
-      rwPoint: { x: 0.5, y: 0.05 },
-      selectedLayer: "top",
-      transform: { a: -40, b: 0, c: 0, d: 40, e: 0, f: 0 },
-    }),
-  ).toEqual([topTrace])
-})

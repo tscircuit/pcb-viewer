@@ -14,7 +14,6 @@ import {
   createTraceOverlayElementIndex,
   getTraceOverlayInfo,
 } from "lib/get-trace-overlay-text"
-import { getTraceHoverRadiusMm } from "lib/trace-hover"
 import { zIndexMap } from "lib/util/z-index-map"
 import React, { useEffect, useMemo, useState } from "react"
 import { type Matrix, applyToPoint, inverse } from "transformation-matrix"
@@ -159,7 +158,7 @@ export const HighlightedPrimitiveBoxWithText = ({
   if (primitiveElement.type === "pcb_trace") {
     const traceTextContext = { primitiveElement, traceOverlayElementIndex }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
-    if (!overlayInfo && !phaseSkewText) return null
+    if (!overlayInfo) return null
 
     return (
       <div
@@ -175,7 +174,7 @@ export const HighlightedPrimitiveBoxWithText = ({
         <div
           style={{
             backgroundColor: "#f2efcc",
-            color: overlayInfo?.isOverLength ? "red" : "black",
+            color: overlayInfo.isOverLength ? "red" : "black",
             textShadow: "none",
             WebkitFontSmoothing: "antialiased",
             MozOsxFontSmoothing: "grayscale",
@@ -187,8 +186,8 @@ export const HighlightedPrimitiveBoxWithText = ({
             whiteSpace: "nowrap",
           }}
         >
-          {overlayInfo?.text && <div>{overlayInfo.text}</div>}
-          {overlayInfo?.name && (
+          {overlayInfo.text && <div>{overlayInfo.text}</div>}
+          {overlayInfo.name && (
             <div
               style={{
                 marginTop: overlayInfo.text ? "2px" : 0,
@@ -198,10 +197,7 @@ export const HighlightedPrimitiveBoxWithText = ({
             </div>
           )}
           {phaseSkewText && (
-            <div
-              data-phase-skew-hover
-              style={{ marginTop: overlayInfo ? "2px" : 0 }}
-            >
+            <div data-phase-skew-hover style={{ marginTop: "2px" }}>
               {phaseSkewText}
             </div>
           )}
@@ -303,11 +299,7 @@ export const ElementOverlayBox = ({
         : undefined,
     [elements, is_showing_differential_pair_phase_skew],
   )
-  const pixelsPerMm = Math.abs(transform?.a ?? 0)
-  const point =
-    phaseSkewTraceIndex && transform && pixelsPerMm > 0
-      ? applyToPoint(inverse(transform), mousePos)
-      : undefined
+  const point = transform && applyToPoint(inverse(transform), mousePos)
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
@@ -317,12 +309,12 @@ export const ElementOverlayBox = ({
   if (hasSmtPadAndTrace) {
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
+  // When having multiple traces filter traces to get only the shortest one
   primitives = filterTracesIfMultiple({
     primitives,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
     phaseSkewTraceIndex,
-    point,
   })
 
   return (
@@ -335,18 +327,7 @@ export const ElementOverlayBox = ({
               : undefined
           const differenceMm =
             trace && point && primitive.layer
-              ? getPhaseSkewAtPoint({
-                  trace,
-                  point,
-                  layer: primitive.layer,
-                  maxDistanceMm: primitive._trace_segment
-                    ? getTraceHoverRadiusMm({
-                        traceWidthMm: primitive._trace_segment.width || 0.5,
-                        pixelsPerMm,
-                      })
-                    : 0,
-                  measureFromCopperEdge: !primitive._trace_segment,
-                })
+              ? getPhaseSkewAtPoint({ trace, point, layer: primitive.layer })
               : null
           return (
             <HighlightedPrimitiveBoxWithText

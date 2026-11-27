@@ -60,7 +60,6 @@ export const CanvasPrimitiveRenderer = ({
   height = 500,
   onRenderComplete,
 }: Props) => {
-  const xRayActive = Boolean(xRayElements?.length)
   const xRayCanvasRef = useRef<HTMLCanvasElement>(null)
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const onRenderCompleteRef = useRef(onRenderComplete)
@@ -105,7 +104,7 @@ export const CanvasPrimitiveRenderer = ({
     drawer.clear()
     drawer.foregroundLayer = selectedLayer
     drawer.hiddenLayerOpacity = hiddenLayerOpacity
-    drawer.xRayNetActive = xRayActive
+    drawer.xRayNetActive = Boolean(xRayElements)
     // Clear every canvas above, then omit drawing completely hidden layers.
     const visibleCanvasRefs = Object.fromEntries(
       Object.entries(availableCanvasRefs).filter(
@@ -217,7 +216,7 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
-      if (showDifferentialPairPhaseSkew && !xRayActive) {
+      if (showDifferentialPairPhaseSkew && !xRayElements) {
         for (const { canvas, copperLayer } of copperLayers) {
           if (!canvas) continue
           drawPcbPhaseSkewOverlayForLayer({
@@ -412,7 +411,7 @@ export const CanvasPrimitiveRenderer = ({
 
     drawer.orderAndFadeLayers()
     const canvas = xRayCanvasRef.current
-    if (canvas && transform && xRayElements?.length) {
+    if (canvas && transform && xRayElements) {
       canvas.getContext("2d")!.clearRect(0, 0, width, height)
       // Composite selected copper above every ordinary layer at full opacity.
       for (const layer of getCopperLayerDrawOrder(elements, selectedLayer)) {
@@ -452,7 +451,6 @@ export const CanvasPrimitiveRenderer = ({
     elements,
     circuitJson,
     xRayElements,
-    xRayActive,
     width,
     height,
     transform,
@@ -487,7 +485,7 @@ export const CanvasPrimitiveRenderer = ({
         transform={transform!}
         stringifyCoord={(x, y, z) => `${toMMSI(x, z)}, ${toMMSI(y, z)}`}
       />
-      {xRayActive && (
+      {xRayElements && (
         <canvas
           ref={xRayCanvasRef}
           className="pcb-x-ray-net"

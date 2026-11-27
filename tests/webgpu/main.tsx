@@ -201,10 +201,7 @@ async function mount(
             ]
           : []),
       ] as AnyCircuitElement[])
-  if (
-    !shouldLoadCircuitJson &&
-    (scenario === "xray-unsupported" || scenario === "controlled-xray")
-  )
+  if (scenario === "xray-unsupported" || scenario === "controlled-xray")
     elements = [
       ...xRayScene,
       ...["top", "bottom"].map((layer) => ({

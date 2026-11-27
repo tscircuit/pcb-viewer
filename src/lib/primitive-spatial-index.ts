@@ -1,4 +1,3 @@
-import { getTraceHoverRadiusMm } from "./trace-hover"
 import type { Primitive } from "./types"
 import { getPrimitiveBoundingBox } from "./util/get-primitive-bounding-box"
 
@@ -66,7 +65,7 @@ export function createPrimitiveSpatialIndex(
       primitive.pcb_drawing_type === "line" &&
       primitive._element?.type === "pcb_trace"
     ) {
-      maxTraceWidth = Math.max(maxTraceWidth, primitive.width || 0.5)
+      maxTraceWidth = Math.max(maxTraceWidth, primitive.width)
     }
 
     const bounds = getPrimitiveBoundingBox(primitive)
@@ -115,10 +114,8 @@ export function getPrimitivesNearPoint({
   realToScreenScale: number
   spatialIndex: PrimitiveSpatialIndex
 }): Primitive[] {
-  const queryRadius = getTraceHoverRadiusMm({
-    traceWidthMm: spatialIndex.maxTraceWidth,
-    pixelsPerMm: Math.max(Math.abs(realToScreenScale), Number.EPSILON),
-  })
+  const scale = Math.max(Math.abs(realToScreenScale), Number.EPSILON)
+  const queryRadius = Math.max(spatialIndex.maxTraceWidth * 25, 2) / scale
   const minCellX = Math.floor((point.x - queryRadius) / spatialIndex.cellSize)
   const maxCellX = Math.floor((point.x + queryRadius) / spatialIndex.cellSize)
   const minCellY = Math.floor((point.y - queryRadius) / spatialIndex.cellSize)

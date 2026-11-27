@@ -1,14 +1,11 @@
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import { distance } from "circuit-json"
 import {
   createPrimitiveSpatialIndex,
   getPrimitivesNearPoint,
 } from "lib/primitive-spatial-index"
-import {
-  getTraceHoverRadiusMm,
-  getTraceSegmentDistanceMm,
-} from "lib/trace-hover"
-import type { Line, Primitive } from "lib/types"
+import type { Primitive } from "lib/types"
 import { getPrimitiveBoundingBox } from "lib/util/get-primitive-bounding-box"
 import { ifSetsMatchExactly } from "lib/util/if-sets-match-exactly"
 import type React from "react"
@@ -90,7 +87,6 @@ export const getPrimitivesUnderPoint = ({
   transform: Matrix
 }): Primitive[] => {
   const newMousedPrimitives: Primitive[] = []
-  const pixelsPerMm = Math.abs(transform.a)
 
   for (const primitive of primitives) {
     if (!primitive._element) continue
@@ -103,20 +99,17 @@ export const getPrimitivesUnderPoint = ({
     }
 
     // Handle PCB traces
-    if (
-      primitive.pcb_drawing_type === "line" &&
-      primitive._element.type === "pcb_trace"
-    ) {
-      const distanceMm = getTraceSegmentDistanceMm({
-        point: rwPoint,
-        line: primitive,
-      })
-      const hoverRadiusMm = getTraceHoverRadiusMm({
-        traceWidthMm: primitive.width || 0.5,
-        pixelsPerMm,
-      })
+    if ("x1" in primitive && primitive._element?.type === "pcb_trace") {
+      const distance = pointToSegmentDistance(
+        { x: rwPoint.x, y: rwPoint.y },
+        { x: primitive.x1, y: primitive.y1 },
+        { x: primitive.x2, y: primitive.y2 },
+      )
 
-      if (distanceMm < hoverRadiusMm) {
+      const lineWidth = primitive.width || 0.5
+      const detectionThreshold = Math.max(lineWidth * 25, 2) / transform!.a
+
+      if (distance < detectionThreshold) {
         newMousedPrimitives.push(primitive)
       }
       continue
@@ -231,9 +224,8 @@ export const MouseElementTracker = ({
     const highlightedPrimitives: HighlightedPrimitive[] = []
 
     for (const primitive of mousedPrimitives) {
-      if (!primitive._element) continue
-      if (primitive._element.type === "pcb_via") continue
-      if (primitive._element.type === "pcb_component") continue
+      if (primitive._element?.type === "pcb_via") continue
+      if (primitive._element?.type === "pcb_component") continue
       if (primitive?.layer === "drill") continue
       if (primitive?.is_hoverable === false) continue
 
@@ -303,10 +295,7 @@ export const MouseElementTracker = ({
       ).length
 
       highlightedPrimitives.push({
-        ...primitive,
-        _element: primitive._element,
-        _trace_segment:
-          primitive.pcb_drawing_type === "line" ? primitive : undefined,
+        ...(primitive as any),
         x: basePoint.x,
         y: basePoint.y,
         w,
@@ -435,7 +424,6 @@ export type HighlightedPrimitive = {
   _parent_source_component?: AnyCircuitElement
   _source_port?: AnyCircuitElement
   layer?: string
-  _trace_segment?: Line
   screen_x: number
   screen_y: number
   screen_w: number

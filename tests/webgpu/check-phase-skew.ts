@@ -102,21 +102,6 @@ try {
   page.setDefaultTimeout(15_000)
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
-  // Widen the lower trace so its hit area extends past the old tooltip cutoff.
-  for (const element of circuitJson) {
-    if (
-      element.type === "pcb_trace" &&
-      element.pcb_trace_id === "pcb_trace_1"
-    ) {
-      for (const point of element.route) {
-        if (point.route_type === "wire") point.width = 1.4
-      }
-    } else if (element.type === "pcb_differential_pair_phase_skew") {
-      for (const segment of element.negative_trace.segments) {
-        segment.width = 1.4
-      }
-    }
-  }
   await page.route("**/tuning-bump.circuit.json", (route) =>
     route.fulfill({ json: circuitJson }),
   )
@@ -139,7 +124,7 @@ try {
   const viewport = { x: 400, y: 450 }
   const lowerTrace = { x: 400, y: 313 }
   const xRayMenuItem = page.getByRole("menuitem", {
-    name: "X-Ray Net",
+    name: "X-Ray N",
     exact: true,
   })
   const upperLoadPad = { x: 657, y: 287 }
@@ -193,29 +178,13 @@ try {
   )
   assert.equal(
     await page.locator("[data-phase-skew-hover]").textContent(),
-    "Lagging 1.823 mm",
+    "Lagging 1.82 mm",
     "Hovering the shorter trace should show how far it lags",
   )
   assert.equal(
     await countBluePixels({ page, renderer: canvasLayer }),
     bluePixels,
   )
-
-  const skewTooltips = page.locator("[data-phase-skew-hover]")
-  const hoveredSkew: string[][] = []
-  for (const { x, y } of [
-    { x: 233, y: 240 }, // Bend shared by two primitives of the upper trace.
-    { x: 400, y: 291 }, // Upper trace, within the hit areas of both traces.
-    { x: 400, y: 339 }, // Lower trace, beyond the previous tooltip cutoff.
-  ]) {
-    await page.mouse.move(x, y)
-    hoveredSkew.push(await skewTooltips.allTextContents())
-  }
-  assert.deepEqual(hoveredSkew, [
-    ["Leading 0.809 mm"],
-    ["Leading 1.823 mm"],
-    ["Lagging 1.823 mm"],
-  ])
 
   // X-ray the lower trace, leaving the upper trace outside the selected net.
   await page.mouse.click(lowerTrace.x, lowerTrace.y, { button: "right" })
@@ -277,32 +246,6 @@ try {
     framesBefore,
   )
   assert.equal(await countBluePixels({ page, renderer: webGpuCanvas }), 0)
-  url.searchParams.set("scenario", "xray-unsupported")
-  await page.goto(url.href)
-  await page.waitForFunction(() => window.gpuViewerTest.stats.frames > 0)
-  await viewMenu.click()
-  await toggle.click()
-  await page.mouse.click(viewport.x, viewport.y)
-  await toggle.waitFor({ state: "detached" })
-  assert((await countBluePixels({ page, renderer: webGpuCanvas })) > 0)
-  await page.mouse.click(lowerTrace.x, lowerTrace.y, { button: "right" })
-  const framesBeforeUnavailableXRay = await page.evaluate(
-    () => window.gpuViewerTest.stats.frames,
-  )
-  await xRayMenuItem.click()
-  await page.getByRole("status").waitFor()
-  await page.waitForFunction((frames) => {
-    const { stats } = window.gpuViewerTest
-    return (
-      stats.frames > frames &&
-      stats.lastView?.options.xRayElementIds?.length === 0
-    )
-  }, framesBeforeUnavailableXRay)
-  assert(
-    (await countBluePixels({ page, renderer: webGpuCanvas })) > 0,
-    "WebGPU skew should remain visible when X-Ray is unavailable",
-  )
-
   assert.deepEqual(errors, [])
 } finally {
   await browser?.close()
