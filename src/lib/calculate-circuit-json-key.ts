@@ -2,7 +2,7 @@ import {
   getBoundsOfPcbElements,
   getElementId,
 } from "@tscircuit/circuit-json-util"
-import type { AnyCircuitElement, PcbTrace } from "circuit-json"
+import type { AnyCircuitElement, PcbTraceRoutePoint } from "circuit-json"
 
 const formatToFixed4 = (value: number): string =>
   Number.isFinite(value) ? value.toFixed(4) : "NaN"
@@ -13,6 +13,53 @@ const generateHash = (input: string): number => {
     hash = (hash << 5) + hash + input.charCodeAt(i)
   }
   return Math.abs(hash)
+}
+
+const getTraceRoutePointSignature = (point: PcbTraceRoutePoint): string => {
+  switch (point.route_type) {
+    case "wire":
+      return JSON.stringify([
+        point.route_type,
+        point.x,
+        point.y,
+        point.width,
+        point.layer,
+        point.copper_pour_id,
+        point.is_inside_copper_pour,
+        point.start_pcb_port_id,
+        point.end_pcb_port_id,
+      ])
+    case "via":
+      return JSON.stringify([
+        point.route_type,
+        point.x,
+        point.y,
+        point.from_layer,
+        point.to_layer,
+        point.outer_diameter,
+        point.hole_diameter,
+        point.tented_on_top,
+        point.tented_on_bottom,
+        point.copper_pour_id,
+        point.is_inside_copper_pour,
+      ])
+    case "through_pad":
+      return JSON.stringify([
+        point.route_type,
+        point.start.x,
+        point.start.y,
+        point.end.x,
+        point.end.y,
+        point.width,
+        point.start_layer,
+        point.end_layer,
+        point.pcb_smtpad_id,
+        point.pcb_plated_hole_id,
+      ])
+    default:
+      // Preserve support for legacy routes without a route_type discriminator.
+      return JSON.stringify(point)
+  }
 }
 
 export const calculateCircuitJsonKey = (
@@ -41,11 +88,11 @@ export const calculateCircuitJsonKey = (
     ].join(",")
     let signature = `${id}:${boundsStr}`
     if (element.type === "pcb_trace") {
-      const routeLength = ((element as PcbTrace).route ?? []).length
-      signature += `:${routeLength}`
+      signature += `:${(element.route ?? []).length}:${element.route_thickness_mode ?? "constant"}:${element.should_round_corners ?? false}:${element.highlight_color ?? ""}`
       for (const point of element.route ?? []) {
-        if (point.route_type !== "via") continue
-        signature += `:${point.tented_on_top}:${point.tented_on_bottom}`
+        // A route can change while its bounds and point count stay identical.
+        // Use a fixed field order so equivalent JSON keeps the same key.
+        signature += `:${getTraceRoutePointSignature(point)}`
       }
     }
     if (element.type === "pcb_board") {
