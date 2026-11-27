@@ -5,7 +5,6 @@ import type { GraphicsObject } from "graphics-debug"
 import { applyEditEvents } from "lib/apply-edit-events"
 import { calculateBoardSizeKey } from "lib/calculate-board-size-key"
 import { calculateCircuitJsonKey } from "lib/calculate-circuit-json-key"
-import { isCompletePhaseSkewPair } from "lib/get-phase-skew-at-point"
 import { ToastContainer } from "lib/toast"
 import { zIndexMap } from "lib/util/z-index-map"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -210,18 +209,15 @@ export const PCBViewer = ({
 
   const pcbElmsPreEdit = useMemo(() => {
     return (
-      circuitJson?.filter((element) =>
-        element.type === "pcb_differential_pair_phase_skew"
-          ? isCompletePhaseSkewPair(element)
-          : element.type.startsWith("pcb_") ||
-            element.type.startsWith("source_"),
+      circuitJson?.filter(
+        (e: any) => e.type.startsWith("pcb_") || e.type.startsWith("source_"),
       ) ?? []
     )
   }, [circuitJson, circuitJsonKey])
 
   const elements = useMemo(() => {
     return applyEditEvents({
-      circuitJson: pcbElmsPreEdit,
+      circuitJson: pcbElmsPreEdit as any,
       editEvents,
     })
   }, [pcbElmsPreEdit, editEvents])

@@ -1,9 +1,6 @@
 import assert from "node:assert/strict"
 import { fileURLToPath } from "node:url"
-import type {
-  AnyCircuitElement,
-  PcbDifferentialPairPhaseSkew,
-} from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import { type Browser, type Locator, type Page, chromium } from "playwright"
 import { createServer } from "vite"
 
@@ -64,17 +61,6 @@ function readCanvasPixel({
   )
 }
 
-async function reloadFixture(page: Page) {
-  const completionsBefore = await page.evaluate(
-    () => window.gpuViewerTest.stats.renderCompletions,
-  )
-  await page.evaluate(() => window.gpuViewerTest.mount())
-  await page.waitForFunction(
-    (completions) => window.gpuViewerTest.stats.renderCompletions > completions,
-    completionsBefore,
-  )
-}
-
 const server = await createServer({
   root: fileURLToPath(new URL("../../", import.meta.url)),
   cacheDir: "node_modules/.vite-phase-skew-test",
@@ -112,7 +98,6 @@ try {
   await page.route("**/tuning-bump.circuit.json", async (route) => {
     const response = await route.fetch()
     const elements: AnyCircuitElement[] = await response.json()
-    const incompletePairs: Partial<PcbDifferentialPairPhaseSkew>[] = []
     // Widen the lower trace so its hit area extends past the old tooltip cutoff.
     for (const element of elements) {
       if (
@@ -126,14 +111,9 @@ try {
         for (const segment of element.negative_trace.segments) {
           segment.width = 1.4
         }
-        const { negative_trace: _negativeTrace, ...incompletePair } = element
-        incompletePairs.push({
-          ...incompletePair,
-          pcb_differential_pair_phase_skew_id: "incomplete_pair",
-        })
       }
     }
-    await route.fulfill({ response, json: [...elements, ...incompletePairs] })
+    await route.fulfill({ response, json: elements })
   })
   const url = new URL("tests/webgpu/", server.resolvedUrls!.local[0])
   url.searchParams.set("scenario", "canvas")
@@ -280,38 +260,6 @@ try {
   )
   await page.keyboard.press("Escape")
   await page.waitForSelector('[data-x-ray-net-active="false"]')
-  assert((await countBluePixels({ page, renderer: webGpuCanvas })) > 0)
-
-  for (const leg of ["positive_trace", "negative_trace"] as const) {
-    await page.route(
-      "**/tuning-bump.circuit.json",
-      async (route) => {
-        const response = await route.fetch()
-        const elements: AnyCircuitElement[] = await response.json()
-        const phaseSkew = elements.find(
-          (element) => element.type === "pcb_differential_pair_phase_skew",
-        )
-        assert(phaseSkew)
-        await route.fulfill({
-          response,
-          json: elements.filter(
-            (element) =>
-              element.type !== "pcb_trace" ||
-              element.pcb_trace_id !== phaseSkew[leg].pcb_trace_id,
-          ),
-        })
-      },
-      { times: 1 },
-    )
-    await reloadFixture(page)
-    assert.equal(
-      await countBluePixels({ page, renderer: webGpuCanvas }),
-      0,
-      `WebGPU should discard skew after deleting the ${leg}`,
-    )
-  }
-
-  await reloadFixture(page)
   assert((await countBluePixels({ page, renderer: webGpuCanvas })) > 0)
 
   await viewMenu.click()

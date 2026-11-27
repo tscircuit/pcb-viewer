@@ -1,6 +1,5 @@
 import type {
   AnyCircuitElement,
-  PcbDifferentialPairPhaseSkew,
   PcbDifferentialPairPhaseSkewTrace,
 } from "circuit-json"
 import type { Point } from "./util/expand-stroke"
@@ -12,28 +11,12 @@ export type PhaseSkewTraceIndex = Record<
 
 const MATCHED_TOLERANCE_MM = 0.0005
 
-export function isCompletePhaseSkewPair({
-  positive_trace,
-  negative_trace,
-}: PcbDifferentialPairPhaseSkew): boolean {
-  return (
-    typeof positive_trace?.pcb_trace_id === "string" &&
-    Array.isArray(positive_trace.segments) &&
-    typeof negative_trace?.pcb_trace_id === "string" &&
-    Array.isArray(negative_trace.segments)
-  )
-}
-
 export function createPhaseSkewTraceIndex(
   elements: AnyCircuitElement[],
 ): PhaseSkewTraceIndex {
   const index: PhaseSkewTraceIndex = Object.create(null)
   for (const element of elements) {
-    if (
-      element.type !== "pcb_differential_pair_phase_skew" ||
-      !isCompletePhaseSkewPair(element)
-    )
-      continue
+    if (element.type !== "pcb_differential_pair_phase_skew") continue
     index[element.positive_trace.pcb_trace_id] = element.positive_trace
     index[element.negative_trace.pcb_trace_id] = element.negative_trace
   }

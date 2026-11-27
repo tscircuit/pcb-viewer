@@ -62,31 +62,6 @@ test("phase skew trace IDs cannot resolve to inherited properties", () => {
   expect(index.__proto__).toBeUndefined()
 })
 
-test("the phase skew index skips pairs missing a trace or segment array", () => {
-  const pair = (tuningBump as AnyCircuitElement[]).find(
-    (element) => element.type === "pcb_differential_pair_phase_skew",
-  )!
-  const { positive_trace, negative_trace, ...pairWithoutTraces } = pair
-  const { segments: _segments, ...negativeTraceWithoutSegments } =
-    negative_trace
-
-  for (const incompletePair of [
-    { ...pairWithoutTraces, negative_trace },
-    { ...pairWithoutTraces, positive_trace },
-    {
-      ...pairWithoutTraces,
-      positive_trace,
-      negative_trace: negativeTraceWithoutSegments,
-    },
-  ]) {
-    expect(
-      Object.keys(
-        createPhaseSkewTraceIndex([incompletePair] as AnyCircuitElement[]),
-      ),
-    ).toEqual([])
-  }
-})
-
 test("hovering a trace on one layer ignores phase skew measured on another", async () => {
   const { default: ddr } = await import(
     "../../src/examples/2026/differential-pair-phase-skew/am3352-ddr-track-a.circuit.json"
