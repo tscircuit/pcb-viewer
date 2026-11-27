@@ -53,6 +53,7 @@ type Props = {
   /** Omit when the host has no enabled schematic tab. */
   onViewSchematicComponent?: (event: ViewSchematicComponentEvent) => void
   onBoundsSelected?: (bounds: BoundsSelection) => void
+  /** Whether to automatically focus the PCB viewer container on mouse hover (default: false). Replaces legacy `disableAutoFocus`. */
   focusOnHover?: boolean
   clickToInteractEnabled?: boolean
   debugGraphics?: GraphicsObject | null
