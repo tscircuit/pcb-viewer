@@ -106,7 +106,7 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
   traceOverlayElementIndex: TraceOverlayElementIndex
-  phaseSkewText?: string | null
+  phaseSkewText: string | null
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
