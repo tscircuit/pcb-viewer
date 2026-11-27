@@ -1,3 +1,7 @@
+import {
+  getPcbPhaseSkewAtPoint,
+  type PcbPhaseSkewIndex,
+} from "@tscircuit/circuit-json-util"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, LayerRef } from "circuit-json"
 import { distance } from "circuit-json"
@@ -194,6 +198,7 @@ export const getPrimitivesUnderPoint = ({
 
 export const MouseElementTracker = ({
   elements,
+  phaseSkewIndex,
   children,
   transform,
   primitives,
@@ -201,6 +206,7 @@ export const MouseElementTracker = ({
   onMouseHoverOverPrimitives,
 }: {
   elements: AnyCircuitElement[]
+  phaseSkewIndex?: PcbPhaseSkewIndex
   children: React.ReactNode
   transform?: Matrix
   primitives: Primitive[]
@@ -311,6 +317,31 @@ export const MouseElementTracker = ({
     return highlightedPrimitives
   }, [mousedPrimitives, transform])
 
+  const phaseSkew =
+    phaseSkewIndex?.size && transform
+      ? getPcbPhaseSkewAtPoint({
+          index: phaseSkewIndex,
+          layer: selectedLayer,
+          point: applyToPoint(inverse(transform), mousePos),
+          candidates: mousedPrimitives.flatMap((p) =>
+            p._element?.type === "pcb_trace" && p.layer === selectedLayer
+              ? [
+                  {
+                    pcbTraceId: p._element.pcb_trace_id,
+                    centerline:
+                      p.pcb_drawing_type === "line"
+                        ? {
+                            start: { x: p.x1, y: p.y1 },
+                            end: { x: p.x2, y: p.y2 },
+                          }
+                        : undefined,
+                  },
+                ]
+              : [],
+          ),
+        })
+      : undefined
+
   const handleInteraction = ({
     screenPoint,
     transform,
@@ -374,6 +405,7 @@ export const MouseElementTracker = ({
         elements={elements}
         mousePos={mousePos}
         highlightedPrimitives={highlightedPrimitives}
+        phaseSkew={phaseSkew}
       />
       {transform && (
         <>

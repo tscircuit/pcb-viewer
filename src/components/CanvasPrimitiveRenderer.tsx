@@ -1,4 +1,8 @@
-import { CircuitToCanvasDrawer } from "circuit-to-canvas"
+import type { PcbPhaseSkewIndex } from "@tscircuit/circuit-json-util"
+import {
+  CircuitToCanvasDrawer,
+  createPcbPhaseSkewOverlay,
+} from "circuit-to-canvas"
 import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import { Drawer } from "lib/Drawer"
 import {
@@ -19,7 +23,10 @@ import { drawPcbKeepoutElementsForLayer } from "lib/draw-pcb-keepout"
 import { drawPcbNoteElementsForLayer } from "lib/draw-pcb-note"
 import { drawPcbPanelElements } from "lib/draw-pcb-panel"
 import { drawPcbSmtPadElementsForLayer } from "lib/draw-pcb-smtpad"
-import { drawPcbTraceElementsForLayer } from "lib/draw-pcb-trace"
+import {
+  drawPcbTraceElementsForLayer,
+  getHighlightedTraceElementIds,
+} from "lib/draw-pcb-trace"
 import { drawPlatedHolePads } from "lib/draw-plated-hole"
 import { drawPrimitives } from "lib/draw-primitives"
 import { drawSilkscreenElementsForLayer } from "lib/draw-silkscreen"
@@ -28,7 +35,7 @@ import { drawPcbViaElementsForLayer } from "lib/draw-via"
 import { getPrimitivesForDrawer } from "lib/get-primitives-for-drawer"
 import { zIndexMap } from "lib/util/z-index-map"
 import type { GridConfig, Primitive } from "lib/types"
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 import { SuperGrid, toMMSI } from "react-supergrid"
 import type { Matrix } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
@@ -37,6 +44,7 @@ interface Props {
   primitives: Primitive[]
   elements: AnyCircuitElement[]
   circuitJson: AnyCircuitElement[]
+  phaseSkewIndex?: PcbPhaseSkewIndex
   xRayElements?: AnyCircuitElement[]
   defaultUnit?: string
   transform?: Matrix
@@ -51,12 +59,17 @@ export const CanvasPrimitiveRenderer = ({
   elements,
   circuitJson,
   xRayElements,
+  phaseSkewIndex,
   transform,
   grid,
   width = 500,
   height = 500,
   onRenderComplete,
 }: Props) => {
+  const drawPhaseSkew = useMemo(
+    () => phaseSkewIndex && createPcbPhaseSkewOverlay(phaseSkewIndex),
+    [phaseSkewIndex],
+  )
   const xRayCanvasRef = useRef<HTMLCanvasElement>(null)
   const canvasRefs = useRef<Record<string, HTMLCanvasElement>>({})
   const onRenderCompleteRef = useRef(onRenderComplete)
@@ -196,6 +209,8 @@ export const CanvasPrimitiveRenderer = ({
         })
       }
 
+      const highlightedTraceIds =
+        drawPhaseSkew && getHighlightedTraceElementIds({ primitives })
       // Draw vias using circuit-to-canvas (on copper layers)
       for (const { canvas, copperLayer, layer } of copperLayers) {
         if (!canvas) continue
@@ -207,6 +222,12 @@ export const CanvasPrimitiveRenderer = ({
           primitives,
           drawSoldermask:
             isShowingSolderMask && (layer === "top" || layer === "bottom"),
+        })
+        drawPhaseSkew?.({
+          ctx: canvas.getContext("2d")!,
+          layer,
+          realToCanvasMat: transform,
+          highlightedTraceIds,
         })
       }
 
@@ -431,6 +452,7 @@ export const CanvasPrimitiveRenderer = ({
     primitives,
     elements,
     circuitJson,
+    drawPhaseSkew,
     xRayElements,
     width,
     height,

@@ -94,7 +94,9 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
   traceOverlayElementIndex,
+  phaseSkewMm,
 }: {
+  phaseSkewMm?: number
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
   traceOverlayElementIndex: TraceOverlayElementIndex
@@ -150,7 +152,7 @@ export const HighlightedPrimitiveBoxWithText = ({
   if (primitiveElement.type === "pcb_trace") {
     const traceTextContext = { primitiveElement, traceOverlayElementIndex }
     const overlayInfo = getTraceOverlayInfo(traceTextContext)
-    if (!overlayInfo) return null
+    if (!overlayInfo && phaseSkewMm === undefined) return null
 
     return (
       <div
@@ -166,7 +168,7 @@ export const HighlightedPrimitiveBoxWithText = ({
         <div
           style={{
             backgroundColor: "#f2efcc",
-            color: overlayInfo.isOverLength ? "red" : "black",
+            color: overlayInfo?.isOverLength ? "red" : "black",
             textShadow: "none",
             WebkitFontSmoothing: "antialiased",
             MozOsxFontSmoothing: "grayscale",
@@ -178,14 +180,21 @@ export const HighlightedPrimitiveBoxWithText = ({
             whiteSpace: "nowrap",
           }}
         >
-          {overlayInfo.text && <div>{overlayInfo.text}</div>}
-          {overlayInfo.name && (
+          {overlayInfo?.text && <div>{overlayInfo.text}</div>}
+          {overlayInfo?.name && (
             <div
               style={{
                 marginTop: overlayInfo.text ? "2px" : 0,
               }}
             >
               {overlayInfo.name}
+            </div>
+          )}
+          {phaseSkewMm !== undefined && (
+            <div data-phase-skew-hover>
+              {Math.abs(phaseSkewMm) < 0.0005
+                ? "In phase"
+                : `${phaseSkewMm > 0 ? "Leading" : "Lagging"} ${Math.abs(phaseSkewMm).toFixed(3)} mm`}
             </div>
           )}
         </div>
@@ -256,11 +265,13 @@ export const HighlightedPrimitiveBoxWithText = ({
 }
 
 export const ElementOverlayBox = ({
+  phaseSkew,
   highlightedPrimitives,
   mousePos,
   elements,
 }: {
   elements: AnyCircuitElement[]
+  phaseSkew?: { pcbTraceId: string; differenceMm: number }
   highlightedPrimitives: HighlightedPrimitive[]
   mousePos: { x: number; y: number }
 }) => {
@@ -285,6 +296,7 @@ export const ElementOverlayBox = ({
   // When having multiple traces filter traces to get only the shortest one
   primitives = filterTracesIfMultiple({
     primitives,
+    preferredTraceId: phaseSkew?.pcbTraceId,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
   })
@@ -298,6 +310,12 @@ export const ElementOverlayBox = ({
             primitive={primitive}
             mousePos={mousePos}
             traceOverlayElementIndex={traceOverlayElementIndex}
+            phaseSkewMm={
+              primitive._element.type === "pcb_trace" &&
+              primitive._element.pcb_trace_id === phaseSkew?.pcbTraceId
+                ? phaseSkew?.differenceMm
+                : undefined
+            }
           />
         ))}
     </div>
