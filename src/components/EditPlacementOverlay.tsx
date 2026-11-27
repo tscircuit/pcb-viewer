@@ -1,4 +1,5 @@
 import type { AnyCircuitElement, PcbComponent } from "circuit-json"
+import { findSmallestComponentAt } from "lib/find-smallest-component-at"
 import { useGlobalStore } from "../global-store"
 import { useEffect, useRef, useState } from "react"
 import type { Matrix } from "transformation-matrix"
@@ -13,22 +14,6 @@ interface Props {
   cancelPanDrag: () => void
   onCreateEditEvent: (event: ManualEditEvent) => void
   onModifyEditEvent: (event: Partial<ManualEditEvent>) => void
-}
-
-const isInsideOf = (
-  pcb_component: PcbComponent,
-  point: { x: number; y: number },
-  padding = 0,
-) => {
-  const halfWidth = pcb_component.width / 2
-  const halfHeight = pcb_component.height / 2
-
-  const left = pcb_component.center.x - halfWidth - padding
-  const right = pcb_component.center.x + halfWidth + padding
-  const top = pcb_component.center.y - halfHeight - padding
-  const bottom = pcb_component.center.y + halfHeight + padding
-
-  return point.x > left && point.x < right && point.y > top && point.y < bottom
 }
 
 export const EditPlacementOverlay = ({
@@ -74,36 +59,39 @@ export const EditPlacementOverlay = ({
         const rwMousePoint = applyToPoint(inverse(transform!), { x, y })
 
         let foundActiveComponent = false
-        for (const e of soup) {
-          if (
-            e.type === "pcb_component" &&
-            isInsideOf(e, rwMousePoint, 10 / transform.a)
-          ) {
-            cancelPanDrag()
-            setActivePcbComponent(e.pcb_component_id)
-            foundActiveComponent = true
-            const edit_event_id = Math.random().toString()
-            setDragState({
-              dragStart: rwMousePoint,
-              originalCenter: e.center,
-              dragEnd: rwMousePoint,
-              edit_event_id,
-            })
+        const hit = findSmallestComponentAt(
+          soup.filter(
+            (element): element is PcbComponent =>
+              element.type === "pcb_component",
+          ),
+          rwMousePoint,
+          10 / transform.a,
+        )
+        if (hit) {
+          const e = hit
+          cancelPanDrag()
+          setActivePcbComponent(e.pcb_component_id)
+          foundActiveComponent = true
+          const edit_event_id = Math.random().toString()
+          setDragState({
+            dragStart: rwMousePoint,
+            originalCenter: e.center,
+            dragEnd: rwMousePoint,
+            edit_event_id,
+          })
 
-            onCreateEditEvent({
-              edit_event_id,
-              edit_event_type: "edit_pcb_component_location",
-              pcb_edit_event_type: "edit_component_location",
-              pcb_component_id: e.pcb_component_id,
-              original_center: e.center,
-              new_center: e.center,
-              in_progress: true,
-              created_at: Date.now(),
-            })
+          onCreateEditEvent({
+            edit_event_id,
+            edit_event_type: "edit_pcb_component_location",
+            pcb_edit_event_type: "edit_component_location",
+            pcb_component_id: e.pcb_component_id,
+            original_center: e.center,
+            new_center: e.center,
+            in_progress: true,
+            created_at: Date.now(),
+          })
 
-            setIsMovingComponent(true)
-            break
-          }
+          setIsMovingComponent(true)
         }
         if (!foundActiveComponent) {
           setActivePcbComponent(null)
