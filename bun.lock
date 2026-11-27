@@ -25,7 +25,7 @@
         "@semantic-release/release-notes-generator": "^10.0.3",
         "@swc/core": "^1.4.12",
         "@tscircuit/circuit-json-util": "^0.0.135",
-        "@tscircuit/circuit-json-webgpu": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.25.tgz",
+        "@tscircuit/circuit-json-webgpu": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.26.tgz",
         "@tscircuit/core": "^0.0.2483",
         "@tscircuit/eagle-xml-converter": "^1.0.0",
         "@types/bun": "latest",
@@ -429,7 +429,7 @@
 
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.135", "", { "dependencies": { "@flatten-js/core": "^1.6.14", "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": ">=0.0.560", "transformation-matrix": "*", "zod": "3" } }, "sha512-4sQvqHpeh5m4YTjUHSWP0pBzw0u29m/+AXTLEKOqNGR7qlGinUyQKI8s+7y9V37YbYOuuwfhny9KO6FU4T2u8Q=="],
 
-    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.25.tgz", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-rT6t1asLvAH6bbcjT/mkdRT9c8kT1/2h23UeL0tfHUMOLhOv5yLlMn7iPj1BlbBgLAn5G5Rxf9HQFrYk66Ujww=="],
+    "@tscircuit/circuit-json-webgpu": ["@tscircuit/circuit-json-webgpu@https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.26.tgz", { "dependencies": { "@tscircuit/alphabet": "^0.0.25", "color-string": "^2.1.4", "earcut": "^3.0.2", "polygon-clipping": "^0.15.7" }, "peerDependencies": { "circuit-json": ">=0.0.518" } }, "sha512-Q+45ZMhiPp7nAiCRuxNeQikj7IaJCUgi4+REeF8fzRWJ76D7KMnet7WcozuR5a8Ft2tPFi4Xpn1e3rn+aa+q9Q=="],
 
     "@tscircuit/cli": ["@tscircuit/cli@0.1.2488", "", { "dependencies": { "typescript": "~5.9.3" }, "peerDependencies": { "tscircuit": "*" }, "bin": { "tscircuit-cli": "cli/entrypoint.js" } }, "sha512-XrqqOGk7qDZYdeLDS55JxMmG2zGAlmlR4X9Zbc5pfedq8Q9FHJBu498kRgWF7mAoFlSrn22qd8U8VnqId5s9Kg=="],
 
