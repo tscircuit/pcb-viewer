@@ -5,7 +5,6 @@ import type {
 } from "circuit-json"
 import { filterTracesIfMultiple } from "lib/filter-traces-if-multiple"
 import {
-  type PhaseSkewTraceIndex,
   createPhaseSkewTraceIndex,
   getPhaseSkewAtPoint,
   getPhaseSkewText,
@@ -15,6 +14,7 @@ import {
   createTraceOverlayElementIndex,
   getTraceOverlayInfo,
 } from "lib/get-trace-overlay-text"
+import { getTraceHoverRadiusMm } from "lib/trace-hover"
 import { zIndexMap } from "lib/util/z-index-map"
 import React, { useEffect, useMemo, useState } from "react"
 import { type Matrix, applyToPoint, inverse } from "transformation-matrix"
@@ -296,30 +296,18 @@ export const ElementOverlayBox = ({
     () => createTraceOverlayElementIndex(elements),
     [elements],
   )
-  const phaseSkewTraceIndex: PhaseSkewTraceIndex = useMemo(
+  const phaseSkewTraceIndex = useMemo(
     () =>
       is_showing_differential_pair_phase_skew
         ? createPhaseSkewTraceIndex(elements)
-        : {},
+        : undefined,
     [elements, is_showing_differential_pair_phase_skew],
   )
-  const getPhaseSkewTextForPrimitive = (primitive: HighlightedPrimitive) => {
-    if (
-      !transform ||
-      !primitive.layer ||
-      primitive._element.type !== "pcb_trace"
-    )
-      return null
-    const trace = phaseSkewTraceIndex[primitive._element.pcb_trace_id]
-    if (!trace) return null
-    const differenceMm = getPhaseSkewAtPoint({
-      trace,
-      point: applyToPoint(inverse(transform), mousePos),
-      maxDistanceMm: 8 / transform.a,
-      layer: primitive.layer,
-    })
-    return differenceMm === null ? null : getPhaseSkewText(differenceMm)
-  }
+  const pixelsPerMm = Math.abs(transform?.a ?? 0)
+  const point =
+    phaseSkewTraceIndex && transform && pixelsPerMm > 0
+      ? applyToPoint(inverse(transform), mousePos)
+      : undefined
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
@@ -329,26 +317,49 @@ export const ElementOverlayBox = ({
   if (hasSmtPadAndTrace) {
     primitives = primitives.filter((p) => p._element.type === "pcb_smtpad")
   }
-  // When having multiple traces filter traces to get only the shortest one
   primitives = filterTracesIfMultiple({
     primitives,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
-    persistentTraceIds: new Set(Object.keys(phaseSkewTraceIndex)),
+    phaseSkewTraceIndex,
+    point,
   })
 
   return (
     <div style={containerStyle}>
       {!is_moving_component &&
-        primitives.map((primitive) => (
-          <HighlightedPrimitiveBoxWithText
-            key={primitive._pcb_drawing_object_id}
-            primitive={primitive}
-            mousePos={mousePos}
-            traceOverlayElementIndex={traceOverlayElementIndex}
-            phaseSkewText={getPhaseSkewTextForPrimitive(primitive)}
-          />
-        ))}
+        primitives.map((primitive) => {
+          const trace =
+            primitive._element.type === "pcb_trace"
+              ? phaseSkewTraceIndex?.[primitive._element.pcb_trace_id]
+              : undefined
+          const differenceMm =
+            trace && point && primitive.layer
+              ? getPhaseSkewAtPoint({
+                  trace,
+                  point,
+                  layer: primitive.layer,
+                  maxDistanceMm: primitive.traceSegment
+                    ? getTraceHoverRadiusMm({
+                        traceWidthMm: primitive.traceSegment.width || 0.5,
+                        pixelsPerMm,
+                      })
+                    : 0,
+                  measureFromCopperEdge: !primitive.traceSegment,
+                })
+              : null
+          return (
+            <HighlightedPrimitiveBoxWithText
+              key={primitive._pcb_drawing_object_id}
+              primitive={primitive}
+              mousePos={mousePos}
+              traceOverlayElementIndex={traceOverlayElementIndex}
+              phaseSkewText={
+                differenceMm === null ? null : getPhaseSkewText(differenceMm)
+              }
+            />
+          )
+        })}
     </div>
   )
 }

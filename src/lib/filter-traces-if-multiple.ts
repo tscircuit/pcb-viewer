@@ -1,62 +1,86 @@
+import type { PcbTrace } from "circuit-json"
 import type { HighlightedPrimitive } from "../components/MouseElementTracker"
+import type { PhaseSkewTraceIndex } from "./get-phase-skew-at-point"
 import {
   type TraceOverlayElementIndex,
   getAssociatedTraceName,
 } from "./get-trace-overlay-text"
+import { getTraceSegmentDistanceMm } from "./trace-hover"
+
+type HighlightedTrace = HighlightedPrimitive & { _element: PcbTrace }
+type Point = { x: number; y: number }
+
+function getNearestTrace({
+  traces,
+  point,
+}: {
+  traces: HighlightedTrace[]
+  point: Point
+}): HighlightedTrace | undefined {
+  let nearestTrace: HighlightedTrace | undefined
+  let nearestDistanceMm = Infinity
+  for (const trace of traces) {
+    // Non-line traces have already passed a hit test against their copper.
+    const distanceMm = trace.traceSegment
+      ? getTraceSegmentDistanceMm({ point, line: trace.traceSegment })
+      : 0
+    if (distanceMm < nearestDistanceMm) {
+      nearestTrace = trace
+      nearestDistanceMm = distanceMm
+    }
+  }
+  return nearestTrace
+}
 
 export function filterTracesIfMultiple(filterTraces: {
   primitives: HighlightedPrimitive[]
   is_showing_multiple_traces_length: boolean
   traceOverlayElementIndex: TraceOverlayElementIndex
-  persistentTraceIds?: Set<string>
+  phaseSkewTraceIndex?: PhaseSkewTraceIndex
+  point?: Point
 }): HighlightedPrimitive[] {
   const {
     primitives,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
-    persistentTraceIds,
+    phaseSkewTraceIndex,
+    point,
   } = filterTraces
 
-  // Filter traces to get only PCB traces
   const traces = primitives.filter(
-    (
-      p,
-    ): p is HighlightedPrimitive & {
-      _element: {
-        type: "pcb_trace"
-        trace_length?: number
-      }
-    } => p._element.type === "pcb_trace",
+    (p): p is HighlightedTrace => p._element.type === "pcb_trace",
   )
-
-  // Get non-trace primitives
   const nonTraces = primitives.filter((p) => p._element.type !== "pcb_trace")
 
-  // Named traces and nets should always have a hover label, even when the
-  // viewer is configured to hide ordinary trace-length overlays.
-  const tracesWithPersistentOverlay = traces.filter((trace) => {
-    const sourceTrace = trace._element.source_trace_id
-      ? traceOverlayElementIndex.sourceTraceById.get(
-          trace._element.source_trace_id,
-        )
+  const nearestTrace =
+    point &&
+    traces.some((trace) => phaseSkewTraceIndex?.[trace._element.pcb_trace_id])
+      ? getNearestTrace({ traces, point })
       : undefined
-    const hasMaxLength = sourceTrace?.max_length !== undefined
 
-    return (
-      hasMaxLength ||
-      persistentTraceIds?.has(trace._element.pcb_trace_id) ||
-      getAssociatedTraceName({
-        primitiveElement: trace._element,
-        traceOverlayElementIndex,
-      }) !== null
-    )
-  })
-
-  // If not showing multiple trace lengths, keep only overlays that carry
-  // important metadata (a configured max length or a source name).
   if (!is_showing_multiple_traces_length) {
-    return [...nonTraces, ...tracesWithPersistentOverlay]
+    const tooltipTraces = nearestTrace ? [nearestTrace] : traces
+    return [
+      ...nonTraces,
+      ...tooltipTraces.filter(({ _element }) => {
+        if (phaseSkewTraceIndex?.[_element.pcb_trace_id]) return true
+        const sourceTrace = _element.source_trace_id
+          ? traceOverlayElementIndex.sourceTraceById.get(
+              _element.source_trace_id,
+            )
+          : undefined
+        return (
+          sourceTrace?.max_length !== undefined ||
+          getAssociatedTraceName({
+            primitiveElement: _element,
+            traceOverlayElementIndex,
+          }) !== null
+        )
+      }),
+    ]
   }
+
+  if (nearestTrace) return [...nonTraces, nearestTrace]
 
   // If multiple traces exist, return only the shortest one
   if (traces.length > 1) {
