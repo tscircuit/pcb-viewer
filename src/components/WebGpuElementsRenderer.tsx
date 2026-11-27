@@ -1,4 +1,5 @@
 import type { AnyCircuitElement } from "circuit-json"
+import { getElementId } from "@tscircuit/circuit-json-util"
 import type { RenderOptions } from "@tscircuit/circuit-json-webgpu"
 import type { GridConfig, Primitive } from "lib/types"
 import { createWebGpuWorker } from "lib/webgpu/create-worker"
@@ -64,12 +65,7 @@ export function WebGpuElementsRenderer(props: Props) {
     () =>
       supportsXRayNet === false
         ? []
-        : (props.xRayElements ?? []).map(
-            (element) =>
-              (element as unknown as Record<string, string>)[
-                `${element.type}_id`
-              ],
-          ),
+        : (props.xRayElements ?? []).map(getElementId),
     [props.xRayElements, supportsXRayNet],
   )
   const options = useMemo<RenderOptions & { xRayElementIds: string[] }>(
