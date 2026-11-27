@@ -38,6 +38,8 @@ interface Props {
   xRayNetIds?: readonly string[]
   onXRayNetsChange?: (netIds: string[]) => void
   onContextMenuOpenChange?: (open: boolean) => void
+  onCheckForShorts?: () => void
+  isCheckingForShorts?: boolean
   onSearchComponent?: (pcbComponentId: string) => void
   children?: React.ReactNode
   elements?: AnyCircuitElement[]
@@ -163,6 +165,8 @@ export const ToolbarOverlay = ({
   onViewSchematicComponent,
   xRayNetIds = [],
   onXRayNetsChange,
+  onCheckForShorts,
+  isCheckingForShorts,
 }: Props) => {
   const isSmallScreen = useIsSmallScreen()
 
@@ -517,6 +521,8 @@ export const ToolbarOverlay = ({
           onExitXRayNet={
             xRayNetIds.length > 0 ? () => onXRayNetsChange?.([]) : undefined
           }
+          onCheckForShorts={onCheckForShorts}
+          isCheckingForShorts={isCheckingForShorts}
         />
       )}
       <div
