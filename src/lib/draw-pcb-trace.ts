@@ -147,15 +147,18 @@ export function drawPcbTraceElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(
-      showDifferentialPairPhaseSkew
-        ? [
-            ...nonHighlightedElements,
-            ...su(elements).pcb_differential_pair_phase_skew.list(),
-          ]
-        : nonHighlightedElements,
-      { layers, clipContextElements, showDifferentialPairPhaseSkew },
-    )
+    let elementsToDraw: AnyCircuitElement[] = nonHighlightedElements
+    if (showDifferentialPairPhaseSkew) {
+      elementsToDraw = [
+        ...nonHighlightedElements,
+        ...su(elements).pcb_differential_pair_phase_skew.list(),
+      ]
+    }
+    drawer.drawElements(elementsToDraw, {
+      layers,
+      clipContextElements,
+      showDifferentialPairPhaseSkew,
+    })
   }
 
   if (highlightedElements.length > 0) {

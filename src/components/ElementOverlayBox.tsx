@@ -10,8 +10,7 @@ import {
   getTraceOverlayInfo,
 } from "lib/get-trace-overlay-text"
 import { createPhaseSkewTraceIndex } from "lib/phase-skew/create-phase-skew-trace-index"
-import { getPhaseSkewAtPoint } from "lib/phase-skew/get-phase-skew-at-point"
-import { getPhaseSkewText } from "lib/phase-skew/get-phase-skew-text"
+import { getPrimitivePhaseSkewText } from "lib/phase-skew/get-primitive-phase-skew-text"
 import { zIndexMap } from "lib/util/z-index-map"
 import React, { useEffect, useMemo, useState } from "react"
 import { type Matrix, applyToPoint, inverse } from "transformation-matrix"
@@ -290,13 +289,10 @@ export const ElementOverlayBox = ({
     () => createTraceOverlayElementIndex(elements),
     [elements],
   )
-  const phaseSkewTraceIndex = useMemo(
-    () =>
-      is_showing_differential_pair_phase_skew
-        ? createPhaseSkewTraceIndex(elements)
-        : undefined,
-    [elements, is_showing_differential_pair_phase_skew],
-  )
+  const phaseSkewTraceIndex = useMemo(() => {
+    if (!is_showing_differential_pair_phase_skew) return undefined
+    return createPhaseSkewTraceIndex(elements)
+  }, [elements, is_showing_differential_pair_phase_skew])
   const point = transform && applyToPoint(inverse(transform), mousePos)
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
@@ -318,27 +314,19 @@ export const ElementOverlayBox = ({
   return (
     <div style={containerStyle}>
       {!is_moving_component &&
-        primitives.map((primitive) => {
-          const trace =
-            primitive._element.type === "pcb_trace"
-              ? phaseSkewTraceIndex?.[primitive._element.pcb_trace_id]
-              : undefined
-          const differenceMm =
-            trace && point && primitive.layer
-              ? getPhaseSkewAtPoint({ trace, point, layer: primitive.layer })
-              : null
-          return (
-            <HighlightedPrimitiveBoxWithText
-              key={primitive._pcb_drawing_object_id}
-              primitive={primitive}
-              mousePos={mousePos}
-              traceOverlayElementIndex={traceOverlayElementIndex}
-              phaseSkewText={
-                differenceMm === null ? null : getPhaseSkewText(differenceMm)
-              }
-            />
-          )
-        })}
+        primitives.map((primitive) => (
+          <HighlightedPrimitiveBoxWithText
+            key={primitive._pcb_drawing_object_id}
+            primitive={primitive}
+            mousePos={mousePos}
+            traceOverlayElementIndex={traceOverlayElementIndex}
+            phaseSkewText={getPrimitivePhaseSkewText({
+              primitive,
+              phaseSkewTraceIndex,
+              point,
+            })}
+          />
+        ))}
     </div>
   )
 }
