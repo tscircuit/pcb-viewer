@@ -16,6 +16,28 @@ function readTopCopper(page: Page) {
   })
 }
 
+async function snapshotBoard(page: Page) {
+  const image = await page.evaluate(() => {
+    const board = document.querySelector(
+      ".pcb-layer-board",
+    ) as HTMLCanvasElement
+    const composite = document.createElement("canvas")
+    composite.width = board.width
+    composite.height = board.height
+    const ctx = composite.getContext("2d")!
+    ctx.fillStyle = "#111"
+    ctx.fillRect(0, 0, composite.width, composite.height)
+    for (const name of ["board", "bottom", "top"]) {
+      const canvas = document.querySelector(
+        `.pcb-layer-${name}`,
+      ) as HTMLCanvasElement
+      ctx.drawImage(canvas, 0, 0)
+    }
+    return composite.toDataURL()
+  })
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><title>Phase skew overlay on the KiCad forum pair</title><image width="800" height="600" href="${image}"/></svg>`
+}
+
 function nextFrame(page: Page) {
   return page.evaluate(
     () =>
@@ -90,31 +112,18 @@ test("View menu toggles the phase skew overlay and its hover readout", async () 
     ).length
     expect(changedValues).toBeGreaterThan(1000)
 
-    const image = await page.evaluate(() => {
-      const board = document.querySelector(
-        ".pcb-layer-board",
-      ) as HTMLCanvasElement
-      const composite = document.createElement("canvas")
-      composite.width = board.width
-      composite.height = board.height
-      const ctx = composite.getContext("2d")!
-      ctx.fillStyle = "#111"
-      ctx.fillRect(0, 0, composite.width, composite.height)
-      for (const name of ["board", "bottom", "top"]) {
-        const canvas = document.querySelector(
-          `.pcb-layer-${name}`,
-        ) as HTMLCanvasElement
-        ctx.drawImage(canvas, 0, 0)
-      }
-      return composite.toDataURL()
-    })
-    await expect(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><title>Phase skew overlay on the KiCad forum pair</title><image width="800" height="600" href="${image}"/></svg>`,
-    ).toMatchSvgSnapshot(import.meta.path, "differential-pair-phase-skew")
+    await expect(await snapshotBoard(page)).toMatchSvgSnapshot(
+      import.meta.path,
+      "differential-pair-phase-skew",
+    )
 
     await page.mouse.move(lowerTrace.x, lowerTrace.y)
     await nextFrame(page)
     expect(await hoverText.textContent()).toBe("Lagging 2.351 mm")
+    await expect(await snapshotBoard(page)).toMatchSvgSnapshot(
+      import.meta.path,
+      "differential-pair-phase-skew-hover",
+    )
 
     await page.mouse.move(emptySpace.x, emptySpace.y)
     await menu.click({ delay: 350 })
