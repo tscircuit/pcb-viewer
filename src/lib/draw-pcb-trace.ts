@@ -144,9 +144,10 @@ export function drawPcbTraceElementsForLayer({
     showCopperPours,
   )
 
-  const phaseSkewElements = showDifferentialPairPhaseSkew
-    ? su(elements).pcb_differential_pair_phase_skew.list()
-    : []
+  let phaseSkewElements: AnyCircuitElement[] = []
+  if (showDifferentialPairPhaseSkew) {
+    phaseSkewElements = su(elements).pcb_differential_pair_phase_skew.list()
+  }
   for (const [traces, colorOverrides] of [
     [nonHighlightedElements, undefined],
     [highlightedElements, HOVER_COLOR_MAP],
