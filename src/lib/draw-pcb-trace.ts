@@ -144,30 +144,52 @@ export function drawPcbTraceElementsForLayer({
     showCopperPours,
   )
 
-  if (nonHighlightedElements.length > 0) {
-    const drawer = new CircuitToCanvasDrawer(canvas)
-    drawer.realToCanvasMat = realToCanvasMat
-    let elementsToDraw: AnyCircuitElement[] = nonHighlightedElements
-    if (showDifferentialPairPhaseSkew) {
-      elementsToDraw = [
-        ...nonHighlightedElements,
-        ...su(elements).pcb_differential_pair_phase_skew.list(),
-      ]
-    }
-    drawer.drawElements(elementsToDraw, {
-      layers,
-      clipContextElements,
-      showDifferentialPairPhaseSkew,
-    })
+  let phaseSkewElements: AnyCircuitElement[] = []
+  if (showDifferentialPairPhaseSkew) {
+    phaseSkewElements = su(elements).pcb_differential_pair_phase_skew.list()
   }
+  const pass = {
+    canvas,
+    realToCanvasMat,
+    phaseSkewElements,
+    layers,
+    clipContextElements,
+    showDifferentialPairPhaseSkew,
+  }
+  drawTracePass({ ...pass, traces: nonHighlightedElements })
+  drawTracePass({
+    ...pass,
+    traces: highlightedElements,
+    colorOverrides: HOVER_COLOR_MAP,
+  })
+}
 
-  if (highlightedElements.length > 0) {
-    const highlightDrawer = new CircuitToCanvasDrawer(canvas)
-    highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
-    highlightDrawer.realToCanvasMat = realToCanvasMat
-    highlightDrawer.drawElements(highlightedElements, {
-      layers,
-      clipContextElements,
-    })
-  }
+function drawTracePass({
+  canvas,
+  realToCanvasMat,
+  traces,
+  phaseSkewElements,
+  colorOverrides,
+  layers,
+  clipContextElements,
+  showDifferentialPairPhaseSkew,
+}: {
+  canvas: HTMLCanvasElement
+  realToCanvasMat: Matrix
+  traces: PcbTrace[]
+  phaseSkewElements: AnyCircuitElement[]
+  colorOverrides?: PcbColorMap
+  layers: PcbRenderLayer[]
+  clipContextElements: AnyCircuitElement[]
+  showDifferentialPairPhaseSkew: boolean
+}) {
+  if (traces.length === 0) return
+  const drawer = new CircuitToCanvasDrawer(canvas)
+  if (colorOverrides) drawer.configure({ colorOverrides })
+  drawer.realToCanvasMat = realToCanvasMat
+  drawer.drawElements([...traces, ...phaseSkewElements], {
+    layers,
+    clipContextElements,
+    showDifferentialPairPhaseSkew,
+  })
 }
