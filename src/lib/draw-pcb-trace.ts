@@ -144,30 +144,21 @@ export function drawPcbTraceElementsForLayer({
     showCopperPours,
   )
 
-  if (nonHighlightedElements.length > 0) {
+  const phaseSkewElements = showDifferentialPairPhaseSkew
+    ? su(elements).pcb_differential_pair_phase_skew.list()
+    : []
+  for (const [traces, colorOverrides] of [
+    [nonHighlightedElements, undefined],
+    [highlightedElements, HOVER_COLOR_MAP],
+  ] as const) {
+    if (traces.length === 0) continue
     const drawer = new CircuitToCanvasDrawer(canvas)
+    if (colorOverrides) drawer.configure({ colorOverrides })
     drawer.realToCanvasMat = realToCanvasMat
-    let elementsToDraw: AnyCircuitElement[] = nonHighlightedElements
-    if (showDifferentialPairPhaseSkew) {
-      elementsToDraw = [
-        ...nonHighlightedElements,
-        ...su(elements).pcb_differential_pair_phase_skew.list(),
-      ]
-    }
-    drawer.drawElements(elementsToDraw, {
+    drawer.drawElements([...traces, ...phaseSkewElements], {
       layers,
       clipContextElements,
       showDifferentialPairPhaseSkew,
-    })
-  }
-
-  if (highlightedElements.length > 0) {
-    const highlightDrawer = new CircuitToCanvasDrawer(canvas)
-    highlightDrawer.configure({ colorOverrides: HOVER_COLOR_MAP })
-    highlightDrawer.realToCanvasMat = realToCanvasMat
-    highlightDrawer.drawElements(highlightedElements, {
-      layers,
-      clipContextElements,
     })
   }
 }
