@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import "bun-match-svg"
 import { fileURLToPath } from "node:url"
+import { svgAlphabet } from "@tscircuit/alphabet"
 import { type Browser, type Page, chromium } from "playwright"
 import { Circuit } from "tscircuit"
 import { createServer } from "vite"
@@ -14,6 +15,46 @@ function readTopCopper(page: Page) {
         .data,
     )
   })
+}
+
+async function snapshotBoard(page: Page) {
+  const { image, caption } = await page.evaluate(() => {
+    const board = document.querySelector(
+      ".pcb-layer-board",
+    ) as HTMLCanvasElement
+    const composite = document.createElement("canvas")
+    composite.width = board.width
+    composite.height = board.height
+    const ctx = composite.getContext("2d")!
+    ctx.fillStyle = "#111"
+    ctx.fillRect(0, 0, composite.width, composite.height)
+    for (const name of ["board", "bottom", "top"]) {
+      const canvas = document.querySelector(
+        `.pcb-layer-${name}`,
+      ) as HTMLCanvasElement
+      ctx.drawImage(canvas, 0, 0)
+    }
+    const hoverText = document.querySelector("[data-phase-skew-hover]")
+    let caption = "Phase skew on, nothing hovered"
+    if (hoverText) {
+      caption = `Phase skew on, hovering trace - ${hoverText.textContent}`
+    }
+    return { image: composite.toDataURL(), caption }
+  })
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><title>${caption}</title><image width="800" height="600" href="${image}"/>${getCaptionSvg(caption)}</svg>`
+}
+
+/** Draws the caption at the top center with the tscircuit stroke font, which renders the same on every OS. */
+function getCaptionSvg(caption: string) {
+  const glyphSize = 20
+  const advance = glyphSize * 0.7
+  const startX = (800 - caption.length * advance) / 2
+  const glyphs = Array.from(caption, (char, index) => {
+    const path = svgAlphabet[char as keyof typeof svgAlphabet]
+    if (!path) return ""
+    return `<path transform="translate(${startX + index * advance} 12) scale(${glyphSize})" d="${path}"/>`
+  })
+  return `<g fill="none" stroke="#fff" stroke-width="0.1" stroke-linecap="round" stroke-linejoin="round">${glyphs.join("")}</g>`
 }
 
 function nextFrame(page: Page) {
@@ -90,31 +131,18 @@ test("View menu toggles the phase skew overlay and its hover readout", async () 
     ).length
     expect(changedValues).toBeGreaterThan(1000)
 
-    const image = await page.evaluate(() => {
-      const board = document.querySelector(
-        ".pcb-layer-board",
-      ) as HTMLCanvasElement
-      const composite = document.createElement("canvas")
-      composite.width = board.width
-      composite.height = board.height
-      const ctx = composite.getContext("2d")!
-      ctx.fillStyle = "#111"
-      ctx.fillRect(0, 0, composite.width, composite.height)
-      for (const name of ["board", "bottom", "top"]) {
-        const canvas = document.querySelector(
-          `.pcb-layer-${name}`,
-        ) as HTMLCanvasElement
-        ctx.drawImage(canvas, 0, 0)
-      }
-      return composite.toDataURL()
-    })
-    await expect(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><title>Phase skew overlay on the KiCad forum pair</title><image width="800" height="600" href="${image}"/></svg>`,
-    ).toMatchSvgSnapshot(import.meta.path, "differential-pair-phase-skew")
+    await expect(await snapshotBoard(page)).toMatchSvgSnapshot(
+      import.meta.path,
+      "differential-pair-phase-skew",
+    )
 
     await page.mouse.move(lowerTrace.x, lowerTrace.y)
     await nextFrame(page)
     expect(await hoverText.textContent()).toBe("Lagging 2.351 mm")
+    await expect(await snapshotBoard(page)).toMatchSvgSnapshot(
+      import.meta.path,
+      "differential-pair-phase-skew-hover",
+    )
 
     await page.mouse.move(emptySpace.x, emptySpace.y)
     await menu.click({ delay: 350 })
