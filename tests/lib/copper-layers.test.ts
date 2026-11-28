@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import {
+  elementHitsCopperRenderLayers,
+  getCopperLayerDrawOrder,
   getCopperLayerRefsFromElements,
   getOrderedCanvasLayers,
 } from "../../src/lib/copper-layers"
@@ -37,8 +39,6 @@ test("creates canvases for every copper layer on a 10-layer board", () => {
   expect(orderedLayers.length).toBeLessThanOrEqual(zIndexMap.topLayer)
 })
 
-import { getCopperLayerDrawOrder } from "../../src/lib/copper-layers"
-
 test("orders X-Ray copper back to front and promotes the selected layer", () => {
   const elements = [{ type: "pcb_board", num_layers: 4 }] as any
   expect(getCopperLayerDrawOrder(elements, "top")).toEqual([
@@ -59,4 +59,20 @@ test("orders X-Ray copper back to front and promotes the selected layer", () => 
     "top",
     "inner1",
   ])
+})
+
+test("elementHitsCopperRenderLayers matches spanning and legacy layers on copper canvases only", () => {
+  expect(elementHitsCopperRenderLayers(["top", "bottom"], ["top_copper"])).toBe(
+    true,
+  )
+  expect(
+    elementHitsCopperRenderLayers(["top", "bottom"], ["bottom_copper"]),
+  ).toBe(true)
+  expect(elementHitsCopperRenderLayers(["bottom"], ["top_copper"])).toBe(false)
+  expect(
+    elementHitsCopperRenderLayers(["top", "inner1"], ["bottom_copper"]),
+  ).toBe(false)
+  expect(elementHitsCopperRenderLayers([], ["top_copper"])).toBe(true)
+  expect(elementHitsCopperRenderLayers([], ["bottom_copper"])).toBe(true)
+  expect(elementHitsCopperRenderLayers([], ["drill"])).toBe(false)
 })

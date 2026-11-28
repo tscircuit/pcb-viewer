@@ -7,6 +7,11 @@ import type { AnyCircuitElement, PcbRenderLayer } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
 import color from "color"
+import {
+  elementHitsCopperRenderLayers,
+  getCopperLayerRefsFromElements,
+  getCopperSoldermaskDrawOptions,
+} from "./copper-layers"
 import { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
@@ -39,20 +44,34 @@ export function drawPcbViaElementsForLayer({
   primitives,
   drawSoldermask,
 }: {
-  canvas: HTMLCanvasElement
+  canvas:
+    | HTMLCanvasElement
+    | ConstructorParameters<typeof CircuitToCanvasDrawer>[0]
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
   primitives?: Primitive[]
   drawSoldermask?: boolean
 }) {
-  // Filter vias to only those on the specified layers
-  const viaElements = elements.filter(isPcbVia).filter((element) => {
-    // Vias are typically drawn on copper layers
-    return layers.some((layer) => layer.includes("copper"))
-  })
+  // Filter vias to only those spanning the target copper layers
+  const fallbackCopperLayers = getCopperLayerRefsFromElements(elements)
+  const viaElements = elements
+    .filter(isPcbVia)
+    .filter((element) =>
+      elementHitsCopperRenderLayers(element.layers ?? [], layers),
+    )
+    .map((element) =>
+      element.layers && element.layers.length > 0
+        ? element
+        : { ...element, layers: fallbackCopperLayers },
+    )
 
   if (viaElements.length === 0) return
+
+  const soldermaskOptions = getCopperSoldermaskDrawOptions({
+    layers,
+    drawSoldermask,
+  })
 
   // Find which via elements have highlighted primitives
   const highlightedElementIds = new Set<string>()
@@ -81,9 +100,7 @@ export function drawPcbViaElementsForLayer({
     drawer.realToCanvasMat = realToCanvasMat
     drawer.drawElements(nonHighlightedElements, {
       layers,
-      drawSoldermask,
-      drawSoldermaskTop: layers.includes("top_copper"),
-      drawSoldermaskBottom: layers.includes("bottom_copper"),
+      ...soldermaskOptions,
       clipContextElements: elements,
     })
   }
@@ -95,9 +112,7 @@ export function drawPcbViaElementsForLayer({
     highlightDrawer.realToCanvasMat = realToCanvasMat
     highlightDrawer.drawElements(highlightedElements, {
       layers,
-      drawSoldermask,
-      drawSoldermaskTop: layers.includes("top_copper"),
-      drawSoldermaskBottom: layers.includes("bottom_copper"),
+      ...soldermaskOptions,
       clipContextElements: elements,
     })
   }

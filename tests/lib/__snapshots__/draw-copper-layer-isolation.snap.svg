@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="280" viewBox="0 0 640 280">
+  <title>Top vs bottom copper layer isolation for plated holes, vias, and SMT pads</title>
+  <rect width="640" height="280" fill="#0f1117"/>
+  <g transform="translate(10 30)">
+    <rect width="300" height="240" rx="6" fill="#181b24" stroke="#2d3343"/>
+    <text x="12" y="20" fill="#e6edf3" font-family="sans-serif" font-size="12">top_copper (blind + legacy via only)</text>
+    <circle cx="150.0" cy="66.0" r="9.0" fill="rgb(200, 52, 52)"/><circle cx="150.0" cy="66.0" r="3.6" fill="#FF26E2"/><circle cx="150.0" cy="174.0" r="9.0" fill="rgb(200, 52, 52)"/><circle cx="150.0" cy="174.0" r="3.6" fill="#FF26E2"/>
+  </g>
+  <g transform="translate(330 30)">
+    <rect width="300" height="240" rx="6" fill="#181b24" stroke="#2d3343"/>
+    <text x="12" y="20" fill="#e6edf3" font-family="sans-serif" font-size="12">bottom_copper (bottom hole + pad + legacy via)</text>
+    <circle cx="78.0" cy="120.0" r="14.4" fill="rgb(77, 127, 196)"/><circle cx="78.0" cy="120.0" r="7.2" fill="#FF26E2"/><rect x="207.6" y="105.6" width="28.8" height="28.8" fill="rgb(77, 127, 196)"/><circle cx="150.0" cy="174.0" r="9.0" fill="rgb(77, 127, 196)"/><circle cx="150.0" cy="174.0" r="3.6" fill="#FF26E2"/>
+  </g>
+</svg>

@@ -7,7 +7,10 @@ import {
 import color from "color"
 import type { Matrix } from "transformation-matrix"
 import colors from "./colors"
-import { normalizeCopperRenderLayers } from "./copper-layers"
+import {
+  getCopperSoldermaskDrawOptions,
+  normalizeCopperRenderLayers,
+} from "./copper-layers"
 import type { Primitive } from "./types"
 
 // Color map with lighter copper colors for hover effect
@@ -40,7 +43,9 @@ export function drawPcbSmtPadElementsForLayer({
   primitives,
   drawSoldermask,
 }: {
-  canvas: HTMLCanvasElement
+  canvas:
+    | HTMLCanvasElement
+    | ConstructorParameters<typeof CircuitToCanvasDrawer>[0]
   elements: AnyCircuitElement[]
   layers: PcbRenderLayer[]
   realToCanvasMat: Matrix
@@ -54,6 +59,11 @@ export function drawPcbSmtPadElementsForLayer({
     .filter((element) => targetLayers.has(element.layer))
 
   if (smtPadElements.length === 0) return
+
+  const soldermaskOptions = getCopperSoldermaskDrawOptions({
+    layers,
+    drawSoldermask,
+  })
 
   // Find which SMT pad elements have highlighted primitives
   const highlightedElementIds = new Set<string>()
@@ -80,7 +90,11 @@ export function drawPcbSmtPadElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, { layers, drawSoldermask })
+    drawer.drawElements(nonHighlightedElements, {
+      layers,
+      ...soldermaskOptions,
+      clipContextElements: elements,
+    })
   }
 
   // Draw highlighted elements with lighter colors
@@ -90,7 +104,8 @@ export function drawPcbSmtPadElementsForLayer({
     highlightDrawer.realToCanvasMat = realToCanvasMat
     highlightDrawer.drawElements(highlightedElements, {
       layers,
-      drawSoldermask,
+      ...soldermaskOptions,
+      clipContextElements: elements,
     })
   }
 }
