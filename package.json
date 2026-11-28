@@ -38,6 +38,7 @@
     "@tscircuit/circuit-json-webgpu": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-webgpu/0.0.27.tgz",
     "@tscircuit/core": "0.0.2491",
     "@tscircuit/eagle-xml-converter": "^1.0.0",
+    "@tscircuit/solver-utils": "0.0.23",
     "@types/bun": "latest",
     "@types/color": "^3.0.6",
     "@types/node": "18.7.23",
