@@ -44,6 +44,7 @@ export interface State {
   is_showing_silkscreen: boolean
   is_showing_fabrication_notes: boolean
   is_showing_pcb_notes: boolean
+  is_showing_differential_pair_phase_skew: boolean
   pcb_group_view_mode: "all" | "named_only"
 
   hovered_error_id: string | null
@@ -66,6 +67,7 @@ export interface State {
   setIsShowingSilkscreen: (is_showing: boolean) => void
   setIsShowingFabricationNotes: (is_showing: boolean) => void
   setIsShowingPcbNotes: (is_showing: boolean) => void
+  setIsShowingDifferentialPairPhaseSkew: (is_showing: boolean) => void
   setPcbGroupViewMode: (mode: "all" | "named_only") => void
   setHoveredErrorId: (errorId: string | null) => void
   setFocusedErrorId: (errorId: string | null) => void
@@ -151,6 +153,7 @@ export const createStore = (
           STORAGE_KEYS.IS_SHOWING_PCB_NOTES,
           true,
         ),
+        is_showing_differential_pair_phase_skew: false,
         pcb_group_view_mode: disablePcbGroups
           ? "all"
           : (getStoredString(
@@ -177,6 +180,8 @@ export const createStore = (
           set({ is_mouse_over_container: is_focused }),
         setIsShowingMultipleTracesLength: (is_showing) =>
           set({ is_showing_multiple_traces_length: is_showing }),
+        setIsShowingDifferentialPairPhaseSkew: (is_showing) =>
+          set({ is_showing_differential_pair_phase_skew: is_showing }),
         setIsShowingAutorouting: (is_showing) =>
           set({ is_showing_autorouting: is_showing }),
         setIsShowingDrcErrors: (is_showing) =>

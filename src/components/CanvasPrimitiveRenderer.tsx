@@ -72,6 +72,9 @@ export const CanvasPrimitiveRenderer = ({
     (s) => s.is_showing_fabrication_notes,
   )
   const isShowingPcbNotes = useGlobalStore((s) => s.is_showing_pcb_notes)
+  const showDifferentialPairPhaseSkew = useGlobalStore(
+    (s) => s.is_showing_differential_pair_phase_skew,
+  )
   const isShowingCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
   const isShowingSilkscreen = useGlobalStore((s) => s.is_showing_silkscreen)
 
@@ -145,6 +148,8 @@ export const CanvasPrimitiveRenderer = ({
           realToCanvasMat: transform,
           primitives,
           showCopperPours: isShowingCopperPours && copperPourOpacity > 0,
+          showDifferentialPairPhaseSkew:
+            showDifferentialPairPhaseSkew && !xRayElements,
         })
       }
 
@@ -442,6 +447,7 @@ export const CanvasPrimitiveRenderer = ({
     isShowingSolderMask,
     isShowingFabricationNotes,
     isShowingPcbNotes,
+    showDifferentialPairPhaseSkew,
     isShowingCourtyards,
     isShowingSilkscreen,
   ])

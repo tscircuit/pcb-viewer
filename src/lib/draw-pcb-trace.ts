@@ -1,3 +1,4 @@
+import { su } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, PcbRenderLayer, PcbTrace } from "circuit-json"
 import {
   CircuitToCanvasDrawer,
@@ -102,6 +103,7 @@ export function drawPcbTraceElementsForLayer({
   realToCanvasMat,
   primitives,
   showCopperPours,
+  showDifferentialPairPhaseSkew = false,
 }: {
   canvas: HTMLCanvasElement
   elements: AnyCircuitElement[]
@@ -109,6 +111,7 @@ export function drawPcbTraceElementsForLayer({
   realToCanvasMat: Matrix
   primitives?: Primitive[]
   showCopperPours: boolean
+  showDifferentialPairPhaseSkew?: boolean
 }) {
   const targetLayers = new Set(normalizeCopperRenderLayers(layers))
 
@@ -144,9 +147,17 @@ export function drawPcbTraceElementsForLayer({
   if (nonHighlightedElements.length > 0) {
     const drawer = new CircuitToCanvasDrawer(canvas)
     drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements(nonHighlightedElements, {
+    let elementsToDraw: AnyCircuitElement[] = nonHighlightedElements
+    if (showDifferentialPairPhaseSkew) {
+      elementsToDraw = [
+        ...nonHighlightedElements,
+        ...su(elements).pcb_differential_pair_phase_skew.list(),
+      ]
+    }
+    drawer.drawElements(elementsToDraw, {
       layers,
       clipContextElements,
+      showDifferentialPairPhaseSkew,
     })
   }
 

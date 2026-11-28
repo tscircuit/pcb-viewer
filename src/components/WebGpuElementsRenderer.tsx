@@ -43,6 +43,9 @@ export function WebGpuElementsRenderer(props: Props) {
   )
   const showPcbNotes = useGlobalStore((s) => s.is_showing_pcb_notes)
   const showCourtyards = useGlobalStore((s) => s.is_showing_courtyards)
+  const showDifferentialPairPhaseSkew = useGlobalStore(
+    (s) => s.is_showing_differential_pair_phase_skew,
+  )
   const highlightedElementIds = useMemo(
     () => [
       ...new Set([
@@ -76,6 +79,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showFabricationNotes,
       showPcbNotes,
       showCourtyards,
+      showDifferentialPairPhaseSkew,
       highlightedElementIds,
       xRayElementIds,
     }),
@@ -89,6 +93,7 @@ export function WebGpuElementsRenderer(props: Props) {
       showFabricationNotes,
       showPcbNotes,
       showCourtyards,
+      showDifferentialPairPhaseSkew,
       highlightedElementIds,
       xRayElementIds,
     ],

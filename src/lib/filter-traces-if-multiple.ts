@@ -3,16 +3,19 @@ import {
   type TraceOverlayElementIndex,
   getAssociatedTraceName,
 } from "./get-trace-overlay-text"
+import type { PhaseSkewTraceIndex } from "./phase-skew/create-phase-skew-trace-index"
 
 export function filterTracesIfMultiple(filterTraces: {
   primitives: HighlightedPrimitive[]
   is_showing_multiple_traces_length: boolean
   traceOverlayElementIndex: TraceOverlayElementIndex
+  phaseSkewTraceIndex?: PhaseSkewTraceIndex
 }): HighlightedPrimitive[] {
   const {
     primitives,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
+    phaseSkewTraceIndex,
   } = filterTraces
 
   // Filter traces to get only PCB traces
@@ -42,6 +45,7 @@ export function filterTracesIfMultiple(filterTraces: {
 
     return (
       hasMaxLength ||
+      phaseSkewTraceIndex?.[trace._element.pcb_trace_id] !== undefined ||
       getAssociatedTraceName({
         primitiveElement: trace._element,
         traceOverlayElementIndex,

@@ -9,8 +9,11 @@ import {
   createTraceOverlayElementIndex,
   getTraceOverlayInfo,
 } from "lib/get-trace-overlay-text"
+import { createPhaseSkewTraceIndex } from "lib/phase-skew/create-phase-skew-trace-index"
+import { getPrimitivePhaseSkewText } from "lib/phase-skew/get-primitive-phase-skew-text"
 import { zIndexMap } from "lib/util/z-index-map"
 import React, { useEffect, useMemo, useState } from "react"
+import { type Matrix, applyToPoint, inverse } from "transformation-matrix"
 import { useGlobalStore } from "../global-store"
 import type { HighlightedPrimitive } from "./MouseElementTracker"
 
@@ -94,10 +97,12 @@ export const HighlightedPrimitiveBoxWithText = ({
   primitive,
   mousePos,
   traceOverlayElementIndex,
+  phaseSkewText,
 }: {
   primitive: HighlightedPrimitive
   mousePos: { x: number; y: number }
   traceOverlayElementIndex: TraceOverlayElementIndex
+  phaseSkewText: string | null
 }) => {
   const [finalState, setFinalState] = useState(false)
   const primitiveElement = primitive._element
@@ -188,6 +193,11 @@ export const HighlightedPrimitiveBoxWithText = ({
               {overlayInfo.name}
             </div>
           )}
+          {phaseSkewText && (
+            <div data-phase-skew-hover style={{ marginTop: "2px" }}>
+              {phaseSkewText}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -259,20 +269,31 @@ export const ElementOverlayBox = ({
   highlightedPrimitives,
   mousePos,
   elements,
+  transform,
 }: {
   elements: AnyCircuitElement[]
   highlightedPrimitives: HighlightedPrimitive[]
   mousePos: { x: number; y: number }
+  transform?: Matrix
 }) => {
-  const [is_moving_component, is_showing_multiple_traces_length] =
-    useGlobalStore((s) => [
-      s.is_moving_component,
-      s.is_showing_multiple_traces_length,
-    ])
+  const [
+    is_moving_component,
+    is_showing_multiple_traces_length,
+    is_showing_differential_pair_phase_skew,
+  ] = useGlobalStore((s) => [
+    s.is_moving_component,
+    s.is_showing_multiple_traces_length,
+    s.is_showing_differential_pair_phase_skew,
+  ])
   const traceOverlayElementIndex = useMemo(
     () => createTraceOverlayElementIndex(elements),
     [elements],
   )
+  const phaseSkewTraceIndex = useMemo(() => {
+    if (!is_showing_differential_pair_phase_skew) return undefined
+    return createPhaseSkewTraceIndex(elements)
+  }, [elements, is_showing_differential_pair_phase_skew])
+  const point = transform && applyToPoint(inverse(transform), mousePos)
   const hasSmtPadAndTrace =
     highlightedPrimitives.some((p) => p._element.type === "pcb_smtpad") &&
     highlightedPrimitives.some((p) => p._element.type === "pcb_trace")
@@ -287,6 +308,7 @@ export const ElementOverlayBox = ({
     primitives,
     is_showing_multiple_traces_length,
     traceOverlayElementIndex,
+    phaseSkewTraceIndex,
   })
 
   return (
@@ -298,6 +320,11 @@ export const ElementOverlayBox = ({
             primitive={primitive}
             mousePos={mousePos}
             traceOverlayElementIndex={traceOverlayElementIndex}
+            phaseSkewText={getPrimitivePhaseSkewText({
+              primitive,
+              phaseSkewTraceIndex,
+              point,
+            })}
           />
         ))}
     </div>
