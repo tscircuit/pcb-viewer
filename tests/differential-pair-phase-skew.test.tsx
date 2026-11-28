@@ -17,7 +17,7 @@ function readTopCopper(page: Page) {
 }
 
 async function snapshotBoard(page: Page) {
-  const image = await page.evaluate(() => {
+  const { image, caption } = await page.evaluate(() => {
     const board = document.querySelector(
       ".pcb-layer-board",
     ) as HTMLCanvasElement
@@ -33,9 +33,18 @@ async function snapshotBoard(page: Page) {
       ) as HTMLCanvasElement
       ctx.drawImage(canvas, 0, 0)
     }
-    return composite.toDataURL()
+    const hoverText = document.querySelector("[data-phase-skew-hover]")
+    const caption = hoverText
+      ? `Phase skew on, hovering trace: ${hoverText.textContent}`
+      : "Phase skew on, nothing hovered"
+    ctx.fillStyle = "#fff"
+    ctx.font = "bold 20px sans-serif"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "top"
+    ctx.fillText(caption, composite.width / 2, 16)
+    return { image: composite.toDataURL(), caption }
   })
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><title>Phase skew overlay on the KiCad forum pair</title><image width="800" height="600" href="${image}"/></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><title>${caption}</title><image width="800" height="600" href="${image}"/></svg>`
 }
 
 function nextFrame(page: Page) {
