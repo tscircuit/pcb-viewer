@@ -148,18 +148,48 @@ export function drawPcbTraceElementsForLayer({
   if (showDifferentialPairPhaseSkew) {
     phaseSkewElements = su(elements).pcb_differential_pair_phase_skew.list()
   }
-  for (const [traces, colorOverrides] of [
-    [nonHighlightedElements, undefined],
-    [highlightedElements, HOVER_COLOR_MAP],
-  ] as const) {
-    if (traces.length === 0) continue
-    const drawer = new CircuitToCanvasDrawer(canvas)
-    if (colorOverrides) drawer.configure({ colorOverrides })
-    drawer.realToCanvasMat = realToCanvasMat
-    drawer.drawElements([...traces, ...phaseSkewElements], {
-      layers,
-      clipContextElements,
-      showDifferentialPairPhaseSkew,
-    })
+  const pass = {
+    canvas,
+    realToCanvasMat,
+    phaseSkewElements,
+    layers,
+    clipContextElements,
+    showDifferentialPairPhaseSkew,
   }
+  drawTracePass({ ...pass, traces: nonHighlightedElements })
+  drawTracePass({
+    ...pass,
+    traces: highlightedElements,
+    colorOverrides: HOVER_COLOR_MAP,
+  })
+}
+
+function drawTracePass({
+  canvas,
+  realToCanvasMat,
+  traces,
+  phaseSkewElements,
+  colorOverrides,
+  layers,
+  clipContextElements,
+  showDifferentialPairPhaseSkew,
+}: {
+  canvas: HTMLCanvasElement
+  realToCanvasMat: Matrix
+  traces: PcbTrace[]
+  phaseSkewElements: AnyCircuitElement[]
+  colorOverrides?: PcbColorMap
+  layers: PcbRenderLayer[]
+  clipContextElements: AnyCircuitElement[]
+  showDifferentialPairPhaseSkew: boolean
+}) {
+  if (traces.length === 0) return
+  const drawer = new CircuitToCanvasDrawer(canvas)
+  if (colorOverrides) drawer.configure({ colorOverrides })
+  drawer.realToCanvasMat = realToCanvasMat
+  drawer.drawElements([...traces, ...phaseSkewElements], {
+    layers,
+    clipContextElements,
+    showDifferentialPairPhaseSkew,
+  })
 }
