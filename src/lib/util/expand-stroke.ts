@@ -26,6 +26,7 @@ export function getExpandedStroke(
     const dx = p2.x - p1.x
     const dy = p2.y - p1.y
     const length = Math.sqrt(dx * dx + dy * dy)
+    if (length === 0) return { x: 0, y: 0 }
     return { x: -dy / length, y: dx / length }
   }
 
@@ -71,7 +72,10 @@ export function getExpandedStroke(
 
     // Check if miter is too long (sharp corner)
     const miterLimit = 2 // Adjust this value to control when to bevel
-    if (miterLength / 2 > miterLimit * (currentWidth / 2)) {
+    if (
+      miterLength === 0 ||
+      miterLength / 2 > miterLimit * (currentWidth / 2)
+    ) {
       // Use bevel join
       addPoint(current, normalPrev, 1, currentWidth)
       addPoint(current, normalNext, 1, currentWidth)
