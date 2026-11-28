@@ -31,6 +31,41 @@ export const normalizeCopperRenderLayers = (
       : (layer as LayerRef),
   )
 
+export const elementHitsCopperRenderLayers = (
+  elementLayers: readonly string[],
+  renderLayers: PcbRenderLayer[],
+): boolean => {
+  const targetCopperLayers = renderLayers.filter((layer) =>
+    layer.endsWith("_copper"),
+  )
+  if (targetCopperLayers.length === 0) return false
+  if (elementLayers.length === 0) {
+    return true
+  }
+  const targetLayerRefs = new Set(
+    normalizeCopperRenderLayers(targetCopperLayers),
+  )
+  return elementLayers.some((layer) => targetLayerRefs.has(layer as LayerRef))
+}
+
+export const getCopperSoldermaskDrawOptions = ({
+  layers,
+  drawSoldermask,
+}: {
+  layers: PcbRenderLayer[]
+  drawSoldermask?: boolean
+}) => {
+  const drawSoldermaskTop =
+    Boolean(drawSoldermask) && layers.includes("top_copper")
+  const drawSoldermaskBottom =
+    Boolean(drawSoldermask) && layers.includes("bottom_copper")
+  return {
+    drawSoldermask: drawSoldermaskTop || drawSoldermaskBottom,
+    drawSoldermaskTop,
+    drawSoldermaskBottom,
+  }
+}
+
 export const getOrderedCanvasLayers = (
   elements: AnyCircuitElement[],
 ): string[] => {
