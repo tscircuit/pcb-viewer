@@ -34,9 +34,10 @@ async function snapshotBoard(page: Page) {
       ctx.drawImage(canvas, 0, 0)
     }
     const hoverText = document.querySelector("[data-phase-skew-hover]")
-    const caption = hoverText
-      ? `Phase skew on, hovering trace: ${hoverText.textContent}`
-      : "Phase skew on, nothing hovered"
+    let caption = "Phase skew on, nothing hovered"
+    if (hoverText) {
+      caption = `Phase skew on, hovering trace: ${hoverText.textContent}`
+    }
     ctx.fillStyle = "#fff"
     ctx.font = "bold 20px sans-serif"
     ctx.textAlign = "center"
